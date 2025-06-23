@@ -13,7 +13,8 @@ import {
   History,
   Info,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +23,10 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { generateDocument, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 
 const templates = {
   'Startup Legal': [
@@ -56,6 +60,10 @@ const AccordionTrigger = ({ title, isOpen, onClick }: { title: string; isOpen: b
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('Non-Disclosure Agreement');
   const [openCategories, setOpenCategories] = useState<TemplateCategory[]>(['Startup Legal']);
+  const [loading, setLoading] = useState(false);
+  const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
+  const [recentDocs, setRecentDocs] = useState<DocumentGeneratorOutput[]>([]);
+  const { toast } = useToast();
 
   const toggleCategory = (category: TemplateCategory) => {
     setOpenCategories(prev => 
@@ -65,6 +73,32 @@ export default function DocumentsPage() {
     );
   };
   
+  const handleGenerateClick = async () => {
+    if (!selectedTemplate) {
+      toast({
+        title: 'No Template Selected',
+        description: 'Please select a template from the library first.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setLoading(true);
+    setGeneratedDoc(null);
+    try {
+      const result = await generateDocument({ templateName: selectedTemplate });
+      setGeneratedDoc(result);
+      setRecentDocs(prev => [result, ...prev].slice(0, 3));
+    } catch (error) {
+      console.error("Error generating document:", error);
+      toast({
+        title: 'Generation Failed',
+        description: 'There was an error generating your document. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start h-full max-h-[calc(100vh-8rem)]">
@@ -124,9 +158,16 @@ export default function DocumentsPage() {
           </div>
         </CardContent>
         <CardFooter className="mt-auto pt-6">
-          <Button className="w-full">
-            <FilePenLine className="mr-2" />
-            Generate Document
+          <Button onClick={handleGenerateClick} disabled={loading} className="w-full">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
+              </>
+            ) : (
+              <>
+                <FilePenLine className="mr-2 h-4 w-4" /> Generate Document
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>
@@ -139,9 +180,9 @@ export default function DocumentsPage() {
               <p className="text-muted-foreground">Generate a new document or view a recent one.</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
-                <Button variant="outline"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
-                <Button><Download className="mr-2 h-4 w-4" /> Download</Button>
+                <Button variant="outline" disabled={!generatedDoc}><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
+                <Button variant="outline" disabled={!generatedDoc}><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
+                <Button disabled={!generatedDoc}><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
          </div>
          
@@ -160,26 +201,65 @@ export default function DocumentsPage() {
             </CardHeader>
          </Card>
 
-        <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card">
+        {loading ? (
+          <Card className="min-h-[400px]">
+            <CardHeader>
+              <Skeleton className="h-6 w-1/2 rounded-md" />
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-5/6 rounded-md" />
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-4 w-full mt-4 rounded-md" />
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-2/3 rounded-md" />
+            </CardContent>
+          </Card>
+        ) : generatedDoc ? (
+          <Card className="min-h-[400px] flex flex-col">
+            <CardHeader>
+              <CardTitle>{generatedDoc.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto">
+              <pre className="whitespace-pre-wrap font-sans text-sm text-card-foreground">
+                {generatedDoc.content}
+              </pre>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card">
             <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4">
               <FilePlus2 className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3>
             <p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p>
-        </Card>
+          </Card>
+        )}
         
          <div>
             <h3 className="text-xl font-bold mb-4">Recent Documents</h3>
-             <Card className="border-dashed min-h-[150px] flex flex-col items-center justify-center text-center p-8 bg-card">
-                <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4">
-                  <History className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">No recent documents found.</p>
-            </Card>
+            {recentDocs.length > 0 ? (
+              <div className="space-y-4">
+                {recentDocs.map((doc, index) => (
+                  <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setGeneratedDoc(doc)}>
+                    <CardHeader>
+                      <CardTitle className="text-base font-semibold">{doc.title}</CardTitle>
+                      <CardDescription>Generated a few moments ago</CardDescription>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed min-h-[150px] flex flex-col items-center justify-center text-center p-8 bg-card">
+                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4">
+                    <History className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">No recent documents found.</p>
+              </Card>
+            )}
          </div>
       </div>
     </div>
   );
 }
-
-    
