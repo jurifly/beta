@@ -9,31 +9,25 @@ import {
 } from '@/components/ui/chart';
 
 const chartData = [
-  { month: "Jan", sales: 186 },
-  { month: "Feb", sales: 305 },
-  { month: "Mar", sales: 237 },
-  { month: "Apr", sales: 173 },
-  { month: "May", sales: 209 },
-  { month: "Jun", sales: 214 },
-  { month: "Jul", sales: 284 },
-  { month: "Aug", sales: 312 },
-  { month: "Sep", sales: 250 },
-  { month: "Oct", sales: 320 },
-  { month: "Nov", sales: 390 },
-  { month: "Dec", sales: 410 },
+  { month: "Jan", actions: 18 },
+  { month: "Feb", actions: 30 },
+  { month: "Mar", actions: 23 },
+  { month: "Apr", actions: 17 },
+  { month: "May", actions: 20 },
+  { month: "Jun", actions: 28 },
 ];
 
 const chartConfig = {
-  sales: {
-    label: "Sales",
+  actions: {
+    label: "Actions",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig;
 
-export default function SalesChart() {
+export default function ComplianceChart() {
   return (
-    <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-      <BarChart accessibilityLayer data={chartData}>
+    <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+      <BarChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
         <XAxis
           dataKey="month"
           tickLine={false}
@@ -47,13 +41,13 @@ export default function SalesChart() {
           fontSize={12}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `$${value}`}
+          tickFormatter={(value) => `${value}`}
         />
         <ChartTooltip
           cursor={false}
           content={<ChartTooltipContent indicator="dot" hideLabel />}
         />
-        <Bar dataKey="sales" fill="var(--color-sales)" radius={8} />
+        <Bar dataKey="actions" fill="var(--color-actions)" radius={4} />
       </BarChart>
     </ChartContainer>
   );

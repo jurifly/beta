@@ -3,8 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'DashMate',
-  description: 'Your intelligent dashboard for business metrics.',
+  title: 'LexIQ.AI',
 };
 
 export default function RootLayout({
