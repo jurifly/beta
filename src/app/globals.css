@@ -82,3 +82,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .interactive-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .interactive-lift:hover {
+    @apply shadow-xl -translate-y-1 scale-[1.02];
+  }
+  .dark .interactive-lift:hover {
+    @apply shadow-primary/20;
+  }
+}
