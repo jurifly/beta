@@ -1,6 +1,6 @@
 'use client';
 
-import { Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, XAxis, YAxis } from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
@@ -24,10 +24,28 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function ComplianceChart() {
+export default function SalesChart() {
   return (
     <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-      <BarChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+      <AreaChart
+        accessibilityLayer
+        data={chartData}
+        margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
+      >
+        <defs>
+          <linearGradient id="fillActions" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor="var(--color-actions)"
+              stopOpacity={0.8}
+            />
+            <stop
+              offset="95%"
+              stopColor="var(--color-actions)"
+              stopOpacity={0.1}
+            />
+          </linearGradient>
+        </defs>
         <XAxis
           dataKey="month"
           tickLine={false}
@@ -47,8 +65,15 @@ export default function ComplianceChart() {
           cursor={false}
           content={<ChartTooltipContent indicator="dot" hideLabel />}
         />
-        <Bar dataKey="actions" fill="var(--color-actions)" radius={4} />
-      </BarChart>
+        <Area
+          dataKey="actions"
+          type="natural"
+          fill="url(#fillActions)"
+          stroke="var(--color-actions)"
+          strokeWidth={2}
+          fillOpacity={1}
+        />
+      </AreaChart>
     </ChartContainer>
   );
 }

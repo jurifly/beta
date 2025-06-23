@@ -33,10 +33,9 @@ import {
   Sun,
   Plus,
   ArrowRight,
-  Shield,
-  File,
   AlertTriangle,
-  GanttChartSquare
+  Building,
+  ShieldCheck,
 } from 'lucide-react';
 import MetricCard from './MetricCard';
 import SalesChart from './SalesChart';
@@ -125,10 +124,7 @@ const DashboardHeader = () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 text-lg font-semibold">
-          <Avatar className="w-6 h-6">
-            <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="company logo" />
-            <AvatarFallback>E</AvatarFallback>
-          </Avatar>
+          <Building className="w-6 h-6" />
           Example Private Limited Company
           <ChevronDown className="w-4 h-4" />
         </Button>
@@ -142,15 +138,11 @@ const DashboardHeader = () => (
     </DropdownMenu>
 
     <div className="flex items-center gap-4">
-      <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-        <Settings className="w-4 h-4" />
-        <span>Credits: 99999999999942</span>
-      </div>
-      <Button variant="ghost" size="icon">
-        <Bell className="w-5 h-5" />
-      </Button>
       <Button variant="ghost" size="icon">
         <Sun className="w-5 h-5" />
+      </Button>
+      <Button variant="ghost" size="icon">
+        <Bell className="w-5 h-5" />
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -208,7 +200,7 @@ export default function Dashboard() {
             </Card>
 
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 mb-8">
-              <MetricCard title="Risk Score" icon={Shield}>
+              <MetricCard title="Risk Score" icon={ShieldCheck}>
                 <div className="text-3xl font-bold text-green-600">N/A</div>
                 <p className="text-xs text-muted-foreground">Low Risk</p>
               </MetricCard>
@@ -216,7 +208,7 @@ export default function Dashboard() {
                 <div className="text-3xl font-bold">0</div>
                 <p className="text-xs text-muted-foreground">In next 30 days</p>
               </MetricCard>
-              <MetricCard title="Docs Generated" icon={File}>
+              <MetricCard title="Docs Generated" icon={FileText}>
                 <div className="text-3xl font-bold">0</div>
                 <p className="text-xs text-muted-foreground">All time</p>
               </MetricCard>
@@ -239,7 +231,7 @@ export default function Dashboard() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <GanttChartSquare />
+                    <ClipboardCheck />
                     <CardTitle>Compliance Checklist</CardTitle>
                   </div>
                   <CardDescription>Key compliance items for your company.</CardDescription>
