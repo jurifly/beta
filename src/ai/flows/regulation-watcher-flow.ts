@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow for generating a summary of regulatory updates.
@@ -6,13 +7,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-export const WatcherInputSchema = z.object({
+const WatcherInputSchema = z.object({
   portal: z.string().describe('The regulatory portal to get updates from (e.g., "MCA", "SEBI", "RBI").'),
   frequency: z.string().describe('The desired frequency of the summary (e.g., "daily", "weekly").'),
 });
 export type WatcherInput = z.infer<typeof WatcherInputSchema>;
 
-export const WatcherOutputSchema = z.object({
+const WatcherOutputSchema = z.object({
   summary: z.string().describe('A markdown-formatted summary of the latest regulatory updates.'),
 });
 export type WatcherOutput = z.infer<typeof WatcherOutputSchema>;
