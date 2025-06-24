@@ -1,6 +1,6 @@
 "use client"
 
-import { AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from "recharts"
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -332,5 +332,4 @@ export default function AnalyticsPage() {
     </div>
   )
 }
-
     
