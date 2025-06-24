@@ -24,6 +24,9 @@ const AuthContext = createContext<AuthContextType>({
   addCredits: () => {},
 });
 
+const USER_PROFILE_STORAGE_KEY = 'userProfile';
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -33,13 +36,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Simulate fetching user data. In a real app, this would be an API call.
     const timer = setTimeout(() => {
+       let storedProfile: UserProfile | null = null;
+      try {
+        const storedProfileString = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+        if (storedProfileString) {
+          storedProfile = JSON.parse(storedProfileString);
+        }
+      } catch (error) {
+        console.error("Failed to parse user profile from localStorage", error);
+        localStorage.removeItem(USER_PROFILE_STORAGE_KEY);
+      }
+      
       const mockUser: User = {
         uid: 'mock-user-123',
         email: 'heckerrr@example.com',
         displayName: 'HECKERRR',
       };
       
-      const mockUserProfile: UserProfile = {
+      const defaultProfile: UserProfile = {
         role: 'Founder',
         plan: 'Free',
         companies: [
@@ -53,8 +67,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         credits: 10,
       };
 
+      const finalProfile = storedProfile || defaultProfile;
+
       setUser(mockUser);
-      setUserProfile(mockUserProfile);
+      setUserProfile(finalProfile);
+      
+      try {
+        if (!storedProfile) {
+            localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(finalProfile));
+        }
+      } catch (error) {
+         console.error("Failed to save user profile to localStorage", error);
+      }
+
+
       setLoading(false);
     }, 500);
 
@@ -64,9 +90,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
     setUserProfile(prev => {
       if (!prev) return null;
-      return { ...prev, ...updates };
+      const newProfile = { ...prev, ...updates };
+      try {
+        localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(newProfile));
+      } catch (error) {
+         console.error("Failed to save updated user profile to localStorage", error);
+      }
+      return newProfile;
     });
-    // In a real app, you would save this to your backend.
   }, []);
 
   const deductCredits = useCallback(async (amount: number) => {
@@ -80,10 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     const newCredits = (userProfile.credits ?? 0) - amount;
-    setUserProfile(prev => {
-      if (!prev) return null;
-      return { ...prev, credits: newCredits };
-    });
+    await updateUserProfile({ credits: newCredits });
     
     toast({
       title: "Credits Deducted",
@@ -91,19 +119,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     return true;
-  }, [userProfile, toast]);
+  }, [userProfile, toast, updateUserProfile]);
 
   const addCredits = useCallback((amount: number) => {
-    setUserProfile(prev => {
-      if (!prev) return null;
-      const newCredits = (prev.credits ?? 0) + amount;
-      toast({
+    if(!userProfile) return;
+    const newCredits = (userProfile.credits ?? 0) + amount;
+    updateUserProfile({ credits: newCredits });
+    toast({
         title: "Credits Added!",
         description: `You have successfully added ${amount} credits. Your new balance is ${newCredits}.`,
-      });
-      return { ...prev, credits: newCredits };
     });
-  }, [toast]);
+  }, [userProfile, toast, updateUserProfile]);
 
   const value = { user, userProfile, loading, updateUserProfile, deductCredits, addCredits };
 
