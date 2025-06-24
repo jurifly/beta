@@ -21,6 +21,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Lightbulb,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -42,6 +43,8 @@ import { ToastAction } from "@/components/ui/toast";
 import { useTypewriter } from "@/hooks/use-typewriter";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { UserProfile } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 
 
 const STEPS = [
@@ -78,6 +81,7 @@ type NavigatorState = {
 export default function SetupAssistantPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [navigatorState, setNavigatorState] = useState<NavigatorState>({ completedSteps: [] });
+  const { userProfile, loading } = useAuth();
 
   const goToNextStep = () => {
      setNavigatorState(prev => ({ ...prev, completedSteps: [...new Set([...prev.completedSteps, currentStep])] }));
@@ -93,17 +97,25 @@ export default function SetupAssistantPage() {
   const updateNavigatorState = (updates: Partial<NavigatorState>) => {
     setNavigatorState((prev) => ({ ...prev, ...updates }));
   };
+  
+  if (loading || !userProfile) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <Step1BusinessType onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
+        return <Step1BusinessType onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} userProfile={userProfile} />;
       case 2:
         return <Step2IncCodeFinder onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 3:
         return <Step3RegistrationGuide onComplete={goToNextStep} />;
       case 4:
-        return <Step4DocumentGenerator onComplete={goToNextStep} />;
+        return <Step4DocumentGenerator onComplete={goToNextStep} userProfile={userProfile} />;
       case 5:
         return <Step5FinalChecklist navigatorState={navigatorState} />;
       default:
@@ -178,10 +190,15 @@ interface StepProps {
     initialState: NavigatorState;
 }
 
-function Step1BusinessType({ onComplete, updateState, initialState }: StepProps) {
+interface Step1BusinessTypeProps extends StepProps {
+  userProfile: UserProfile;
+}
+
+function Step1BusinessType({ onComplete, updateState, initialState, userProfile }: Step1BusinessTypeProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.businessTypeResult);
+    const isLocked = userProfile.plan === 'Free';
 
     const { control, handleSubmit, formState: { errors } } = useForm<BusinessTypeFormData>({
         resolver: zodResolver(businessTypeFormSchema),
@@ -210,7 +227,17 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
   
     return (
         <div className="grid md:grid-cols-2 gap-8">
-            <div>
+            <div className="relative">
+                {isLocked && (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-8 rounded-lg">
+                        <Lock className="w-12 h-12 text-primary/20 mb-4" />
+                        <h3 className="text-xl font-bold mb-2">Unlock AI Recommendations</h3>
+                        <p className="text-muted-foreground mb-6">Upgrade to our Pro plan to get personalized business structure recommendations from our AI.</p>
+                        <Button asChild>
+                            <Link href="/dashboard/billing">Upgrade to Pro</Link>
+                        </Button>
+                    </div>
+                )}
                 <h2 className="text-xl font-bold">Find Your Ideal Business Structure</h2>
                 <p className="text-muted-foreground mt-1">Answer a few questions and our AI will recommend the best legal structure for your new venture.</p>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
@@ -218,7 +245,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                         <div className="space-y-2">
                             <Label>Number of Founders</Label>
                             <Controller name="founderCount" control={control} render={({ field }) => (
-                                <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value || 1)}>
+                                <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value || 1)} disabled={isLocked}>
                                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="1">1 Founder</SelectItem>
@@ -234,7 +261,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                         <div className="space-y-2">
                              <Label>Investment Plan</Label>
                              <Controller name="investmentPlan" control={control} render={({ field }) => (
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLocked}>
                                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Bootstrapped">Bootstrapped</SelectItem>
@@ -249,7 +276,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                      <div className="space-y-2">
                          <Label>Projected Annual Revenue</Label>
                          <Controller name="revenueGoal" control={control} render={({ field }) => (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLocked}>
                                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="< 10 Lakhs">Under ₹10 Lakhs</SelectItem>
@@ -263,11 +290,11 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                     <div className="space-y-2">
                         <Label htmlFor="businessDescription">Business Description</Label>
                         <Controller name="businessDescription" control={control} render={({ field }) => (
-                            <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances..." {...field} className="min-h-[100px]" />
+                            <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances..." {...field} className="min-h-[100px]" disabled={isLocked} />
                         )}/>
                         {errors.businessDescription && <p className="text-sm text-destructive">{errors.businessDescription.message}</p>}
                     </div>
-                    <Button type="submit" disabled={isLoading} className="w-full">
+                    <Button type="submit" disabled={isLoading || isLocked} className="w-full">
                         {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
                         Get Recommendation
                     </Button>
@@ -283,30 +310,41 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                 )}
                 {!isLoading && result && (
                     <div className="space-y-6 animate-in fade-in-50 duration-500">
-                        <Card className="bg-background text-center">
-                            <CardHeader>
-                                <CardTitle className="text-primary">{result.recommendedType}</CardTitle>
-                                <CardDescription className="font-semibold text-base">{result.reasoning}</CardDescription>
+                        <Card className="bg-background">
+                            <CardHeader className="text-center">
+                                <CardTitle className="text-2xl text-primary">{result.recommendedType}</CardTitle>
                             </CardHeader>
+                            <CardContent className="space-y-4">
+                                <p className="text-center text-muted-foreground">{result.reasoning}</p>
+                                <Separator />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsUp className="text-green-500"/> Pros</h4>
+                                        <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
+                                            {result.pros.map((pro, i) => <li key={i}>{pro}</li>)}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsDown className="text-red-500"/> Cons</h4>
+                                        <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
+                                            {result.cons.map((con, i) => <li key={i}>{con}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {result.alternativeOption && (
+                                    <>
+                                        <Separator />
+                                        <div className="flex items-center gap-3 p-3 bg-amber-100/50 border border-amber-500/20 rounded-lg">
+                                            <Lightbulb className="text-amber-600 h-5 w-5 shrink-0"/>
+                                            <div>
+                                                <h4 className="font-semibold text-amber-900">Alternative to Consider</h4>
+                                                <p className="text-sm text-amber-800">{result.alternativeOption}</p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </CardContent>
                         </Card>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Card>
-                                <CardHeader><CardTitle className="text-base flex items-center gap-2"><ThumbsUp className="text-green-500"/> Pros</CardTitle></CardHeader>
-                                <CardContent><ul className="list-disc pl-4 space-y-1 text-sm">{result.pros.map((pro, i) => <li key={i}>{pro}</li>)}</ul></CardContent>
-                            </Card>
-                            <Card>
-                                <CardHeader><CardTitle className="text-base flex items-center gap-2"><ThumbsDown className="text-red-500"/> Cons</CardTitle></CardHeader>
-                                <CardContent><ul className="list-disc pl-4 space-y-1 text-sm">{result.cons.map((con, i) => <li key={i}>{con}</li>)}</ul></CardContent>
-                            </Card>
-                        </div>
-                        {result.alternativeOption && (
-                            <Card className="bg-amber-100/50 border-amber-500/30">
-                                <CardHeader className="flex-row items-center gap-3">
-                                    <Lightbulb className="text-amber-600"/>
-                                    <CardTitle className="text-base text-amber-800">Alternative to Consider: {result.alternativeOption}</CardTitle>
-                                </CardHeader>
-                            </Card>
-                        )}
                         <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
                     </div>
                 )}
@@ -458,6 +496,11 @@ function Step3RegistrationGuide({ onComplete }: { onComplete: () => void }) {
     );
 }
 
+interface Step4DocumentGeneratorProps {
+    onComplete: () => void;
+    userProfile: UserProfile;
+}
+
 // --- Step 4: Document Generation ---
 const docTemplates = [
   { name: "NOC from Landlord", desc: "A no-objection certificate required if your registered office is a rented property.", premium: false },
@@ -466,11 +509,10 @@ const docTemplates = [
   { name: "Registered Address Declaration", desc: "A declaration for the company's registered office address.", premium: true },
 ];
 
-function Step4DocumentGenerator({ onComplete }: { onComplete: () => void }) {
+function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGeneratorProps) {
     const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
     const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
     const { toast } = useToast();
-    const { userProfile } = useAuth();
     
     const [editorContent, setEditorContent] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -667,5 +709,7 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         </div>
     )
 }
+
+    
 
     
