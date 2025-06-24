@@ -1,6 +1,6 @@
 "use client"
 
-import { AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from "recharts"
+import { AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, Area } from "recharts"
 import {
   Card,
   CardContent,
@@ -23,19 +23,30 @@ import { useAuth } from "@/hooks/auth"
 import { UpgradePrompt } from "@/components/upgrade-prompt"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { generateFilings } from "@/ai/flows/filing-generator-flow"
+import { format } from "date-fns"
+import { useToast } from "@/hooks/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 
+type Deadline = {
+    date: string;
+    title: string;
+    overdue: boolean;
+};
 
 // --- Founder Analytics ---
 function FounderAnalytics() {
   const { userProfile } = useAuth();
   const [checklistState, setChecklistState] = useState<{ data: GenerateDDChecklistOutput, timestamp: string } | null>(null);
-  const [deadlines, setDeadlines] = useState<any[]>([]);
-  const activeCompanyId = userProfile?.activeCompanyId;
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (!activeCompanyId) return;
+    if (!activeCompany) return;
     
-    const checklistKey = `ddChecklistData-${activeCompanyId}`;
+    const checklistKey = `ddChecklistData-${activeCompany.id}`;
     try {
         const savedChecklist = localStorage.getItem(checklistKey);
         if (savedChecklist) {
@@ -46,19 +57,43 @@ function FounderAnalytics() {
         localStorage.removeItem(checklistKey);
     }
     
-    // Generate dynamic deadlines based on active company
-    if (activeCompanyId === '1') {
-        setDeadlines([
-            { date: '2024-07-20', title: 'GSTR-3B Filing', overdue: false },
-            { date: '2024-06-30', title: 'TDS Payment', overdue: true }, // example overdue
-        ]);
-    } else {
-         setDeadlines([
-            { date: '2024-07-25', title: 'Advance Tax Payment', overdue: false },
-         ]);
-    }
+    const fetchFilings = async () => {
+        if (!activeCompany) {
+          setIsLoading(false);
+          return;
+        }
+        setIsLoading(true);
+        try {
+          const currentDate = format(new Date(), 'yyyy-MM-dd');
+          const response = await generateFilings({
+            companyType: activeCompany.type,
+            incorporationDate: activeCompany.incorporationDate,
+            currentDate: currentDate,
+          });
 
-  }, [activeCompanyId]);
+          const generatedEvents = response.filings.map(filing => ({
+            date: filing.date,
+            title: filing.title,
+            overdue: filing.status === 'overdue'
+          }));
+          
+          setDeadlines(generatedEvents);
+
+        } catch (error) {
+            console.error("Failed to fetch AI-generated filings for analytics:", error);
+            toast({
+                title: "Could not fetch filings",
+                description: "There was an error generating analytics data.",
+                variant: "destructive"
+            });
+            setDeadlines([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchFilings();
+
+  }, [activeCompany, toast]);
 
   const { completedCount, totalCount, progress, pendingItems } = useMemo(() => {
     if (!checklistState?.data) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
@@ -81,7 +116,7 @@ function FounderAnalytics() {
   const { hygieneScore, filingPerformance, documentHealth } = useMemo(() => {
     const checklistProgress = progress; // from checklist state
     const totalFilings = deadlines.length;
-    const overdueFilings = deadlines.filter(d => new Date(d.date) < new Date()).length;
+    const overdueFilings = deadlines.filter(d => d.overdue).length;
     const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
     
     const docHealth = checklistProgress;
@@ -89,7 +124,7 @@ function FounderAnalytics() {
     const score = Math.round((docHealth * 0.6) + (filingPerf * 0.4));
 
     return {
-        hygieneScore: score || "N/A",
+        hygieneScore: score || 0,
         filingPerformance: Math.round(filingPerf),
         documentHealth: Math.round(docHealth),
     };
@@ -103,24 +138,37 @@ function FounderAnalytics() {
                 <CardDescription>An AI-generated score based on your company's legal preparedness and compliance health.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-                 <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary/10 to-transparent rounded-lg text-center border">
-                    <p className="text-6xl font-bold text-primary">{hygieneScore}</p>
-                    <p className="text-lg font-medium">Out of 100</p>
-                </div>
-                <div className="lg:col-span-3 space-y-4">
-                    <div>
-                        <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance</span><span>{filingPerformance}%</span></div>
-                        <Progress value={filingPerformance} />
-                    </div>
-                    <div>
-                        <div className="flex justify-between text-sm mb-1 font-medium"><span>Document Health</span><span>{documentHealth}%</span></div>
-                        <Progress value={documentHealth} />
-                    </div>
-                    <div>
-                        <div className="flex justify-between text-sm mb-1 font-medium"><span>Regulatory Adherence</span><span>100%</span></div>
-                        <Progress value={100} />
-                    </div>
-                </div>
+                 {isLoading ? (
+                    <>
+                        <Skeleton className="h-[140px] w-full rounded-lg" />
+                        <div className="lg:col-span-3 space-y-4 w-full">
+                            <Skeleton className="h-8 w-full rounded-lg" />
+                            <Skeleton className="h-8 w-full rounded-lg" />
+                            <Skeleton className="h-8 w-full rounded-lg" />
+                        </div>
+                    </>
+                 ) : (
+                    <>
+                        <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary/10 to-transparent rounded-lg text-center border">
+                            <p className="text-6xl font-bold text-primary">{hygieneScore}</p>
+                            <p className="text-lg font-medium">Out of 100</p>
+                        </div>
+                        <div className="lg:col-span-3 space-y-4">
+                            <div>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance</span><span>{filingPerformance}%</span></div>
+                                <Progress value={filingPerformance} />
+                            </div>
+                            <div>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Document Health</span><span>{documentHealth}%</span></div>
+                                <Progress value={documentHealth} />
+                            </div>
+                            <div>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Regulatory Adherence</span><span>100%</span></div>
+                                <Progress value={100} />
+                            </div>
+                        </div>
+                    </>
+                 )}
             </CardContent>
         </Card>
 
@@ -237,7 +285,7 @@ function CAAnalytics() {
                             <CartesianGrid vertical={false} strokeDasharray="3 3"/>
                             <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
                             <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="dot" />} />
-                            <AreaChart type="monotone" dataKey="compliance" strokeWidth={2} stroke="hsl(var(--chart-1))" fill="url(#colorCompliance)" />
+                            <Area type="monotone" dataKey="compliance" strokeWidth={2} stroke="hsl(var(--chart-1))" fill="url(#colorCompliance)" />
                         </AreaChart>
                     </ChartContainer>
                 </CardContent>

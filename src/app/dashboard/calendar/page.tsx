@@ -9,6 +9,7 @@ import {
   Download,
   FileText,
   Copy,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -34,9 +35,10 @@ import {
 } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/auth';
 import { cn } from '@/lib/utils';
-import { add, format, getDate } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { generateFilings } from '@/ai/flows/filing-generator-flow';
 
 type LegendProps = {
     color: string;
@@ -63,28 +65,47 @@ export default function CalendarPage() {
   const { userProfile } = useAuth();
   const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (userProfile?.activeCompanyId) {
-        const companyId = userProfile.activeCompanyId;
-        const today = new Date();
-        if (companyId === '1') {
-            setEvents([
-                { date: add(today, { days: 5 }), title: "GSTR-3B Filing", type: "GST Filing", status: "upcoming" },
-                { date: add(today, { days: 12 }), title: "Form AOC-4 Filing", type: "ROC Filing", status: "upcoming" },
-                { date: add(today, { days: -3 }), title: "TDS Payment", type: "ITR Filing", status: "overdue" },
-                { date: add(today, { days: -10 }), title: "GSTR-1 Filing", type: "GST Filing", status: "completed" },
-            ]);
-        } else { // companyId === '2'
-             setEvents([
-                { date: add(today, { days: 8 }), title: "Quarterly TDS Return", type: "ITR Filing", status: "upcoming" },
-                { date: add(today, { days: -5 }), title: "Professional Tax Payment", type: "GST Filing", status: "overdue" },
-                { date: add(today, { days: -15 }), title: "Board Meeting Minutes", type: "ROC Filing", status: "completed" },
-                { date: add(today, { days: 25 }), title: "Finalize Annual Accounts", type: "Task", status: "upcoming" },
-            ]);
+    const fetchFilings = async () => {
+        if (!activeCompany) {
+          setIsLoading(false);
+          return;
+        };
+        setIsLoading(true);
+
+        try {
+          const currentDate = format(new Date(), 'yyyy-MM-dd');
+          const response = await generateFilings({
+            companyType: activeCompany.type,
+            incorporationDate: activeCompany.incorporationDate,
+            currentDate: currentDate,
+          });
+          
+          const generatedEvents = response.filings.map(filing => ({
+            ...filing,
+            // Add T00:00:00 to avoid timezone issues where the date might shift
+            date: new Date(filing.date + 'T00:00:00'),
+          }));
+
+          setEvents(generatedEvents);
+
+        } catch (error) {
+            console.error("Failed to fetch AI-generated filings:", error);
+            toast({
+                title: "Could not fetch filings",
+                description: "There was an error generating compliance dates with AI. Please try again later.",
+                variant: "destructive"
+            });
+            setEvents([]); // Clear events on error
+        } finally {
+            setIsLoading(false);
         }
-    }
-  }, [userProfile?.activeCompanyId]);
+    };
+
+    fetchFilings();
+  }, [activeCompany, toast]);
 
   const handleCalendarSync = () => {
     toast({
@@ -164,7 +185,11 @@ export default function CalendarPage() {
             <CardDescription>A summary of events for the selected day.</CardDescription>
           </CardHeader>
           <CardContent className="flex-1">
-            {selectedDayEvents.length > 0 ? (
+            {isLoading ? (
+                <div className="h-full flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+            ) : selectedDayEvents.length > 0 ? (
                 <div className="space-y-4">
                 {selectedDayEvents.map(event => (
                     <div key={event.title} className="flex items-start gap-3 p-4 border rounded-lg">

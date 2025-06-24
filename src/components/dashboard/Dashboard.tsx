@@ -28,6 +28,7 @@ import {
   Coffee,
   Receipt,
   Ticket,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,8 @@ import { cn } from "@/lib/utils";
 import type { UserProfile } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { generateFilings } from "@/ai/flows/filing-generator-flow";
+import { format } from "date-fns";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -56,15 +59,24 @@ const ComplianceActivityChart = dynamic(
 
 // --- Helper Components ---
 
-const StatCard = ({ title, value, subtext, icon, colorClass }: { title: string, value: string, subtext: string, icon: React.ReactNode, colorClass?: string }) => (
+const StatCard = ({ title, value, subtext, icon, colorClass, isLoading }: { title: string, value: string, subtext: string, icon: React.ReactNode, colorClass?: string, isLoading?: boolean }) => (
     <Card className="interactive-lift">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
             <div className="text-muted-foreground">{icon}</div>
         </CardHeader>
         <CardContent>
-            <div className={cn("text-2xl font-bold", colorClass)}>{value}</div>
-            <p className="text-xs text-muted-foreground">{subtext}</p>
+            {isLoading ? (
+                <>
+                    <Skeleton className="h-8 w-1/2 mb-1" />
+                    <Skeleton className="h-4 w-3/4" />
+                </>
+            ) : (
+                <>
+                    <div className={cn("text-2xl font-bold", colorClass)}>{value}</div>
+                    <p className="text-xs text-muted-foreground">{subtext}</p>
+                </>
+            )}
         </CardContent>
     </Card>
 );
@@ -97,38 +109,54 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         checklist: { id: number; text: string; completed: boolean }[];
         riskScore: number;
         alerts: number;
-    }>({ filings: 0, checklist: [], riskScore: 0, alerts: 0 });
+        loading: boolean;
+    }>({ filings: 0, checklist: [], riskScore: 0, alerts: 0, loading: true });
+    
+    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
 
     useEffect(() => {
-        if (userProfile?.activeCompanyId) {
-            const companyId = userProfile.activeCompanyId;
-            // Generate pseudo-random mock data based on company ID
-            if (companyId === '1') {
-                setDynamicData({
-                    filings: 3,
-                    checklist: [
-                        { id: 1, text: "GSTR-3B monthly filing", completed: true },
-                        { id: 2, text: "Form AOC-4 annual filing", completed: false },
-                        { id: 3, text: "TDS Payment for Q3", completed: false },
-                    ],
-                    riskScore: 85,
-                    alerts: 1,
+        const fetchDashboardData = async () => {
+            if (!activeCompany) {
+                setDynamicData(prev => ({ ...prev, loading: false }));
+                return;
+            }
+            setDynamicData(prev => ({ ...prev, loading: true }));
+
+            try {
+                const currentDate = format(new Date(), 'yyyy-MM-dd');
+                const response = await generateFilings({
+                    companyType: activeCompany.type,
+                    incorporationDate: activeCompany.incorporationDate,
+                    currentDate: currentDate,
                 });
-            } else { // companyId === '2'
+
+                const upcomingFilings = response.filings.filter(f => f.status === 'upcoming');
+                const overdueFilings = response.filings.filter(f => f.status === 'overdue');
+                
+                const checklistItems = response.filings.slice(0, 3).map((filing, index) => ({
+                    id: index + 1,
+                    text: filing.title,
+                    completed: filing.status === 'completed'
+                }));
+
+                const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
+
                 setDynamicData({
-                    filings: 5,
-                    checklist: [
-                        { id: 1, text: "Verify Form 26AS", completed: true },
-                        { id: 2, text: "File Form MGT-7", completed: true },
-                        { id: 3, text: "Advance Tax Payment", completed: false },
-                        { id: 4, text: "GSTR-1 quarterly filing", completed: false },
-                    ],
-                    riskScore: 92,
-                    alerts: 0,
+                    filings: upcomingFilings.length,
+                    checklist: checklistItems,
+                    riskScore: riskScore,
+                    alerts: overdueFilings.length,
+                    loading: false
                 });
+
+            } catch (error) {
+                console.error("Failed to fetch AI-generated dashboard data:", error);
+                setDynamicData({ filings: 0, checklist: [], riskScore: 0, alerts: 0, loading: false });
             }
         }
-    }, [userProfile?.activeCompanyId]);
+
+        fetchDashboardData();
+    }, [activeCompany]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -143,10 +171,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     </Button>
                 </Card>
             </div>
-            <StatCard title="Risk Score" value={isPro ? `${dynamicData.riskScore}` : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} />
-            <StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} />
-            <StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} />
-            <StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} />
+            <StatCard title="Risk Score" value={isPro ? `${dynamicData.riskScore}` : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} isLoading={dynamicData.loading} />
+            <StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} isLoading={dynamicData.loading} />
+            <StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} isLoading={false} />
+            <StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} />
             
             <div className="md:col-span-2 lg:col-span-2">
               <ComplianceActivityChart />
@@ -158,7 +186,13 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     <CardDescription>Key compliance items for your company.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    {dynamicData.checklist.length > 0 ? (
+                    {dynamicData.loading ? (
+                        <div className="space-y-3">
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-5/6" />
+                            <Skeleton className="h-6 w-full" />
+                        </div>
+                    ) : dynamicData.checklist.length > 0 ? (
                         dynamicData.checklist.map(item => (
                             <div key={item.id} className="flex items-center gap-3 text-sm">
                                 <CheckCircle className={cn("h-5 w-5", item.completed ? "text-green-500" : "text-muted-foreground/30")} />
@@ -167,7 +201,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         ))
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
-                            <p>No items yet. Connect your company data to get started.</p>
+                            <p>No items yet. AI couldn't generate a checklist.</p>
                         </div>
                     )}
                 </CardContent>
@@ -350,7 +384,19 @@ export default function Dashboard() {
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
   const renderDesktopDashboardByRole = () => {
-    if (!userProfile) return null;
+    if (!userProfile) return <div className="space-y-6">
+        <Skeleton className="h-24 w-full" />
+        <div className="grid grid-cols-4 gap-6">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+        </div>
+         <div className="grid grid-cols-2 gap-6">
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-96 w-full" />
+        </div>
+    </div>;
     switch (userProfile.role) {
       case 'Founder':
         return <FounderDashboard userProfile={userProfile} />;
