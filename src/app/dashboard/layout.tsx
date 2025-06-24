@@ -26,6 +26,7 @@ import {
   FolderKanban,
   Library,
   ChevronDown,
+  Network,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -50,6 +51,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, premium: false },
+  businessSetup: { href: "/dashboard/business-setup", label: "Setup", icon: Network, premium: true },
   aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Assistant", icon: Sparkles, premium: false },
   documents: { href: "/dashboard/documents", label: "Documents", icon: FileText, premium: false },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar, premium: true },
@@ -69,6 +71,7 @@ type NavItem = typeof navItemConfig[keyof typeof navItemConfig];
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
+  navItemConfig.businessSetup,
   navItemConfig.aiCopilot,
   navItemConfig.documents,
   navItemConfig.calendar,
@@ -510,5 +513,3 @@ const MobileBottomNav = () => {
     </div>
   )
 }
-
-    

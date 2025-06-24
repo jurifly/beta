@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -94,13 +95,15 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-4">
-                 <Card className="p-6 bg-primary/10 border-primary/20 interactive-lift">
-                    <CardTitle className="flex items-center gap-3"><Sparkles/> Your AI Legal Assistant</CardTitle>
-                    <CardDescription className="mt-2">Not sure what you need to do this month? Ask our AI for a personalized compliance checklist.</CardDescription>
-                    <Button asChild className="mt-4">
-                        <Link href="/dashboard/ai-copilot">Ask AI <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                <Card className="bg-gradient-to-r from-primary/10 via-card to-card border-primary/20 p-6 flex flex-col md:flex-row items-center justify-between gap-6 interactive-lift">
+                    <div>
+                        <CardTitle className="flex items-center gap-3 font-headline"><Network/> Business Setup Navigator</CardTitle>
+                        <CardDescription className="mt-2 max-w-2xl">Get a step-by-step AI-guided roadmap for registering your company, getting your GST number, and more.</CardDescription>
+                    </div>
+                    <Button asChild size="lg" className="shrink-0 w-full md:w-auto">
+                        <Link href="/dashboard/business-setup">Start Business Setup <ArrowRight className="ml-2 h-4 w-4"/></Link>
                     </Button>
-                 </Card>
+                </Card>
             </div>
             <StatCard title="Risk Score" value={isPro ? "N/A" : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} />
             <StatCard title="Upcoming Filings" value="0" subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} />
