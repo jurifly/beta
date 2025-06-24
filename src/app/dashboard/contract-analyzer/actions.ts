@@ -1,28 +1,27 @@
 'use server';
 
-import { analyzeContract, type ContractAnalyzerInput, type ContractAnalyzerOutput } from '@/ai/flows/contract-analyzer-flow';
+import { analyzeContract, type AnalyzeContractInput, type AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
 
 type FormState = {
-  data: ContractAnalyzerOutput | null;
+  data: AnalyzeContractOutput | null;
   error: string | null;
-  timestamp: string | null;
 };
 
-export async function generateContractAnalysis(previousState: FormState, formData: FormData): Promise<FormState> {
-  const contractText = formData.get('contractText') as string;
+export async function analyzeContractAction(previousState: FormState, formData: FormData): Promise<FormState> {
+  const fileDataUri = formData.get('fileDataUri') as string;
 
-  if (!contractText || contractText.length < 100) {
-    return { data: null, error: 'Contract text must be at least 100 characters.', timestamp: null };
+  if (!fileDataUri) {
+    return { data: null, error: 'File data is missing. Please try uploading again.' };
   }
   
-  const input: ContractAnalyzerInput = { contractText };
+  const input: AnalyzeContractInput = { fileDataUri };
 
   try {
     const result = await analyzeContract(input);
-    return { data: result, error: null, timestamp: new Date().toISOString() };
+    return { data: result, error: null };
   } catch (e: any) {
     console.error('AI Flow Error:', e);
     const errorMessage = e.message || 'An unexpected error occurred.';
-    return { data: null, error: `AI analysis failed: ${errorMessage}`, timestamp: null };
+    return { data: null, error: `AI analysis failed: ${errorMessage}` };
   }
 }
