@@ -172,41 +172,46 @@ export default function IntegrationsPage() {
         <CardContent className="space-y-6">
             <div className="p-6 border rounded-lg bg-muted/40 space-y-4">
                 <h3 className="font-semibold text-lg">Create a New Workflow</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
-                    <div className="md:col-span-3 grid md:grid-cols-3 gap-4 items-center">
-                        <div className="space-y-2">
-                            <Label className="text-xs text-muted-foreground">Trigger</Label>
-                            <Select value={newWorkflow.trigger} onValueChange={(v) => setNewWorkflow(w => ({...w, trigger: v}))}>
-                                <SelectTrigger><SelectValue placeholder="When this happens..."/></SelectTrigger>
-                                <SelectContent>
-                                    {workflowTriggers.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <ArrowRight className="w-6 h-6 text-muted-foreground mx-auto hidden md:block" />
-                        <div className="space-y-2">
-                             <Label className="text-xs text-muted-foreground">Action</Label>
-                            <Select value={newWorkflow.action} onValueChange={(v) => setNewWorkflow(w => ({...w, action: v}))}>
-                                <SelectTrigger><SelectValue placeholder="Do this..."/></SelectTrigger>
-                                <SelectContent>
-                                    {workflowActions.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <ArrowRight className="w-6 h-6 text-muted-foreground mx-auto hidden md:block" />
-                         <div className="space-y-2">
-                             <Label className="text-xs text-muted-foreground">Notification</Label>
-                            <Select value={newWorkflow.notification} onValueChange={(v) => setNewWorkflow(w => ({...w, notification: v}))}>
-                                <SelectTrigger><SelectValue placeholder="Then notify..."/></SelectTrigger>
-                                <SelectContent>
-                                    {workflowNotifications.map(n => <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                 <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
+                    <div className="space-y-2 w-full md:flex-1">
+                        <Label>Trigger</Label>
+                        <Select value={newWorkflow.trigger} onValueChange={(v) => setNewWorkflow(w => ({...w, trigger: v}))}>
+                            <SelectTrigger><SelectValue placeholder="When this happens..."/></SelectTrigger>
+                            <SelectContent>
+                                {workflowTriggers.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <Button className="w-full md:w-auto self-end interactive-lift" onClick={handleCreateWorkflow}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Create
-                    </Button>
+
+                    <ArrowRight className="w-6 h-6 text-muted-foreground hidden md:block" />
+                    
+                    <div className="space-y-2 w-full md:flex-1">
+                         <Label>Action</Label>
+                        <Select value={newWorkflow.action} onValueChange={(v) => setNewWorkflow(w => ({...w, action: v}))}>
+                            <SelectTrigger><SelectValue placeholder="Do this..."/></SelectTrigger>
+                            <SelectContent>
+                                {workflowActions.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <ArrowRight className="w-6 h-6 text-muted-foreground hidden md:block" />
+
+                     <div className="space-y-2 w-full md:flex-1">
+                         <Label>Notification</Label>
+                        <Select value={newWorkflow.notification} onValueChange={(v) => setNewWorkflow(w => ({...w, notification: v}))}>
+                            <SelectTrigger><SelectValue placeholder="Then notify..."/></SelectTrigger>
+                            <SelectContent>
+                                {workflowNotifications.map(n => <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="w-full md:w-auto">
+                        <Button className="w-full interactive-lift" onClick={handleCreateWorkflow}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Create
+                        </Button>
+                    </div>
                 </div>
             </div>
              <div>
@@ -214,25 +219,25 @@ export default function IntegrationsPage() {
                 {workflows.length > 0 ? (
                     <div className="space-y-4">
                         {workflows.map(wf => (
-                            <div key={wf.id} className="p-4 border rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <Card key={wf.id} className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 interactive-lift">
                                 <div className="flex items-center gap-4 font-medium flex-wrap">
-                                    <span className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
-                                        <span className="text-primary">When:</span> {getLabel(wf.trigger, workflowTriggers)}
+                                    <span className="flex items-center gap-2 text-sm">
+                                        <span className="text-muted-foreground">When:</span> {getLabel(wf.trigger, workflowTriggers)}
                                     </span>
                                     <ArrowRight className="w-5 h-5 text-muted-foreground hidden md:block" />
-                                    <span className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
-                                        <span className="text-primary">Do:</span> {getLabel(wf.action, workflowActions)}
+                                    <span className="flex items-center gap-2 text-sm">
+                                        <span className="text-muted-foreground">Do:</span> {getLabel(wf.action, workflowActions)}
                                     </span>
                                      <ArrowRight className="w-5 h-5 text-muted-foreground hidden md:block" />
-                                     <span className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
-                                        <span className="text-primary">Notify:</span> {getLabel(wf.notification, workflowNotifications)}
+                                     <span className="flex items-center gap-2 text-sm">
+                                        <span className="text-muted-foreground">Notify:</span> {getLabel(wf.notification, workflowNotifications)}
                                     </span>
                                 </div>
                                 <div className="flex gap-2 self-end md:self-center">
                                     <Button variant="ghost" size="icon"><Play className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleDeleteWorkflow(wf.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                 </div>
-                            </div>
+                            </Card>
                         ))}
                     </div>
                 ) : (
