@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo, useState, useEffect, useTransition, useCallback } from "react"
@@ -13,6 +14,7 @@ import { Loader2, Sparkles, FolderCheck, Download, FileUp, MessageSquare, Lock, 
 import { Progress } from "@/components/ui/progress"
 import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem } from "@/lib/types"
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
+import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/auth"
 import { Input } from "@/components/ui/input"
@@ -21,7 +23,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
 import { useDropzone, type FileRejection } from "react-dropzone"
-import { generateDiligenceChecklist } from "./actions"
+import { generateDiligenceChecklist, validateComplianceAction } from "./actions"
 
 
 const initialDiligenceState: { data: RawChecklistOutput | null; error: string | null } = {
@@ -29,7 +31,7 @@ const initialDiligenceState: { data: RawChecklistOutput | null; error: string | 
   error: null,
 }
 
-const initialComplianceState = { data: null, error: null };
+const initialComplianceState: { data: ComplianceValidatorOutput | null; error: string | null } = { data: null, error: null };
 
 type ChecklistState = {
   data: GenerateDDChecklistOutput | null;
@@ -55,10 +57,28 @@ function SubmitButton({ isRegenerate }: { isRegenerate: boolean }) {
 function ComplianceValidator() {
     const { toast } = useToast();
     const { deductCredits } = useAuth();
-    const [isPending, startTransition] = useTransition();
     const [file, setFile] = useState<File | null>(null);
-    const [state, setState] = useState(initialComplianceState);
+    const [fileDataUri, setFileDataUri] = useState<string | null>(null);
     const [framework, setFramework] = useState('SOC2');
+
+    const [state, formAction] = useFormState(validateComplianceAction, initialComplianceState);
+    const [isPending, startTransition] = useTransition();
+
+    useEffect(() => {
+        if (state.error) {
+            toast({
+                variant: "destructive",
+                title: "Analysis Failed",
+                description: state.error,
+            });
+        }
+        if (state.data) {
+             toast({
+                title: "Analysis Complete",
+                description: "Your compliance report is ready.",
+            });
+        }
+    }, [state, toast]);
 
     const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
       if (fileRejections.length > 0) {
@@ -70,7 +90,13 @@ function ComplianceValidator() {
         return
       }
        if (acceptedFiles[0]) {
-        setFile(acceptedFiles[0])
+        const uploadedFile = acceptedFiles[0];
+        setFile(uploadedFile);
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+            setFileDataUri(loadEvent.target?.result as string);
+        }
+        reader.readAsDataURL(uploadedFile);
       }
     }, [toast]);
 
@@ -81,7 +107,18 @@ function ComplianceValidator() {
     });
 
     const handleAnalysis = async () => {
-        toast({ variant: 'destructive', title: 'AI Feature Removed', description: 'This feature has been temporarily removed.' });
+        if (!fileDataUri) {
+            toast({ variant: 'destructive', title: 'File Missing', description: 'Please upload a document to analyze.' });
+            return;
+        }
+        if (!await deductCredits(10)) return;
+
+        startTransition(() => {
+            const formData = new FormData();
+            formData.append('fileDataUri', fileDataUri);
+            formData.append('framework', framework);
+            formAction(formData);
+        });
     };
 
     return (
@@ -89,7 +126,7 @@ function ComplianceValidator() {
             <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><ShieldCheck className="text-primary"/> SOC2 / ISO / GDPR Toolkit</CardTitle>
-                    <CardDescription>Upload your IT and policy documents. Our AI will validate them against compliance checklists and suggest fixes.</CardDescription>
+                    <CardDescription>Upload your IT and policy documents. Our AI will validate them against compliance checklists and suggest fixes. Costs 10 credits per analysis.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div {...getRootProps()} className={cn("p-6 border-2 border-dashed rounded-lg text-center bg-muted/40 cursor-pointer", isDragActive && "border-primary bg-primary/10")}>
@@ -123,21 +160,21 @@ function ComplianceValidator() {
                     <Loader2 className="h-12 w-12 text-primary animate-spin" />
                     <p className="font-semibold text-lg text-foreground">Running analysis...</p>
                  </div>
-            ) : (state.data as any) && (
+            ) : (state.data) && (
                 <Card>
                     <CardHeader>
                         <CardTitle>{framework} Analysis Report</CardTitle>
-                        <CardDescription>Readiness Score: <span className="font-bold text-primary">{(state.data as any).readinessScore}/100</span></CardDescription>
+                        <CardDescription>Readiness Score: <span className="font-bold text-primary">{state.data.readinessScore}/100</span></CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
                             <h4 className="font-semibold mb-2">Summary</h4>
-                            <p className="text-sm text-muted-foreground">{(state.data as any).summary}</p>
+                            <p className="text-sm text-muted-foreground">{state.data.summary}</p>
                         </div>
                         <div>
                             <h4 className="font-semibold mb-2">Recommendations</h4>
                             <div className="space-y-2">
-                                {(state.data as any).missingItems.map((item:any, index:number) => (
+                                {state.data.missingItems.map((item, index) => (
                                     <div key={index} className="p-3 border rounded-md bg-muted/50">
                                         <p className="font-medium text-sm">{item.item}</p>
                                         <p className="text-xs text-muted-foreground">{item.recommendation}</p>
@@ -445,5 +482,3 @@ export default function DueDiligencePage() {
       </Card>
   )
 }
-
-    
