@@ -113,7 +113,7 @@ export default function DocumentsPage() {
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
           <div className="flex items-center justify-between px-1">
-            <Label htmlFor="explain-mode" className="flex items-center gap-2 font-medium text-sm">
+            <Label htmlFor="explain-mode" className="flex items-center gap-2 font-medium text-xs">
               Explain-as-you-build Mode
               <TooltipProvider>
                 <Tooltip>
