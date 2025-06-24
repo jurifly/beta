@@ -11,9 +11,9 @@ export async function analyzeContractAction(previousState: FormState, formData: 
   const fileDataUri = formData.get('fileDataUri') as string;
 
   if (!fileDataUri) {
-    return { data: null, error: 'File data is missing. Please try uploading again.' };
+    return { data: null, error: 'File is required for analysis.' };
   }
-  
+
   const input: AnalyzeContractInput = { fileDataUri };
 
   try {
@@ -22,6 +22,6 @@ export async function analyzeContractAction(previousState: FormState, formData: 
   } catch (e: any) {
     console.error('AI Flow Error:', e);
     const errorMessage = e.message || 'An unexpected error occurred.';
-    return { data: null, error: `AI analysis failed: ${errorMessage}` };
+    return { data: null, error: `AI is currently unavailable: ${errorMessage}` };
   }
 }
