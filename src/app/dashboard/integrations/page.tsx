@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react";
@@ -14,9 +13,9 @@ import { formatDistanceToNow } from 'date-fns';
 
 
 const initialIntegrations = [
-  { name: "Slack", description: "Get notifications and interact with LexIQ.AI bot.", icon: MessageSquare, connected: false, authUrl: "https://slack.com/oauth/v2/authorize" },
+  { name: "Slack", description: "Get notifications and interact with Clausey bot.", icon: MessageSquare, connected: false, authUrl: "https://slack.com/oauth/v2/authorize" },
   { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false, authUrl: "https://accounts.google.com/o/oauth2/v2/auth" },
-  { name: "Zapier", description: "Connect LexIQ.AI to thousands of other apps.", icon: Zap, connected: false, authUrl: "https://zapier.com/apps/lexiq-ai/integrations" },
+  { name: "Zapier", description: "Connect Clausey to thousands of other apps.", icon: Zap, connected: false, authUrl: "https://zapier.com/apps/clausey/integrations" },
   { name: "WhatsApp", description: "Receive urgent alerts directly on your phone.", icon: Bot, connected: false, authUrl: "#" }, // No standard web auth flow
   { name: "Notion", description: "Sync compliance calendars and task lists.", icon: Database, connected: false, authUrl: "https://api.notion.com/v1/oauth/authorize" },
   { name: "GitHub", description: "Example for another integration.", icon: GitBranch, connected: false, authUrl: "https://github.com/login/oauth/authorize" },
@@ -72,7 +71,7 @@ export default function IntegrationsPage() {
   if (!['Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
     return <UpgradePrompt 
       title="Unlock the Workflow & Automation Studio"
-      description="Connect LexIQ.AI to your favorite tools and build automated workflows. This is an Enterprise feature."
+      description="Connect Clausey to your favorite tools and build automated workflows. This is an Enterprise feature."
       icon={<Zap className="w-12 h-12 text-primary/20"/>}
     />;
   }
@@ -175,7 +174,7 @@ export default function IntegrationsPage() {
             <div>
                 <h2 className="text-2xl font-bold tracking-tight">Workflow & Automation Studio</h2>
                 <p className="text-muted-foreground">
-                  Connect LexIQ.AI to your favorite tools and build powerful, automated workflows.
+                  Connect Clausey to your favorite tools and build powerful, automated workflows.
                 </p>
             </div>
             <Card className="interactive-lift">

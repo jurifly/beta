@@ -170,7 +170,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                   <Link href="/dashboard" className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                      <span className="sr-only">LexIQ.AI</span>
+                      <span className="sr-only">Clausey</span>
                   </Link>
               </div>
 
@@ -289,7 +289,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
               <span className="flex items-center">
-                LexIQ.AI
+                Clausey
                  {userProfile.plan !== 'Free' && (
                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
                       <span className="mr-1.5">🔥</span>
@@ -408,7 +408,7 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary" onClick={handleLinkClick}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                 <span className="flex items-center">
-                  LexIQ.AI
+                  Clausey
                    {userProfile.plan !== 'Free' && (
                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
                       <span className="mr-1.5">🔥</span>

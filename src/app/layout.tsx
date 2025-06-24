@@ -5,7 +5,7 @@ import { AuthProvider } from '@/hooks/auth';
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export const metadata: Metadata = {
-  title: 'LexIQ.AI',
+  title: 'Clausey',
 };
 
 export default function RootLayout({

@@ -203,7 +203,7 @@ export default function BillingPage() {
                       {isCurrentPlan ? (
                         <span>Your Current Plan</span>
                       ) : plan.cta === "Contact Sales" ? (
-                        <a href="mailto:sales@lexiq.ai">{plan.cta}</a>
+                        <a href="mailto:sales@clausey.com">{plan.cta}</a>
                       ) : (
                         <Link href={`/dashboard/checkout?plan=${plan.name.toLowerCase().replace(' pro', '-pro').replace(' ', '-')}&cycle=${billingCycle}`}>
                            {isPopular && <Sparkles className="mr-2 h-4 w-4"/>} {plan.cta}
