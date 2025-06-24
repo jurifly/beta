@@ -1,8 +1,7 @@
 
 "use client"
 
-import { useCallback, useState, useEffect, useTransition, useRef } from "react"
-import { useFormState } from "react-dom"
+import { useCallback, useState, useEffect, useTransition, useRef, useActionState } from "react"
 import { useDropzone, type FileRejection } from "react-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -29,7 +28,7 @@ const initialState: { data: AnalyzeContractOutput | null; error: string | null }
 }
 
 export default function ContractAnalyzerForm() {
-  const [state, formAction] = useFormState(analyzeContractAction, initialState)
+  const [state, formAction] = useActionState(analyzeContractAction, initialState)
   const [isPending, startTransition] = useTransition()
   const [file, setFile] = useState<File | null>(null)
   const { toast } = useToast()
@@ -140,12 +139,12 @@ export default function ContractAnalyzerForm() {
       
       return (
         <div ref={reportRef} className="w-full h-full p-4 md:p-6 bg-muted/30 rounded-b-lg">
-           <h3 className="text-2xl font-bold text-center mb-6">Contract Analysis Report</h3>
+           <h3 className="text-xl font-bold text-center mb-6">Contract Analysis Report</h3>
           <div className="grid lg:grid-cols-5 gap-6">
             <div className="lg:col-span-3 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg"><FileText className="text-primary"/>Contract Overview</CardTitle>
+                        <CardTitle className="flex items-center gap-3 text-base"><FileText className="text-primary"/>Contract Overview</CardTitle>
                         <CardDescription>{state.data.summary.contractType}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 text-sm">
@@ -180,7 +179,7 @@ export default function ContractAnalyzerForm() {
                 </Card>
                 <Card className="interactive-lift flex flex-col">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg"><AlertTriangle className="text-red-500"/>Risk Flags ({state.data.riskFlags.length})</CardTitle>
+                        <CardTitle className="flex items-center gap-3 text-base"><AlertTriangle className="text-red-500"/>Risk Flags ({state.data.riskFlags.length})</CardTitle>
                     </CardHeader>
                     <CardContent className="flex-1 min-h-0">
                         {state.data.riskFlags.length > 0 ? (
@@ -203,7 +202,7 @@ export default function ContractAnalyzerForm() {
             <div className="lg:col-span-2 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="text-lg">Smart Legal Risk Score</CardTitle>
+                        <CardTitle className="text-base">Smart Legal Risk Score</CardTitle>
                     </CardHeader>
                     <CardContent className="text-center flex flex-col items-center">
                         <div className="relative w-40 h-40 mx-auto">
@@ -227,7 +226,7 @@ export default function ContractAnalyzerForm() {
                 </Card>
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg"><FileWarning className="text-yellow-500"/>Missing Clauses</CardTitle>
+                        <CardTitle className="flex items-center gap-3 text-base"><FileWarning className="text-yellow-500"/>Missing Clauses</CardTitle>
                     </CardHeader>
                     <CardContent>
                     {state.data.missingClauses.length > 0 ? (
@@ -278,7 +277,7 @@ export default function ContractAnalyzerForm() {
         <div className="flex items-center gap-3">
           {file && !isPending ? <FileText className="w-5 h-5 text-primary" /> : <div className="w-5 h-5" />}
           <div>
-            <h3 className="font-semibold text-lg">
+            <h3 className="font-semibold">
               {state.data ? "Analysis Complete" : file ? file.name : "Upload a document"}
             </h3>
             {state.data && (
