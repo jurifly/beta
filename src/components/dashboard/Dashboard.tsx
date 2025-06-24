@@ -298,7 +298,8 @@ export default function Dashboard() {
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
   const renderDesktopDashboardByRole = () => {
-    switch (userProfile?.role) {
+    if (!userProfile) return null;
+    switch (userProfile.role) {
       case 'Founder':
         return <FounderDashboard userProfile={userProfile} />;
       case 'CA':
@@ -308,10 +309,7 @@ export default function Dashboard() {
       case 'Enterprise':
         return <EnterpriseDashboard userProfile={userProfile} />;
       default:
-        if (userProfile) {
-            return <FounderDashboard userProfile={userProfile} />;
-        }
-        return null;
+        return <FounderDashboard userProfile={userProfile} />;
     }
   };
   
