@@ -1,22 +1,33 @@
 'use server';
 
-import { generateChecklist, type GenerateChecklistOutput } from "@/ai/flows/generate-checklist-flow";
+import { generateChecklist, type GenerateChecklistInput, type GenerateChecklistOutput } from '@/ai/flows/generate-checklist-flow';
 
-export async function generateDiligenceChecklist(
-  prevState: any,
-  formData: FormData
-): Promise<{ data: GenerateChecklistOutput | null; error: string | null }> {
-    const dealType = formData.get('dealType') as string;
+type FormState = {
+  data: GenerateChecklistOutput | null;
+  error: string | null;
+};
 
-    if (!dealType) {
-        return { data: null, error: 'Deal type is required.' };
-    }
+/**
+ * Server action to invoke the AI checklist generation flow.
+ * @param previousState The previous state of the form.
+ * @param formData The data submitted from the form.
+ * @returns A promise that resolves to the new form state.
+ */
+export async function generateDiligenceChecklist(previousState: FormState, formData: FormData): Promise<FormState> {
+  const dealType = formData.get('dealType') as string;
 
-    try {
-        const result = await generateChecklist({ dealType });
-        return { data: result, error: null };
-    } catch (e: any) {
-        console.error('Checklist Generation Error:', e);
-        return { data: null, error: e.message || 'An unexpected error occurred.' };
-    }
+  if (!dealType) {
+    return { data: null, error: 'Deal type is required.' };
+  }
+  
+  const input: GenerateChecklistInput = { dealType };
+
+  try {
+    const result = await generateChecklist(input);
+    return { data: result, error: null };
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    const errorMessage = e.message || 'An unexpected error occurred.';
+    return { data: null, error: `AI is currently unavailable: ${errorMessage}` };
+  }
 }
