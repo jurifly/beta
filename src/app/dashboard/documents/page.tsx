@@ -135,6 +135,7 @@ export default function DocumentsPage() {
   const [editorContent, setEditorContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const hasUserEdited = useRef(false);
+  const [explainMode, setExplainMode] = useState(false);
 
   const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 10);
   
@@ -258,7 +259,7 @@ export default function DocumentsPage() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Switch id="explain-mode" />
+            <Switch id="explain-mode" checked={explainMode} onCheckedChange={setExplainMode} />
           </div>
 
           <div className="relative">
