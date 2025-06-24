@@ -243,8 +243,10 @@ export default function DocumentsPage() {
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
           <div className="flex items-center justify-between px-1">
-            <Label htmlFor="explain-mode" className="flex items-center gap-2 font-medium text-xs">
-              Explain-as-you-build Mode
+            <div className="flex items-center gap-2">
+              <Label htmlFor="explain-mode" className="font-medium text-sm">
+                Explain-as-you-build Mode
+              </Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -255,7 +257,7 @@ export default function DocumentsPage() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </Label>
+            </div>
             <Switch id="explain-mode" />
           </div>
 
