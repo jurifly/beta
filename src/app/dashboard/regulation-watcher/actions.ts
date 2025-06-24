@@ -1,24 +1,24 @@
 'use server';
 
-import { fetchRegulatoryUpdates, type RegulationWatcherInput, type RegulationWatcherOutput } from '@/ai/flows/regulation-watcher-flow';
+import { getRegulatoryUpdatesSummary, type RegulatorySummaryInput, type RegulatorySummaryOutput } from '@/ai/flows/regulation-watcher-flow';
 
 type FormState = {
-  data: RegulationWatcherOutput | null;
+  data: RegulatorySummaryOutput | null;
   error: string | null;
 };
 
-export async function fetchRegulationsAction(previousState: FormState, formData: FormData): Promise<FormState> {
-  const regulator = formData.get('regulator') as string;
-  const topic = formData.get('topic') as string;
+export async function getRegulatoryUpdates(previousState: FormState, formData: FormData): Promise<FormState> {
+  const portal = formData.get('portal') as string;
+  const frequency = formData.get('frequency') as string;
 
-  if (!regulator) {
-    return { data: null, error: 'Regulator is required.' };
+  if (!portal || !frequency) {
+    return { data: null, error: 'Portal and frequency are required.' };
   }
 
-  const input: RegulationWatcherInput = { regulator, topic: topic || '' };
+  const input: RegulatorySummaryInput = { portal, frequency };
 
   try {
-    const result = await fetchRegulatoryUpdates(input);
+    const result = await getRegulatoryUpdatesSummary(input);
     return { data: result, error: null };
   } catch (e: any) {
     console.error('AI Flow Error:', e);

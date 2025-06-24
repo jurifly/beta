@@ -1,138 +1,160 @@
-"use client"
 
-import { useFormState, useFormStatus } from "react-dom"
-import { useEffect, useRef } from "react"
-import { fetchRegulationsAction } from "./actions"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Search, BookText, ExternalLink, Calendar as CalendarIcon } from "lucide-react"
-import type { RegulationWatcherOutput } from "@/ai/flows/regulation-watcher-flow"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/hooks/auth"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+"use client";
 
-const initialState: { data: RegulationWatcherOutput | null; error: string | null } = {
+import { useState, useTransition, useEffect } from "react";
+import { useFormStatus, useFormState } from "react-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2, Telescope, RadioTower, Building2, Banknote, ShieldCheck, DatabaseZap, Globe } from "lucide-react";
+import { useAuth } from "@/hooks/auth";
+import { useTypewriter } from "@/hooks/use-typewriter";
+import { useToast } from "@/hooks/use-toast";
+import { getRegulatoryUpdates } from "./actions";
+
+const initialState: { data: { summary: string } | null; error: string | null } = {
   data: null,
   error: null,
-}
+};
+
+const portals = [
+    { id: "MCA", name: "MCA", description: "Corporate Affairs", icon: <Building2 className="w-6 h-6" /> },
+    { id: "RBI", name: "RBI", description: "Banking Regulations", icon: <Banknote className="w-6 h-6" /> },
+    { id: "SEBI", name: "SEBI", description: "Securities", icon: <ShieldCheck className="w-6 h-6" /> },
+    { id: "DPDP", name: "DPDP", description: "Data Privacy", icon: <DatabaseZap className="w-6 h-6" /> },
+    { id: "GDPR", name: "GDPR", description: "EU Privacy", icon: <Globe className="w-6 h-6" /> },
+];
 
 function SubmitButton() {
-  const { pending } = useFormStatus()
+  const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-      Fetch Updates
+    <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto">
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />}
+      Get Latest Updates
     </Button>
-  )
+  );
 }
 
+const Typewriter = ({ text }: { text: string }) => {
+    const displayText = useTypewriter(text, 20);
+    return <>{displayText}</>;
+};
+
 export default function RegulationWatcherForm() {
-  const [state, formAction] = useFormState(fetchRegulationsAction, initialState)
-  const { toast } = useToast()
-  const { deductCredits } = useAuth()
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const [state, formAction] = useFormState(getRegulatoryUpdates, initialState);
+  const [submittedPortal, setSubmittedPortal] = useState("");
+  const [submittedFrequency, setSubmittedFrequency] = useState("");
+  const { deductCredits } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (state.error) {
-      toast({
-        variant: "destructive",
-        title: "Request Failed",
-        description: state.error,
-      })
+      toast({ variant: "destructive", title: "Update Failed", description: state.error });
     }
     if (state.data) {
-      deductCredits(1).then(success => {
-        if (success) {
-            toast({
-            title: "Updates Fetched",
-            description: "Latest regulatory changes are ready for review.",
-            });
-            setTimeout(() => {
-                resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-        }
-      });
+      deductCredits(1);
     }
-  }, [state, toast, deductCredits])
+  }, [state, toast, deductCredits]);
+
+  const handleFormAction = (formData: FormData) => {
+    const portal = formData.get("portal") as string;
+    const frequency = formData.get("frequency") as string;
+    setSubmittedPortal(portal);
+    setSubmittedFrequency(frequency);
+    formAction(formData);
+  }
 
   return (
     <div className="space-y-8">
-      <Card>
-        <form action={formAction}>
-          <CardHeader>
-            <CardTitle>Select Regulator</CardTitle>
-            <CardDescription>Choose a regulatory body and optionally provide keywords to filter updates.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="space-y-2 sm:col-span-1">
-              <Label htmlFor="regulator">Regulator</Label>
-              <Select name="regulator" defaultValue="MCA" required>
-                <SelectTrigger id="regulator">
-                  <SelectValue placeholder="Select a regulator..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MCA">Ministry of Corporate Affairs (MCA)</SelectItem>
-                  <SelectItem value="SEBI">Securities and Exchange Board of India (SEBI)</SelectItem>
-                  <SelectItem value="RBI">Reserve Bank of India (RBI)</SelectItem>
-                  <SelectItem value="Income Tax">Income Tax Department</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="topic">Keywords (Optional)</Label>
-              <Input id="topic" name="topic" placeholder="e.g., 'foreign investment', 'KYC norms', 'related party transactions'" />
-            </div>
-          </CardContent>
-          <CardContent>
-            <SubmitButton />
-          </CardContent>
-        </form>
-      </Card>
+        <form action={handleFormAction}>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Configure Your Watcher</CardTitle>
+                    <CardDescription>Select the regulatory bodies you want to monitor and the frequency of updates.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                        <Label className="text-base font-medium">1. Select a Regulatory Portal</Label>
+                        <RadioGroup 
+                            name="portal"
+                            defaultValue="MCA"
+                            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+                        >
+                            {portals.map((portal) => (
+                                <Label key={portal.id} htmlFor={portal.id} className="group flex flex-col items-center justify-center gap-2 border rounded-lg p-4 hover:bg-accent/50 has-[input:checked]:border-primary has-[input:checked]:bg-primary/10 transition-colors cursor-pointer text-center interactive-lift">
+                                    <RadioGroupItem value={portal.id} id={portal.id} className="sr-only" />
+                                    <div className="p-2 rounded-full bg-muted group-has-[input:checked]:bg-primary/10 group-has-[input:checked]:text-primary">{portal.icon}</div>
+                                    <p className="font-semibold group-has-[input:checked]:text-primary">{portal.name}</p>
+                                    <p className="text-xs text-muted-foreground">{portal.description}</p>
+                                </Label>
+                            ))}
+                        </RadioGroup>
+                    </div>
 
-      <div ref={resultsRef}>
-        {state.data && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Latest Updates</CardTitle>
-              <CardDescription>
-                AI-generated summaries of the most recent notifications and circulars.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {state.data.updates.length > 0 ? (
-                state.data.updates.map((update, index) => (
-                  <div key={index} className="p-4 border rounded-lg bg-muted/50">
-                    <div className="flex justify-between items-start gap-4">
-                        <h4 className="font-semibold">{update.title}</h4>
-                        <Button asChild variant="ghost" size="sm" className="shrink-0">
-                            <a href={update.link} target="_blank" rel="noopener noreferrer">
-                                Read More <ExternalLink className="ml-2 h-3 w-3" />
-                            </a>
-                        </Button>
+                    <div className="space-y-3">
+                        <Label className="text-base font-medium">2. Set Update Frequency</Label>
+                         <RadioGroup
+                            name="frequency"
+                            defaultValue="daily"
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                         >
+                            <Label htmlFor="daily" className="flex items-center space-x-3 border rounded-md p-4 hover:bg-accent/50 has-[input:checked]:border-primary has-[input:checked]:bg-accent transition-colors cursor-pointer interactive-lift">
+                                <RadioGroupItem value="daily" id="daily" />
+                                <div>
+                                    <p className="font-semibold">Daily Digest</p>
+                                    <p className="text-sm text-muted-foreground">Receive a summary every 24 hours.</p>
+                                </div>
+                            </Label>
+                            <Label htmlFor="weekly" className="flex items-center space-x-3 border rounded-md p-4 hover:bg-accent/50 has-[input:checked]:border-primary has-[input:checked]:bg-accent transition-colors cursor-pointer interactive-lift">
+                                <RadioGroupItem value="weekly" id="weekly" />
+                                <div>
+                                    <p className="font-semibold">Weekly Roundup</p>
+                                    <p className="text-sm text-muted-foreground">A consolidated report once a week.</p>
+                                </div>
+                            </Label>
+                        </RadioGroup>
                     </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1 mb-2">
-                        <CalendarIcon className="h-3 w-3"/>
-                        <span>Published on: {update.date}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{update.summary}</p>
-                  </div>
-                ))
-              ) : (
-                <Alert>
-                  <BookText className="h-4 w-4" />
-                  <AlertTitle>No Updates Found</AlertTitle>
-                  <AlertDescription>
-                    Could not find any recent updates for the selected criteria.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+                </CardContent>
+                 <CardFooter className="flex justify-center border-t pt-6 mt-6">
+                    <SubmitButton />
+                </CardFooter>
+            </Card>
+            
+            <h2 className="text-xl font-bold tracking-tight">Latest Updates</h2>
+            
+            {state.data ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                           {portals.find(p => p.id === submittedPortal)?.icon}
+                           {submittedPortal} {submittedFrequency.charAt(0).toUpperCase() + submittedFrequency.slice(1)} Digest
+                        </CardTitle>
+                        <CardDescription>Last updated: Just now</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="prose dark:prose-invert max-w-none text-sm p-6 bg-muted/50 rounded-lg border">
+                           <Typewriter text={state.data.summary} />
+                        </div>
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card className="flex flex-col items-center justify-center text-center p-8 min-h-[300px] border-dashed">
+                    <RadioTower className="w-16 h-16 text-primary/20"/>
+                    <p className="mt-4 font-semibold text-lg">Stay Ahead of Changes</p>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                        Select a portal and frequency above to receive AI-powered summaries of regulatory updates.
+                    </p>
+                </Card>
+            )}
+        </form>
     </div>
-  )
+  );
 }
