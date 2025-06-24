@@ -51,3 +51,23 @@ export interface GenerateDDChecklistOutput {
   reportTitle: string;
   checklist: ChecklistCategory[];
 }
+
+
+// Types for Contract Analyzer
+export interface KeyTerm {
+  term: string;
+  explanation: string;
+}
+
+export interface RiskItem {
+  risk: string;
+  severity: 'High' | 'Medium' | 'Low';
+  recommendation: string;
+}
+
+export interface ContractAnalysisOutput {
+  summary: string;
+  keyTerms: KeyTerm[];
+  risks: RiskItem[];
+  missingClauses: string[];
+}
