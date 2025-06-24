@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -11,59 +11,65 @@ import {
   Check,
   Building2,
   FileText,
-  Home,
   ListChecks,
   Sparkles,
-  ThumbsUp,
-  ThumbsDown,
-  Lightbulb,
   Download,
-  AlertCircle,
+  Fingerprint,
+  FileSignature,
+  BookUser,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getBusinessRecommendationAction, getFinalChecklistAction } from "./actions";
-import type { BusinessRecommenderOutput } from "@/ai/flows/business-recommender-flow";
+import { getIncCodeAction, getFinalChecklistAction } from "./actions";
+import type { IncCodeFinderOutput } from "@/ai/flows/inc-code-finder-flow";
 import type { AssistantOutput } from "@/ai/flows/assistant-flow";
+import { Progress } from "@/components/ui/progress";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { generateDocument } from "@/ai/flows/document-generator-flow";
+import { useAuth } from "@/hooks/auth";
+import Link from "next/link";
+import { ToastAction } from "@/components/ui/toast";
+import { useTypewriter } from "@/hooks/use-typewriter";
 
 const STEPS = [
-  { id: 1, name: "Business Type", icon: Building2 },
-  { id: 2, name: "Registrations", icon: FileText },
-  { id: 3, name: "Virtual Address", icon: Home },
+  { id: 1, name: "INC Code Finder", icon: Fingerprint },
+  { id: 2, name: "Registration Guide", icon: BookUser },
+  { id: 3, name: "Generate Documents", icon: FileSignature },
   { id: 4, name: "Final Checklist", icon: ListChecks },
 ];
 
-const recommendationFormSchema = z.object({
-  founderCount: z.coerce.number().min(1, "At least one founder is required."),
-  investmentPlan: z.string().min(1, "Please select an investment plan."),
-  revenueGoal: z.string().min(1, "Please select a revenue goal."),
-  businessDescription: z.string().min(10, "Please provide a brief description.").max(500),
+const incCodeFormSchema = z.object({
+  businessDescription: z.string().min(20, "Please provide a more detailed description (min 20 characters).").max(500),
 });
 
-type RecommendationFormData = z.infer<typeof recommendationFormSchema>;
+type IncCodeFormData = z.infer<typeof incCodeFormSchema>;
 
 type NavigatorState = {
-  recommendationForm?: RecommendationFormData;
-  recommendationResult?: BusinessRecommenderOutput;
+  incCodeForm?: IncCodeFormData;
+  incCodeResult?: IncCodeFinderOutput;
   finalChecklist?: AssistantOutput;
+  completedSteps: number[];
 };
 
 // Main Page Component
-export default function BusinessSetupPage() {
+export default function SetupAssistantPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [navigatorState, setNavigatorState] = useState<NavigatorState>({});
+  const [navigatorState, setNavigatorState] = useState<NavigatorState>({ completedSteps: [] });
 
-  const goToNextStep = () => setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+  const goToNextStep = () => {
+     setNavigatorState(prev => ({ ...prev, completedSteps: [...new Set([...prev.completedSteps, currentStep])] }));
+     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+  }
   const goToPrevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const jumpToStep = (step: number) => {
     // Allow jumping only to completed steps
-    if (step < currentStep) {
+    if (navigatorState.completedSteps.includes(step) || step < currentStep) {
         setCurrentStep(step);
     }
   }
@@ -75,11 +81,11 @@ export default function BusinessSetupPage() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <Step1BusinessRecommender onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
+        return <Step1IncCodeFinder onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 2:
-        return <Step2Registrations onComplete={goToNextStep} />;
+        return <Step2RegistrationGuide onComplete={goToNextStep} />;
       case 3:
-        return <Step3VirtualAddress onComplete={goToNextStep} />;
+        return <Step3DocumentGenerator onComplete={goToNextStep} />;
       case 4:
         return <Step4FinalChecklist navigatorState={navigatorState} />;
       default:
@@ -87,12 +93,22 @@ export default function BusinessSetupPage() {
     }
   };
 
+  const completionPercentage = Math.round((navigatorState.completedSteps.length / (STEPS.length -1)) * 100);
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Business Setup Navigator</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-headline">Startup Setup Assistant</h1>
         <p className="text-muted-foreground">Your AI-guided journey to launching your company.</p>
       </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Setup Progress</CardTitle>
+          <CardDescription>You’ve completed {navigatorState.completedSteps.length} of {STEPS.length} registration essentials.</CardDescription>
+          <Progress value={completionPercentage} className="mt-2" />
+        </CardHeader>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -101,7 +117,7 @@ export default function BusinessSetupPage() {
             <div aria-label="Progress bar" className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
               {STEPS.map((step, index) => {
                 const stepStatus =
-                  currentStep > index + 1 ? 'completed' : currentStep === index + 1 ? 'current' : 'upcoming';
+                  navigatorState.completedSteps.includes(step.id) ? 'completed' : currentStep === index + 1 ? 'current' : 'upcoming';
                 return (
                   <div key={step.id} className="flex items-center gap-2 sm:gap-4 w-full">
                     <button
@@ -137,107 +153,54 @@ export default function BusinessSetupPage() {
   );
 }
 
-// --- Step 1: Business Type Recommender ---
+// --- Step 1: INC Code Finder ---
 interface Step1Props {
     onComplete: () => void;
     updateState: (updates: Partial<NavigatorState>) => void;
     initialState: NavigatorState;
 }
 
-function Step1BusinessRecommender({ onComplete, updateState, initialState }: Step1Props) {
+function Step1IncCodeFinder({ onComplete, updateState, initialState }: Step1Props) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.recommendationResult);
+  const [result, setResult] = useState<IncCodeFinderOutput | undefined>(initialState.incCodeResult);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<RecommendationFormData>({
-    resolver: zodResolver(recommendationFormSchema),
-    defaultValues: initialState.recommendationForm || {
-      founderCount: 1,
-      investmentPlan: "",
-      revenueGoal: "",
+  const { control, handleSubmit, formState: { errors } } = useForm<IncCodeFormData>({
+    resolver: zodResolver(incCodeFormSchema),
+    defaultValues: initialState.incCodeForm || {
       businessDescription: "",
     },
   });
 
-  const onSubmit = async (data: RecommendationFormData) => {
+  const onSubmit = async (data: IncCodeFormData) => {
     setIsLoading(true);
     setResult(undefined);
-    updateState({ recommendationForm: data });
+    updateState({ incCodeForm: data });
     try {
-      const response = await getBusinessRecommendationAction(data);
+      const response = await getIncCodeAction(data);
       setResult(response);
-      updateState({ recommendationResult: response });
+      updateState({ incCodeResult: response });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Recommendation Failed", description: error.message });
+      toast({ variant: "destructive", title: "INC Code Search Failed", description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
   
-  const InfoCard = ({ icon, title, children }: { icon: ReactNode, title: string, children: ReactNode }) => (
-    <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
-        <div className="text-primary mt-1">{icon}</div>
-        <div>
-            <h4 className="font-semibold text-foreground">{title}</h4>
-            <div className="text-sm text-muted-foreground space-y-2 mt-1">{children}</div>
-        </div>
-    </div>
-  );
-
-
   return (
      <div className="grid md:grid-cols-2 gap-8">
         <div>
-            <h2 className="text-xl font-bold">Find the Right Business Structure</h2>
-            <p className="text-muted-foreground mt-1">Answer a few questions and our AI will suggest the best fit for you.</p>
+            <h2 className="text-xl font-bold">Find Your INC/NIC Code</h2>
+            <p className="text-muted-foreground mt-1">Describe your business, and our AI will suggest the correct government classification code for your registration.</p>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
-              <Controller name="founderCount" control={control} render={({ field }) => (
-                  <div className="space-y-2">
-                    <Label htmlFor="founderCount">How many founders?</Label>
-                    <Input id="founderCount" type="number" min="1" {...field} />
-                    {errors.founderCount && <p className="text-sm text-destructive">{errors.founderCount.message}</p>}
-                  </div>
-              )} />
-              <Controller name="investmentPlan" control={control} render={({ field }) => (
-                <div className="space-y-2">
-                    <Label>What are your investment plans?</Label>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger><SelectValue placeholder="Select a plan..." /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Bootstrapped">Bootstrapped / Self-funded</SelectItem>
-                            <SelectItem value="Friends & Family">Friends & Family Round</SelectItem>
-                            <SelectItem value="Angel Investors">Angel Investors</SelectItem>
-                            <SelectItem value="Venture Capital">Venture Capital (VC)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {errors.investmentPlan && <p className="text-sm text-destructive">{errors.investmentPlan.message}</p>}
-                </div>
-              )} />
-               <Controller name="revenueGoal" control={control} render={({ field }) => (
-                <div className="space-y-2">
-                    <Label>Projected annual revenue (first 2-3 years)?</Label>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger><SelectValue placeholder="Select a range..." /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="< 10 Lakhs">Under ₹10 Lakhs</SelectItem>
-                            <SelectItem value="10-50 Lakhs">₹10 Lakhs - ₹50 Lakhs</SelectItem>
-                            <SelectItem value="50 Lakhs - 1 Crore">₹50 Lakhs - ₹1 Crore</SelectItem>
-                            <SelectItem value="> 1 Crore">More than ₹1 Crore</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {errors.revenueGoal && <p className="text-sm text-destructive">{errors.revenueGoal.message}</p>}
-                </div>
-              )} />
-              <Controller name="businessDescription" control={control} render={({ field }) => (
-                <div className="space-y-2">
-                    <Label htmlFor="businessDescription">What does your business do? (1-2 sentences)</Label>
-                    <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances." {...field} />
-                    {errors.businessDescription && <p className="text-sm text-destructive">{errors.businessDescription.message}</p>}
-                </div>
-              )} />
+              <div className="space-y-2">
+                  <Label htmlFor="businessDescription">Business Description</Label>
+                  <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances, using AI to provide insights and automation." {...control.register("businessDescription")} className="min-h-[120px]" />
+                  {errors.businessDescription && <p className="text-sm text-destructive">{errors.businessDescription.message}</p>}
+              </div>
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
-                Get AI Recommendation
+                Find My Code
               </Button>
             </form>
         </div>
@@ -246,41 +209,40 @@ function Step1BusinessRecommender({ onComplete, updateState, initialState }: Ste
           {isLoading && (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <p className="mt-4 font-semibold">Analyzing your input...</p>
+              <p className="mt-4 font-semibold">Analyzing your business...</p>
             </div>
           )}
           {!isLoading && result && (
              <div className="space-y-6 animate-in fade-in-50 duration-500">
                 <Card className="bg-primary/10 border-primary/20 text-center">
                     <CardHeader>
-                        <CardTitle className="text-primary">{result.recommendedType}</CardTitle>
-                        <CardDescription>{result.reasoning}</CardDescription>
+                        <CardTitle className="text-primary font-mono">{result.nicCode}</CardTitle>
+                        <CardDescription className="font-semibold">{result.nicTitle}</CardDescription>
                     </CardHeader>
+                    <CardContent>
+                       <p className="text-sm">{result.reasoning}</p>
+                    </CardContent>
                 </Card>
-                <div className="space-y-4">
-                  <InfoCard icon={<ThumbsUp/>} title="Pros">
-                     <ul className="list-disc pl-5 space-y-1">
-                        {result.pros.map((pro, i) => <li key={i}>{pro}</li>)}
-                     </ul>
-                  </InfoCard>
-                  <InfoCard icon={<ThumbsDown/>} title="Cons">
-                     <ul className="list-disc pl-5 space-y-1">
-                        {result.cons.map((con, i) => <li key={i}>{con}</li>)}
-                     </ul>
-                  </InfoCard>
-                  {result.alternativeOption && (
-                    <InfoCard icon={<Lightbulb/>} title="Alternative to Consider">
-                       <p>{result.alternativeOption}</p>
-                    </InfoCard>
-                  )}
-                </div>
+                {result.alternativeCodes && result.alternativeCodes.length > 0 && (
+                    <div>
+                        <h4 className="font-semibold text-center mb-2">Alternatives</h4>
+                        <div className="space-y-2">
+                           {result.alternativeCodes.map(alt => (
+                            <div key={alt.code} className="p-2 text-center border rounded-md bg-card">
+                                <p className="font-semibold font-mono text-sm">{alt.code}</p>
+                                <p className="text-xs text-muted-foreground">{alt.title}</p>
+                            </div>
+                           ))}
+                        </div>
+                    </div>
+                )}
                 <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
              </div>
           )}
            {!isLoading && !result && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
                     <Sparkles className="w-12 h-12 text-primary/20 mb-4" />
-                    <p className="font-medium">Your recommendation will appear here.</p>
+                    <p className="font-medium">Your INC/NIC code will appear here.</p>
                 </div>
            )}
         </div>
@@ -288,42 +250,42 @@ function Step1BusinessRecommender({ onComplete, updateState, initialState }: Ste
   );
 }
 
-// --- Step 2: Registrations ---
-function Step2Registrations({ onComplete }: { onComplete: () => void }) {
-    const InfoBlock = ({ title, children }: { title: string, children: ReactNode }) => (
-        <div className="p-6 rounded-lg border bg-card">
-            <h3 className="font-bold text-lg mb-2">{title}</h3>
-            <div className="text-muted-foreground space-y-3 text-sm">{children}</div>
-        </div>
-    );
+// --- Step 2: Registration Guide ---
+const registrationData = [
+  { id: "gst", title: "GST Registration", time: "3-7 days", link: "https://www.gst.gov.in/", docs: ["PAN Card", "Proof of Business Registration", "Address Proof of Business", "Bank Account Statement", "Promoter's ID and Address Proof"] },
+  { id: "msme", title: "MSME / Udyam Registration", time: "1-2 days", link: "https://udyamregistration.gov.in/", docs: ["Aadhaar Card of Applicant", "PAN Card of Organization", "Bank Account Details"] },
+  { id: "startup_india", title: "Startup India (DPIIT)", time: "1-2 weeks", link: "https://www.startupindia.gov.in/", docs: ["Incorporation/Registration Certificate", "Director/Partner Details", "Proof of Funding (if any)", "Pitch Deck or Business Brief"] },
+  { id: "shops", title: "Shops & Establishment Act", time: "7-15 days", link: "#", docs: ["Business Name and Address", "Category of Establishment", "Employer and Employee Details"] },
+];
+
+function Step2RegistrationGuide({ onComplete }: { onComplete: () => void }) {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="text-center">
-                <h2 className="text-xl font-bold">Key Business Registrations</h2>
-                <p className="text-muted-foreground mt-1">Understanding when and why you need GST and MSME registrations.</p>
+                <h2 className="text-xl font-bold">Key Registration Workflows</h2>
+                <p className="text-muted-foreground mt-1">A guide to the essential registrations for your new venture.</p>
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
-                <InfoBlock title="GST (Goods and Services Tax)">
-                    <p>GST registration is mandatory for businesses whose aggregate turnover exceeds a certain threshold. This threshold varies by state and whether you supply goods or services.</p>
-                    <p><strong>Generally required if:</strong></p>
-                    <ul className="list-disc pl-5 space-y-1">
-                        <li>Your annual turnover is over ₹40 Lakhs (for goods) or ₹20 Lakhs (for services).</li>
-                        <li>You make inter-state sales (selling outside your state).</li>
-                        <li>You sell on e-commerce platforms like Amazon or Flipkart.</li>
-                    </ul>
-                    <Button variant="link" asChild className="p-0 h-auto"><a href="https://www.gst.gov.in/" target="_blank" rel="noopener noreferrer">Visit GST Portal <ArrowRight className="ml-1"/></a></Button>
-                </InfoBlock>
-                <InfoBlock title="MSME (Udyam Registration)">
-                    <p>Registering as a Micro, Small, or Medium Enterprise (MSME) is not mandatory but offers numerous government benefits.</p>
-                     <p><strong>Key benefits include:</strong></p>
-                    <ul className="list-disc pl-5 space-y-1">
-                        <li>Easier access to bank loans with lower interest rates.</li>
-                        <li>Protection against delayed payments from buyers.</li>
-                        <li>Eligibility for various government schemes and subsidies.</li>
-                    </ul>
-                     <Button variant="link" asChild className="p-0 h-auto"><a href="https://udyamregistration.gov.in/" target="_blank" rel="noopener noreferrer">Visit Udyam Portal <ArrowRight className="ml-1"/></a></Button>
-                </InfoBlock>
-            </div>
+            <Accordion type="single" collapsible className="w-full">
+                {registrationData.map(reg => (
+                  <AccordionItem value={reg.id} key={reg.id}>
+                    <AccordionTrigger className="text-base font-semibold hover:no-underline">{reg.title}</AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                        <div className="p-4 bg-muted/50 rounded-md border space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div><p className="font-medium">Est. Time:</p><p className="text-muted-foreground">{reg.time}</p></div>
+                                <div><p className="font-medium">Official Link:</p><p><Button variant="link" asChild className="p-0 h-auto text-sm"><a href={reg.link} target="_blank" rel="noopener noreferrer">Visit Portal <ArrowRight className="ml-1 w-4 h-4"/></a></Button></p></div>
+                            </div>
+                            <div>
+                                <p className="font-medium text-sm mb-2">Required Documents:</p>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                    {reg.docs.map(doc => <li key={doc}>{doc}</li>)}
+                                </ul>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+            </Accordion>
             <div className="text-center pt-4">
                 <Button onClick={onComplete}>Next Step <ArrowRight className="ml-2"/></Button>
             </div>
@@ -331,37 +293,105 @@ function Step2Registrations({ onComplete }: { onComplete: () => void }) {
     );
 }
 
-// --- Step 3: Virtual Address ---
-const virtualOfficeProviders = [
-  { name: "InstaSpaces", pricing: "Starts from ₹1,000/month", url: "#" },
-  { name: "myHQ", pricing: "Starts from ₹1,500/month", url: "#" },
-  { name: "Regus", pricing: "Starts from ₹2,500/month", url: "#" },
-  { name: "Awfis", pricing: "Starts from ₹1,200/month", url: "#" },
-  { name: "WeWork", pricing: "Starts from ₹3,000/month", url: "#" },
-  { name: "BHIVE", pricing: "Starts from ₹999/month", url: "#" },
+// --- Step 3: Document Generation ---
+const docTemplates = [
+  { name: "NOC from Landlord", desc: "A no-objection certificate required if your registered office is a rented property.", premium: false },
+  { name: "Board Resolution for Incorporation", desc: "The official board resolution to authorize the incorporation process.", premium: true },
+  { name: "MSME Application Draft", desc: "A pre-filled draft to help with your Udyam registration.", premium: false },
+  { name: "Registered Address Declaration", desc: "A declaration for the company's registered office address.", premium: true },
 ];
 
-function Step3VirtualAddress({ onComplete }: { onComplete: () => void }) {
+function Step3DocumentGenerator({ onComplete }: { onComplete: () => void }) {
+    const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
+    const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
+    const { toast } = useToast();
+    const { userProfile } = useAuth();
+    
+    const displayText = useTypewriter(generatedContent?.content || '', 10);
+
+    const handleGenerate = async (templateName: string, isPremium: boolean) => {
+        if (isPremium && userProfile?.plan === 'Free') {
+            toast({
+                title: 'Upgrade Required',
+                description: 'This is a premium document. Please upgrade to generate.',
+                variant: 'destructive',
+                action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction>,
+            });
+            return;
+        }
+
+        setLoadingDoc(templateName);
+        setGeneratedContent(null);
+        try {
+            const doc = await generateDocument({ templateName });
+            setGeneratedContent(doc);
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Generation Failed', description: e.message });
+        } finally {
+            setLoadingDoc(null);
+        }
+    };
+    
     return (
-         <div className="max-w-5xl mx-auto">
-             <div className="text-center">
-                <h2 className="text-xl font-bold">Set Up Your Virtual Address</h2>
-                <p className="text-muted-foreground mt-1">A virtual office gives you a professional business address without the cost of physical space.</p>
+        <div className="grid lg:grid-cols-2 gap-8">
+            <div>
+                <h2 className="text-xl font-bold">Auto-Generate Registration Documents</h2>
+                <p className="text-muted-foreground mt-1">Select a document to instantly generate a draft with AI.</p>
+                <div className="space-y-4 mt-6">
+                    {docTemplates.map(template => (
+                        <Card key={template.name} className="interactive-lift">
+                            <CardHeader>
+                                <CardTitle className="text-base flex items-center justify-between">
+                                  {template.name}
+                                  {template.premium && <Badge variant="secondary" className="text-amber-600 bg-amber-100">Premium</Badge>}
+                                </CardTitle>
+                                <CardDescription className="text-sm">{template.desc}</CardDescription>
+                            </CardHeader>
+                            <CardFooter>
+                                <Button
+                                    variant="secondary"
+                                    className="w-full"
+                                    onClick={() => handleGenerate(template.name, template.premium)}
+                                    disabled={!!loadingDoc}
+                                >
+                                    {loadingDoc === template.name ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
+                                    Generate
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                {virtualOfficeProviders.map(provider => (
-                    <Card key={provider.name} className="interactive-lift hover:border-primary">
-                        <CardHeader>
-                            <CardTitle>{provider.name}</CardTitle>
-                            <CardDescription>{provider.pricing}</CardDescription>
-                        </CardHeader>
-                        <CardFooter>
-                            <Button asChild variant="secondary" className="w-full"><a href={provider.url} target="_blank" rel="noopener noreferrer">Visit Website</a></Button>
-                        </CardFooter>
-                    </Card>
-                ))}
+            
+            <div className="bg-muted/50 rounded-lg p-4 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg">Document Preview</h3>
+                    <Button variant="outline" size="sm" disabled={!generatedContent}>
+                        <Download className="mr-2 h-4 w-4" /> Download
+                    </Button>
+                </div>
+                <div className="flex-1 border rounded-md bg-card p-4 overflow-y-auto min-h-[300px]">
+                    {loadingDoc && (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                          <p className="mt-4 font-semibold">Generating {loadingDoc}...</p>
+                        </div>
+                    )}
+                    {generatedContent && (
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <h4 className="font-bold mb-4">{generatedContent.title}</h4>
+                            <p className="whitespace-pre-wrap">{displayText}</p>
+                        </div>
+                    )}
+                    {!loadingDoc && !generatedContent && (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                            <FileSignature className="w-12 h-12 text-primary/20 mb-4" />
+                            <p className="font-medium">Your generated document will appear here.</p>
+                        </div>
+                    )}
+                </div>
             </div>
-             <div className="text-center pt-8">
+            <div className="lg:col-span-2 text-center pt-4">
                 <Button onClick={onComplete}>Next Step <ArrowRight className="ml-2"/></Button>
             </div>
         </div>
@@ -375,13 +405,9 @@ function Step4FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
     const { toast } = useToast();
 
     const handleGenerateChecklist = async () => {
-        if (!navigatorState.recommendationResult) {
-            toast({ variant: 'destructive', title: "Missing Information", description: "Please complete Step 1 first."});
-            return;
-        }
         setIsLoading(true);
         setChecklist(undefined);
-        const topic = `Generate a final business setup checklist for a "${navigatorState.recommendationResult.recommendedType}" with ${navigatorState.recommendationForm?.founderCount} founder(s). The company plans on ${navigatorState.recommendationForm?.investmentPlan}. Include sections for Legal/Registration, Banking, and Initial Operations.`;
+        const topic = `Generate a final business setup checklist for a startup. Their business is: "${navigatorState.incCodeForm?.businessDescription}". Include sections for Legal/Registration, Banking, and Initial Operations.`;
 
         try {
             const response = await getFinalChecklistAction({ topic });
@@ -400,7 +426,7 @@ function Step4FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
                 <p className="text-muted-foreground mt-1">Here is your final roadmap. Generate it with AI based on your inputs.</p>
             </div>
             <div className="text-center my-6">
-                <Button onClick={handleGenerateChecklist} disabled={isLoading || !navigatorState.recommendationResult}>
+                <Button onClick={handleGenerateChecklist} disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
                     {checklist ? "Regenerate Checklist" : "Generate Final Checklist"}
                 </Button>
@@ -448,4 +474,3 @@ function Step4FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         </div>
     )
 }
-    

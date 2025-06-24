@@ -51,7 +51,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, premium: false },
-  businessSetup: { href: "/dashboard/business-setup", label: "Setup", icon: Network, premium: true },
+  businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network, premium: true },
   aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Assistant", icon: Sparkles, premium: false },
   documents: { href: "/dashboard/documents", label: "Documents", icon: FileText, premium: false },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar, premium: true },

@@ -97,11 +97,11 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             <div className="lg:col-span-4">
                 <Card className="bg-gradient-to-r from-primary/10 via-card to-card border-primary/20 p-6 flex flex-col md:flex-row items-center justify-between gap-6 interactive-lift">
                     <div>
-                        <CardTitle className="flex items-center gap-3 font-headline"><Network/> Business Setup Navigator</CardTitle>
+                        <CardTitle className="flex items-center gap-3 font-headline"><Network/> Setup Assistant</CardTitle>
                         <CardDescription className="mt-2 max-w-2xl">Get a step-by-step AI-guided roadmap for registering your company, getting your GST number, and more.</CardDescription>
                     </div>
                     <Button asChild size="lg" className="shrink-0 w-full md:w-auto">
-                        <Link href="/dashboard/business-setup">Start Business Setup <ArrowRight className="ml-2 h-4 w-4"/></Link>
+                        <Link href="/dashboard/business-setup">Start Setup <ArrowRight className="ml-2 h-4 w-4"/></Link>
                     </Button>
                 </Card>
             </div>

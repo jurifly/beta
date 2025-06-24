@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -55,6 +56,9 @@ const templateLibrary: TemplateCategoryData[] = [
       { name: 'ESOP Plan', isPremium: true },
       { name: 'Terms of Service', isPremium: false },
       { name: 'Privacy Policy', isPremium: false },
+      { name: 'NOC from Landlord', isPremium: false },
+      { name: 'Board Resolution for Incorporation', isPremium: true },
+      { name: 'Registered Address Declaration', isPremium: true },
     ],
   },
   {
@@ -80,6 +84,7 @@ const templateLibrary: TemplateCategoryData[] = [
       { name: 'Form DIR-3', isPremium: false },
       { name: 'Audit Engagement Letter', isPremium: true },
       { name: 'Statutory Audit Report', isPremium: true },
+      { name: 'MSME Application Draft', isPremium: false },
     ],
   },
   {
@@ -89,6 +94,7 @@ const templateLibrary: TemplateCategoryData[] = [
       { name: 'SAFE Agreement', isPremium: true },
       { name: 'Shareholder Agreement', isPremium: true },
       { name: 'Investor Pitch Deck', isPremium: false },
+      { name: 'Startup India Pitch Deck', isPremium: false },
     ],
   },
   {
