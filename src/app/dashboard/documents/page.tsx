@@ -316,7 +316,7 @@ export default function DocumentsPage() {
             </div>
          </div>
          
-         <Card className="bg-primary/5 border-primary/20">
+         <Card className="bg-primary/5 border-primary/20 interactive-lift">
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="bg-primary/10 p-2 rounded-lg">
                     <Sparkles className="w-6 h-6 text-primary" />
@@ -374,7 +374,7 @@ export default function DocumentsPage() {
             {recentDocs.length > 0 ? (
               <div className="space-y-4">
                 {recentDocs.map((doc, index) => (
-                  <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleRecentDocClick(doc)}>
+                  <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors interactive-lift" onClick={() => handleRecentDocClick(doc)}>
                     <CardHeader>
                       <CardTitle className="text-base font-semibold">{doc.title}</CardTitle>
                       <CardDescription>Generated a few moments ago</CardDescription>
