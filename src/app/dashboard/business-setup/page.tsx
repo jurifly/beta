@@ -36,6 +36,7 @@ import { useAuth } from "@/hooks/auth";
 import Link from "next/link";
 import { ToastAction } from "@/components/ui/toast";
 import { useTypewriter } from "@/hooks/use-typewriter";
+import { Badge } from "@/components/ui/badge";
 
 const STEPS = [
   { id: 1, name: "INC Code Finder", icon: Fingerprint },
