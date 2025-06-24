@@ -1,57 +1,50 @@
-'use client';
+"use client"
 
-import { useAuth } from '@/hooks/auth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { UpgradePrompt } from '@/components/upgrade-prompt';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/hooks/auth"
+import { Badge } from "@/components/ui/badge"
+import { ArrowRight, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export default function BillingForm() {
-  const { userProfile } = useAuth();
+  const { userProfile } = useAuth()
 
-  if (!userProfile) return null;
-
-  const isFreePlan = userProfile.plan === 'Free';
+  if (!userProfile) {
+    return <Card><CardContent className="p-6 h-64 flex items-center justify-center"><Loader2 className="animate-spin"/></CardContent></Card>
+  }
+  
+  const isPaidPlan = userProfile.plan !== 'Free';
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Plan</CardTitle>
-          <CardDescription>Manage your subscription and billing details.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-            <div className='flex items-center gap-4'>
-               <Badge variant="secondary" className="text-lg py-2 px-4 border-primary/20 bg-primary/10 text-primary">{userProfile.plan}</Badge>
-               <div>
-                  <p className="font-semibold">You are currently on the {userProfile.plan} plan.</p>
-                  <p className="text-sm text-muted-foreground">Billed monthly. Next renewal on July 24, 2024.</p>
-               </div>
+    <Card className="w-full max-w-4xl">
+      <CardHeader>
+        <CardTitle>Billing & Plan</CardTitle>
+        <CardDescription>Manage your subscription and view your billing history.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="p-4 border rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <p className="text-sm text-muted-foreground">Current Plan</p>
+                <p className="text-xl font-bold flex items-center gap-3">
+                    {userProfile.plan}
+                    {isPaidPlan && <Badge variant="secondary" className="border-violet-500/30 text-violet-500">{userProfile.plan}</Badge>}
+                </p>
             </div>
-            {!isFreePlan && <Button variant="outline">Manage Subscription</Button>}
-          </div>
-        </CardContent>
-        {isFreePlan && (
-           <CardFooter>
-             <UpgradePrompt />
-           </CardFooter>
+            <Button asChild>
+                <Link href="/dashboard/billing">
+                    {isPaidPlan ? "Manage Subscription" : "Upgrade Plan"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+            </Button>
+        </div>
+        {isPaidPlan && (
+            <div className="p-4 border rounded-lg">
+                <h4 className="font-medium mb-2">Billing History</h4>
+                <p className="text-sm text-muted-foreground">No invoices yet.</p>
+            </div>
         )}
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Method</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="text-muted-foreground">
-                No payment method on file.
-            </div>
-        </CardContent>
-        <CardFooter>
-            <Button variant="secondary">Add Payment Method</Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+      </CardContent>
+    </Card>
+  )
 }
