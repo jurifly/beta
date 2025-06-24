@@ -9,8 +9,6 @@ import { GitBranch, Mail, MessageSquare, Zap, Bot, Database, ArrowRight, UploadC
 import { useAuth } from "@/hooks/auth";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
 
@@ -94,6 +92,8 @@ export default function IntegrationsPage() {
        return;
     }
 
+    // In a real app, you would handle the OAuth callback to confirm connection.
+    // For this prototype, we'll just simulate success after a delay.
     window.open(authUrl, '_blank', 'noopener,noreferrer');
     
     setTimeout(() => {
@@ -119,6 +119,11 @@ export default function IntegrationsPage() {
     setWorkflows(prev => [...prev, workflow]);
     setNewWorkflow({ trigger: '', action: '', notification: '' });
     toast({ title: "Workflow Created!", description: "Your new automation is now active." });
+  }
+
+  const handleDeleteWorkflow = (id: string) => {
+    setWorkflows(wfs => wfs.filter(w => w.id !== id));
+    toast({ title: "Workflow Deleted", description: "The automation has been removed." });
   }
 
   const getLabel = (value: string, list: {value: string, label: string}[]) => list.find(item => item.value === value)?.label || 'N/A';
@@ -199,7 +204,7 @@ export default function IntegrationsPage() {
                             </Select>
                         </div>
                     </div>
-                    <Button className="w-full md:w-auto self-end" onClick={handleCreateWorkflow}>
+                    <Button className="w-full md:w-auto self-end interactive-lift" onClick={handleCreateWorkflow}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Create
                     </Button>
                 </div>
@@ -225,7 +230,7 @@ export default function IntegrationsPage() {
                                 </div>
                                 <div className="flex gap-2 self-end md:self-center">
                                     <Button variant="ghost" size="icon"><Play className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" onClick={() => setWorkflows(wfs => wfs.filter(w => w.id !== wf.id))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteWorkflow(wf.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                 </div>
                             </div>
                         ))}
