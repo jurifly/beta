@@ -309,10 +309,10 @@ export default function DocumentsPage() {
               <h2 className="text-2xl font-bold font-headline">Document Preview</h2>
               <p className="text-muted-foreground">Generate a new document or view a recent one.</p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" disabled={!generatedDoc} className="interactive-lift"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
-                <Button variant="outline" disabled={!generatedDoc} className="interactive-lift"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
-                <Button disabled={!generatedDoc} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
+            <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
+                <Button disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
          </div>
          
@@ -355,6 +355,7 @@ export default function DocumentsPage() {
               <Textarea
                 value={editorContent}
                 onChange={handleEditorChange}
+                readOnly={isTyping}
                 className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
               />
             </CardContent>

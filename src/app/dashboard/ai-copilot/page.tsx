@@ -15,14 +15,29 @@ type ChatMessage = {
   content: string | AssistantOutput;
 };
 
+const CHAT_HISTORY_KEY = 'aiCopilotHistory';
+
 export default function AiCopilotPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [view, setView] = useState<'chat' | 'history'>('chat');
+  const [savedConversations, setSavedConversations] = useState<ChatMessage[][]>([]);
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CHAT_HISTORY_KEY);
+      if (saved) {
+        setSavedConversations(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error("Failed to load history from localStorage", error);
+    }
+  }, []);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -44,12 +59,29 @@ export default function AiCopilotPage() {
     if (!topic.trim()) return;
 
     setLoading(true);
-    setChatHistory(prev => [...prev, { role: 'user', content: topic }]);
+    setView('chat');
+
+    const userMessage: ChatMessage = { role: 'user', content: topic };
+    setChatHistory([userMessage]);
     setInput('');
 
     try {
       const response = await generateChecklist({ topic });
-      setChatHistory(prev => [...prev, { role: 'assistant', content: response }]);
+      const assistantMessage: ChatMessage = { role: 'assistant', content: response };
+      const newConversation = [userMessage, assistantMessage];
+      
+      setChatHistory(newConversation);
+      
+      setSavedConversations(prev => {
+          const updatedConversations = [newConversation, ...prev];
+          try {
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(updatedConversations));
+          } catch (error) {
+             console.error("Failed to save history to localStorage", error);
+          }
+          return updatedConversations;
+      });
+
     } catch (error) {
       console.error('Error generating checklist:', error);
       toast({
@@ -57,7 +89,7 @@ export default function AiCopilotPage() {
         description: 'Failed to generate the response. Please try again.',
         variant: 'destructive',
       });
-      setChatHistory(prev => prev.slice(0, -1));
+      setChatHistory([]);
     } finally {
       setLoading(false);
     }
@@ -85,116 +117,147 @@ export default function AiCopilotPage() {
   };
 
   const suggestionPrompts = [
-    { text: 'Register a Pvt Ltd', icon: FileText },
+    { text: 'Register a Private Limited Company', icon: FileText },
     { text: 'Hire first employee', icon: UserPlus },
     { text: 'Close Financial Year', icon: Clock },
   ];
 
   return (
-    <div className="flex flex-col h-full max-h-[calc(100vh-8rem)] min-h-[calc(100vh-8rem)] bg-card border rounded-lg shadow-sm">
+    <div className={cn("flex flex-col bg-card border rounded-lg shadow-sm", chatHistory.length === 0 && view === 'chat' && !loading ? "h-auto" : "h-full max-h-[calc(100vh-8rem)] min-h-[calc(100vh-8rem)]")}>
       <div className="flex items-center justify-between p-4 border-b">
         <div>
           <h1 className="text-lg font-bold font-headline">AI Assistant</h1>
           <p className="text-sm text-muted-foreground">Your unified legal copilot.</p>
         </div>
         <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="bg-muted interactive-lift">
+            <Button variant={view === 'chat' ? 'outline' : 'ghost'} size="sm" className={cn("interactive-lift", view === 'chat' && "bg-muted")} onClick={() => setView('chat')}>
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Chat
             </Button>
-            <Button variant="ghost" size="sm" className="interactive-lift">
+            <Button variant={view === 'history' ? 'outline' : 'ghost'} size="sm" className={cn("interactive-lift", view === 'history' && "bg-muted")} onClick={() => setView('history')}>
                 <History className="mr-2 h-4 w-4" />
                 History
             </Button>
         </div>
       </div>
       
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-8">
-        {chatHistory.length === 0 && !loading && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="p-4 bg-primary/10 rounded-full mb-4">
-                <Sparkles className="w-8 h-8 text-primary" />
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
+        {view === 'chat' && (
+        <>
+          {chatHistory.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center text-center p-6">
+              <div className="p-4 bg-primary/10 rounded-full mb-4">
+                  <Sparkles className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold mb-1">Your AI Legal Assistant</h2>
+              <p className="text-muted-foreground mb-6">Ask a legal question, drop a file, or try a suggestion.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-4">
+                {suggestionPrompts.map((prompt) => (
+                  <button
+                    key={prompt.text}
+                    onClick={() => handleSuggestionClick(prompt.text)}
+                    className="p-4 border rounded-lg text-left hover:bg-muted transition-colors flex items-center gap-3 interactive-lift"
+                  >
+                    <prompt.icon className="w-5 h-5 text-muted-foreground" />
+                    <span className="font-medium text-sm">{prompt.text}</span>
+                  </button>
+                ))}
+              </div>
+              <Button variant="ghost" className="bg-primary/10 text-primary hover:bg-primary/20 w-full max-w-3xl interactive-lift">
+                  <Paperclip className="w-4 h-4 mr-2" />
+                  Got a notice? Upload it for analysis.
+              </Button>
             </div>
-            <h2 className="text-2xl font-bold mb-1">Your AI Legal Assistant</h2>
-            <p className="text-muted-foreground mb-6">Ask a legal question, drop a file, or try a suggestion.</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-4">
-              {suggestionPrompts.map((prompt) => (
-                <button
-                  key={prompt.text}
-                  onClick={() => handleSuggestionClick(prompt.text)}
-                  className="p-4 border rounded-lg text-left hover:bg-muted transition-colors flex items-center gap-3 interactive-lift"
-                >
-                  <prompt.icon className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-medium text-sm">{prompt.text}</span>
-                </button>
-              ))}
-            </div>
-             <Button variant="ghost" className="bg-primary/10 text-primary hover:bg-primary/20 w-full max-w-3xl interactive-lift">
-                <Paperclip className="w-4 h-4 mr-2" />
-                Got a notice? Upload it for analysis.
-            </Button>
-          </div>
-        )}
+          )}
 
-        {chatHistory.map((message, index) => (
-          <div key={index} className={cn('flex items-start gap-4', message.role === 'user' ? 'justify-end' : '')}>
-            {message.role === 'assistant' && (
+          <div className="p-6 space-y-8">
+            {chatHistory.map((message, index) => (
+            <div key={index} className={cn('flex items-start gap-4', message.role === 'user' ? 'justify-end' : '')}>
+                {message.role === 'assistant' && (
+                <Avatar className="w-8 h-8 border">
+                    <div className="w-full h-full flex items-center justify-center bg-primary/10 rounded-full">
+                        <Bot className="w-5 h-5 text-primary" />
+                    </div>
+                </Avatar>
+                )}
+                
+                <div className={cn('rounded-xl', message.role === 'user' ? 'bg-primary text-primary-foreground p-4 max-w-2xl' : 'w-full')}>
+                  {typeof message.content === 'string' ? (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  ) : (
+                    <div className="bg-muted rounded-xl max-w-4xl">
+                        <div className="flex items-center justify-between p-4 border-b">
+                            <h3 className="font-bold text-md">{message.content.title}</h3>
+                            <Button variant="ghost" size="icon" onClick={() => copyToClipboard(message.content as AssistantOutput)}>
+                              <Clipboard className="h-4 w-4" />
+                              <span className="sr-only">Copy to clipboard</span>
+                            </Button>
+                        </div>
+                        <ul className="space-y-3 p-4">
+                        {message.content.checklist.map((item, itemIndex) => (
+                            <li key={itemIndex} className="flex items-start gap-3">
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 mt-0.5">
+                                  <Check className="h-3 w-3" />
+                              </span>
+                              <div>
+                                  <p className="font-medium text-sm">{item.task}</p>
+                                  <p className="text-xs text-muted-foreground">{item.category}</p>
+                              </div>
+                            </li>
+                        ))}
+                        </ul>
+                    </div>
+                  )}
+                </div>
+
+                {message.role === 'user' && userProfile && (
+                <Avatar className="w-8 h-8 border">
+                    <AvatarImage src={`https://avatar.vercel.sh/${userProfile.email}.png`} alt={userProfile.name} />
+                    <AvatarFallback>{userProfile.name.slice(0,2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                )}
+            </div>
+            ))}
+          </div>
+          
+          {loading && (
+            <div className="flex items-center space-x-4 p-6">
               <Avatar className="w-8 h-8 border">
                   <div className="w-full h-full flex items-center justify-center bg-primary/10 rounded-full">
-                    <Bot className="w-5 h-5 text-primary" />
+                      <Bot className="w-5 h-5 text-primary" />
                   </div>
-              </Avatar>
-            )}
-            
-            <div className={cn('max-w-2xl rounded-xl', message.role === 'user' ? 'bg-primary text-primary-foreground p-4' : 'p-0')}>
-              {typeof message.content === 'string' ? (
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                </Avatar>
+              <div className="p-4 bg-muted rounded-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            </div>
+          )}
+          </>
+        )}
+        {view === 'history' && (
+           <div className="p-6 space-y-4">
+              <h2 className="text-xl font-bold">Conversation History</h2>
+              {savedConversations.length > 0 ? (
+                <div className="space-y-2">
+                  {savedConversations.map((convo, index) => (
+                    <button 
+                      key={index} 
+                      onClick={() => { setChatHistory(convo); setView('chat'); }} 
+                      className="block w-full p-4 border rounded-lg text-left hover:bg-muted transition-colors interactive-lift"
+                    >
+                      <p className="font-medium truncate text-sm">{(convo[0]?.content as string) || "Untitled Conversation"}</p>
+                      <p className="text-xs text-muted-foreground">{convo.length} messages</p>
+                    </button>
+                  ))}
+                </div>
               ) : (
-                <div className="bg-muted rounded-xl">
-                    <div className="flex items-center justify-between p-4 border-b">
-                        <h3 className="font-bold text-md">{message.content.title}</h3>
-                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(message.content as AssistantOutput)}>
-                          <Clipboard className="h-4 w-4" />
-                          <span className="sr-only">Copy to clipboard</span>
-                        </Button>
-                    </div>
-                    <ul className="space-y-3 p-4">
-                    {message.content.checklist.map((item, itemIndex) => (
-                        <li key={itemIndex} className="flex items-start gap-3">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 mt-0.5">
-                              <Check className="h-3 w-3" />
-                          </span>
-                          <div>
-                              <p className="font-medium text-sm">{item.task}</p>
-                              <p className="text-xs text-muted-foreground">{item.category}</p>
-                          </div>
-                        </li>
-                    ))}
-                    </ul>
+                <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                  <History className="w-16 h-16 text-primary/20"/>
+                  <p className="font-semibold text-lg">No Saved History</p>
+                  <p className="text-sm max-w-sm">Your past conversations will appear here.</p>
                 </div>
               )}
             </div>
-
-            {message.role === 'user' && userProfile && (
-              <Avatar className="w-8 h-8 border">
-                  <AvatarImage src={`https://avatar.vercel.sh/${userProfile.email}.png`} alt={userProfile.name} />
-                  <AvatarFallback>{userProfile.name.slice(0,2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            )}
-          </div>
-        ))}
-        
-        {loading && (
-          <div className="flex items-center space-x-4">
-             <Avatar className="w-8 h-8 border">
-                <div className="w-full h-full flex items-center justify-center bg-primary/10 rounded-full">
-                    <Bot className="w-5 h-5 text-primary" />
-                </div>
-              </Avatar>
-            <div className="p-4 bg-muted rounded-lg">
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            </div>
-          </div>
         )}
       </div>
 
