@@ -1,31 +1,23 @@
 'use client';
 
-import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useCallback } from 'react';
-import { useDropzone, type FileRejection } from 'react-dropzone';
-import { Bot, Check, Clipboard, FileText, Loader2, Paperclip, Send, Sparkles, User, History, MessageSquare, Clock, FileScan, UploadCloud, AlertTriangle, FileWarning } from 'lucide-react';
+import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent } from 'react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { generateChecklist, type AssistantOutput } from '@/ai/flows/assistant-flow';
-import { analyzeContract, type AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-// Type guards to differentiate message content
+// Type guard to differentiate message content
 function isChecklist(content: any): content is AssistantOutput {
   return content && typeof content === 'object' && 'checklist' in content;
 }
 
-function isAnalysis(content: any): content is AnalyzeContractOutput {
-  return content && typeof content === 'object' && 'riskScore' in content;
-}
-
 type ChatMessage = {
   role: 'user' | 'assistant';
-  content: string | AssistantOutput | AnalyzeContractOutput;
+  content: string | AssistantOutput;
 };
 
 const CHAT_HISTORY_KEY = 'aiCopilotHistory';
@@ -46,7 +38,7 @@ const ChecklistResult = ({ checklist }: { checklist: AssistantOutput }) => {
   };
   
   return (
-    <div className="bg-muted rounded-xl max-w-4xl prose-p:my-0 prose-ul:my-0">
+    <div className="bg-muted rounded-xl max-w-4xl">
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-bold text-md font-sans">{checklist.title}</h3>
         <Button variant="ghost" size="icon" onClick={() => copyToClipboard(checklist)}>
@@ -54,83 +46,20 @@ const ChecklistResult = ({ checklist }: { checklist: AssistantOutput }) => {
           <span className="sr-only">Copy to clipboard</span>
         </Button>
       </div>
-      <div className="p-4 prose dark:prose-invert max-w-none text-sm font-sans" dangerouslySetInnerHTML={{ __html: checklist.checklist.map(item => `<p><b>${item.category}:</b> ${item.task}</p>`).join('') }} />
+      <div className="p-4 text-sm font-sans">
+        <ul className="space-y-3">
+          {checklist.checklist.map((item, index) => (
+            <li key={index} className="flex items-start gap-3">
+              <Check className="h-4 w-4 text-primary mt-1 shrink-0" />
+              <div>
+                <span className="font-semibold">{item.category}:</span> {item.task}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
-};
-
-
-const AnalysisResult = ({ analysis }: { analysis: AnalyzeContractOutput }) => {
-    const riskScore = analysis.riskScore;
-    const riskLevel = riskScore > 75 ? "Low" : riskScore > 50 ? "Medium" : "High";
-    const riskColor = riskScore > 75 ? "text-green-500" : riskScore > 50 ? "text-yellow-500" : "text-red-500";
-
-    return (
-        <Card className="bg-muted rounded-xl max-w-4xl overflow-hidden">
-             <CardHeader className="flex flex-row items-center gap-4 bg-muted/50 p-4 border-b">
-                <FileScan className="w-6 h-6 text-primary"/>
-                <div>
-                  <CardTitle className="text-lg">Contract Analysis Report</CardTitle>
-                  <CardDescription>AI-powered risk assessment complete.</CardDescription>
-                </div>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-                <Card className="text-center">
-                    <CardHeader>
-                        <CardTitle>Risk Score</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className={`text-6xl font-bold ${riskColor}`}>{riskScore}</p>
-                        <p className={`text-lg font-medium ${riskColor}`}>{riskLevel} Risk</p>
-                    </CardContent>
-                </Card>
-
-                <Accordion type="multiple" defaultValue={['summary', 'risks']} className="w-full">
-                    <AccordionItem value="summary">
-                        <AccordionTrigger>Contract Summary</AccordionTrigger>
-                        <AccordionContent>
-                           <div className="space-y-3 text-sm">
-                                <div><span className="font-semibold">Type:</span> {analysis.summary.contractType}</div>
-                                <div><span className="font-semibold">Parties:</span> {analysis.summary.parties.join(', ')}</div>
-                                <div><span className="font-semibold">Effective Date:</span> {analysis.summary.effectiveDate}</div>
-                                <div className="pt-2"><p className="font-semibold mb-1">Purpose:</p><p className="text-muted-foreground">{analysis.summary.purpose}</p></div>
-                           </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="risks">
-                        <AccordionTrigger>Risk Flags ({analysis.riskFlags.length})</AccordionTrigger>
-                        <AccordionContent>
-                            {analysis.riskFlags.length > 0 ? (
-                                <div className="space-y-3">
-                                {analysis.riskFlags.map((flag, i) => (
-                                    <div key={i} className="p-3 bg-card/50 rounded-lg border-l-4 border-l-red-500">
-                                        <p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p>
-                                        <p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p>
-                                    </div>
-                                ))}
-                                </div>
-                            ) : <p className="text-sm text-muted-foreground">No significant risks found.</p>}
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="missing">
-                        <AccordionTrigger>Missing Clauses ({analysis.missingClauses.length})</AccordionTrigger>
-                        <AccordionContent>
-                             {analysis.missingClauses.length > 0 ? (
-                                <ul className="space-y-2 list-disc list-inside">
-                                {analysis.missingClauses.map((clause, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                        <FileWarning className="w-4 h-4 mt-0.5 text-yellow-600 shrink-0"/>
-                                        <span>{clause}</span>
-                                    </li>
-                                ))}
-                                </ul>
-                            ) : <p className="text-sm text-muted-foreground">No critical clauses seem to be missing.</p>}
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </CardContent>
-        </Card>
-    );
 };
 
 
@@ -143,7 +72,7 @@ export default function AiCopilotPage() {
   const [view, setView] = useState<'chat' | 'history'>('chat');
   const [savedConversations, setSavedConversations] = useState<ChatMessage[][]>([]);
   const { toast } = useToast();
-  const { userProfile, deductCredits } = useAuth();
+  const { userProfile } = useAuth();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -218,66 +147,6 @@ export default function AiCopilotPage() {
     }
   };
 
-  const handleFileAnalysis = useCallback(async (file: File) => {
-    if (!await deductCredits(5)) return;
-
-    setIsProcessing(true);
-    setView('chat');
-
-    const userMessage: ChatMessage = { role: 'user', content: `Analyze the document: ${file.name}` };
-    const currentChat = [userMessage];
-    setChatHistory(currentChat);
-
-    try {
-        const reader = new FileReader();
-        reader.onload = async (loadEvent) => {
-            const fileDataUri = loadEvent.target?.result as string;
-            const response = await analyzeContract({ fileDataUri });
-            const assistantMessage: ChatMessage = { role: 'assistant', content: response };
-            const newConversation = [...currentChat, assistantMessage];
-
-            setChatHistory(newConversation);
-            saveConversation(newConversation);
-            setIsProcessing(false);
-        };
-        reader.onerror = () => {
-             throw new Error('Failed to read file.');
-        };
-        reader.readAsDataURL(file);
-    } catch(error) {
-        console.error('Error analyzing contract:', error);
-        toast({
-            title: 'Analysis Failed',
-            description: 'Could not analyze the contract. Please try again.',
-            variant: 'destructive',
-        });
-        setChatHistory([]);
-        setIsProcessing(false);
-    }
-  }, [deductCredits, toast]);
-
-  const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
-      if (fileRejections.length > 0) {
-        toast({
-          variant: "destructive",
-          title: "File Upload Error",
-          description: fileRejections[0].errors[0].message,
-        })
-        return
-      }
-      if (acceptedFiles[0]) {
-        handleFileAnalysis(acceptedFiles[0]);
-      }
-  }, [handleFileAnalysis, toast]);
-
-  const { getRootProps, getInputProps, open: openFileDialog } = useDropzone({
-    onDrop,
-    accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"]},
-    maxFiles: 1,
-    noClick: true,
-    noKeyboard: true,
-  });
-
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isProcessing) {
       e.preventDefault();
@@ -286,16 +155,13 @@ export default function AiCopilotPage() {
   };
 
   const suggestionPrompts = [
-    { text: 'Register a Private Limited Company', icon: FileText, action: () => handleTextSubmit(undefined, 'Register a Private Limited Company') },
-    { text: 'Hire first employee', icon: Clock, action: () => handleTextSubmit(undefined, 'Hire first employee') },
-    { text: 'Analyze a document', icon: FileScan, action: openFileDialog },
+    { text: 'What are the steps to register a Private Limited Company?', icon: FileText, action: () => handleTextSubmit(undefined, 'What are the steps to register a Private Limited Company?') },
+    { text: 'What are the compliance requirements for hiring the first employee?', icon: Clock, action: () => handleTextSubmit(undefined, 'What are the compliance requirements for hiring the first employee?') },
+    { text: 'Draft a simple non-disclosure agreement', icon: FileText, action: () => handleTextSubmit(undefined, 'Draft a simple non-disclosure agreement') },
   ];
 
   return (
-    <div {...getRootProps({
-        className: cn("flex flex-col bg-card border rounded-lg shadow-sm", chatHistory.length === 0 && view === 'chat' && !isProcessing ? "h-auto" : "h-full max-h-[calc(100vh-8rem)] min-h-[calc(100vh-8rem)]")
-    })}>
-      <input {...getInputProps()} />
+    <div className={cn("flex flex-col bg-card border rounded-lg shadow-sm", chatHistory.length === 0 && view === 'chat' && !isProcessing ? "h-auto" : "h-full max-h-[calc(100vh-8rem)] min-h-[calc(100vh-8rem)]")}>
       <div className="flex items-center justify-between p-4 border-b">
         <div>
           <h1 className="text-lg font-bold font-headline">AI Assistant</h1>
@@ -322,7 +188,7 @@ export default function AiCopilotPage() {
                   <Sparkles className="w-8 h-8 text-primary" />
               </div>
               <h2 className="text-2xl font-bold mb-1">Your AI Legal Assistant</h2>
-              <p className="text-muted-foreground mb-6">Ask a legal question, drop a file, or try a suggestion.</p>
+              <p className="text-muted-foreground mb-6">Ask a legal question or try a suggestion.</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-4">
                 {suggestionPrompts.map((prompt) => (
                   <button
@@ -335,10 +201,6 @@ export default function AiCopilotPage() {
                   </button>
                 ))}
               </div>
-               <Button variant="ghost" className="bg-primary/10 text-primary hover:bg-primary/20 w-full max-w-3xl interactive-lift" onClick={openFileDialog}>
-                  <UploadCloud className="w-4 h-4 mr-2" />
-                  Or drag and drop a file anywhere
-              </Button>
             </div>
           )}
 
@@ -358,8 +220,6 @@ export default function AiCopilotPage() {
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   ) : isChecklist(message.content) ? (
                     <ChecklistResult checklist={message.content} />
-                  ) : isAnalysis(message.content) ? (
-                    <AnalysisResult analysis={message.content} />
                   ) : null}
                 </div>
 
@@ -418,19 +278,13 @@ export default function AiCopilotPage() {
 
       <div className="p-4 border-t bg-card-background rounded-b-lg">
         <form onSubmit={handleTextSubmit} className="relative">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2">
-              <Button type="button" variant="ghost" size="icon" disabled={isProcessing} onClick={openFileDialog}>
-                  <Paperclip className="h-5 w-5" />
-                  <span className="sr-only">Attach file</span>
-              </Button>
-          </div>
           <Textarea
             ref={textareaRef}
             placeholder="e.g., 'What are the compliance requirements for a private limited company?'"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full resize-none pr-14 pl-14 py-3 max-h-48 overflow-y-auto"
+            className="w-full resize-none pr-14 pl-4 py-3 max-h-48 overflow-y-auto"
             rows={1}
             disabled={isProcessing}
           />
