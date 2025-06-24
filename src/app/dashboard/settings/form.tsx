@@ -1,75 +1,213 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/hooks/auth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Plus, Edit } from 'lucide-react';
-import type { Company } from '@/lib/types';
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import type { Company, UserProfile, UserRole } from "@/lib/types";
+import { Loader2, Save, PlusCircle, Building, Info, KeyRound, MapPin, Calendar, Briefcase, User as UserIcon, Edit } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/auth";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
-interface SettingsFormProps {
-  onAddCompanyClick: () => void;
-  onEditCompanyClick: (company: Company) => void;
-}
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters."),
+  phone: z.string().min(10, "Please enter a valid phone number.").or(z.literal('')),
+  role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"]),
+});
 
-export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: SettingsFormProps) {
-  const { userProfile } = useAuth();
+type FormData = z.infer<typeof formSchema>;
 
-  if (!userProfile) return null;
+const roles: { id: UserRole, label: string, description: string }[] = [
+    { id: "Founder", label: "Founder", description: "Startup/SMB owner handling their company’s compliance and legal obligations" },
+    { id: "CA", label: "Chartered Accountant", description: "Financial or legal advisor helping multiple clients with filings" },
+    { id: "Legal Advisor", label: "Legal Advisor", description: "Lawyers or firm associates managing contracts and legal reviews" },
+    { id: "Enterprise", label: "Enterprise / Finance Head", description: "Legal/compliance heads in medium/large organizations handling internal audits and multi-entity filings" },
+];
+
+export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: { onAddCompanyClick: () => void; onEditCompanyClick: (company: Company) => void }) {
+  const { user, userProfile, updateUserProfile } = useAuth();
+  const { toast } = useToast();
+
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+        name: userProfile?.name || "",
+        phone: userProfile?.phone || "",
+        role: userProfile?.role || "Founder",
+    },
+  });
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      await updateUserProfile(data);
+      toast({
+        title: "Success!",
+        description: "Your settings have been updated.",
+      });
+      if (data.role !== userProfile?.role) {
+        toast({
+            title: "Role updated",
+            description: "Some navigation items may have changed. Please refresh to see them.",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save your settings. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  if (!userProfile) {
+    return (
+        <Card className="w-full max-w-4xl">
+            <CardHeader><CardTitle>Profile Settings</CardTitle></CardHeader>
+            <CardContent className="p-6 h-96 flex items-center justify-center">
+                <Loader2 className="animate-spin" />
+            </CardContent>
+        </Card>
+    );
+  }
+
+  const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Update your personal details here.</CardDescription>
+          <CardDescription>Update your personal details and preferences.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue={userProfile.name} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" defaultValue={userProfile.email} disabled />
-            </div>
+        <CardContent className="space-y-6">
+          <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
+                    <Label htmlFor="name">Full Name</Label>
+                    <div className="md:col-span-2">
+                        <Input id="name" {...field} />
+                        {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
+                    </div>
+                </div>
+              )}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
+              <Label htmlFor="email">Email</Label>
+              <div className="md:col-span-2">
+                  <Input id="email" type="email" value={user?.email || ""} disabled />
+              </div>
           </div>
+          <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
+                    <Label htmlFor="phone">Phone</Label>
+                    <div className="md:col-span-2">
+                        <Input id="phone" type="tel" {...field} />
+                        {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>}
+                    </div>
+                </div>
+              )}
+          />
+          <Separator />
+          <Controller
+              name="role"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
+                    <Label>Your Role</Label>
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="md:col-span-2 flex flex-wrap gap-4 pt-2">
+                        {roles.map((role) => (
+                          <TooltipProvider key={role.id}>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <Label htmlFor={`role-${role.id}`} className="flex items-center space-x-2 cursor-pointer">
+                                          <RadioGroupItem value={role.id} id={`role-${role.id}`} />
+                                          <span>{role.label}</span>
+                                          <Info className="w-3 h-3 text-muted-foreground" />
+                                      </Label>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                      <p className="max-w-xs">{role.description}</p>
+                                  </TooltipContent>
+                              </Tooltip>
+                          </TooltipProvider>
+                        ))}
+                    </RadioGroup>
+                </div>
+              )}
+          />
         </CardContent>
-        <CardFooter>
-          <Button>Save Changes</Button>
+         <CardFooter className="flex justify-end border-t pt-6">
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save Changes
+            </Button>
         </CardFooter>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Company Management</CardTitle>
-          <CardDescription>Manage the companies associated with your account.</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div>
+                <CardTitle>Company Information</CardTitle>
+                <CardDescription>
+                  Manage your companies here.
+                </CardDescription>
+            </div>
+            <Button variant="outline" type="button" onClick={onAddCompanyClick}>
+                <PlusCircle className="mr-2 h-4 w-4"/>Add New Company
+            </Button>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {userProfile.companies.map((company) => (
-              <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <p className="font-semibold">{company.name}</p>
-                  <p className="text-sm text-muted-foreground">{company.type}</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => onEditCompanyClick(company)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-              </div>
-            ))}
-          </div>
+        <CardContent className="space-y-4">
+          {userProfile.companies.length > 0 ? (
+             <div className="space-y-4">
+                {userProfile.companies.map(company => (
+                    <div key={company.id} className="p-4 border rounded-lg flex items-center justify-between">
+                        <div>
+                            <p className="font-semibold">{company.name}</p>
+                            <p className="text-sm text-muted-foreground">{company.type}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           {company.id === userProfile.activeCompanyId && <Badge>Active</Badge>}
+                           <Button variant="ghost" size="icon" onClick={() => onEditCompanyClick(company)}>
+                             <Edit className="h-4 w-4" />
+                             <span className="sr-only">Edit Company</span>
+                           </Button>
+                        </div>
+                    </div>
+                ))}
+             </div>
+          ) : (
+             <div className="text-center text-sm text-muted-foreground py-10 border rounded-lg border-dashed">
+                <p>No companies added yet.</p>
+            </div>
+          )}
         </CardContent>
-        <CardFooter className="border-t pt-6">
-          <Button variant="outline" onClick={onAddCompanyClick}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Company
-          </Button>
-        </CardFooter>
       </Card>
-    </div>
+    </form>
   );
 }

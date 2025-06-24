@@ -29,5 +29,6 @@ export interface UserProfile {
   activeCompanyId: string;
   name: string;
   email: string;
+  phone?: string;
   credits?: number;
 }
