@@ -11,8 +11,6 @@ import {
   FilePlus2,
   History,
   Info,
-  ChevronUp,
-  ChevronDown,
   Loader2,
   Lock,
 } from 'lucide-react';
@@ -21,8 +19,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from "@/components/ui/toast";
@@ -33,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/auth';
 import type { UserRole } from '@/lib/types';
 import Link from 'next/link';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 type Template = {
   name: string;
@@ -119,18 +116,9 @@ const templateLibrary: TemplateCategoryData[] = [
   },
 ];
 
-
-const AccordionTrigger = ({ title, isOpen, onClick }: { title: string; isOpen: boolean; onClick: () => void; }) => (
-    <button onClick={onClick} className="flex w-full items-center justify-between py-3 text-base font-medium hover:no-underline text-card-foreground interactive-lift">
-      <span>{title}</span>
-      {isOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-    </button>
-);
-
-
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [openCategories, setOpenCategories] = useState<string[]>([]);
+  const [activeAccordion, setActiveAccordion] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
   const [recentDocs, setRecentDocs] = useState<DocumentGeneratorOutput[]>([]);
@@ -166,18 +154,10 @@ export default function DocumentsPage() {
   }, [userProfile]);
 
   useEffect(() => {
-    if (availableCategories.length > 0 && openCategories.length === 0) {
-      setOpenCategories([availableCategories[0].name]);
+    if (availableCategories.length > 0 && !activeAccordion) {
+      setActiveAccordion(availableCategories[0].name);
     }
-  }, [availableCategories, openCategories]);
-
-  const toggleCategory = (categoryName: string) => {
-    setOpenCategories(prev => 
-      prev.includes(categoryName) 
-        ? prev.filter(c => c !== categoryName) 
-        : [categoryName] // This makes it a single-item accordion
-    );
-  };
+  }, [availableCategories, activeAccordion]);
   
   const handleGenerateClick = async () => {
     if (!selectedTemplate) {
@@ -256,16 +236,14 @@ export default function DocumentsPage() {
 
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                {availableCategories.map((category) => (
-                    <div key={category.name} className="border-b">
-                        <AccordionTrigger 
-                            title={category.name}
-                            isOpen={openCategories.includes(category.name)}
-                            onClick={() => toggleCategory(category.name)}
-                        />
-                         {openCategories.includes(category.name) && (
-                            <div className="pl-2 pt-2 pb-4">
-                                <div className="flex flex-col gap-1">
+                <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
+                    {availableCategories.map((category) => (
+                        <AccordionItem value={category.name} key={category.name}>
+                            <AccordionTrigger className="text-base font-medium hover:no-underline interactive-lift py-3 px-2">
+                                {category.name}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="flex flex-col gap-1 pl-2">
                                 {category.templates.map((template) => {
                                   const isLocked = template.isPremium && userProfile.plan === 'Free';
                                   return (
@@ -281,10 +259,10 @@ export default function DocumentsPage() {
                                   )
                                 })}
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
              </RadioGroup>
           </div>
         </CardContent>
@@ -310,7 +288,7 @@ export default function DocumentsPage() {
               <h2 className="text-2xl font-bold font-headline">Document Preview</h2>
               <p className="text-muted-foreground">Generate a new document or view a recent one.</p>
             </div>
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
                 <Button disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
