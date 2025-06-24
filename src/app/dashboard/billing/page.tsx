@@ -54,7 +54,7 @@ const plans = [
     price: { monthly: 2999, yearly: 29990 },
     description: "For law firms, mid-sized enterprises, and compliance teams.",
     features: ["Everything in Pro, plus:", "Compliance Toolkit (SOC2, ISO)", "Full Integrations (Zapier, etc.)", "API Access & Webhooks", "Unlimited Watcher AI", "Team Access (10+ Users)", "White-labeled Exports"],
-    cta: "Contact Sales",
+    cta: "Upgrade to Enterprise",
     role: ["Enterprise", "Founder", "CA", "Legal Advisor"],
     popular: false,
     icon: Building,
@@ -274,5 +274,3 @@ export default function BillingPage() {
     </div>
   )
 }
-
-    
