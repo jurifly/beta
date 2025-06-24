@@ -32,3 +32,22 @@ export interface UserProfile {
   phone?: string;
   credits?: number;
 }
+
+export type ChecklistItemStatus = 'Pending' | 'Completed' | 'In Progress' | 'Not Applicable';
+
+export interface ChecklistItem {
+  id: string;
+  task: string;
+  description: string;
+  status: ChecklistItemStatus;
+}
+
+export interface ChecklistCategory {
+  category: string;
+  items: ChecklistItem[];
+}
+
+export interface GenerateDDChecklistOutput {
+  reportTitle: string;
+  checklist: ChecklistCategory[];
+}
