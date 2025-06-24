@@ -24,7 +24,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -324,18 +324,28 @@ function Step1BusinessType({ onComplete, updateState, initialState, userProfile 
                                 <AccordionItem value="pros-cons">
                                     <AccordionTrigger>Pros & Cons</AccordionTrigger>
                                     <AccordionContent>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-left">
-                                            <div>
-                                                <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsUp className="text-green-500"/> Pros</h4>
-                                                <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
-                                                    {result.pros.map((pro, i) => <li key={i}>{pro}</li>)}
-                                                </ul>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-left p-4 bg-background border rounded-md">
+                                            <div className="space-y-3">
+                                                <h4 className="font-semibold flex items-center gap-2"><ThumbsUp className="text-green-500"/> Pros</h4>
+                                                <div className="space-y-3 text-muted-foreground">
+                                                    {result.pros.map((pro, i) => (
+                                                        <div key={i} className="flex items-start gap-2.5">
+                                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/70" />
+                                                            <p className="flex-1">{pro}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsDown className="text-red-500"/> Cons</h4>
-                                                <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
-                                                    {result.cons.map((con, i) => <li key={i}>{con}</li>)}
-                                                </ul>
+                                            <div className="space-y-3">
+                                                <h4 className="font-semibold flex items-center gap-2"><ThumbsDown className="text-red-500"/> Cons</h4>
+                                                <div className="space-y-3 text-muted-foreground">
+                                                    {result.cons.map((con, i) => (
+                                                        <div key={i} className="flex items-start gap-2.5">
+                                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/70" />
+                                                            <p className="flex-1">{con}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </AccordionContent>
@@ -356,7 +366,7 @@ function Step1BusinessType({ onComplete, updateState, initialState, userProfile 
                                 )}
                             </Accordion>
                         </div>
-                        <div className="mt-auto shrink-0 pt-6">
+                        <div className="mt-6 shrink-0">
                            <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
                         </div>
                     </div>
