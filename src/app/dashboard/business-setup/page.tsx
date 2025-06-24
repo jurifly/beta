@@ -356,7 +356,9 @@ function Step1BusinessType({ onComplete, updateState, initialState, userProfile 
                                 )}
                             </Accordion>
                         </div>
-                        <Button onClick={onComplete} className="w-full mt-auto shrink-0 pt-6">Next Step <ArrowRight className="ml-2"/></Button>
+                        <div className="mt-auto shrink-0 pt-6">
+                           <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
+                        </div>
                     </div>
                 )}
                 {!isLoading && !result && (
