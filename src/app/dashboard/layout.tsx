@@ -31,6 +31,7 @@ import {
   Scale,
   MessageSquare,
   Briefcase,
+  FileClock,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -148,9 +149,15 @@ const getNavItems = (role: UserProfile['role']) => {
     }
 }
 
+const MOCK_NOTIFICATIONS = [
+    {id: 1, title: 'GSTR-3B Filing Overdue', description: 'Your GSTR-3B for last month is due in 3 days.', icon: <AlertTriangle className="h-5 w-5 text-destructive" />, read: false},
+    {id: 2, title: 'New Regulation Update', description: 'RBI released a new circular on digital lending.', icon: <RadioTower className="h-5 w-5 text-primary" />, read: false},
+    {id: 3, title: 'Annual Filing Completed', description: 'Form AOC-4 for FY 23-24 has been successfully filed.', icon: <FileClock className="h-5 w-5 text-green-500" />, read: true},
+]
+
 function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile } = useAuth();
-  const [notifications, setNotifications] = useState<{id: number, title: string, description: string, icon: React.ReactNode, read: boolean}[]>([]);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

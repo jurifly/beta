@@ -48,6 +48,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -294,6 +295,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
 }
 
 function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
+  const { toast } = useToast();
   const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
 
   const stats = [
@@ -315,7 +317,7 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
       <Card className="bg-primary text-primary-foreground p-4 shadow-lg interactive-lift">
         <h2 className="text-lg font-semibold">Welcome, {userProfile.name.split(' ')[0]}!</h2>
         <p className="text-sm text-primary-foreground/80 mt-1">Here's your legal and compliance overview.</p>
-        <Button variant="secondary" className="mt-4 h-9">View Guide</Button>
+        <Button variant="secondary" className="mt-4 h-9" onClick={() => toast({title: "Feature coming soon!"})}>View Guide</Button>
       </Card>
 
       <div className="grid grid-cols-2 gap-4">
@@ -351,14 +353,14 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
               <p className="font-medium">Company Online</p>
               <p className="text-xs text-muted-foreground">Accepting tasks</p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked onCheckedChange={() => toast({title: "This is a demo toggle."})}/>
           </div>
            <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Email Alerts</p>
               <p className="text-xs text-muted-foreground">For deadlines</p>
             </div>
-            <Switch />
+            <Switch onCheckedChange={() => toast({title: "This is a demo toggle."})}/>
           </div>
         </CardContent>
       </Card>
@@ -366,7 +368,7 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
       <Card className="interactive-lift">
         <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Recent Activity</CardTitle>
-            <Button variant="link" size="sm" className="p-0 h-auto">View All</Button>
+            <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => toast({title: "Feature coming soon!"})}>View All</Button>
         </CardHeader>
         <CardContent>
             <div className="text-center text-muted-foreground py-8">

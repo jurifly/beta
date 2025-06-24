@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { CompanyDetailsOutput } from "@/ai/flows/company-details-flow";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useAuth } from "@/hooks/auth";
-import { fetchCompanyDetailsFromCIN } from "@/app/dashboard/settings/actions";
+import { fetchCompanyDetailsFromCIN } from "./actions";
 
 const manualInputSchema = z.object({
   name: z.string().min(2, "Company name is required."),

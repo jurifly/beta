@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,7 +10,8 @@ import {
   Download,
   FileText,
   Copy,
-  Loader2
+  Loader2,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -126,7 +128,7 @@ export default function CalendarPage() {
           </p>
         </div>
         <div className='flex items-center gap-2'>
-            <Button variant="outline" onClick={handleCalendarSync} disabled>Sync Calendar</Button>
+            <Button variant="outline" onClick={handleCalendarSync}>Sync Calendar</Button>
             {activeCompany && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -213,7 +215,10 @@ export default function CalendarPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button className="w-full">Add New Task</Button>
+            <Button className="w-full" onClick={() => toast({title: "Feature coming soon!"})}>
+                <Plus className="mr-2 h-4 w-4"/>
+                Add New Task
+            </Button>
           </CardFooter>
         </Card>
       </div>

@@ -89,7 +89,7 @@ const TemplateGenerator = () => {
 
   useEffect(() => {
     if (availableCategories.length > 0 && !activeAccordion) setActiveAccordion(availableCategories[0].name);
-  }, [availableCategories]);
+  }, [availableCategories, activeAccordion]);
   
   const handleGenerateClick = async () => {
     if (!selectedTemplate) {
@@ -120,7 +120,7 @@ const TemplateGenerator = () => {
 
   const handleDownload = () => {
     if (!generatedDoc) return;
-    const blob = new Blob([generatedDoc.content], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
