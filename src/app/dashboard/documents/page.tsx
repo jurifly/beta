@@ -25,7 +25,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast, ToastAction } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from "@/components/ui/toast";
 import { cn } from '@/lib/utils';
 import { generateDocument, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 import { useTypewriter } from '@/hooks/use-typewriter';
@@ -375,3 +376,5 @@ export default function DocumentsPage() {
     </div>
   );
 }
+
+    
