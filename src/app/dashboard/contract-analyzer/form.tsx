@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useCallback, useState, useEffect, useTransition, useRef } from "react"
@@ -20,6 +21,7 @@ import type { AnalyzeContractOutput } from "@/ai/flows/contract-analyzer-flow"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth"
 import { analyzeContractAction } from "./actions"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const initialState: { data: AnalyzeContractOutput | null; error: string | null } = {
   data: null,
@@ -90,7 +92,7 @@ export default function ContractAnalyzerForm() {
     const { default: jsPDF } = await import('jspdf');
     const { default: html2canvas } = await import('html2canvas');
 
-    const canvas = await html2canvas(reportRef.current, { scale: 2 });
+    const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: null });
     const imgData = canvas.toDataURL('image/png');
     
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -133,82 +135,90 @@ export default function ContractAnalyzerForm() {
     }
     if (state.data) {
       const riskScore = state.data.riskScore;
-
+      const riskLevel = riskScore > 75 ? "Low" : riskScore > 50 ? "Medium" : "High";
+      const riskColor = riskScore > 75 ? "text-green-500" : riskScore > 50 ? "text-yellow-500" : "text-red-500";
+      
       return (
-        <div ref={reportRef} className="w-full h-full p-4 bg-background">
+        <div ref={reportRef} className="w-full h-full p-4 md:p-6 bg-muted/30 rounded-b-lg">
+           <h3 className="text-2xl font-bold text-center mb-6">Contract Analysis Report</h3>
           <div className="grid lg:grid-cols-5 gap-6">
             <div className="lg:col-span-3 space-y-6">
-                 <h3 className="text-xl font-bold text-center mb-4">Contract Analysis Report</h3>
-                <Card className="h-full">
-                <CardHeader>
-                    <div className="flex flex-row items-center gap-3">
-                        <FileText className="w-5 h-5 text-primary" />
-                        <h3 className="text-lg font-semibold">Summary</h3>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">{state.data.summary}</p>
-                </CardContent>
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-lg"><FileText className="text-primary"/>Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">{state.data.summary}</p>
+                    </CardContent>
                 </Card>
-                <Card className="h-full">
-                <CardHeader>
-                    <div className="flex flex-row items-center gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-500" />
-                        <h3 className="text-lg font-semibold">Risk Flags</h3>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {state.data.riskFlags.map((flag: any, i: number) => (
-                    <div key={i} className="p-3 bg-muted/50 rounded-lg border-l-4 border-l-red-500">
-                        <p className="font-semibold text-foreground text-sm">In Clause: <span className="font-normal italic">"{flag.clause}"</span></p>
-                        <p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p>
-                    </div>
-                    ))}
-                    {state.data.riskFlags.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No significant risks found.</p>
-                    )}
-                </CardContent>
+                <Card className="interactive-lift flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-lg"><AlertTriangle className="text-red-500"/>Risk Flags ({state.data.riskFlags.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 min-h-0">
+                        {state.data.riskFlags.length > 0 ? (
+                            <ScrollArea className="h-72">
+                                <div className="space-y-4 pr-4">
+                                {state.data.riskFlags.map((flag, i) => (
+                                <div key={i} className="p-3 bg-muted/50 rounded-lg border-l-4 border-l-red-500">
+                                    <p className="font-semibold text-foreground text-sm">In Clause: <span className="font-normal italic">"{flag.clause}"</span></p>
+                                    <p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p>
+                                </div>
+                                ))}
+                                </div>
+                            </ScrollArea>
+                        ) : (
+                            <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>
+                        )}
+                    </CardContent>
                 </Card>
             </div>
             <div className="lg:col-span-2 space-y-6">
-                <Card>
+                <Card className="interactive-lift">
                     <CardHeader>
-                    <CardTitle className="text-base">Smart Legal Risk Score</CardTitle>
+                        <CardTitle className="text-lg">Smart Legal Risk Score</CardTitle>
                     </CardHeader>
-                    <CardContent className="text-center">
-                        <div className="relative w-32 h-32 mx-auto">
+                    <CardContent className="text-center flex flex-col items-center">
+                        <div className="relative w-40 h-40 mx-auto">
                             <svg className="w-full h-full" viewBox="0 0 36 36">
-                                <path className="text-muted" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
-                                <path className="text-primary" strokeWidth="3" strokeDasharray={`${riskScore}, 100`} strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                <path className="text-muted/20" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                <path className={riskColor} strokeWidth="3" strokeDasharray={`${riskScore}, 100`} strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-3xl font-bold text-primary">{riskScore}</span>
+                                <span className={`text-4xl font-bold ${riskColor}`}>{riskScore}</span>
                             </div>
                         </div>
-                        <p className="mt-2 text-lg font-medium">{riskScore > 75 ? "Low Risk" : riskScore > 50 ? "Medium Risk" : "High Risk"}</p>
-                        <Button variant="link" className="mt-2">Suggest Revisions</Button>
+                        <p className={`mt-2 text-xl font-medium ${riskColor}`}>{riskLevel} Risk</p>
+                         <Button 
+                            variant="link" 
+                            className="mt-2"
+                            onClick={() => toast({ title: 'Feature Coming Soon', description: 'AI-powered revision suggestions will be available in a future update.' })}
+                        >
+                            Suggest Revisions
+                        </Button>
                     </CardContent>
                 </Card>
-                <Card>
-                <CardHeader className="flex flex-row items-center gap-3">
-                    <CheckSquare className="w-5 h-5 text-yellow-500" />
-                    <h3 className="text-lg font-semibold">Missing Clauses</h3>
-                </CardHeader>
-                <CardContent>
-                    <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                    {state.data.missingClauses.map((clause: string, i: number) => (
-                        <li key={i}>{clause}</li>
-                    ))}
-                    </ul>
-                    {state.data.missingClauses.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                        No critical clauses seem to be missing.
-                    </p>
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-lg"><FileWarning className="text-yellow-500"/>Missing Clauses</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    {state.data.missingClauses.length > 0 ? (
+                        <ul className="space-y-2">
+                        {state.data.missingClauses.map((clause, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                <CheckSquare className="w-4 h-4 mt-0.5 text-yellow-600 shrink-0"/>
+                                <span>{clause}</span>
+                            </li>
+                        ))}
+                        </ul>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">No critical clauses seem to be missing.</p>
                     )}
-                </CardContent>
+                    </CardContent>
                 </Card>
             </div>
-            </div>
+          </div>
         </div>
       )
     }
@@ -236,16 +246,18 @@ export default function ContractAnalyzerForm() {
   }
 
   return (
-    <Card className="flex flex-col min-h-[calc(100vh-14rem)]">
+    <Card className="flex flex-col min-h-[calc(100vh-14rem)] interactive-lift">
       <CardHeader className="flex-row items-center justify-between border-b">
         <div className="flex items-center gap-3">
-          {file && !isPending && <FileText className="w-5 h-5 text-primary" />}
+          {file && !isPending ? <FileText className="w-5 h-5 text-primary" /> : <div className="w-5 h-5" />}
           <div>
             <h3 className="font-semibold text-lg">
-              {file ? file.name : "Upload a document"}
+              {state.data ? "Analysis Complete" : file ? file.name : "Upload a document"}
             </h3>
             {state.data && (
-              <p className="text-sm text-muted-foreground">Analysis Complete</p>
+              <p className="text-sm text-muted-foreground">
+                Displaying report for: <span className="font-medium">{file?.name}</span>
+              </p>
             )}
           </div>
         </div>
@@ -259,7 +271,7 @@ export default function ContractAnalyzerForm() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-6">{renderContent()}</CardContent>
+      <CardContent className="flex-1 flex flex-col p-0">{renderContent()}</CardContent>
     </Card>
   )
 }
