@@ -30,6 +30,7 @@ import {
   Monitor,
   Scale,
   MessageSquare,
+  Briefcase,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -48,32 +49,32 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
-import type { UserProfile } from "@/lib/types";
+import type { UserProfile, UserPlan } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const navItemConfig = {
-  dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, premium: false },
-  businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network, premium: true },
-  aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Assistant", icon: Sparkles, premium: false },
-  documents: { href: "/dashboard/documents", label: "Documents", icon: FileText, premium: false },
-  calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar, premium: true },
-  contractAnalyzer: { href: "/dashboard/contract-analyzer", label: "Analyzer", icon: FileScan, premium: true },
-  dueDiligence: { href: "/dashboard/due-diligence", label: "Audit", icon: GanttChartSquare, premium: false, requiredPlan: 'Pro' },
-  analytics: { href: "/dashboard/analytics", label: "Insights", icon: LineChart, premium: true },
-  clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban, premium: true, requiredPlan: 'Pro' },
-  regulationWatcher: { href: "/dashboard/regulation-watcher", label: "Watcher", icon: RadioTower, premium: true },
-  team: { href: "/dashboard/team", label: "Team", icon: Users, premium: true, requiredPlan: 'CA Pro' },
-  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library, premium: true, requiredPlan: 'Pro' },
-  billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard, premium: false },
-  integrations: { href: "/dashboard/integrations", label: "Integrations", icon: Zap, premium: true, requiredPlan: 'Enterprise' },
-  settings: { href: "/dashboard/settings", label: "Settings", icon: Settings, premium: false },
-  mcaTracker: { href: "/dashboard/mca-tracker", label: "MCA Tracker", icon: Monitor, premium: true },
-  reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale, premium: true, requiredPlan: 'CA Pro' },
-  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare, premium: false },
+  dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network, requiredPlan: 'Founder' },
+  aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Assistant", icon: Sparkles },
+  documents: { href: "/dashboard/documents", label: "Documents", icon: FileText },
+  calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
+  contractAnalyzer: { href: "/dashboard/contract-analyzer", label: "Analyzer", icon: FileScan },
+  dueDiligence: { href: "/dashboard/due-diligence", label: "Audit", icon: GanttChartSquare, requiredPlan: 'Founder' },
+  analytics: { href: "/dashboard/analytics", label: "Insights", icon: LineChart, requiredPlan: 'Founder' },
+  clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban, requiredPlan: 'Pro' },
+  regulationWatcher: { href: "/dashboard/regulation-watcher", label: "Watcher", icon: RadioTower, requiredPlan: 'Pro' },
+  team: { href: "/dashboard/team", label: "Team", icon: Users, requiredPlan: 'Pro' },
+  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library, requiredPlan: 'Founder' },
+  billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  integrations: { href: "/dashboard/integrations", label: "Integrations", icon: Zap, requiredPlan: 'Enterprise' },
+  settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  mcaTracker: { href: "/dashboard/mca-tracker", label: "MCA Tracker", icon: Monitor, requiredPlan: 'Founder' },
+  reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale, requiredPlan: 'Pro' },
+  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
 } as const;
 
-type NavItem = typeof navItemConfig[keyof typeof navItemConfig];
+type NavItem = typeof navItemConfig[keyof typeof navItemConfig] & { requiredPlan?: UserPlan };
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
@@ -85,8 +86,8 @@ const founderNavItems: NavItem[] = [
   navItemConfig.mcaTracker,
   navItemConfig.dueDiligence,
   navItemConfig.analytics,
-  navItemConfig.integrations,
   navItemConfig.community,
+  navItemConfig.clauseLibrary,
 ];
 
 const caNavItems: NavItem[] = [
@@ -101,6 +102,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.dueDiligence,
   navItemConfig.analytics,
   navItemConfig.team,
+  navItemConfig.clauseLibrary,
 ];
 
 const legalAdvisorNavItems: NavItem[] = [
@@ -129,6 +131,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.integrations,
   navItemConfig.team,
   navItemConfig.clients,
+  navItemConfig.clauseLibrary,
 ];
 
 const getNavItems = (role: UserProfile['role']) => {
@@ -159,8 +162,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
      setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
   }
 
-  // The parent `DashboardLayout` handles the loading and auth checks.
-  // We can assume userProfile is available here.
   if (!userProfile) {
      return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -286,11 +287,24 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
+const planHierarchy: Record<UserPlan, number> = {
+  'Starter': 0,
+  'Founder': 1,
+  'Pro': 2,
+  'Enterprise': 3,
+  // Deprecated plans
+  'Free': 0, 
+  'CA Pro': 2,
+  'Enterprise Pro': 3,
+};
+
 const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
     const { userProfile } = useAuth();
 
     if (!userProfile) return null;
+    
+    const currentUserPlanLevel = planHierarchy[userProfile.plan] ?? 0;
 
     const bottomNavItems = [navItemConfig.billing, navItemConfig.settings];
 
@@ -302,10 +316,12 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
               <span className="flex items-center">
                 Clausey
-                 {userProfile.plan !== 'Free' && (
+                 {userProfile.plan !== 'Starter' && (
                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
-                      <span className="mr-1.5">🔥</span>
-                      {userProfile.plan.replace(' Pro', '')}
+                      <span className="mr-1.5">
+                        {userProfile.plan === 'Founder' ? '💡' : userProfile.plan === 'Pro' ? '💼' : '🏢'}
+                      </span>
+                      {userProfile.plan}
                     </Badge>
                   )}
               </span>
@@ -314,10 +330,8 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
           <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
-                const isLocked = (item.premium && userProfile.plan === 'Free') ||
-                                 (item.requiredPlan === 'Pro' && userProfile.plan === 'Free') ||
-                                 (item.requiredPlan === 'CA Pro' && !['CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) ||
-                                 (item.requiredPlan === 'Enterprise' && !['Enterprise', 'Enterprise Pro'].includes(userProfile.plan));
+                const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
+                const isLocked = item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false;
                 
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
@@ -339,7 +353,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
                       </TooltipTrigger>
                       {isLocked && (
                         <TooltipContent side="right">
-                          <p>Upgrade to {item.requiredPlan || 'Pro'} to unlock</p>
+                          <p>Upgrade to {item.requiredPlan} to unlock</p>
                         </TooltipContent>
                       )}
                     </Tooltip>
@@ -350,38 +364,25 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
           </div>
           <div className="mt-auto p-4">
             <div className="border-t pt-4 grid items-start px-2 text-sm font-medium lg:px-0">
-               {bottomNavItems.map((item) => {
-                 const isLocked = (item.premium && userProfile.plan === 'Free') ||
-                                  (item.requiredPlan === 'Pro' && userProfile.plan === 'Free') ||
-                                  (item.requiredPlan === 'CA Pro' && !['CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) ||
-                                  (item.requiredPlan === 'Enterprise' && !['Enterprise', 'Enterprise Pro'].includes(userProfile.plan));
-                 return (
+               {bottomNavItems.map((item) => (
                     <TooltipProvider key={item.href} delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                            <Link
-                              href={isLocked ? '#' : item.href}
+                              href={item.href}
                               className={cn(
                                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                                  pathname === item.href && "bg-muted text-primary font-semibold",
-                                  isLocked && "text-muted-foreground/50 hover:text-muted-foreground/50 cursor-not-allowed hover:transform-none hover:shadow-none"
+                                  pathname === item.href && "bg-muted text-primary font-semibold"
                               )}
-                              onClick={(e) => isLocked && e.preventDefault()}
                             >
                               <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                               {item.label}
-                              {isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500"/>}
                             </Link>
                           </TooltipTrigger>
-                          {isLocked && (
-                          <TooltipContent side="right">
-                              <p>Upgrade to {item.requiredPlan || 'Pro'} to unlock</p>
-                          </TooltipContent>
-                          )}
                       </Tooltip>
                     </TooltipProvider>
                  )
-               })}
+               )}
             </div>
           </div>
         </div>
@@ -395,13 +396,14 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     if (!userProfile) return null;
+    
+    const currentUserPlanLevel = planHierarchy[userProfile.plan] ?? 0;
 
     const handleLinkClick = () => {
       setIsOpen(false);
     }
     
     const bottomNavItems = [navItemConfig.billing, navItemConfig.settings];
-
 
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -421,10 +423,12 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                 <span className="flex items-center">
                   Clausey
-                   {userProfile.plan !== 'Free' && (
-                    <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
-                      <span className="mr-1.5">🔥</span>
-                      {userProfile.plan.replace(' Pro', '')}
+                   {userProfile.plan !== 'Starter' && (
+                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
+                        <span className="mr-1.5">
+                          {userProfile.plan === 'Founder' ? '💡' : userProfile.plan === 'Pro' ? '💼' : '🏢'}
+                        </span>
+                        {userProfile.plan}
                     </Badge>
                   )}
                 </span>
@@ -433,10 +437,8 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
           <ScrollArea className="flex-1">
             <nav className="grid gap-2 text-lg font-medium p-4">
               {navItems.map(item => {
-                const isLocked = (item.premium && userProfile.plan === 'Free') ||
-                                 (item.requiredPlan === 'Pro' && userProfile.plan === 'Free') ||
-                                 (item.requiredPlan === 'CA Pro' && !['CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) ||
-                                 (item.requiredPlan === 'Enterprise' && !['Enterprise', 'Enterprise Pro'].includes(userProfile.plan));
+                const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
+                const isLocked = item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false;
                 return (
                     <Link
                         key={item.href}
@@ -457,30 +459,19 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
                 )
               })}
               <div className="pt-4 mt-4 border-t">
-                {bottomNavItems.map(item => {
-                    const isLocked = (item.premium && userProfile.plan === 'Free') ||
-                                     (item.requiredPlan === 'Pro' && userProfile.plan === 'Free') ||
-                                     (item.requiredPlan === 'CA Pro' && !['CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) ||
-                                     (item.requiredPlan === 'Enterprise' && !['Enterprise', 'Enterprise Pro'].includes(userProfile.plan));
-                    return (
-                        <Link
-                            key={item.href}
-                            href={isLocked ? '#' : item.href}
-                            className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
-                                pathname === item.href && "bg-muted text-primary",
-                                isLocked && "opacity-60 cursor-not-allowed active:transform-none"
-                            )}
-                            onClick={(e) => {
-                                if (isLocked) e.preventDefault();
-                                else handleLinkClick();
-                            }}
-                        >
-                            <item.icon className="h-5 w-5" />
-                            {item.label}
-                            {isLocked && <Lock className="h-4 w-4 ml-auto text-amber-500" />}
-                        </Link>
-                    )
-                })}
+                {bottomNavItems.map(item => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
+                            pathname === item.href && "bg-muted text-primary"
+                        )}
+                        onClick={handleLinkClick}
+                    >
+                        <item.icon className="h-5 w-5" />
+                        {item.label}
+                    </Link>
+                ))}
               </div>
             </nav>
           </ScrollArea>

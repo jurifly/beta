@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -23,13 +24,16 @@ export default function SettingsPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const companyLimit = userProfile.plan === 'Free' ? 1 : userProfile.plan === 'Pro' ? 5 : Infinity;
+  const companyLimit = userProfile.plan === 'Starter' || userProfile.plan === 'Free' ? 1 : userProfile.plan === 'Founder' ? 5 : Infinity;
   const canAddCompany = userProfile.companies.length < companyLimit;
 
   const handleAddCompanyClick = () => {
     if (canAddCompany) {
       setCompanyToEdit(null);
       setModalOpen(true);
+    } else {
+        const upgradePlan = userProfile.plan === 'Starter' || userProfile.plan === 'Free' ? 'Founder' : 'Pro';
+         // TODO: Add toast or modal to upsell
     }
   };
 

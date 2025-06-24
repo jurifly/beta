@@ -1,3 +1,4 @@
+
 "use client"
 import { useState } from "react";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
@@ -14,17 +15,17 @@ import { InviteMemberModal } from "@/components/dashboard/invite-member-modal";
 
 export default function TeamPage() {
     const { userProfile } = useAuth();
-    const isEnterprise = userProfile?.plan === 'Enterprise' || userProfile?.plan === 'Enterprise Pro';
+    const isEnterprise = userProfile?.plan === 'Enterprise';
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!['CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+    if (!['Pro', 'Enterprise'].includes(userProfile.plan)) {
         return <UpgradePrompt
             title="Unlock Team Management"
-            description="Collaborate with your team, assign roles, and manage compliance together. This is a CA Pro / Enterprise feature."
+            description="Collaborate with your team, assign roles, and manage compliance together. This is a Pro feature."
             icon={<Users className="w-12 h-12 text-primary/20" />}
         />;
     }

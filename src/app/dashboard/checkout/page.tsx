@@ -1,3 +1,4 @@
+
 "use client"
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,16 +17,28 @@ export default function CheckoutPage() {
     const plan = searchParams.get('plan');
     
     const planMap: { [key: string]: UserPlan } = {
+      'starter': 'Starter',
+      'founder': 'Founder',
       'pro': 'Pro',
-      'ca-pro': 'CA Pro',
       'enterprise': 'Enterprise',
-      'enterprise-pro': 'Enterprise Pro',
     };
     
     const newPlan = plan ? planMap[plan] : null;
 
     if (newPlan) {
-      updateUserProfile({ plan: newPlan }).then(() => {
+      // Define credit mapping for new plans
+      const creditMap: Record<UserPlan, number> = {
+        'Starter': 90,
+        'Founder': 50,
+        'Pro': 1000,
+        'Enterprise': 10000,
+        // Deprecated plans
+        'Free': 30,
+        'CA Pro': 1000,
+        'Enterprise Pro': 10000
+      };
+
+      updateUserProfile({ plan: newPlan, credits: creditMap[newPlan] }).then(() => {
         router.replace('/dashboard/checkout-success');
       });
     } else {

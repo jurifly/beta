@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useAuth } from "@/hooks/auth";
@@ -12,7 +13,7 @@ export default function RegulationWatcherPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  if (userProfile.plan === 'Free') {
+  if (!['Pro', 'Enterprise'].includes(userProfile.plan)) {
     return <UpgradePrompt 
       title="Unlock Regulation Watcher"
       description="Stay ahead of regulatory changes with AI-powered summaries from government portals. This feature requires a Pro plan."

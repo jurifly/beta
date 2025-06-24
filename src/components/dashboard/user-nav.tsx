@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Briefcase, Building, CreditCard, LogOut, Settings, User as UserIcon, Check, Bolt, Sparkles } from "lucide-react";
@@ -104,7 +105,7 @@ export function UserNav() {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none flex items-center gap-2">
               {userProfile.name}
-              {userProfile.plan !== 'Free' && <Badge variant="secondary" className="border-violet-500/30 py-0 px-2 text-violet-500">{userProfile.plan}</Badge>}
+              {userProfile.plan !== 'Starter' && <Badge variant="secondary" className="border-violet-500/30 py-0 px-2 text-violet-500">{userProfile.plan}</Badge>}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {userProfile.email}
@@ -115,7 +116,7 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem disabled>
             <Bolt className="mr-2 h-4 w-4" />
-            <span>Credits: {userProfile.credits}</span>
+            <span>Credits: {userProfile.plan === 'Enterprise' ? 'Unlimited' : userProfile.credits}</span>
           </DropdownMenuItem>
            <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             <Sparkles className="mr-2 h-4 w-4" />

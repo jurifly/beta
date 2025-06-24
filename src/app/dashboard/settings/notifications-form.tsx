@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect } from "react"
@@ -30,7 +31,7 @@ export default function NotificationsForm() {
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
-  const isFreePlan = userProfile?.plan === 'Free';
+  const isFreePlan = userProfile?.plan === 'Starter' || userProfile?.plan === 'Free';
 
   useEffect(() => {
     if (state.success) {

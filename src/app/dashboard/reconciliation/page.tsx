@@ -94,10 +94,10 @@ export default function ReconciliationPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   
-  if (!['CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+  if (!['Pro', 'Enterprise'].includes(userProfile.plan)) {
     return <UpgradePrompt 
       title="Unlock AI Reconciliation Assistant"
-      description="Automatically compare GST, ROC, and ITR filings to find discrepancies and ensure accuracy. This is a CA Pro / Enterprise feature."
+      description="Automatically compare GST, ROC, and ITR filings to find discrepancies and ensure accuracy. This is a Pro feature."
       icon={<Scale className="w-12 h-12 text-primary/20"/>}
     />;
   }

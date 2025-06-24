@@ -91,7 +91,7 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
 // --- Dashboards ---
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
-    const isPro = userProfile.plan !== 'Free';
+    const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-4">
@@ -211,7 +211,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
 }
 
 function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
-  const isPro = userProfile.plan !== 'Free';
+  const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
 
   const stats = [
     { title: "Risk Score", value: "Low", subtext: "All Good", icon: <ShieldCheck />, color: "text-green-500" },

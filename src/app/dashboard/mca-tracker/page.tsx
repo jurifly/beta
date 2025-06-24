@@ -59,10 +59,10 @@ export default function McaTrackerPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  if (userProfile.plan === 'Free') {
+  if (userProfile.plan === 'Starter' || userProfile.plan === 'Free') {
     return <UpgradePrompt 
       title="Unlock MCA Tracker"
-      description="Get real-time (mocked) company details directly from the MCA portal using just a CIN. This is a Pro feature."
+      description="Get real-time (mocked) company details directly from the MCA portal using just a CIN. This is a Founder plan feature."
       icon={<Monitor className="w-12 h-12 text-primary/20"/>}
     />;
   }

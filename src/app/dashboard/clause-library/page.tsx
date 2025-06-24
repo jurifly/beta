@@ -1,3 +1,4 @@
+
 "use client"
 import { useState } from "react";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
@@ -26,13 +27,15 @@ export default function ClauseLibraryPage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+    if (!['Founder', 'Pro', 'Enterprise'].includes(userProfile.plan)) {
         return <UpgradePrompt
             title="Unlock the Clause Library"
-            description="Access a library of pre-approved legal clauses, add your own, and build contracts faster. This is a Pro feature."
+            description="Access a library of pre-approved legal clauses, add your own, and build contracts faster. This is a Founder plan feature."
             icon={<Library className="w-12 h-12 text-primary/20" />}
         />;
     }
+    
+    const isReadOnly = userProfile.plan === 'Founder';
 
     return (
         <>
@@ -49,7 +52,7 @@ export default function ClauseLibraryPage() {
                         <div>
                             <CardTitle>Your Clause Collection</CardTitle>
                             <CardDescription>
-                                All your saved clauses in one place.
+                                {isReadOnly ? "View available clauses. Upgrade to Pro to add your own." : "All your saved clauses in one place."}
                             </CardDescription>
                         </div>
                         <div className="flex w-full sm:w-auto gap-2">
@@ -57,7 +60,7 @@ export default function ClauseLibraryPage() {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input placeholder="Search clauses..." className="pl-10" />
                             </div>
-                            <Button className="w-full sm:w-auto interactive-lift" onClick={() => setModalOpen(true)}>
+                            <Button className="w-full sm:w-auto interactive-lift" onClick={() => setModalOpen(true)} disabled={isReadOnly}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Clause
                             </Button>
                         </div>
@@ -67,7 +70,7 @@ export default function ClauseLibraryPage() {
                             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
                                 <Library className="w-16 h-16 text-primary/20"/>
                                 <p className="font-semibold text-lg">Your Library is Empty</p>
-                                <p className="text-sm max-w-sm">Add a new clause to get started.</p>
+                                <p className="text-sm max-w-sm">{isReadOnly ? "Upgrade to Pro to add and manage custom clauses." : "Add a new clause to get started."}</p>
                             </div>
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

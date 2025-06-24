@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   addCredits: () => {},
 });
 
-const USER_PROFILE_STORAGE_KEY = 'userProfile';
+const USER_PROFILE_STORAGE_KEY = 'userProfile_v2'; // v2 for new plan structure
 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       const defaultProfile: UserProfile = {
         role: 'Founder',
-        plan: 'Free',
+        plan: 'Starter',
         companies: [
           { id: '1', name: 'Example Private Limited Company', type: 'Private Limited Company', pan: 'ABCDE1234F', incorporationDate: '2022-01-01', sector: 'Tech', location: 'Bengaluru, Karnataka', cin: 'U72200KA2022PTC123456' },
           { id: '2', name: 'Another Company Inc.', type: 'Private Limited Company', pan: 'FGHIJ5678K', incorporationDate: '2021-05-15', sector: 'SaaS', location: 'Pune, Maharashtra', cin: 'U72900PN2021PTC654321' }
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: 'HECKERRR',
         email: 'heckerrr@example.com',
         phone: '1234567890',
-        credits: 10,
+        credits: 90, // Starter plan default
       };
 
       const finalProfile = storedProfile || defaultProfile;
@@ -101,11 +101,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deductCredits = useCallback(async (amount: number) => {
-    if (!userProfile || (userProfile.credits ?? 0) < amount) {
+    if (!userProfile) return false;
+
+    // Enterprise plan has unlimited credits
+    if (userProfile.plan === 'Enterprise') return true;
+
+    if ((userProfile.credits ?? 0) < amount) {
       toast({
         variant: "destructive",
         title: "Insufficient Credits",
-        description: `You need ${amount} credit(s) for this action. Please upgrade your plan.`,
+        description: `You need ${amount} credit(s) for this action. Please upgrade your plan or buy more credits.`,
       });
       return false;
     }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
@@ -65,10 +66,10 @@ export function InviteMemberModal({ isOpen, onOpenChange }: InviteMemberModalPro
     if (userProfile?.role === 'CA') {
         return ['Viewer', 'Editor'];
     }
-    if (userProfile?.plan.includes('Enterprise')) {
+    if (userProfile?.plan === 'Enterprise') {
         return ['Admin', 'Member', 'Billing'];
     }
-    // Default roles for CA Pro
+    // Default roles for Pro plan
     return ['Manager', 'Associate'];
   }
 

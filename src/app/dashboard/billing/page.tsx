@@ -1,8 +1,9 @@
+
 "use client"
 
 import { useState } from "react"
 import Link from "next/link"
-import { CheckCircle, Sparkles, Bolt, Package, Star, Briefcase, Building, Loader2 } from "lucide-react"
+import { CheckCircle, Sparkles, Bolt, Package, Star, Briefcase, Building, User, Users, BrainCircuit, Gift } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -16,50 +17,44 @@ import type { UserProfile, UserPlan } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 
-const plans: { name: UserPlan, price: { monthly: number, yearly: number }, description: string, features: string[], cta: string, role: UserProfile['role'][], popular: boolean, icon?: React.ElementType }[] = [
+const plans = [
   {
-    name: "Free",
+    name: "Starter",
     price: { monthly: 0, yearly: 0 },
-    description: "For individuals and startups getting started.",
-    features: ["1 Company Limit", "30 AI Credits/month (renews monthly)", "Basic Calendar & Notifications", "Limited Document Generation"],
+    description: "For curious users, early founders, and student professionals.",
+    features: ["Conversational AI (3 prompts/day)", "Document Generator (1 NDA/month)", "Basic Activity Tracker", "Checklist Generator (1/month)", "Company Profile Setup", "AI Assistant (Summary Only)", "Contract Analyzer (1 doc/month)"],
     cta: "Current Plan",
     role: ["Founder", "Legal Advisor", "CA", "Enterprise"],
     popular: false,
+    icon: User,
+  },
+  {
+    name: "Founder",
+    price: { monthly: 199, yearly: 999 },
+    description: "For early-stage startups, solo entrepreneurs, and freelancers.",
+    features: ["Everything in Starter, plus:", "50 AI Credits/month", "Unlimited Document Generation", "Full Editor Access & Downloads", "Unlimited Checklists", "Analyzer (10 docs/month)", "Setup Assistant (INC/NIC finder)", "Conversation History", "Clause Library (Read-only)"],
+    cta: "Upgrade to Founder",
+    role: ["Founder", "Legal Advisor", "Enterprise"],
+    popular: true,
+    icon: Sparkles,
   },
   {
     name: "Pro",
-    price: { monthly: 129, yearly: 1299 },
-    description: "For founders who need powerful compliance tools.",
-    features: ["Unlimited Companies", "500 AI Credits/month", "Full Access to Document Generation", "Compliance Calendar + Insights", "Document Analyzer (Upload & Scan)", "Company Risk Score Indicator"],
+    price: { monthly: 799, yearly: 7990 },
+    description: "For CAs, legal professionals, and consultants managing clients.",
+    features: ["Everything in Founder, plus:", "Full Clause Library Access", "Client & Team Management (3 users)", "Unlimited Contract Analyzer", "Watcher AI (3 portals)", "Advanced Insights Dashboard"],
     cta: "Upgrade to Pro",
-    role: ["Founder", "Legal Advisor", "Enterprise"],
+    role: ["CA", "Legal Advisor", "Enterprise"],
     popular: true,
-  },
-  {
-    name: "CA Pro",
-    price: { monthly: 349, yearly: 3499 },
-    description: "For CAs managing multiple clients.",
-    features: ["All Pro Plan Features", "1000 AI Credits/month", "CA Dashboard & Client Analytics", "Multi-user Team Access", "Downloadable Compliance Reports"],
-    cta: "Upgrade to CA Pro",
-    role: ["CA", "Enterprise"],
-    popular: true,
+    icon: Briefcase,
   },
    {
     name: "Enterprise",
-    price: { monthly: 4999, yearly: 49990 },
-    description: "Advanced compliance and team management.",
-    features: ["All Pro & CA Pro Features", "5 Included User Seats", "Advanced Risk Engine", "Workflow Studio (Beta)", "Dedicated Support"],
-    cta: "Upgrade to Enterprise",
-    role: ["Enterprise", "Founder", "CA", "Legal Advisor"],
-    popular: false,
-  },
-   {
-    name: "Enterprise Pro",
-    price: { monthly: 9999, yearly: 99990 },
-    description: "Ultimate toolkit for SOC2, ISO, and GDPR compliance.",
-    features: ["All Enterprise Features", "10+ Included User Seats", "SOC2 / ISO / GDPR Toolkits", "Full Automation Studio Access", "Custom Onboarding"],
+    price: { monthly: 2999, yearly: 29990 },
+    description: "For law firms, mid-sized enterprises, and compliance teams.",
+    features: ["Everything in Pro, plus:", "Compliance Toolkit (SOC2, ISO)", "Full Integrations (Zapier, etc.)", "API Access & Webhooks", "Unlimited Watcher AI", "Team Access (10+ Users)", "White-labeled Exports"],
     cta: "Contact Sales",
-    role: ["Enterprise"],
+    role: ["Enterprise", "Founder", "CA", "Legal Advisor"],
     popular: false,
     icon: Building,
   },
@@ -88,23 +83,26 @@ export default function BillingPage() {
     }).format(price)
   }
   
-  const userPlan = userProfile.plan || "Free";
+  const userPlan = userProfile.plan || "Starter";
   const creditLimitMap = {
+    'Starter': 90, // 3 per day
+    'Founder': 50,
+    'Pro': 1000,
+    'Enterprise': 10000,
+    // Deprecated plans, handle gracefully
     'Free': 30,
-    'Pro': 500,
     'CA Pro': 1000,
-    'Enterprise': 5000,
     'Enterprise Pro': 10000,
   }
-  const creditLimit = creditLimitMap[userProfile.plan];
+  const creditLimit = creditLimitMap[userProfile.plan] || 30;
   const creditUsagePercentage = userProfile.credits ? (userProfile.credits / creditLimit) * 100 : 0;
 
   const handleDowngrade = async () => {
     if (userProfile) {
-        await updateUserProfile({ plan: "Free", credits: userProfile.credits ? Math.min(userProfile.credits, 30) : 30 });
+        await updateUserProfile({ plan: "Starter", credits: userProfile.credits ? Math.min(userProfile.credits, 90) : 90 });
         toast({
             title: "Plan Downgraded",
-            description: "You are now on the Free plan. Premium features have been disabled.",
+            description: "You are now on the Starter plan. Premium features have been disabled.",
         });
     }
   };
@@ -114,7 +112,7 @@ export default function BillingPage() {
       addCredits(credits);
     }
   }
-
+  
   const availablePlans = plans.filter(p => p.role.includes(userProfile.role || 'Founder'));
 
   return (
@@ -139,7 +137,7 @@ export default function BillingPage() {
       </div>
 
       <div className={cn("max-w-7xl mx-auto grid grid-cols-1 gap-8 items-stretch", 
-        availablePlans.length > 3 ? "lg:grid-cols-2 xl:grid-cols-3" : "lg:grid-cols-3"
+        availablePlans.length > 3 ? "lg:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-3"
       )}>
         {availablePlans.map((plan) => {
            const isCurrentPlan = plan.name === userPlan;
@@ -152,7 +150,6 @@ export default function BillingPage() {
                 "flex flex-col relative interactive-lift",
                 isCurrentPlan && "border-2 border-primary ring-4 ring-primary/10",
                 isPopular && !isCurrentPlan && "border-2 border-accent",
-                plan.name === 'Enterprise Pro' && "bg-muted/30"
               )}
             >
               {isPopular && (
@@ -164,7 +161,7 @@ export default function BillingPage() {
                 <CardDescription className="mt-2 h-10 text-sm">{plan.description}</CardDescription>
                 {plan.cta !== 'Contact Sales' ? (
                     <p className="mt-4">
-                        <span className="text-4xl font-bold">{formatPrice(price)}</span>
+                        <span className="text-4xl font-bold">{price > 0 ? formatPrice(price) : "Free"}</span>
                         <span className="text-muted-foreground">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                     </p>
                 ) : (
@@ -183,14 +180,14 @@ export default function BillingPage() {
                 </ul>
               </CardContent>
               <CardFooter>
-                 {plan.name === 'Free' ? (
+                 {plan.name === 'Starter' ? (
                     isCurrentPlan ? (
                       <Button className="w-full" disabled variant="outline">
                         Your Current Plan
                       </Button>
                     ) : (
                       <Button className="w-full" variant="outline" onClick={handleDowngrade}>
-                        Downgrade to Free
+                        Downgrade to Starter
                       </Button>
                     )
                   ) : (
@@ -205,7 +202,7 @@ export default function BillingPage() {
                       ) : plan.cta === "Contact Sales" ? (
                         <a href="mailto:sales@clausey.com">{plan.cta}</a>
                       ) : (
-                        <Link href={`/dashboard/checkout?plan=${plan.name.toLowerCase().replace(' pro', '-pro').replace(' ', '-')}&cycle=${billingCycle}`}>
+                        <Link href={`/dashboard/checkout?plan=${plan.name.toLowerCase()}&cycle=${billingCycle}`}>
                            {isPopular && <Sparkles className="mr-2 h-4 w-4"/>} {plan.cta}
                         </Link>
                       )}
@@ -244,25 +241,34 @@ export default function BillingPage() {
 
         <div>
             <h2 className="text-2xl font-bold text-center mb-6">Your Current Usage</h2>
-            <Card>
-                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                        <h3 className="font-semibold">AI Credits</h3>
-                        <p className="text-sm text-muted-foreground">Your remaining credits for the current billing cycle.</p>
-                        <div className="space-y-2">
-                            <Progress value={creditUsagePercentage} />
-                            <p className="text-right font-mono text-lg font-bold">{userProfile.credits || 0} / {creditLimit}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="text-base font-semibold">AI Credits</CardTitle>
+                        <CardDescription>Remaining credits for the current cycle.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <Progress value={creditUsagePercentage} />
+                        <p className="text-right font-mono text-lg font-bold">{userProfile.credits || 0} / {creditLimit}</p>
+                    </CardContent>
+                </Card>
+                 <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="text-base font-semibold">Referral Boosts</CardTitle>
+                         <CardDescription>Earn free credits by sharing with friends.</CardDescription>
+                    </CardHeader>
+                     <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-muted/50 border rounded-lg">
+                        <div className="shrink-0 text-primary bg-primary/10 p-3 rounded-full">
+                           <Gift className="w-6 h-6"/>
                         </div>
-                    </div>
-                     <div className="space-y-4">
-                        <h3 className="font-semibold">Billing History</h3>
-                        <div className="border rounded-lg p-4 text-center text-sm text-muted-foreground">
-                            <p>No invoices yet.</p>
-                            <Button variant="link" size="sm" className="mt-2">Download Invoices</Button>
+                        <div className="flex-1 text-center sm:text-left">
+                            <p className="font-semibold">Share & Earn!</p>
+                            <p className="text-xs text-muted-foreground">Get 50 free credits for every friend who signs up.</p>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                        <Button variant="outline" className="w-full sm:w-auto" onClick={() => toast({title: "Coming Soon!"})}>Get Link</Button>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
       </div>
     </div>

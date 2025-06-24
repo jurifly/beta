@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,7 @@ export default function BillingForm() {
     return <Card><CardContent className="p-6 h-64 flex items-center justify-center"><Loader2 className="animate-spin"/></CardContent></Card>
   }
   
-  const isPaidPlan = userProfile.plan !== 'Free';
+  const isPaidPlan = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
 
   return (
     <Card className="w-full max-w-4xl interactive-lift">

@@ -24,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/hooks/use-toast"
 import { useDropzone, type FileRejection } from "react-dropzone"
 import { generateDiligenceChecklist, validateComplianceAction } from "./actions"
+import { UpgradePrompt } from "@/components/upgrade-prompt"
 
 
 const initialDiligenceState: { data: RawChecklistOutput | null; error: string | null } = {
@@ -197,8 +198,13 @@ export default function DueDiligencePage() {
   const { userProfile, deductCredits } = useAuth();
   const { toast } = useToast();
   const { pending } = useFormStatus();
-  const isEnterprise = userProfile?.plan === 'Enterprise' || userProfile?.plan === 'Enterprise Pro';
-  const checklistKey = userProfile ? `ddChecklistData-${userProfile.activeCompanyId}` : null;
+  
+  if (!userProfile) {
+    return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  const isEnterprise = userProfile.plan === 'Enterprise';
+  const checklistKey = `ddChecklistData-${userProfile.activeCompanyId}`;
 
   useEffect(() => {
     if (checklistKey) {
@@ -228,7 +234,6 @@ export default function DueDiligencePage() {
       deductCredits(2); // Cost for generating a checklist
       const rawData = serverState.data;
 
-      // Transform flat AI response to grouped structure for UI
       const groupedData = rawData.checklist.reduce<ChecklistCategory[]>((acc, item) => {
         let category = acc.find(c => c.category === item.category);
         if (!category) {
@@ -323,8 +328,12 @@ export default function DueDiligencePage() {
 
   }, [checklistState.data, activeFilter]);
 
-  if (!userProfile) {
-    return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (['Starter'].includes(userProfile.plan)) {
+     return <UpgradePrompt 
+      title="Unlock the Audit Hub"
+      description="Generate comprehensive due diligence checklists and prepare for audits with our AI-powered tools. This feature is available on the Founder plan and above."
+      icon={<FolderCheck className="w-12 h-12 text-primary/20"/>}
+    />;
   }
 
   return (

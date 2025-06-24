@@ -23,7 +23,7 @@ export interface Company {
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
-export type UserPlan = 'Free' | 'Pro' | 'CA Pro' | 'Enterprise' | 'Enterprise Pro';
+export type UserPlan = 'Starter' | 'Founder' | 'Pro' | 'Enterprise' | 'Free' | 'CA Pro' | 'Enterprise Pro'; // Keep old for graceful degradation
 
 export interface UserProfile {
   role: UserRole;
