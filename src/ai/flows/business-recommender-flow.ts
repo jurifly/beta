@@ -7,7 +7,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-export const BusinessRecommenderInputSchema = z.object({
+const BusinessRecommenderInputSchema = z.object({
   founderCount: z.number().min(1).describe('The number of founders in the business.'),
   investmentPlan: z.string().describe('The plans for raising investment (e.g., "bootstrapped", "angel investors", "venture capital").'),
   revenueGoal: z.string().describe('The projected annual revenue goal for the first 2-3 years.'),
@@ -15,7 +15,7 @@ export const BusinessRecommenderInputSchema = z.object({
 });
 export type BusinessRecommenderInput = z.infer<typeof BusinessRecommenderInputSchema>;
 
-export const BusinessRecommenderOutputSchema = z.object({
+const BusinessRecommenderOutputSchema = z.object({
   recommendedType: z.string().describe('The recommended business structure (e.g., "Private Limited Company", "LLP", "One Person Company").'),
   reasoning: z.string().describe('A detailed explanation for why this structure is recommended.'),
   pros: z.array(z.string()).describe('A list of advantages for the recommended structure.'),
