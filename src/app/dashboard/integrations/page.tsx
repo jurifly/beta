@@ -1,12 +1,17 @@
+
 "use client"
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, Mail, MessageSquare, Zap, Bot, Database, ArrowRight, UploadCloud, Lock, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GitBranch, Mail, MessageSquare, Zap, Bot, Database, ArrowRight, UploadCloud, Lock, Loader2, PlusCircle, Workflow as WorkflowIcon, Play, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
 
 const initialIntegrations = [
   { name: "Slack", description: "Get notifications and interact with LexIQ.AI bot.", icon: MessageSquare, connected: false, authUrl: "https://slack.com/oauth/v2/authorize" },
@@ -17,12 +22,40 @@ const initialIntegrations = [
   { name: "GitHub", description: "Example for another integration.", icon: GitBranch, connected: false, authUrl: "https://github.com/login/oauth/authorize" },
 ];
 
+const workflowTriggers = [
+    { value: "doc_uploaded", label: "Document Uploaded", desc: "When a new contract or notice is uploaded." },
+    { value: "client_added", label: "New Client Added", desc: "When a new client is added to your workspace." },
+    { value: "reg_update", label: "Regulatory Update Found", desc: "When the watcher finds a new circular." },
+];
+
+const workflowActions = [
+    { value: "analyze_risk", label: "Analyze for Risks", desc: "Run the document through the Contract Analyzer." },
+    { value: "gen_checklist", label: "Generate Onboarding Checklist", desc: "Create a standard setup checklist for the client." },
+    { value: "summarize", label: "Summarize Update", desc: "Use AI to summarize the regulatory changes." },
+];
+
+const workflowNotifications = [
+    { value: "slack_legal", label: "Notify #legal on Slack", desc: "Post a summary message to your legal channel." },
+    { value: "email_client", label: "Email Client", desc: "Send an automated email to the client's primary contact." },
+    { value: "log_only", label: "Log to Activity Feed", desc: "No notification, just log the event." },
+];
+
+type Workflow = {
+  id: string;
+  trigger: string;
+  action: string;
+  notification: string;
+};
+
 export default function IntegrationsPage() {
   const { userProfile } = useAuth();
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [connecting, setConnecting] = useState<string | null>(null);
   const { toast } = useToast();
   
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [newWorkflow, setNewWorkflow] = useState({ trigger: '', action: '', notification: '' });
+
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -39,49 +72,55 @@ export default function IntegrationsPage() {
     const integration = integrations.find(i => i.name === name);
     if (!integration) return;
 
-    // Handle disconnection
     if (integration.connected) {
       setIntegrations(currentIntegrations =>
         currentIntegrations.map(i =>
           i.name === name ? { ...i, connected: false } : i
         )
       );
-      toast({
-        title: `Integration Disconnected`,
-        description: `Successfully disconnected from ${name}.`,
-      });
+      toast({ title: `Integration Disconnected`, description: `Successfully disconnected from ${name}.` });
       return;
     }
     
-    // Handle connection
     setConnecting(name);
     
-    // For integrations without a real auth URL, just simulate locally
     if (authUrl === "#") {
        setTimeout(() => {
           setIntegrations(current => current.map(i => i.name === name ? { ...i, connected: true } : i));
           setConnecting(null);
-          toast({
-            title: `Integration Connected`,
-            description: `Successfully connected to ${name}.`,
-          });
+          toast({ title: `Integration Connected`, description: `Successfully connected to ${name}.` });
        }, 2000);
        return;
     }
 
-    // Open auth URL in a new tab for others
     window.open(authUrl, '_blank', 'noopener,noreferrer');
     
-    // Simulate the callback and successful connection
     setTimeout(() => {
       setIntegrations(current => current.map(i => i.name === name ? { ...i, connected: true } : i));
       setConnecting(null);
-      toast({
-        title: `Integration Connected`,
-        description: `Successfully connected to ${name}.`,
-      });
+      toast({ title: `Integration Connected`, description: `Successfully connected to ${name}.` });
     }, 3000);
   };
+  
+  const handleCreateWorkflow = () => {
+    if (!newWorkflow.trigger || !newWorkflow.action || !newWorkflow.notification) {
+      toast({
+        variant: "destructive",
+        title: "Incomplete Workflow",
+        description: "Please select a trigger, action, and notification.",
+      });
+      return;
+    }
+    const workflow: Workflow = {
+      id: `wf_${Date.now()}`,
+      ...newWorkflow
+    }
+    setWorkflows(prev => [...prev, workflow]);
+    setNewWorkflow({ trigger: '', action: '', notification: '' });
+    toast({ title: "Workflow Created!", description: "Your new automation is now active." });
+  }
+
+  const getLabel = (value: string, list: {value: string, label: string}[]) => list.find(item => item.value === value)?.label || 'N/A';
 
   return (
     <div className="space-y-6">
@@ -121,41 +160,81 @@ export default function IntegrationsPage() {
 
       <Card className="interactive-lift">
         <CardHeader>
-          <CardTitle>Workflow Builder</CardTitle>
+          <CardTitle className="flex items-center gap-2"><WorkflowIcon /> Workflow Builder</CardTitle>
           <CardDescription>Create powerful automations to streamline your compliance processes.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40 space-y-6">
-            <Zap className="mx-auto h-12 w-12 text-primary/20" />
-            <p className="mt-4 text-lg font-semibold text-foreground">Build Automated Legal Workflows</p>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-foreground">
-              <div className="flex items-center gap-3 p-3 bg-background rounded-lg border shadow-sm">
-                <UploadCloud className="w-6 h-6 text-blue-500" />
-                <span className="font-medium">Trigger</span>
-              </div>
-              <ArrowRight className="w-8 h-8 text-muted-foreground hidden md:block" />
-              <div className="flex items-center gap-3 p-3 bg-background rounded-lg border shadow-sm">
-                <Zap className="w-6 h-6 text-yellow-500" />
-                <span className="font-medium">Action</span>
-              </div>
-              <ArrowRight className="w-8 h-8 text-muted-foreground hidden md:block" />
-              <div className="flex items-center gap-3 p-3 bg-background rounded-lg border shadow-sm">
-                <MessageSquare className="w-6 h-6 text-green-500" />
-                <span className="font-medium">Notify</span>
-              </div>
+        <CardContent className="space-y-6">
+            <div className="p-6 border rounded-lg bg-muted/40 space-y-4">
+                <h3 className="font-semibold text-lg">Create a New Workflow</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                    <div className="md:col-span-3 grid md:grid-cols-3 gap-4 items-center">
+                        <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">Trigger</Label>
+                            <Select value={newWorkflow.trigger} onValueChange={(v) => setNewWorkflow(w => ({...w, trigger: v}))}>
+                                <SelectTrigger><SelectValue placeholder="When this happens..."/></SelectTrigger>
+                                <SelectContent>
+                                    {workflowTriggers.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <ArrowRight className="w-6 h-6 text-muted-foreground mx-auto hidden md:block" />
+                        <div className="space-y-2">
+                             <Label className="text-xs text-muted-foreground">Action</Label>
+                            <Select value={newWorkflow.action} onValueChange={(v) => setNewWorkflow(w => ({...w, action: v}))}>
+                                <SelectTrigger><SelectValue placeholder="Do this..."/></SelectTrigger>
+                                <SelectContent>
+                                    {workflowActions.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <ArrowRight className="w-6 h-6 text-muted-foreground mx-auto hidden md:block" />
+                         <div className="space-y-2">
+                             <Label className="text-xs text-muted-foreground">Notification</Label>
+                            <Select value={newWorkflow.notification} onValueChange={(v) => setNewWorkflow(w => ({...w, notification: v}))}>
+                                <SelectTrigger><SelectValue placeholder="Then notify..."/></SelectTrigger>
+                                <SelectContent>
+                                    {workflowNotifications.map(n => <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <Button className="w-full md:w-auto self-end" onClick={handleCreateWorkflow}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create
+                    </Button>
+                </div>
             </div>
-            <p className="text-sm max-w-2xl">Example: "When a 'Contract is Uploaded', automatically 'Analyze it for Risks', and if the risk is 'High', then 'Notify the Legal Team on Slack'."</p>
-            <Button
-              variant="secondary"
-              className="interactive-lift"
-              onClick={() => {
-                toast({
-                  title: "Coming Soon!",
-                  description: "The visual workflow builder is under development.",
-                });
-              }}
-            >
-              Start Building
-            </Button>
+             <div>
+                <h3 className="font-semibold text-lg mb-4">Active Workflows</h3>
+                {workflows.length > 0 ? (
+                    <div className="space-y-4">
+                        {workflows.map(wf => (
+                            <div key={wf.id} className="p-4 border rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4 font-medium flex-wrap">
+                                    <span className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
+                                        <span className="text-primary">When:</span> {getLabel(wf.trigger, workflowTriggers)}
+                                    </span>
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground hidden md:block" />
+                                    <span className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
+                                        <span className="text-primary">Do:</span> {getLabel(wf.action, workflowActions)}
+                                    </span>
+                                     <ArrowRight className="w-5 h-5 text-muted-foreground hidden md:block" />
+                                     <span className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
+                                        <span className="text-primary">Notify:</span> {getLabel(wf.notification, workflowNotifications)}
+                                    </span>
+                                </div>
+                                <div className="flex gap-2 self-end md:self-center">
+                                    <Button variant="ghost" size="icon"><Play className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" onClick={() => setWorkflows(wfs => wfs.filter(w => w.id !== wf.id))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40">
+                        <p>You haven't created any workflows yet.</p>
+                    </div>
+                )}
+            </div>
         </CardContent>
       </Card>
     </div>
