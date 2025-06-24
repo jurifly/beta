@@ -24,7 +24,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,7 +78,7 @@ type NavigatorState = {
 };
 
 // Main Page Component
-export default function SetupAssistantPage() {
+export default function BusinessSetupPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [navigatorState, setNavigatorState] = useState<NavigatorState>({ completedSteps: [] });
   const { userProfile, loading } = useAuth();
@@ -109,7 +109,7 @@ export default function SetupAssistantPage() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <Step1BusinessType onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} userProfile={userProfile} />;
+        return <Step1BusinessType onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 2:
         return <Step2IncCodeFinder onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 3:
@@ -190,15 +190,12 @@ interface StepProps {
     initialState: NavigatorState;
 }
 
-interface Step1BusinessTypeProps extends StepProps {
-  userProfile: UserProfile;
-}
-
-function Step1BusinessType({ onComplete, updateState, initialState, userProfile }: Step1BusinessTypeProps) {
+function Step1BusinessType({ onComplete, updateState, initialState }: StepProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.businessTypeResult);
-    const isLocked = userProfile.plan === 'Free';
+    const { userProfile } = useAuth();
+    const isLocked = userProfile?.plan === 'Free';
 
     const { control, handleSubmit, formState: { errors } } = useForm<BusinessTypeFormData>({
         resolver: zodResolver(businessTypeFormSchema),
@@ -324,30 +321,32 @@ function Step1BusinessType({ onComplete, updateState, initialState, userProfile 
                                 <AccordionItem value="pros-cons">
                                     <AccordionTrigger>Pros & Cons</AccordionTrigger>
                                     <AccordionContent>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-left p-4 bg-background border rounded-md">
-                                            <div className="space-y-3">
-                                                <h4 className="font-semibold flex items-center gap-2"><ThumbsUp className="text-green-500"/> Pros</h4>
-                                                <div className="space-y-3 text-muted-foreground">
-                                                    {result.pros.map((pro, i) => (
-                                                        <div key={i} className="flex items-start gap-2.5">
-                                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/70" />
-                                                            <p className="flex-1">{pro}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <h4 className="font-semibold flex items-center gap-2"><ThumbsDown className="text-red-500"/> Cons</h4>
-                                                <div className="space-y-3 text-muted-foreground">
-                                                    {result.cons.map((con, i) => (
-                                                        <div key={i} className="flex items-start gap-2.5">
-                                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/70" />
-                                                            <p className="flex-1">{con}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <Card className="bg-background">
+                                          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-left p-4">
+                                              <div className="space-y-3">
+                                                  <h4 className="font-semibold flex items-center gap-2"><ThumbsUp className="text-green-500"/> Pros</h4>
+                                                  <ul className="space-y-3 text-muted-foreground">
+                                                      {result.pros.map((pro, i) => (
+                                                          <li key={i} className="flex items-start gap-2.5">
+                                                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-500/50" />
+                                                              <p className="flex-1">{pro}</p>
+                                                          </li>
+                                                      ))}
+                                                  </ul>
+                                              </div>
+                                              <div className="space-y-3">
+                                                  <h4 className="font-semibold flex items-center gap-2"><ThumbsDown className="text-red-500"/> Cons</h4>
+                                                  <ul className="space-y-3 text-muted-foreground">
+                                                      {result.cons.map((con, i) => (
+                                                          <li key={i} className="flex items-start gap-2.5">
+                                                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-500/50" />
+                                                              <p className="flex-1">{con}</p>
+                                                          </li>
+                                                      ))}
+                                                  </ul>
+                                              </div>
+                                          </CardContent>
+                                        </Card>
                                     </AccordionContent>
                                 </AccordionItem>
                                 {result.alternativeOption && (
