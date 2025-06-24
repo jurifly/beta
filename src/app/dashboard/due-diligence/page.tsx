@@ -39,6 +39,38 @@ type ChecklistState = {
   timestamp: string | null;
 };
 
+const dealTypesByRole = {
+  Founder: [
+    { value: "Seed Funding", label: "Pre-seed / Seed Funding" },
+    { value: "Series A", label: "Series A Funding" },
+    { value: "Series B/C+ Funding", label: "Series B/C+ Funding" },
+    { value: "Merger & Acquisition", label: "Merger & Acquisition (M&A)" },
+    { value: "Internal Audit Prep", label: "Internal Audit Prep" },
+  ],
+  CA: [
+    { value: "Financial Due Diligence", label: "Financial Due Diligence" },
+    { value: "Tax Due Diligence", label: "Tax Due Diligence" },
+    { value: "Statutory Audit", label: "Statutory Audit" },
+    { value: "Internal Audit", label: "Internal Audit" },
+    { value: "Forensic Audit", label: "Forensic Audit" },
+  ],
+  'Legal Advisor': [
+    { value: "Legal Due Diligence", label: "Legal Due Diligence" },
+    { value: "IP Due Diligence", label: "IP Due Diligence" },
+    { value: "Contract Review Audit", label: "Contract Review Audit" },
+    { value: "Merger & Acquisition", label: "Merger & Acquisition (M&A)" },
+    { value: "Litigation Review", label: "Litigation Review" },
+  ],
+  Enterprise: [
+    { value: "IPO Readiness", label: "IPO Readiness" },
+    { value: "SOC2 Compliance Prep", label: "SOC2 Compliance Prep" },
+    { value: "ISO 27001 Compliance Prep", label: "ISO 27001 Compliance Prep" },
+    { value: "Internal Controls Audit (SOX)", label: "Internal Controls Audit (SOX)" },
+    { value: "GDPR/DPDP Audit", label: "GDPR / DPDP Audit" },
+  ],
+};
+
+
 function SubmitButton({ isRegenerate }: { isRegenerate: boolean }) {
   const { pending } = useFormStatus()
   return (
@@ -304,7 +336,7 @@ export default function DueDiligencePage() {
     const completedItems = allItems.filter(i => i.status === 'Completed');
     const totalItems = allItems.length;
 
-    if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0 };
+    if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
     
     return {
       completedCount: completedItems.length,
@@ -327,6 +359,8 @@ export default function DueDiligencePage() {
     })).filter(category => category.items.length > 0);
 
   }, [checklistState.data, activeFilter]);
+
+  const availableDealTypes = dealTypesByRole[userProfile.role] || dealTypesByRole.Founder;
 
   if (['Starter'].includes(userProfile.plan)) {
      return <UpgradePrompt 
@@ -360,19 +394,14 @@ export default function DueDiligencePage() {
               <form action={formAction} className="flex flex-col sm:flex-row items-center gap-4 mb-6 pb-6 border-b">
                 <div className="space-y-1.5 w-full sm:w-auto sm:flex-1">
                     <Label htmlFor="dealType">Deal / Audit Type</Label>
-                    <Select name="dealType" defaultValue="Seed Funding">
+                    <Select name="dealType" defaultValue={availableDealTypes[0].value}>
                         <SelectTrigger id="dealType" className="min-w-[200px]">
                             <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Seed Funding">Pre-seed / Seed Funding</SelectItem>
-                            <SelectItem value="Series A">Series A</SelectItem>
-                            <SelectItem value="Series B/C+ Funding">Series B/C+ Funding</SelectItem>
-                            <SelectItem value="Merger & Acquisition">Merger &amp; Acquisition</SelectItem>
-                            <SelectItem value="Internal Audit Prep">Internal Audit Prep</SelectItem>
-                            <SelectItem value="Financial Due Diligence">Financial Due Diligence</SelectItem>
-                            <SelectItem value="Legal Due Diligence">Legal Due Diligence</SelectItem>
-                            <SelectItem value="IPO Readiness">IPO Readiness</SelectItem>
+                            {availableDealTypes.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
@@ -495,3 +524,5 @@ export default function DueDiligencePage() {
       </Card>
   )
 }
+
+    
