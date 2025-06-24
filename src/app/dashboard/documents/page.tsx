@@ -153,7 +153,7 @@ export default function DocumentsPage() {
       setIsTyping(false);
     }
     setEditorContent(e.target.value);
-  }
+  };
 
   const availableCategories = useMemo(() => {
     if (!userProfile) return [];
