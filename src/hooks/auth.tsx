@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, Company } from '@/lib/types';
+import type { User, UserProfile, Company, UserPlan } from '@/lib/types';
 import { useToast } from './use-toast';
 
 export interface AuthContextType {
@@ -12,6 +12,7 @@ export interface AuthContextType {
   loading: boolean;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   deductCredits: (amount: number) => Promise<boolean>;
+  addCredits?: (amount: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   updateUserProfile: async () => {},
   deductCredits: async () => false,
+  addCredits: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       const mockUserProfile: UserProfile = {
         role: 'Founder',
-        plan: 'Enterprise',
+        plan: 'Free',
         companies: [
           { id: '1', name: 'Example Private Limited Company', type: 'Private Limited Company', pan: 'ABCDE1234F', incorporationDate: '2022-01-01', sector: 'Tech', location: 'Bengaluru, Karnataka', cin: 'U72200KA2022PTC123456' },
           { id: '2', name: 'Another Company Inc.', type: 'Private Limited Company', pan: 'FGHIJ5678K', incorporationDate: '2021-05-15', sector: 'SaaS', location: 'Pune, Maharashtra', cin: 'U72900PN2021PTC654321' }
@@ -91,7 +93,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   }, [userProfile, toast]);
 
-  const value = { user, userProfile, loading, updateUserProfile, deductCredits };
+  const addCredits = useCallback((amount: number) => {
+    setUserProfile(prev => {
+      if (!prev) return null;
+      const newCredits = (prev.credits ?? 0) + amount;
+      toast({
+        title: "Credits Added!",
+        description: `You have successfully added ${amount} credits. Your new balance is ${newCredits}.`,
+      });
+      return { ...prev, credits: newCredits };
+    });
+  }, [toast]);
+
+  const value = { user, userProfile, loading, updateUserProfile, deductCredits, addCredits };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

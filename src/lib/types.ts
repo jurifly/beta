@@ -21,10 +21,11 @@ export interface Company {
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
+export type UserPlan = 'Free' | 'Pro' | 'CA Pro' | 'Enterprise' | 'Enterprise Pro';
 
 export interface UserProfile {
   role: UserRole;
-  plan: 'Free' | 'Pro' | 'CA Pro' | 'Enterprise' | 'Enterprise Pro';
+  plan: UserPlan;
   companies: Company[];
   activeCompanyId: string;
   name: string;
