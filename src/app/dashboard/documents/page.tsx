@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -157,7 +158,7 @@ export default function DocumentsPage() {
     if (availableCategories.length > 0 && !activeAccordion) {
       setActiveAccordion(availableCategories[0].name);
     }
-  }, [availableCategories, activeAccordion]);
+  }, [availableCategories]);
   
   const handleGenerateClick = async () => {
     if (!selectedTemplate) {
