@@ -11,6 +11,7 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 
 const initialIntegrations = [
