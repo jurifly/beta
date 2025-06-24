@@ -1,3 +1,4 @@
+
 'use client';
 
 // This is a simplified mock. In a real app, you'd get this from your auth provider.
@@ -7,11 +8,24 @@ export interface User {
   displayName: string | null;
 }
 
+export interface Company {
+    id: string;
+    name: string;
+    type: string;
+    cin?: string;
+    pan: string;
+    gstin?: string;
+    incorporationDate: string;
+    sector: string;
+    location: string;
+}
+
 export interface UserProfile {
   role: 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
   plan: 'Free' | 'Pro' | 'CA Pro' | 'Enterprise' | 'Enterprise Pro';
-  companies: { id: string; name:string }[];
+  companies: Company[];
   activeCompanyId: string;
   name: string;
   email: string;
+  credits?: number;
 }
