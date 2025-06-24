@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Search,
   FilePenLine,
@@ -133,7 +132,28 @@ export default function DocumentsPage() {
   const { toast } = useToast();
   const { userProfile } = useAuth();
   
-  const typewriterText = useTypewriter(generatedDoc?.content || '', 10);
+  const [editorContent, setEditorContent] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const hasUserEdited = useRef(false);
+
+  const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 10);
+  
+  useEffect(() => {
+    if (isTyping && !hasUserEdited.current) {
+      setEditorContent(typewriterText);
+    }
+    if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedDoc?.content || '').length) {
+        setIsTyping(false);
+    }
+  }, [typewriterText, isTyping, generatedDoc]);
+
+  const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (isTyping) {
+      hasUserEdited.current = true;
+      setIsTyping(false);
+    }
+    setEditorContent(e.target.value);
+  }
 
   const availableCategories = useMemo(() => {
     if (!userProfile) return [];
@@ -179,10 +199,13 @@ export default function DocumentsPage() {
 
     setLoading(true);
     setGeneratedDoc(null);
+    setEditorContent('');
+    hasUserEdited.current = false;
     try {
       const result = await generateDocument({ templateName: selectedTemplate });
       setGeneratedDoc(result);
       setRecentDocs(prev => [result, ...prev].slice(0, 3));
+      setIsTyping(true);
     } catch (error) {
       console.error("Error generating document:", error);
       toast({
@@ -193,6 +216,13 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRecentDocClick = (doc: DocumentGeneratorOutput) => {
+    setGeneratedDoc(doc);
+    setEditorContent(doc.content);
+    setIsTyping(false);
+    hasUserEdited.current = false;
   };
 
   if (!userProfile) {
@@ -334,8 +364,8 @@ export default function DocumentsPage() {
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
               <Textarea
-                readOnly
-                value={typewriterText}
+                value={editorContent}
+                onChange={handleEditorChange}
                 className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
               />
             </CardContent>
@@ -355,7 +385,7 @@ export default function DocumentsPage() {
             {recentDocs.length > 0 ? (
               <div className="space-y-4">
                 {recentDocs.map((doc, index) => (
-                  <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setGeneratedDoc(doc)}>
+                  <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleRecentDocClick(doc)}>
                     <CardHeader>
                       <CardTitle className="text-base font-semibold">{doc.title}</CardTitle>
                       <CardDescription>Generated a few moments ago</CardDescription>
@@ -376,5 +406,3 @@ export default function DocumentsPage() {
     </div>
   );
 }
-
-    
