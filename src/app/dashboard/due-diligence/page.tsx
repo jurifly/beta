@@ -367,8 +367,12 @@ export default function DueDiligencePage() {
                         <SelectContent>
                             <SelectItem value="Seed Funding">Pre-seed / Seed Funding</SelectItem>
                             <SelectItem value="Series A">Series A</SelectItem>
-                            <SelectItem value="Merger & Acquisition">Merger & Acquisition</SelectItem>
+                            <SelectItem value="Series B/C+ Funding">Series B/C+ Funding</SelectItem>
+                            <SelectItem value="Merger & Acquisition">Merger &amp; Acquisition</SelectItem>
                             <SelectItem value="Internal Audit Prep">Internal Audit Prep</SelectItem>
+                            <SelectItem value="Financial Due Diligence">Financial Due Diligence</SelectItem>
+                            <SelectItem value="Legal Due Diligence">Legal Due Diligence</SelectItem>
+                            <SelectItem value="IPO Readiness">IPO Readiness</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
