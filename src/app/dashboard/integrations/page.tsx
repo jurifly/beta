@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react";
@@ -10,17 +9,18 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useToast } from "@/hooks/use-toast";
 
 const initialIntegrations = [
-  { name: "Slack", description: "Get notifications and interact with LexIQ.AI bot.", icon: MessageSquare, connected: false },
-  { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false },
-  { name: "Zapier", description: "Connect LexIQ.AI to thousands of other apps.", icon: Zap, connected: false },
-  { name: "WhatsApp", description: "Receive urgent alerts directly on your phone.", icon: Bot, connected: false },
-  { name: "Notion", description: "Sync compliance calendars and task lists.", icon: Database, connected: false },
-  { name: "GitHub", description: "Example for another integration.", icon: GitBranch, connected: false },
+  { name: "Slack", description: "Get notifications and interact with LexIQ.AI bot.", icon: MessageSquare, connected: false, authUrl: "https://slack.com/oauth/v2/authorize" },
+  { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false, authUrl: "https://accounts.google.com/o/oauth2/v2/auth" },
+  { name: "Zapier", description: "Connect LexIQ.AI to thousands of other apps.", icon: Zap, connected: false, authUrl: "https://zapier.com/apps/lexiq-ai/integrations" },
+  { name: "WhatsApp", description: "Receive urgent alerts directly on your phone.", icon: Bot, connected: false, authUrl: "#" }, // No standard web auth flow
+  { name: "Notion", description: "Sync compliance calendars and task lists.", icon: Database, connected: false, authUrl: "https://api.notion.com/v1/oauth/authorize" },
+  { name: "GitHub", description: "Example for another integration.", icon: GitBranch, connected: false, authUrl: "https://github.com/login/oauth/authorize" },
 ];
 
 export default function IntegrationsPage() {
   const { userProfile } = useAuth();
   const [integrations, setIntegrations] = useState(initialIntegrations);
+  const [connecting, setConnecting] = useState<string | null>(null);
   const { toast } = useToast();
   
   if (!userProfile) {
@@ -35,21 +35,52 @@ export default function IntegrationsPage() {
     />;
   }
   
-  const handleToggleConnection = (name: string) => {
-    const isConnecting = !integrations.find(i => i.name === name)?.connected;
+  const handleToggleConnection = (name: string, authUrl: string) => {
+    const integration = integrations.find(i => i.name === name);
+    if (!integration) return;
+
+    // Handle disconnection
+    if (integration.connected) {
+      setIntegrations(currentIntegrations =>
+        currentIntegrations.map(i =>
+          i.name === name ? { ...i, connected: false } : i
+        )
+      );
+      toast({
+        title: `Integration Disconnected`,
+        description: `Successfully disconnected from ${name}.`,
+      });
+      return;
+    }
     
-    setIntegrations(currentIntegrations =>
-      currentIntegrations.map(integration =>
-        integration.name === name
-          ? { ...integration, connected: !integration.connected }
-          : integration
-      )
-    );
+    // Handle connection
+    setConnecting(name);
     
-    toast({
-      title: `Integration ${isConnecting ? 'Connected' : 'Disconnected'}`,
-      description: `Successfully ${isConnecting ? 'connected to' : 'disconnected from'} ${name}.`,
-    });
+    // For integrations without a real auth URL, just simulate locally
+    if (authUrl === "#") {
+       setTimeout(() => {
+          setIntegrations(current => current.map(i => i.name === name ? { ...i, connected: true } : i));
+          setConnecting(null);
+          toast({
+            title: `Integration Connected`,
+            description: `Successfully connected to ${name}.`,
+          });
+       }, 2000);
+       return;
+    }
+
+    // Open auth URL in a new tab for others
+    window.open(authUrl, '_blank', 'noopener,noreferrer');
+    
+    // Simulate the callback and successful connection
+    setTimeout(() => {
+      setIntegrations(current => current.map(i => i.name === name ? { ...i, connected: true } : i));
+      setConnecting(null);
+      toast({
+        title: `Integration Connected`,
+        description: `Successfully connected to ${name}.`,
+      });
+    }, 3000);
   };
 
   return (
@@ -75,8 +106,12 @@ export default function IntegrationsPage() {
                 <Button 
                   className="w-full interactive-lift" 
                   variant={integration.connected ? "outline" : "default"}
-                  onClick={() => handleToggleConnection(integration.name)}
+                  onClick={() => handleToggleConnection(integration.name, integration.authUrl)}
+                  disabled={!!connecting}
                 >
+                    {connecting === integration.name ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
                     {integration.connected ? "Disconnect" : "Connect"}
                 </Button>
             </CardContent>
@@ -109,7 +144,18 @@ export default function IntegrationsPage() {
               </div>
             </div>
             <p className="text-sm max-w-2xl">Example: "When a 'Contract is Uploaded', automatically 'Analyze it for Risks', and if the risk is 'High', then 'Notify the Legal Team on Slack'."</p>
-            <Button variant="secondary" className="interactive-lift">Start Building</Button>
+            <Button
+              variant="secondary"
+              className="interactive-lift"
+              onClick={() => {
+                toast({
+                  title: "Coming Soon!",
+                  description: "The visual workflow builder is under development.",
+                });
+              }}
+            >
+              Start Building
+            </Button>
         </CardContent>
       </Card>
     </div>
