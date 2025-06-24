@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react";
@@ -14,9 +15,9 @@ import type { Workflow, ActivityLogItem } from "@/lib/types";
 
 
 const initialIntegrations = [
-  { name: "Slack", description: "Get notifications and interact with Clausey bot.", icon: MessageSquare, connected: false, authUrl: "https://slack.com/oauth/v2/authorize" },
-  { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false, authUrl: "https://accounts.google.com/o/oauth2/v2/auth" },
-  { name: "Zapier", description: "Connect Clausey to thousands of other apps.", icon: Zap, connected: false, authUrl: "https://zapier.com/apps/clausey/integrations" },
+  { name: "Slack", description: "Get notifications and interact with Clausey bot.", icon: MessageSquare, connected: false, authUrl: "#" },
+  { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false, authUrl: "#" },
+  { name: "Zapier", description: "Connect Clausey to thousands of other apps.", icon: Zap, connected: false, authUrl: "#" },
 ];
 
 const workflowTriggers = [
@@ -75,22 +76,12 @@ export default function IntegrationsPage() {
     
     setConnecting(name);
     
-    if (authUrl === "#") {
-       setTimeout(() => {
-          setIntegrations(current => current.map(i => i.name === name ? { ...i, connected: true } : i));
-          setConnecting(null);
-          toast({ title: `Integration Connected`, description: `Successfully connected to ${name}.` });
-       }, 2000);
-       return;
-    }
-
-    window.open(authUrl, '_blank', 'noopener,noreferrer');
-    
+    // Simulate OAuth flow
     setTimeout(() => {
       setIntegrations(current => current.map(i => i.name === name ? { ...i, connected: true } : i));
       setConnecting(null);
       toast({ title: `Integration Connected`, description: `Successfully connected to ${name}.` });
-    }, 3000);
+    }, 2000);
   };
   
   const getLabel = (value: string, list: {value: string, label: string}[]) => list.find(item => item.value === value)?.label || 'N/A';

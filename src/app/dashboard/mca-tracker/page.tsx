@@ -16,12 +16,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Monitor, Search, Loader2, Building2, KeyRound, Calendar, Briefcase, MapPin, AlertTriangle, Edit, Telescope } from "lucide-react";
+import { Monitor, Search, Loader2, Building2, KeyRound, Calendar, Briefcase, MapPin, AlertTriangle, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { CompanyDetailsOutput } from "@/ai/flows/company-details-flow";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useAuth } from "@/hooks/auth";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { fetchCompanyDetailsFromCIN } from "@/app/dashboard/settings/actions";
 
 const manualInputSchema = z.object({
   name: z.string().min(2, "Company name is required."),
@@ -40,15 +40,41 @@ export default function McaTrackerPage() {
   const [companyDetails, setCompanyDetails] = useState<CompanyDetailsOutput | null>(null);
   const [mode, setMode] = useState<'search' | 'manual'>('search');
   const { toast } = useToast();
-  const { userProfile } = useAuth();
-  const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false);
+  const { userProfile, deductCredits } = useAuth();
   
   const { register, handleSubmit, formState: { errors } } = useForm<ManualInputData>({
     resolver: zodResolver(manualInputSchema),
   });
 
   const handleSearch = async () => {
-    setIsComingSoonModalOpen(true);
+    if (cin.length !== 21) {
+        toast({
+            variant: "destructive",
+            title: "Invalid CIN",
+            description: "Please enter a valid 21-digit CIN."
+        });
+        return;
+    }
+    if (!await deductCredits(1)) return;
+
+    setIsLoading(true);
+    setCompanyDetails(null);
+    try {
+        const details = await fetchCompanyDetailsFromCIN(cin);
+        setCompanyDetails(details);
+        toast({
+            title: "Success!",
+            description: "Company details fetched successfully."
+        });
+    } catch(e: any) {
+        toast({
+            variant: "destructive",
+            title: "Search Failed",
+            description: e.message || "Could not fetch company details."
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   const onManualSubmit = (data: ManualInputData) => {
@@ -74,24 +100,6 @@ export default function McaTrackerPage() {
 
   return (
     <>
-      <Dialog open={isComingSoonModalOpen} onOpenChange={setIsComingSoonModalOpen}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader className="items-center text-center">
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
-                    <Telescope className="w-8 h-8 text-primary" />
-                </div>
-                <DialogTitle className="text-2xl">Feature Coming Soon!</DialogTitle>
-                <DialogDescription className="pt-2">
-                    The automated CIN search feature is currently under development. We're working hard to bring it to you.
-                    <br/><br/>
-                    For now, please use the "Manual Input" option to add company details.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="sm:justify-center">
-                <Button onClick={() => setIsComingSoonModalOpen(false)}>Got it</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <div className="space-y-6">
         <div>
             <h2 className="text-2xl font-bold tracking-tight">MCA Company Tracker</h2>

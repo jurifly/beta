@@ -1,22 +1,46 @@
 
 "use client"
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, PlusCircle, Search } from "lucide-react";
+import { MessageSquare, PlusCircle, Search, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { generateForumThreads, type ForumGeneratorOutput } from "@/ai/flows/forum-generator-flow";
+import { useToast } from "@/hooks/use-toast";
 
-const mockThreads = [
-  { id: 1, title: "How to handle TDS on foreign payments for SaaS subscriptions?", author: "Rohan S.", replies: 5, tag: "Taxation" },
-  { id: 2, title: "Best practices for drafting a Founders' Agreement?", author: "Priya K.", replies: 12, tag: "Legal" },
-  { id: 3, title: "What are the key compliance deadlines for a Pvt Ltd in Q3?", author: "Ankit J.", replies: 8, tag: "Compliance" },
-  { id: 4, title: "Looking for a good CA in Bangalore for a seed-stage startup.", author: "Sneha M.", replies: 15, tag: "Networking" },
-];
+type ForumThread = ForumGeneratorOutput["threads"][0];
 
 export default function CommunityPage() {
+  const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchThreads = async () => {
+      setIsLoading(true);
+      try {
+        const response = await generateForumThreads();
+        setThreads(response.threads);
+      } catch (error) {
+        console.error("Failed to generate forum threads:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load forum",
+          description: "Could not fetch dynamic content for the community forum.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchThreads();
+  }, [toast]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -45,34 +69,54 @@ export default function CommunityPage() {
             </div>
         </CardHeader>
         <CardContent>
-            <div className="space-y-4">
-                {mockThreads.map(thread => (
-                    <Link href="#" key={thread.id}>
-                        <div className="p-4 border rounded-lg flex items-center justify-between hover:bg-muted transition-colors cursor-pointer interactive-lift">
-                            <div className="flex items-center gap-4">
-                                <Avatar>
-                                    <AvatarFallback>{thread.author.slice(0,2)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-semibold text-base">{thread.title}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        Posted by {thread.author}
-                                        <Badge variant="outline" className="ml-2">{thread.tag}</Badge>
-                                    </p>
+            {isLoading ? (
+                <div className="space-y-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="p-4 border rounded-lg flex items-center justify-between">
+                             <div className="flex items-center gap-4 flex-1">
+                                <Skeleton className="h-12 w-12 rounded-full" />
+                                <div className="space-y-2 flex-1">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-4 w-1/4" />
                                 </div>
                             </div>
-                            <div className="text-center">
-                                <p className="font-bold text-lg">{thread.replies}</p>
-                                <p className="text-xs text-muted-foreground">Replies</p>
+                             <div className="text-center w-12">
+                                <Skeleton className="h-6 w-full mb-1" />
+                                <Skeleton className="h-3 w-full" />
                             </div>
                         </div>
-                    </Link>
-                ))}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {threads.map(thread => (
+                        <Link href="#" key={thread.id}>
+                            <div className="p-4 border rounded-lg flex items-center justify-between hover:bg-muted transition-colors cursor-pointer interactive-lift">
+                                <div className="flex items-center gap-4">
+                                    <Avatar>
+                                        <AvatarFallback>{thread.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold text-base">{thread.title}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Posted by {thread.author}
+                                            <Badge variant="outline" className="ml-2">{thread.tag}</Badge>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                    <p className="font-bold text-lg">{thread.replies}</p>
+                                    <p className="text-xs text-muted-foreground">Replies</p>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </CardContent>
       </Card>
       <div className="text-center text-xs text-muted-foreground">
-        <p>This is a mock UI for demonstration purposes.</p>
+        <p>Forum content is generated by AI for demonstration purposes.</p>
       </div>
     </div>
   );
