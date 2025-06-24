@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Monitor, Search, Loader2, Building2, KeyRound, Calendar, Briefcase, MapPin, AlertTriangle, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchCompanyDetailsFromCIN } from "@/app/dashboard/settings/actions";
 import type { CompanyDetailsOutput } from "@/ai/flows/company-details-flow";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useAuth } from "@/hooks/auth";
@@ -40,38 +39,17 @@ export default function McaTrackerPage() {
   const [companyDetails, setCompanyDetails] = useState<CompanyDetailsOutput | null>(null);
   const [mode, setMode] = useState<'search' | 'manual'>('search');
   const { toast } = useToast();
-  const { userProfile, deductCredits } = useAuth();
+  const { userProfile } = useAuth();
   
   const { register, handleSubmit, formState: { errors } } = useForm<ManualInputData>({
     resolver: zodResolver(manualInputSchema),
   });
 
   const handleSearch = async () => {
-    if (cin.length !== 21) {
-      toast({
-        variant: "destructive",
-        title: "Invalid CIN",
-        description: "Please enter a valid 21-character CIN.",
-      });
-      return;
-    }
-    
-    if (!await deductCredits(1)) return;
-
-    setIsLoading(true);
-    setCompanyDetails(null);
-    try {
-      const details = await fetchCompanyDetailsFromCIN(cin);
-      setCompanyDetails(details);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Search Failed",
-        description: error.message,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({
+      title: "Coming Soon",
+      description: "The CIN search feature is under development. Please use Manual Input for now.",
+    });
   };
 
   const onManualSubmit = (data: ManualInputData) => {
