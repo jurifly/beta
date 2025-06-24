@@ -157,6 +157,18 @@ export default function IntegrationsPage() {
     toast({ title: "Workflow Deleted", description: "The automation has been removed." });
   }
 
+  const handleRunWorkflow = (workflow: Workflow) => {
+    const newActivity: ActivityLogItem = {
+      id: `act_${Date.now()}`,
+      timestamp: new Date(),
+      icon: Play,
+      title: `Workflow Run: "${getLabel(workflow.action, workflowActions)}"`,
+      description: `Triggered manually.`,
+    };
+    setActivityLog(prev => [newActivity, ...prev]);
+    toast({ title: "Workflow Running", description: "The workflow has been manually triggered." });
+  };
+
   return (
     <div className="grid lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -229,6 +241,7 @@ export default function IntegrationsPage() {
                                     </span>
                                 </div>
                                 <div className="flex gap-2 self-end md:self-center">
+                                    <Button variant="ghost" size="icon" onClick={() => handleRunWorkflow(wf)}><Play className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleDeleteWorkflow(wf.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                 </div>
                             </Card>
@@ -250,6 +263,31 @@ export default function IntegrationsPage() {
                 <p className="text-muted-foreground">
                   Connect your favorite tools.
                 </p>
+            </div>
+             <div className="space-y-4">
+                {integrations.slice(0, 3).map((integration) => (
+                <Card key={integration.name} className="interactive-lift">
+                    <CardHeader className="flex flex-row items-center gap-4 p-4">
+                    <integration.icon className="w-6 h-6 text-primary" />
+                    <div>
+                        <CardTitle className="text-base">{integration.name}</CardTitle>
+                    </div>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                        <Button 
+                        className="w-full interactive-lift" 
+                        variant={integration.connected ? "outline" : "default"}
+                        onClick={() => handleToggleConnection(integration.name, integration.authUrl)}
+                        disabled={!!connecting}
+                        >
+                            {connecting === integration.name ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {integration.connected ? "Disconnect" : "Connect"}
+                        </Button>
+                    </CardContent>
+                </Card>
+                ))}
             </div>
             <Card className="interactive-lift">
                 <CardHeader>
@@ -280,35 +318,7 @@ export default function IntegrationsPage() {
                 </CardContent>
             </Card>
 
-             <div className="space-y-4">
-                {integrations.slice(0, 3).map((integration) => (
-                <Card key={integration.name} className="interactive-lift">
-                    <CardHeader className="flex flex-row items-center gap-4 p-4">
-                    <integration.icon className="w-6 h-6 text-primary" />
-                    <div>
-                        <CardTitle className="text-base">{integration.name}</CardTitle>
-                    </div>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <Button 
-                        className="w-full interactive-lift" 
-                        variant={integration.connected ? "outline" : "default"}
-                        onClick={() => handleToggleConnection(integration.name, integration.authUrl)}
-                        disabled={!!connecting}
-                        >
-                            {connecting === integration.name ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : null}
-                            {integration.connected ? "Disconnect" : "Connect"}
-                        </Button>
-                    </CardContent>
-                </Card>
-                ))}
-            </div>
         </div>
     </div>
   );
 }
-
-
-    
