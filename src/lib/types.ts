@@ -52,3 +52,10 @@ export interface GenerateDDChecklistOutput {
   reportTitle: string;
   checklist: ChecklistCategory[];
 }
+
+export interface Clause {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+}
