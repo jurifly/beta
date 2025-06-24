@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow for analyzing legal contracts from a file.
@@ -6,7 +7,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const AnalyzeContractInputSchema = z.object({
+const AnalyzeContractInputSchema = z.object({
   fileDataUri: z.string().describe("The contract document as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type AnalyzeContractInput = z.infer<typeof AnalyzeContractInputSchema>;
@@ -16,7 +17,7 @@ const RiskFlagSchema = z.object({
   risk: z.string().describe("A concise description of the potential risk."),
 });
 
-export const AnalyzeContractOutputSchema = z.object({
+const AnalyzeContractOutputSchema = z.object({
   summary: z.string().describe("A brief, high-level summary of the contract's purpose and main parties."),
   riskScore: z.number().min(0).max(100).describe("A numerical score from 0 (very high risk) to 100 (very low risk) representing the overall risk level of the contract."),
   riskFlags: z.array(RiskFlagSchema).describe("A list of potential risks, liabilities, or unfavorable terms for the user."),
