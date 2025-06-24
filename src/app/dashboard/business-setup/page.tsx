@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -17,7 +17,10 @@ import {
   Fingerprint,
   FileSignature,
   BookUser,
-  Info
+  Info,
+  ThumbsUp,
+  ThumbsDown,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -26,7 +29,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getIncCodeAction, getFinalChecklistAction } from "./actions";
+import { getBusinessRecommendationAction, getIncCodeAction, getFinalChecklistAction } from "./actions";
+import type { BusinessRecommenderOutput } from "@/ai/flows/business-recommender-flow";
 import type { IncCodeFinderOutput } from "@/ai/flows/inc-code-finder-flow";
 import type { AssistantOutput } from "@/ai/flows/assistant-flow";
 import { Progress } from "@/components/ui/progress";
@@ -37,21 +41,33 @@ import Link from "next/link";
 import { ToastAction } from "@/components/ui/toast";
 import { useTypewriter } from "@/hooks/use-typewriter";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const STEPS = [
-  { id: 1, name: "INC Code Finder", icon: Fingerprint },
-  { id: 2, name: "Registration Guide", icon: BookUser },
-  { id: 3, name: "Generate Documents", icon: FileSignature },
-  { id: 4, name: "Final Checklist", icon: ListChecks },
+  { id: 1, name: "Business Type", icon: Building2 },
+  { id: 2, name: "INC Code Finder", icon: Fingerprint },
+  { id: 3, name: "Registration Guide", icon: BookUser },
+  { id: 4, name: "Generate Documents", icon: FileSignature },
+  { id: 5, name: "Final Checklist", icon: ListChecks },
 ];
+
+const businessTypeFormSchema = z.object({
+  founderCount: z.coerce.number().min(1, "Number of founders is required."),
+  investmentPlan: z.string().min(1, "Investment plan is required."),
+  revenueGoal: z.string().min(1, "Revenue goal is required."),
+  businessDescription: z.string().min(20, "Please provide a more detailed description (min 20 characters).").max(500),
+});
+type BusinessTypeFormData = z.infer<typeof businessTypeFormSchema>;
 
 const incCodeFormSchema = z.object({
   businessDescription: z.string().min(20, "Please provide a more detailed description (min 20 characters).").max(500),
 });
-
 type IncCodeFormData = z.infer<typeof incCodeFormSchema>;
 
 type NavigatorState = {
+  businessTypeForm?: BusinessTypeFormData;
+  businessTypeResult?: BusinessRecommenderOutput;
   incCodeForm?: IncCodeFormData;
   incCodeResult?: IncCodeFinderOutput;
   finalChecklist?: AssistantOutput;
@@ -69,7 +85,6 @@ export default function SetupAssistantPage() {
   }
   const goToPrevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const jumpToStep = (step: number) => {
-    // Allow jumping only to completed steps
     if (navigatorState.completedSteps.includes(step) || step < currentStep) {
         setCurrentStep(step);
     }
@@ -82,13 +97,15 @@ export default function SetupAssistantPage() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <Step1IncCodeFinder onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
+        return <Step1BusinessType onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 2:
-        return <Step2RegistrationGuide onComplete={goToNextStep} />;
+        return <Step2IncCodeFinder onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 3:
-        return <Step3DocumentGenerator onComplete={goToNextStep} />;
+        return <Step3RegistrationGuide onComplete={goToNextStep} />;
       case 4:
-        return <Step4FinalChecklist navigatorState={navigatorState} />;
+        return <Step4DocumentGenerator onComplete={goToNextStep} />;
+      case 5:
+        return <Step5FinalChecklist navigatorState={navigatorState} />;
       default:
         return null;
     }
@@ -154,22 +171,167 @@ export default function SetupAssistantPage() {
   );
 }
 
-// --- Step 1: INC Code Finder ---
-interface Step1Props {
+// --- Step 1: Business Type Recommender ---
+interface StepProps {
     onComplete: () => void;
     updateState: (updates: Partial<NavigatorState>) => void;
     initialState: NavigatorState;
 }
 
-function Step1IncCodeFinder({ onComplete, updateState, initialState }: Step1Props) {
+function Step1BusinessType({ onComplete, updateState, initialState }: StepProps) {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.businessTypeResult);
+
+    const { control, handleSubmit, formState: { errors } } = useForm<BusinessTypeFormData>({
+        resolver: zodResolver(businessTypeFormSchema),
+        defaultValues: initialState.businessTypeForm || {
+          founderCount: 1,
+          investmentPlan: "",
+          revenueGoal: "",
+          businessDescription: "",
+        },
+    });
+
+    const onSubmit = async (data: BusinessTypeFormData) => {
+        setIsLoading(true);
+        setResult(undefined);
+        updateState({ businessTypeForm: data });
+        try {
+            const response = await getBusinessRecommendationAction(data);
+            setResult(response);
+            updateState({ businessTypeResult: response });
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "Recommendation Failed", description: error.message });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+  
+    return (
+        <div className="grid md:grid-cols-2 gap-8">
+            <div>
+                <h2 className="text-xl font-bold">Find Your Ideal Business Structure</h2>
+                <p className="text-muted-foreground mt-1">Answer a few questions and our AI will recommend the best legal structure for your new venture.</p>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Number of Founders</Label>
+                            <Controller name="founderCount" control={control} render={({ field }) => (
+                                <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value || 1)}>
+                                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">1 Founder</SelectItem>
+                                        <SelectItem value="2">2 Founders</SelectItem>
+                                        <SelectItem value="3">3 Founders</SelectItem>
+                                        <SelectItem value="4">4 Founders</SelectItem>
+                                        <SelectItem value="5">5+ Founders</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}/>
+                            {errors.founderCount && <p className="text-sm text-destructive">{errors.founderCount.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                             <Label>Investment Plan</Label>
+                             <Controller name="investmentPlan" control={control} render={({ field }) => (
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Bootstrapped">Bootstrapped</SelectItem>
+                                        <SelectItem value="Angel Investors">Angel Investors</SelectItem>
+                                        <SelectItem value="Venture Capital">Venture Capital</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}/>
+                             {errors.investmentPlan && <p className="text-sm text-destructive">{errors.investmentPlan.message}</p>}
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                         <Label>Projected Annual Revenue</Label>
+                         <Controller name="revenueGoal" control={control} render={({ field }) => (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="< 10 Lakhs">Under ₹10 Lakhs</SelectItem>
+                                    <SelectItem value="10 Lakhs - 1 Crore">₹10 Lakhs - ₹1 Crore</SelectItem>
+                                    <SelectItem value="> 1 Crore">Over ₹1 Crore</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}/>
+                         {errors.revenueGoal && <p className="text-sm text-destructive">{errors.revenueGoal.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="businessDescription">Business Description</Label>
+                        <Controller name="businessDescription" control={control} render={({ field }) => (
+                            <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances..." {...field} className="min-h-[100px]" />
+                        )}/>
+                        {errors.businessDescription && <p className="text-sm text-destructive">{errors.businessDescription.message}</p>}
+                    </div>
+                    <Button type="submit" disabled={isLoading} className="w-full">
+                        {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
+                        Get Recommendation
+                    </Button>
+                </form>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-6">
+                <h3 className="font-bold text-lg text-center mb-4">AI Recommendation</h3>
+                {isLoading && (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                        <p className="mt-4 font-semibold">Analyzing your venture...</p>
+                    </div>
+                )}
+                {!isLoading && result && (
+                    <div className="space-y-6 animate-in fade-in-50 duration-500">
+                        <Card className="bg-background text-center">
+                            <CardHeader>
+                                <CardTitle className="text-primary">{result.recommendedType}</CardTitle>
+                                <CardDescription className="font-semibold text-base">{result.reasoning}</CardDescription>
+                            </CardHeader>
+                        </Card>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Card>
+                                <CardHeader><CardTitle className="text-base flex items-center gap-2"><ThumbsUp className="text-green-500"/> Pros</CardTitle></CardHeader>
+                                <CardContent><ul className="list-disc pl-4 space-y-1 text-sm">{result.pros.map((pro, i) => <li key={i}>{pro}</li>)}</ul></CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle className="text-base flex items-center gap-2"><ThumbsDown className="text-red-500"/> Cons</CardTitle></CardHeader>
+                                <CardContent><ul className="list-disc pl-4 space-y-1 text-sm">{result.cons.map((con, i) => <li key={i}>{con}</li>)}</ul></CardContent>
+                            </Card>
+                        </div>
+                        {result.alternativeOption && (
+                            <Card className="bg-amber-100/50 border-amber-500/30">
+                                <CardHeader className="flex-row items-center gap-3">
+                                    <Lightbulb className="text-amber-600"/>
+                                    <CardTitle className="text-base text-amber-800">Alternative to Consider: {result.alternativeOption}</CardTitle>
+                                </CardHeader>
+                            </Card>
+                        )}
+                        <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
+                    </div>
+                )}
+                {!isLoading && !result && (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+                        <Building2 className="w-12 h-12 text-primary/20 mb-4" />
+                        <p className="font-medium">Your recommended business structure will appear here.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+
+// --- Step 2: INC Code Finder ---
+function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<IncCodeFinderOutput | undefined>(initialState.incCodeResult);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<IncCodeFormData>({
+  const { control, handleSubmit, formState: { errors }, setValue } = useForm<IncCodeFormData>({
     resolver: zodResolver(incCodeFormSchema),
     defaultValues: initialState.incCodeForm || {
-      businessDescription: "",
+      businessDescription: initialState.businessTypeForm?.businessDescription || "",
     },
   });
 
@@ -196,7 +358,9 @@ function Step1IncCodeFinder({ onComplete, updateState, initialState }: Step1Prop
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
               <div className="space-y-2">
                   <Label htmlFor="businessDescription">Business Description</Label>
-                  <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances, using AI to provide insights and automation." {...control.register("businessDescription")} className="min-h-[120px]" />
+                  <Controller name="businessDescription" control={control} render={({ field }) => (
+                    <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances, using AI to provide insights and automation." {...field} className="min-h-[120px]" />
+                  )}/>
                   {errors.businessDescription && <p className="text-sm text-destructive">{errors.businessDescription.message}</p>}
               </div>
               <Button type="submit" disabled={isLoading} className="w-full">
@@ -251,7 +415,7 @@ function Step1IncCodeFinder({ onComplete, updateState, initialState }: Step1Prop
   );
 }
 
-// --- Step 2: Registration Guide ---
+// --- Step 3: Registration Guide ---
 const registrationData = [
   { id: "gst", title: "GST Registration", time: "3-7 days", link: "https://www.gst.gov.in/", docs: ["PAN Card", "Proof of Business Registration", "Address Proof of Business", "Bank Account Statement", "Promoter's ID and Address Proof"] },
   { id: "msme", title: "MSME / Udyam Registration", time: "1-2 days", link: "https://udyamregistration.gov.in/", docs: ["Aadhaar Card of Applicant", "PAN Card of Organization", "Bank Account Details"] },
@@ -259,7 +423,7 @@ const registrationData = [
   { id: "shops", title: "Shops & Establishment Act", time: "7-15 days", link: "#", docs: ["Business Name and Address", "Category of Establishment", "Employer and Employee Details"] },
 ];
 
-function Step2RegistrationGuide({ onComplete }: { onComplete: () => void }) {
+function Step3RegistrationGuide({ onComplete }: { onComplete: () => void }) {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="text-center">
@@ -294,7 +458,7 @@ function Step2RegistrationGuide({ onComplete }: { onComplete: () => void }) {
     );
 }
 
-// --- Step 3: Document Generation ---
+// --- Step 4: Document Generation ---
 const docTemplates = [
   { name: "NOC from Landlord", desc: "A no-objection certificate required if your registered office is a rented property.", premium: false },
   { name: "Board Resolution for Incorporation", desc: "The official board resolution to authorize the incorporation process.", premium: true },
@@ -302,7 +466,7 @@ const docTemplates = [
   { name: "Registered Address Declaration", desc: "A declaration for the company's registered office address.", premium: true },
 ];
 
-function Step3DocumentGenerator({ onComplete }: { onComplete: () => void }) {
+function Step4DocumentGenerator({ onComplete }: { onComplete: () => void }) {
     const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
     const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
     const { toast } = useToast();
@@ -399,8 +563,8 @@ function Step3DocumentGenerator({ onComplete }: { onComplete: () => void }) {
     )
 }
 
-// --- Step 4: Final Checklist ---
-function Step4FinalChecklist({ navigatorState }: { navigatorState: NavigatorState }) {
+// --- Step 5: Final Checklist ---
+function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorState }) {
     const [isLoading, setIsLoading] = useState(false);
     const [checklist, setChecklist] = useState<AssistantOutput | undefined>(navigatorState.finalChecklist);
     const { toast } = useToast();
@@ -408,7 +572,9 @@ function Step4FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
     const handleGenerateChecklist = async () => {
         setIsLoading(true);
         setChecklist(undefined);
-        const topic = `Generate a final business setup checklist for a startup. Their business is: "${navigatorState.incCodeForm?.businessDescription}". Include sections for Legal/Registration, Banking, and Initial Operations.`;
+        const businessDesc = navigatorState.businessTypeForm?.businessDescription || navigatorState.incCodeForm?.businessDescription;
+        const businessType = navigatorState.businessTypeResult?.recommendedType;
+        const topic = `Generate a final business setup checklist for a startup. Their recommended business structure is "${businessType}". Their business is: "${businessDesc}". Include sections for Legal/Registration, Banking, and Initial Operations.`;
 
         try {
             const response = await getFinalChecklistAction({ topic });
