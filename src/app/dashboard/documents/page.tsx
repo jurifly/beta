@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -136,7 +135,7 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
   const [recentDocs, setRecentDocs] = useState<DocumentGeneratorOutput[]>([]);
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
   
   const [editorContent, setEditorContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -176,7 +175,7 @@ export default function DocumentsPage() {
     setOpenCategories(prev => 
       prev.includes(categoryName) 
         ? prev.filter(c => c !== categoryName) 
-        : [...prev, categoryName]
+        : [categoryName] // This makes it a single-item accordion
     );
   };
   
@@ -202,6 +201,8 @@ export default function DocumentsPage() {
         });
         return;
     }
+    
+    if (!await deductCredits(1)) return;
 
     setLoading(true);
     setGeneratedDoc(null);
@@ -309,10 +310,10 @@ export default function DocumentsPage() {
               <h2 className="text-2xl font-bold font-headline">Document Preview</h2>
               <p className="text-muted-foreground">Generate a new document or view a recent one.</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
-                <Button disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
+                <Button disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
          </div>
          
