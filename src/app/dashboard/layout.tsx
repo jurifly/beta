@@ -280,7 +280,7 @@ export default function DashboardLayout({
     if (!user) {
       router.replace("/onboarding");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router.replace]);
 
 
   if (loading || !userProfile) {
