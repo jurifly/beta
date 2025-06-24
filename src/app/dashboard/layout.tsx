@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -57,7 +57,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network, requiredPlan: 'Founder' },
-  aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Assistant", icon: Sparkles },
+  aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Documents", icon: FileText },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
   contractAnalyzer: { href: "/dashboard/contract-analyzer", label: "Analyzer", icon: FileScan },
@@ -85,7 +85,6 @@ const founderNavItems: NavItem[] = [
   navItemConfig.calendar,
   navItemConfig.contractAnalyzer,
   navItemConfig.mcaTracker,
-  navItemConfig.dueDiligence,
   navItemConfig.analytics,
   navItemConfig.community,
   navItemConfig.clauseLibrary,
@@ -100,7 +99,6 @@ const caNavItems: NavItem[] = [
   navItemConfig.regulationWatcher,
   navItemConfig.mcaTracker,
   navItemConfig.reconciliation,
-  navItemConfig.dueDiligence,
   navItemConfig.analytics,
   navItemConfig.team,
   navItemConfig.clauseLibrary,
@@ -112,7 +110,6 @@ const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.aiCopilot,
   navItemConfig.contractAnalyzer,
   navItemConfig.documents,
-  navItemConfig.dueDiligence,
   navItemConfig.clauseLibrary,
   navItemConfig.regulationWatcher,
   navItemConfig.mcaTracker,
@@ -126,7 +123,6 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.analytics,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.dueDiligence,
   navItemConfig.regulationWatcher,
   navItemConfig.reconciliation,
   navItemConfig.integrations,
@@ -270,7 +266,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
@@ -495,7 +491,7 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/dashboard/ai-copilot", icon: Sparkles, label: "Assistant" },
+    { href: "/dashboard/ai-copilot", icon: Sparkles, label: "AI Tools" },
     { href: "/dashboard/documents", icon: FileText, label: "Docs" },
     { href: "/dashboard/analytics", icon: LineChart, label: "Insights" },
     { href: "/dashboard/settings", icon: Settings, label: "Profile" },
