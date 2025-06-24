@@ -40,7 +40,7 @@ export default function NotificationsForm() {
 
   return (
      <form action={formAction} className="w-full">
-        <Card>
+        <Card className="interactive-lift">
             <CardHeader>
                 <CardTitle>Notifications & Automations</CardTitle>
                 <CardDescription>Choose how and where you receive alerts and reports.</CardDescription>
@@ -56,7 +56,7 @@ export default function NotificationsForm() {
                         </AlertDescription>
                     </Alert>
                 )}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
                         <Bell className="w-5 h-5 text-primary mt-1 shrink-0"/>
                         <div>
@@ -66,7 +66,7 @@ export default function NotificationsForm() {
                     </div>
                     <Switch id="email_notifications" name="email_notifications" defaultChecked disabled={isFreePlan} />
                 </div>
-                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0">
+                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
                         <FileClock className="w-5 h-5 text-primary mt-1 shrink-0"/>
                         <div>
@@ -76,7 +76,7 @@ export default function NotificationsForm() {
                     </div>
                     <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked disabled={isFreePlan} />
                 </div>
-                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0">
+                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
                         <Bot className="w-5 h-5 text-primary mt-1 shrink-0"/>
                         <div>

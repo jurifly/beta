@@ -87,7 +87,7 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 px-3 flex items-center gap-2">
+        <Button variant="ghost" className="relative h-10 px-3 flex items-center gap-2 interactive-lift">
           <Avatar className="h-8 w-8">
              <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
           </Avatar>

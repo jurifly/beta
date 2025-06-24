@@ -186,7 +186,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
               <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative shrink-0">
+                  <Button variant="ghost" size="icon" className="relative shrink-0 interactive-lift">
                       <Bell className="h-5 w-5" />
                       <span className="sr-only">Notifications</span>
                       {unreadCount > 0 && (

@@ -17,13 +17,13 @@ export default function BillingForm() {
   const isPaidPlan = userProfile.plan !== 'Free';
 
   return (
-    <Card className="w-full max-w-4xl">
+    <Card className="w-full max-w-4xl interactive-lift">
       <CardHeader>
         <CardTitle>Billing & Plan</CardTitle>
         <CardDescription>Manage your subscription and view your billing history.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="p-4 border rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="p-4 border rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 interactive-lift">
             <div>
                 <p className="text-sm text-muted-foreground">Current Plan</p>
                 <p className="text-xl font-bold flex items-center gap-3">
@@ -31,7 +31,7 @@ export default function BillingForm() {
                     {isPaidPlan && <Badge variant="secondary" className="border-violet-500/30 text-violet-500">{userProfile.plan}</Badge>}
                 </p>
             </div>
-            <Button asChild>
+            <Button asChild className="interactive-lift">
                 <Link href="/dashboard/billing">
                     {isPaidPlan ? "Manage Subscription" : "Upgrade Plan"}
                     <ArrowRight className="ml-2 h-4 w-4" />

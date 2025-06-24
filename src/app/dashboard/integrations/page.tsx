@@ -58,7 +58,7 @@ export default function IntegrationsPage() {
         ))}
       </div>
 
-      <Card>
+      <Card className="interactive-lift">
         <CardHeader>
           <CardTitle>Workflow Builder</CardTitle>
           <CardDescription>Create powerful automations to streamline your compliance processes.</CardDescription>
@@ -83,7 +83,7 @@ export default function IntegrationsPage() {
               </div>
             </div>
             <p className="text-sm max-w-2xl">Example: "When a 'Contract is Uploaded', automatically 'Analyze it for Risks', and if the risk is 'High', then 'Notify the Legal Team on Slack'."</p>
-            <Button variant="secondary">Start Building</Button>
+            <Button variant="secondary" className="interactive-lift">Start Building</Button>
         </CardContent>
       </Card>
     </div>

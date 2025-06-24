@@ -95,7 +95,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
-      <Card>
+      <Card className="interactive-lift">
         <CardHeader>
           <CardTitle>Personal Information</CardTitle>
           <CardDescription>Update your personal details and preferences.</CardDescription>
@@ -170,7 +170,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
         </CardFooter>
       </Card>
 
-      <Card>
+      <Card className="interactive-lift">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
             <div>
                 <CardTitle>Company Information</CardTitle>
@@ -186,7 +186,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
           {userProfile.companies.length > 0 ? (
              <div className="space-y-4">
                 {userProfile.companies.map(company => (
-                    <div key={company.id} className="p-4 border rounded-lg flex items-center justify-between">
+                    <div key={company.id} className="p-4 border rounded-lg flex items-center justify-between interactive-lift">
                         <div>
                             <p className="font-semibold">{company.name}</p>
                             <p className="text-sm text-muted-foreground">{company.type}</p>

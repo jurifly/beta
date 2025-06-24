@@ -62,7 +62,7 @@ export default function CalendarPage() {
         {activeCompany && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-[220px] justify-between">
+              <Button variant="outline" className="w-full sm:w-[220px] justify-between interactive-lift">
                 {activeCompany.name}
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
@@ -79,7 +79,7 @@ export default function CalendarPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 flex-1 min-h-0">
-        <Card className="xl:col-span-3 flex flex-col">
+        <Card className="xl:col-span-3 flex flex-col interactive-lift">
           <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
             <Calendar
               mode="single"
@@ -100,7 +100,7 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-2">
+        <Card className="xl:col-span-2 interactive-lift">
           <CardHeader>
             <CardTitle>Deadlines & Tasks</CardTitle>
             <CardDescription>A summary of all your key dates.</CardDescription>
@@ -108,17 +108,17 @@ export default function CalendarPage() {
           <CardContent>
             <Tabs defaultValue="upcoming" className="w-full">
               <TabsList className="grid w-full grid-cols-3 h-auto bg-transparent p-0 gap-2">
-                <TabsTrigger value="upcoming" className="py-2 flex items-center justify-center gap-1.5 bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
+                <TabsTrigger value="upcoming" className="py-2 flex items-center justify-center gap-1.5 bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md interactive-lift">
                   <Bell className="h-4 w-4" />
                   Upcoming
                   <span className="font-semibold ml-1">0</span>
                 </TabsTrigger>
-                <TabsTrigger value="overdue" className="py-2 flex items-center justify-center gap-1.5 bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
+                <TabsTrigger value="overdue" className="py-2 flex items-center justify-center gap-1.5 bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md interactive-lift">
                   <AlertTriangle className="h-4 w-4" />
                   Overdue
                   <span className="font-semibold ml-1 text-destructive data-[state=active]:text-primary-foreground">0</span>
                 </TabsTrigger>
-                <TabsTrigger value="completed" className="py-2 flex items-center justify-center gap-1.5 bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
+                <TabsTrigger value="completed" className="py-2 flex items-center justify-center gap-1.5 bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md interactive-lift">
                   <CheckCircle className="h-4 w-4" />
                   Completed
                 </TabsTrigger>

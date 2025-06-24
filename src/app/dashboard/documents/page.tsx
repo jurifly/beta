@@ -122,7 +122,7 @@ const templateLibrary: TemplateCategoryData[] = [
 
 
 const AccordionTrigger = ({ title, isOpen, onClick }: { title: string; isOpen: boolean; onClick: () => void; }) => (
-    <button onClick={onClick} className="flex w-full items-center justify-between py-3 text-base font-medium hover:no-underline text-card-foreground">
+    <button onClick={onClick} className="flex w-full items-center justify-between py-3 text-base font-medium hover:no-underline text-card-foreground interactive-lift">
       <span>{title}</span>
       {isOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
     </button>
@@ -242,7 +242,7 @@ export default function DocumentsPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start h-full max-h-[calc(100vh-8rem)]">
       {/* Left Column: Template Library */}
-      <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card">
+      <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
         <CardHeader>
           <CardTitle>Template Library</CardTitle>
           <CardDescription>Select a template to generate.</CardDescription>
@@ -269,7 +269,7 @@ export default function DocumentsPage() {
                                   const isLocked = template.isPremium && userProfile.plan === 'Free';
                                   return (
                                     <Label key={template.name} className={cn(
-                                        "flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted",
+                                        "flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift",
                                         selectedTemplate === template.name && "bg-muted",
                                         isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"
                                     )}>
@@ -310,9 +310,9 @@ export default function DocumentsPage() {
               <p className="text-muted-foreground">Generate a new document or view a recent one.</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" disabled={!generatedDoc}><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
-                <Button variant="outline" disabled={!generatedDoc}><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
-                <Button disabled={!generatedDoc}><Download className="mr-2 h-4 w-4" /> Download</Button>
+                <Button variant="outline" disabled={!generatedDoc} className="interactive-lift"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
+                <Button variant="outline" disabled={!generatedDoc} className="interactive-lift"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
+                <Button disabled={!generatedDoc} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
          </div>
          

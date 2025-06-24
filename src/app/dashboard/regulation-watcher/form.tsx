@@ -36,7 +36,7 @@ const portals = [
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto">
+    <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto interactive-lift">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />}
       Get Latest Updates
     </Button>
@@ -75,7 +75,7 @@ export default function RegulationWatcherForm() {
   return (
     <div className="space-y-8">
         <form action={handleFormAction}>
-            <Card>
+            <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle>Configure Your Watcher</CardTitle>
                     <CardDescription>Select the regulatory bodies you want to monitor and the frequency of updates.</CardDescription>
@@ -131,7 +131,7 @@ export default function RegulationWatcherForm() {
             <h2 className="text-xl font-bold tracking-tight">Latest Updates</h2>
             
             {state.data ? (
-                <Card>
+                <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3">
                            {portals.find(p => p.id === submittedPortal)?.icon}

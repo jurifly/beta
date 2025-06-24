@@ -132,7 +132,7 @@ export default function BusinessSetupPage() {
         <p className="text-muted-foreground">Your AI-guided journey to launching your company.</p>
       </div>
 
-       <Card>
+       <Card className="interactive-lift">
         <CardHeader>
           <CardTitle>Setup Progress</CardTitle>
           <CardDescription>You’ve completed {navigatorState.completedSteps.length} of {STEPS.length} registration essentials.</CardDescription>
@@ -140,7 +140,7 @@ export default function BusinessSetupPage() {
         </CardHeader>
       </Card>
 
-      <Card>
+      <Card className="interactive-lift">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="font-semibold">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].name}</p>
@@ -493,7 +493,7 @@ function Step3RegistrationGuide({ onComplete }: { onComplete: () => void }) {
             <Accordion type="single" collapsible className="w-full">
                 {registrationData.map(reg => (
                   <AccordionItem value={reg.id} key={reg.id}>
-                    <AccordionTrigger className="text-base font-semibold hover:no-underline">{reg.title}</AccordionTrigger>
+                    <AccordionTrigger className="text-base font-semibold hover:no-underline interactive-lift">{reg.title}</AccordionTrigger>
                     <AccordionContent className="pt-2">
                         <div className="p-4 bg-muted/50 rounded-md border space-y-4">
                             <div className="grid grid-cols-2 gap-4 text-sm">

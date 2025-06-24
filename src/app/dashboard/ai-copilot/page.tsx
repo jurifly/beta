@@ -98,11 +98,11 @@ export default function AiCopilotPage() {
           <p className="text-sm text-muted-foreground">Your unified legal copilot.</p>
         </div>
         <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="bg-muted">
+            <Button variant="outline" size="sm" className="bg-muted interactive-lift">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Chat
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="interactive-lift">
                 <History className="mr-2 h-4 w-4" />
                 History
             </Button>

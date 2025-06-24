@@ -250,11 +250,11 @@ export default function ContractAnalyzerForm() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={openFileDialog}>
+          <Button variant="outline" size="sm" onClick={openFileDialog} className="interactive-lift">
             <UploadCloud className="mr-2 h-4 w-4" />
             {file ? "Upload New" : "Upload Contract"}
           </Button>
-          <Button variant="default" size="sm" disabled={!state.data} onClick={handleExport}>
+          <Button variant="default" size="sm" disabled={!state.data} onClick={handleExport} className="interactive-lift">
             <Download className="mr-2 h-4 w-4" /> Export Report
           </Button>
         </div>

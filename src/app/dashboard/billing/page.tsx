@@ -233,7 +233,7 @@ export default function BillingPage() {
                             <p className="text-xl font-semibold">{formatPrice(pack.price)}</p>
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full" onClick={() => handleBuyCredits(pack.credits)}>
+                            <Button className="w-full interactive-lift" onClick={() => handleBuyCredits(pack.credits)}>
                                 <Bolt className="mr-2 h-4 w-4" /> Buy Now
                             </Button>
                         </CardFooter>
