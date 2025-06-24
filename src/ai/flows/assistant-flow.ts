@@ -30,13 +30,13 @@ const prompt = ai.definePrompt({
   name: 'assistantPrompt',
   input: {schema: AssistantInputSchema},
   output: {schema: AssistantOutputSchema},
-  prompt: `You are an expert AI legal and compliance assistant for businesses. A user will ask for a compliance checklist on a specific topic.
+  prompt: `You are an expert AI legal and compliance assistant for businesses in India. A user will ask for a compliance checklist on a specific topic.
 
 Generate a personalized compliance checklist based on the user's request: "{{topic}}".
 
-Your response should be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant compliance category.
+Your response must be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant compliance category.
 
-Ensure the language is professional, clear, and uses standard legal and business terminology for an Indian context. The checklist should be comprehensive. Double-check for clarity and accuracy.
+Ensure the language is professional, clear, and uses standard legal and business terminology. The checklist should be comprehensive and accurate.
 
 For example, if the user asks for "monthly compliance for a private limited company", the tasks could include items like "Review monthly financial statements" under "Financial Reporting" and "File monthly GST returns" under "Tax Filings".
 `,
