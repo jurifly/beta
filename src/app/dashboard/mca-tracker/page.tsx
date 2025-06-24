@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Monitor, Search, Loader2, Building2, KeyRound, Calendar, Briefcase, MapPin, AlertTriangle, Edit } from "lucide-react";
+import { Monitor, Search, Loader2, Building2, KeyRound, Calendar, Briefcase, MapPin, AlertTriangle, Edit, Telescope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { CompanyDetailsOutput } from "@/ai/flows/company-details-flow";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useAuth } from "@/hooks/auth";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const manualInputSchema = z.object({
   name: z.string().min(2, "Company name is required."),
@@ -40,16 +41,14 @@ export default function McaTrackerPage() {
   const [mode, setMode] = useState<'search' | 'manual'>('search');
   const { toast } = useToast();
   const { userProfile } = useAuth();
+  const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false);
   
   const { register, handleSubmit, formState: { errors } } = useForm<ManualInputData>({
     resolver: zodResolver(manualInputSchema),
   });
 
   const handleSearch = async () => {
-    toast({
-      title: "Coming Soon",
-      description: "The CIN search feature is under development. Please use Manual Input for now.",
-    });
+    setIsComingSoonModalOpen(true);
   };
 
   const onManualSubmit = (data: ManualInputData) => {
@@ -74,154 +73,174 @@ export default function McaTrackerPage() {
   }
 
   return (
-    <div className="space-y-6">
-       <div>
-          <h2 className="text-2xl font-bold tracking-tight">MCA Company Tracker</h2>
-          <p className="text-muted-foreground">
-            Fetch live company details using a Corporate Identification Number (CIN). Costs 1 credit per search.
-          </p>
-      </div>
-
-      <Card className="interactive-lift">
-        <CardHeader>
-            <CardTitle>Find Company Information</CardTitle>
-            <CardDescription>Fetch details using a CIN, or enter them manually.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="flex gap-2">
-                <Button variant={mode === 'search' ? 'default' : 'outline'} onClick={() => setMode('search')} className="interactive-lift">
-                    <Search className="mr-2 h-4 w-4"/> Search by CIN
-                </Button>
-                <Button variant={mode === 'manual' ? 'default' : 'outline'} onClick={() => setMode('manual')} className="interactive-lift">
-                    <Edit className="mr-2 h-4 w-4"/> Manual Input
-                </Button>
-            </div>
-            
-            {mode === 'search' && (
-                <div className="pt-4 border-t animate-in fade-in-50">
-                    <div className="flex flex-col sm:flex-row gap-4 items-end">
-                        <div className="w-full space-y-2">
-                            <Label htmlFor="cin-input">Enter 21-Digit CIN</Label>
-                            <Input 
-                                id="cin-input"
-                                placeholder="e.g., U72200KA2022PTC123456"
-                                value={cin}
-                                onChange={(e) => setCin(e.target.value.toUpperCase())}
-                                maxLength={21}
-                            />
-                        </div>
-                        <Button onClick={handleSearch} disabled={isLoading || cin.length !== 21} className="w-full sm:w-auto">
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
-                            Search
-                        </Button>
-                    </div>
+    <>
+      <Dialog open={isComingSoonModalOpen} onOpenChange={setIsComingSoonModalOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader className="items-center text-center">
+                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                    <Telescope className="w-8 h-8 text-primary" />
                 </div>
-            )}
-
-            {mode === 'manual' && (
-                <form onSubmit={handleSubmit(onManualSubmit)} className="pt-4 border-t space-y-4 animate-in fade-in-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="manual-name">Company Name</Label>
-                            <Input id="manual-name" {...register("name")} />
-                            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="manual-pan">Company PAN</Label>
-                            <Input id="manual-pan" {...register("pan")} maxLength={10} />
-                            {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
-                        </div>
-                    </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="manual-inc-date">Incorporation Date</Label>
-                            <Input id="manual-inc-date" type="date" {...register("incorporationDate")} />
-                            {errors.incorporationDate && <p className="text-sm text-destructive">{errors.incorporationDate.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="manual-sector">Industry / Sector</Label>
-                            <Input id="manual-sector" placeholder="e.g., Fintech" {...register("sector")} />
-                            {errors.sector && <p className="text-sm text-destructive">{errors.sector.message}</p>}
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="manual-location">Registered Office (City, State)</Label>
-                        <Input id="manual-location" placeholder="e.g., Mumbai, Maharashtra" {...register("location")} />
-                        {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
-                    </div>
-
-                    <Button type="submit" disabled={isLoading}>
-                         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
-                        Show Details
-                    </Button>
-                </form>
-            )}
-        </CardContent>
-      </Card>
-      
-      {isLoading && (
-        <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1">
-            <Loader2 className="h-12 w-12 text-primary animate-spin" />
-            <p className="font-semibold text-lg text-foreground">Fetching data...</p>
+                <DialogTitle className="text-2xl">Feature Coming Soon!</DialogTitle>
+                <DialogDescription className="pt-2">
+                    The automated CIN search feature is currently under development. We're working hard to bring it to you.
+                    <br/><br/>
+                    For now, please use the "Manual Input" option to add company details.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="sm:justify-center">
+                <Button onClick={() => setIsComingSoonModalOpen(false)}>Got it</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="space-y-6">
+        <div>
+            <h2 className="text-2xl font-bold tracking-tight">MCA Company Tracker</h2>
+            <p className="text-muted-foreground">
+              Fetch live company details using a Corporate Identification Number (CIN). Costs 1 credit per search.
+            </p>
         </div>
-      )}
 
-      {companyDetails && !isLoading && (
-        <Card className="interactive-lift animate-in fade-in-50 duration-500">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Building2 className="text-primary"/> {companyDetails.name}</CardTitle>
-                {cin && mode === 'search' && <CardDescription>Corporate Identification Number: {cin}</CardDescription>}
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
-                <div className="flex items-start gap-3">
-                    <KeyRound className="w-5 h-5 text-muted-foreground mt-1"/>
-                    <div>
-                        <p className="font-medium">Company PAN</p>
-                        <p className="text-muted-foreground">{companyDetails.pan}</p>
-                    </div>
-                </div>
-                 <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-muted-foreground mt-1"/>
-                    <div>
-                        <p className="font-medium">Incorporation Date</p>
-                        <p className="text-muted-foreground">{companyDetails.incorporationDate}</p>
-                    </div>
-                </div>
-                 <div className="flex items-start gap-3">
-                    <Briefcase className="w-5 h-5 text-muted-foreground mt-1"/>
-                    <div>
-                        <p className="font-medium">Industry / Sector</p>
-                        <p className="text-muted-foreground">{companyDetails.sector}</p>
-                    </div>
-                </div>
-                 <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-muted-foreground mt-1"/>
-                    <div>
-                        <p className="font-medium">Registered Office</p>
-                        <p className="text-muted-foreground">{companyDetails.location}</p>
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter>
-                 <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500"/>
-                     {mode === 'search' 
-                      ? 'This is mock data generated by AI for demonstration purposes.'
-                      : 'This is manually entered data.'
-                    }
-                </p>
-            </CardFooter>
+        <Card className="interactive-lift">
+          <CardHeader>
+              <CardTitle>Find Company Information</CardTitle>
+              <CardDescription>Fetch details using a CIN, or enter them manually.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                  <Button variant={mode === 'search' ? 'default' : 'outline'} onClick={() => setMode('search')} className="interactive-lift">
+                      <Search className="mr-2 h-4 w-4"/> Search by CIN
+                  </Button>
+                  <Button variant={mode === 'manual' ? 'default' : 'outline'} onClick={() => setMode('manual')} className="interactive-lift">
+                      <Edit className="mr-2 h-4 w-4"/> Manual Input
+                  </Button>
+              </div>
+              
+              {mode === 'search' && (
+                  <div className="pt-4 border-t animate-in fade-in-50">
+                      <div className="flex flex-col sm:flex-row gap-4 items-end">
+                          <div className="w-full space-y-2">
+                              <Label htmlFor="cin-input">Enter 21-Digit CIN</Label>
+                              <Input 
+                                  id="cin-input"
+                                  placeholder="e.g., U72200KA2022PTC123456"
+                                  value={cin}
+                                  onChange={(e) => setCin(e.target.value.toUpperCase())}
+                                  maxLength={21}
+                              />
+                          </div>
+                          <Button onClick={handleSearch} disabled={isLoading || cin.length !== 21} className="w-full sm:w-auto">
+                              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
+                              Search
+                          </Button>
+                      </div>
+                  </div>
+              )}
+
+              {mode === 'manual' && (
+                  <form onSubmit={handleSubmit(onManualSubmit)} className="pt-4 border-t space-y-4 animate-in fade-in-50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="manual-name">Company Name</Label>
+                              <Input id="manual-name" {...register("name")} />
+                              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="manual-pan">Company PAN</Label>
+                              <Input id="manual-pan" {...register("pan")} maxLength={10} />
+                              {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
+                          </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="manual-inc-date">Incorporation Date</Label>
+                              <Input id="manual-inc-date" type="date" {...register("incorporationDate")} />
+                              {errors.incorporationDate && <p className="text-sm text-destructive">{errors.incorporationDate.message}</p>}
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="manual-sector">Industry / Sector</Label>
+                              <Input id="manual-sector" placeholder="e.g., Fintech" {...register("sector")} />
+                              {errors.sector && <p className="text-sm text-destructive">{errors.sector.message}</p>}
+                          </div>
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="manual-location">Registered Office (City, State)</Label>
+                          <Input id="manual-location" placeholder="e.g., Mumbai, Maharashtra" {...register("location")} />
+                          {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
+                      </div>
+
+                      <Button type="submit" disabled={isLoading}>
+                          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
+                          Show Details
+                      </Button>
+                  </form>
+              )}
+          </CardContent>
         </Card>
-      )}
+        
+        {isLoading && (
+          <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1">
+              <Loader2 className="h-12 w-12 text-primary animate-spin" />
+              <p className="font-semibold text-lg text-foreground">Fetching data...</p>
+          </div>
+        )}
 
-      {!companyDetails && !isLoading && (
-        <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-            <Monitor className="w-16 h-16 text-primary/20"/>
-            <p className="font-semibold text-lg">Company details will appear here</p>
-            <p className="text-sm max-w-sm">Enter company information above to see details.</p>
-        </div>
-      )}
+        {companyDetails && !isLoading && (
+          <Card className="interactive-lift animate-in fade-in-50 duration-500">
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Building2 className="text-primary"/> {companyDetails.name}</CardTitle>
+                  {cin && mode === 'search' && <CardDescription>Corporate Identification Number: {cin}</CardDescription>}
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+                  <div className="flex items-start gap-3">
+                      <KeyRound className="w-5 h-5 text-muted-foreground mt-1"/>
+                      <div>
+                          <p className="font-medium">Company PAN</p>
+                          <p className="text-muted-foreground">{companyDetails.pan}</p>
+                      </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                      <Calendar className="w-5 h-5 text-muted-foreground mt-1"/>
+                      <div>
+                          <p className="font-medium">Incorporation Date</p>
+                          <p className="text-muted-foreground">{companyDetails.incorporationDate}</p>
+                      </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                      <Briefcase className="w-5 h-5 text-muted-foreground mt-1"/>
+                      <div>
+                          <p className="font-medium">Industry / Sector</p>
+                          <p className="text-muted-foreground">{companyDetails.sector}</p>
+                      </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                      <MapPin className="w-5 h-5 text-muted-foreground mt-1"/>
+                      <div>
+                          <p className="font-medium">Registered Office</p>
+                          <p className="text-muted-foreground">{companyDetails.location}</p>
+                      </div>
+                  </div>
+              </CardContent>
+              <CardFooter>
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500"/>
+                      {mode === 'search' 
+                        ? 'This is mock data generated by AI for demonstration purposes.'
+                        : 'This is manually entered data.'
+                      }
+                  </p>
+              </CardFooter>
+          </Card>
+        )}
 
-    </div>
+        {!companyDetails && !isLoading && (
+          <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+              <Monitor className="w-16 h-16 text-primary/20"/>
+              <p className="font-semibold text-lg">Company details will appear here</p>
+              <p className="text-sm max-w-sm">Enter company information above to see details.</p>
+          </div>
+        )}
+
+      </div>
+    </>
   );
 }
