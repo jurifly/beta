@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   FilePenLine,
@@ -13,7 +14,8 @@ import {
   Info,
   ChevronUp,
   ChevronDown,
-  Loader2
+  Loader2,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,32 +25,95 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import { useToast, ToastAction } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { generateDocument, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/hooks/auth';
+import type { UserRole } from '@/lib/types';
+import Link from 'next/link';
 
-const templates = {
-  'Startup Legal': [
-    'Non-Disclosure Agreement',
-    'Founders Agreement',
-    'ESOP Plan',
-    'Terms of Service',
-    'Privacy Policy',
-  ],
-  'Contracts & HR': [
-    'Employment Agreement',
-    'Consulting Agreement',
-    'Offer Letter',
-  ],
-  'Fundraising / Dataroom': [
-    'Pitch Deck',
-    'Term Sheet',
-    'Shareholder Agreement',
-  ],
+type Template = {
+  name: string;
+  isPremium: boolean;
 };
-type TemplateCategory = keyof typeof templates;
+
+type TemplateCategoryData = {
+  name: string;
+  roles: UserRole[];
+  templates: Template[];
+};
+
+const templateLibrary: TemplateCategoryData[] = [
+  {
+    name: 'Startup Legal',
+    roles: ['Founder', 'CA', 'Legal Advisor', 'Enterprise'],
+    templates: [
+      { name: 'Non-Disclosure Agreement', isPremium: false },
+      { name: 'Founders Agreement', isPremium: true },
+      { name: 'ESOP Plan', isPremium: true },
+      { name: 'Terms of Service', isPremium: false },
+      { name: 'Privacy Policy', isPremium: false },
+    ],
+  },
+  {
+    name: 'Contracts & HR',
+    roles: ['Founder', 'CA', 'Legal Advisor', 'Enterprise'],
+    templates: [
+        { name: 'Employment Offer Letter', isPremium: false },
+        { name: 'Consulting Agreement', isPremium: true },
+        { name: 'Vendor Agreement', isPremium: true },
+        { name: 'Freelance Services Agreement', isPremium: false },
+        { name: 'Statement of Work (SOW)', isPremium: false },
+        { name: 'Invoice Template', isPremium: false },
+        { name: 'International Contract Rider', isPremium: true },
+    ],
+  },
+    {
+    name: 'Corporate Filings',
+    roles: ['CA', 'Enterprise'],
+    templates: [
+      { name: 'Board Resolution', isPremium: false },
+      { name: 'MOA (Memorandum of Association)', isPremium: true },
+      { name: 'AOA (Articles of Association)', isPremium: true },
+      { name: 'Form DIR-3', isPremium: false },
+      { name: 'Audit Engagement Letter', isPremium: true },
+      { name: 'Statutory Audit Report', isPremium: true },
+    ],
+  },
+  {
+    name: 'Fundraising / Dataroom',
+    roles: ['Founder', 'Legal Advisor', 'CA', 'Enterprise'],
+    templates: [
+      { name: 'SAFE Agreement', isPremium: true },
+      { name: 'Shareholder Agreement', isPremium: true },
+      { name: 'Investor Pitch Deck', isPremium: false },
+    ],
+  },
+  {
+    name: 'Legal & Advisory',
+    roles: ['Legal Advisor', 'Enterprise'],
+    templates: [
+      { name: 'Legal Notice Draft', isPremium: false },
+      { name: 'GDPR/DPDP Policy Generator', isPremium: true },
+      { name: 'Litigation Summary Template', isPremium: true },
+      { name: 'Client Brief Template', isPremium: true },
+      { name: 'Service Level Agreement (SLA)', isPremium: true },
+      { name: 'Non-compete Agreement', isPremium: true },
+      { name: 'Client Engagement Letter', isPremium: true },
+    ],
+  },
+  {
+    name: 'Enterprise Suite',
+    roles: ['Enterprise'],
+    templates: [
+      { name: 'HR Policy Docs', isPremium: true },
+      { name: 'Cross-border NDA', isPremium: true },
+    ],
+  },
+];
+
 
 const AccordionTrigger = ({ title, isOpen, onClick }: { title: string; isOpen: boolean; onClick: () => void; }) => (
     <button onClick={onClick} className="flex w-full items-center justify-between py-3 text-base font-medium hover:no-underline text-card-foreground">
@@ -59,20 +124,32 @@ const AccordionTrigger = ({ title, isOpen, onClick }: { title: string; isOpen: b
 
 
 export default function DocumentsPage() {
-  const [selectedTemplate, setSelectedTemplate] = useState('Non-Disclosure Agreement');
-  const [openCategories, setOpenCategories] = useState<TemplateCategory[]>(['Startup Legal']);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [openCategories, setOpenCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
   const [recentDocs, setRecentDocs] = useState<DocumentGeneratorOutput[]>([]);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
   
   const typewriterText = useTypewriter(generatedDoc?.content || '', 10);
 
-  const toggleCategory = (category: TemplateCategory) => {
+  const availableCategories = useMemo(() => {
+    if (!userProfile) return [];
+    return templateLibrary.filter(category => category.roles.includes(userProfile.role));
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (availableCategories.length > 0 && openCategories.length === 0) {
+      setOpenCategories([availableCategories[0].name]);
+    }
+  }, [availableCategories, openCategories]);
+
+  const toggleCategory = (categoryName: string) => {
     setOpenCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category) 
-        : [...prev, category]
+      prev.includes(categoryName) 
+        ? prev.filter(c => c !== categoryName) 
+        : [...prev, categoryName]
     );
   };
   
@@ -85,6 +162,20 @@ export default function DocumentsPage() {
       });
       return;
     }
+
+    const allTemplates = availableCategories.flatMap(c => c.templates);
+    const templateDetails = allTemplates.find(t => t.name === selectedTemplate);
+    
+    if (templateDetails?.isPremium && userProfile?.plan === 'Free') {
+        toast({
+            title: 'Upgrade to Pro',
+            description: 'This is a premium template. Please upgrade your plan to generate it.',
+            variant: 'destructive',
+            action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction>,
+        });
+        return;
+    }
+
     setLoading(true);
     setGeneratedDoc(null);
     try {
@@ -102,6 +193,14 @@ export default function DocumentsPage() {
       setLoading(false);
     }
   };
+
+  if (!userProfile) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start h-full max-h-[calc(100vh-8rem)]">
@@ -135,23 +234,31 @@ export default function DocumentsPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
-             <RadioGroup value={selectedTemplate} onValueChange={setSelectedTemplate} className="w-full">
-                {Object.keys(templates).map((category) => (
-                    <div key={category} className="border-b">
+             <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
+                {availableCategories.map((category) => (
+                    <div key={category.name} className="border-b">
                         <AccordionTrigger 
-                            title={category}
-                            isOpen={openCategories.includes(category as TemplateCategory)}
-                            onClick={() => toggleCategory(category as TemplateCategory)}
+                            title={category.name}
+                            isOpen={openCategories.includes(category.name)}
+                            onClick={() => toggleCategory(category.name)}
                         />
-                         {openCategories.includes(category as TemplateCategory) && (
+                         {openCategories.includes(category.name) && (
                             <div className="pl-2 pt-2 pb-4">
                                 <div className="flex flex-col gap-1">
-                                {templates[category as TemplateCategory].map((item) => (
-                                    <Label key={item} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted cursor-pointer", selectedTemplate === item && "bg-muted")}>
-                                    <RadioGroupItem value={item} id={item} />
-                                    <span className="font-normal text-sm">{item}</span>
+                                {category.templates.map((template) => {
+                                  const isLocked = template.isPremium && userProfile.plan === 'Free';
+                                  return (
+                                    <Label key={template.name} className={cn(
+                                        "flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted",
+                                        selectedTemplate === template.name && "bg-muted",
+                                        isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                                    )}>
+                                      <RadioGroupItem value={template.name} id={template.name} disabled={isLocked} />
+                                      <span className="font-normal text-sm">{template.name}</span>
+                                      {isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500" />}
                                     </Label>
-                                ))}
+                                  )
+                                })}
                                 </div>
                             </div>
                         )}
@@ -161,7 +268,7 @@ export default function DocumentsPage() {
           </div>
         </CardContent>
         <CardFooter className="mt-auto pt-6">
-          <Button onClick={handleGenerateClick} disabled={loading} className="w-full">
+          <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
