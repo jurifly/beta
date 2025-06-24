@@ -300,8 +300,8 @@ function Step1BusinessType({ onComplete, updateState, initialState, userProfile 
                     </Button>
                 </form>
             </div>
-            <div className="bg-muted/50 rounded-lg p-6">
-                <h3 className="font-bold text-lg text-center mb-4">AI Recommendation</h3>
+            <div className="bg-muted/50 rounded-lg p-6 flex flex-col">
+                <h3 className="font-bold text-lg text-center mb-4 shrink-0">AI Recommendation</h3>
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -309,43 +309,54 @@ function Step1BusinessType({ onComplete, updateState, initialState, userProfile 
                     </div>
                 )}
                 {!isLoading && result && (
-                    <div className="space-y-6 animate-in fade-in-50 duration-500">
-                        <Card className="bg-background">
-                            <CardHeader className="text-center">
-                                <CardTitle className="text-2xl text-primary">{result.recommendedType}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <p className="text-center text-muted-foreground">{result.reasoning}</p>
-                                <Separator />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsUp className="text-green-500"/> Pros</h4>
-                                        <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
-                                            {result.pros.map((pro, i) => <li key={i}>{pro}</li>)}
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsDown className="text-red-500"/> Cons</h4>
-                                        <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
-                                            {result.cons.map((con, i) => <li key={i}>{con}</li>)}
-                                        </ul>
-                                    </div>
-                                </div>
-                                {result.alternativeOption && (
-                                    <>
-                                        <Separator />
-                                        <div className="flex items-center gap-3 p-3 bg-amber-100/50 border border-amber-500/20 rounded-lg">
-                                            <Lightbulb className="text-amber-600 h-5 w-5 shrink-0"/>
+                    <div className="flex-1 flex flex-col min-h-0 animate-in fade-in-50 duration-500">
+                        <div className="overflow-y-auto pr-2 -mr-4">
+                            <Card className="bg-background text-center mb-4">
+                                <CardHeader>
+                                    <CardTitle className="text-2xl text-primary">{result.recommendedType}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">{result.reasoning}</p>
+                                </CardContent>
+                            </Card>
+                            
+                            <Accordion type="single" collapsible defaultValue="pros-cons" className="w-full">
+                                <AccordionItem value="pros-cons">
+                                    <AccordionTrigger>Pros & Cons</AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-left">
                                             <div>
-                                                <h4 className="font-semibold text-amber-900">Alternative to Consider</h4>
-                                                <p className="text-sm text-amber-800">{result.alternativeOption}</p>
+                                                <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsUp className="text-green-500"/> Pros</h4>
+                                                <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
+                                                    {result.pros.map((pro, i) => <li key={i}>{pro}</li>)}
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold flex items-center gap-2 mb-2"><ThumbsDown className="text-red-500"/> Cons</h4>
+                                                <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
+                                                    {result.cons.map((con, i) => <li key={i}>{con}</li>)}
+                                                </ul>
                                             </div>
                                         </div>
-                                    </>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                {result.alternativeOption && (
+                                    <AccordionItem value="alternative">
+                                        <AccordionTrigger>Alternative to Consider</AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="flex items-start gap-3 p-3 bg-amber-100/50 border border-amber-500/20 rounded-lg text-left">
+                                                <Lightbulb className="text-amber-600 h-5 w-5 shrink-0 mt-1"/>
+                                                <div>
+                                                    <h4 className="font-semibold text-amber-900">{result.alternativeOption}</h4>
+                                                    <p className="text-sm text-amber-800">This could also be a viable option depending on your specific priorities.</p>
+                                                </div>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
                                 )}
-                            </CardContent>
-                        </Card>
-                        <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
+                            </Accordion>
+                        </div>
+                        <Button onClick={onComplete} className="w-full mt-auto shrink-0 pt-6">Next Step <ArrowRight className="ml-2"/></Button>
                     </div>
                 )}
                 {!isLoading && !result && (
@@ -709,7 +720,3 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         </div>
     )
 }
-
-    
-
-    
