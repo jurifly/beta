@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Card,
@@ -85,23 +85,7 @@ export default function CalendarPage() {
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="p-0 flex-1"
-              classNames={{
-                caption_label: "text-base font-medium",
-                nav_button: "h-8 w-8",
-                head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem] capitalize",
-                row: "flex w-full mt-4",
-                cell: "h-auto text-center text-sm p-0 relative first:rounded-l-md last:rounded-r-md focus-within:relative focus-within:z-20",
-                day: cn("w-full h-12 rounded-md", buttonVariants({ variant: "ghost" })),
-                day_selected:
-                  "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                day_today: "bg-accent text-accent-foreground",
-                day_outside: "text-muted-foreground opacity-50",
-              }}
-              components={{
-                IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-                IconRight: () => <ChevronRight className="h-4 w-4" />,
-              }}
+              className="rounded-md border"
             />
             <div className="flex items-center justify-between border-t mt-4 pt-4 px-2 flex-wrap gap-2">
                 <div className="flex items-center gap-4">
