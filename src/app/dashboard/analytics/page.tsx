@@ -1,6 +1,6 @@
 "use client"
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from "recharts"
+import { AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -35,7 +35,6 @@ function FounderAnalytics() {
   useEffect(() => {
     if (!activeCompanyId) return;
     
-    // Load checklist data from the correct key
     const checklistKey = `ddChecklistData-${activeCompanyId}`;
     try {
         const savedChecklist = localStorage.getItem(checklistKey);
@@ -46,10 +45,19 @@ function FounderAnalytics() {
         console.error("Failed to parse checklist data from localStorage", error);
         localStorage.removeItem(checklistKey);
     }
+    
+    // Generate dynamic deadlines based on active company
+    if (activeCompanyId === '1') {
+        setDeadlines([
+            { date: '2024-07-20', title: 'GSTR-3B Filing', overdue: false },
+            { date: '2024-06-30', title: 'TDS Payment', overdue: true }, // example overdue
+        ]);
+    } else {
+         setDeadlines([
+            { date: '2024-07-25', title: 'Advance Tax Payment', overdue: false },
+         ]);
+    }
 
-    // AI logic for calendar deadlines was here. It has been removed.
-    // In a real app, you would fetch this data from your new backend.
-    setDeadlines([]);
   }, [activeCompanyId]);
 
   const { completedCount, totalCount, progress, pendingItems } = useMemo(() => {
@@ -229,7 +237,7 @@ function CAAnalytics() {
                             <CartesianGrid vertical={false} strokeDasharray="3 3"/>
                             <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
                             <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="dot" />} />
-                            <Area type="monotone" dataKey="compliance" strokeWidth={2} stroke="hsl(var(--chart-1))" fill="url(#colorCompliance)" />
+                            <AreaChart type="monotone" dataKey="compliance" strokeWidth={2} stroke="hsl(var(--chart-1))" fill="url(#colorCompliance)" />
                         </AreaChart>
                     </ChartContainer>
                 </CardContent>

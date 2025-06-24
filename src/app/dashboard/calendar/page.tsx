@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   Bell,
@@ -57,22 +57,35 @@ const CalendarLegendItem = ({ color, label }: LegendProps) => (
   </div>
 );
 
-const today = new Date();
-const mockEvents: Event[] = [
-    { date: add(today, { days: 5 }), title: "GSTR-3B Filing", type: "GST Filing", status: "upcoming" },
-    { date: add(today, { days: 12 }), title: "Form AOC-4 Filing", type: "ROC Filing", status: "upcoming" },
-    { date: add(today, { days: -3 }), title: "TDS Payment", type: "ITR Filing", status: "overdue" },
-    { date: add(today, { days: -10 }), title: "GSTR-1 Filing", type: "GST Filing", status: "completed" },
-    { date: add(today, { days: 20 }), title: "Advance Tax Payment", type: "ITR Filing", status: "upcoming" },
-];
-
-
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [events, setEvents] = useState<Event[]>([]);
   const { userProfile } = useAuth();
   const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
   const { toast } = useToast();
   
+  useEffect(() => {
+    if (userProfile?.activeCompanyId) {
+        const companyId = userProfile.activeCompanyId;
+        const today = new Date();
+        if (companyId === '1') {
+            setEvents([
+                { date: add(today, { days: 5 }), title: "GSTR-3B Filing", type: "GST Filing", status: "upcoming" },
+                { date: add(today, { days: 12 }), title: "Form AOC-4 Filing", type: "ROC Filing", status: "upcoming" },
+                { date: add(today, { days: -3 }), title: "TDS Payment", type: "ITR Filing", status: "overdue" },
+                { date: add(today, { days: -10 }), title: "GSTR-1 Filing", type: "GST Filing", status: "completed" },
+            ]);
+        } else { // companyId === '2'
+             setEvents([
+                { date: add(today, { days: 8 }), title: "Quarterly TDS Return", type: "ITR Filing", status: "upcoming" },
+                { date: add(today, { days: -5 }), title: "Professional Tax Payment", type: "GST Filing", status: "overdue" },
+                { date: add(today, { days: -15 }), title: "Board Meeting Minutes", type: "ROC Filing", status: "completed" },
+                { date: add(today, { days: 25 }), title: "Finalize Annual Accounts", type: "Task", status: "upcoming" },
+            ]);
+        }
+    }
+  }, [userProfile?.activeCompanyId]);
+
   const handleCalendarSync = () => {
     toast({
         title: "Feature Coming Soon!",
@@ -80,7 +93,7 @@ export default function CalendarPage() {
     })
   }
 
-  const selectedDayEvents = mockEvents.filter(event => format(event.date, 'yyyy-MM-dd') === format(date || new Date(), 'yyyy-MM-dd'));
+  const selectedDayEvents = events.filter(event => format(event.date, 'yyyy-MM-dd') === format(date || new Date(), 'yyyy-MM-dd'));
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -122,9 +135,9 @@ export default function CalendarPage() {
                 onSelect={setDate}
                 className="rounded-md border"
                 modifiers={{
-                    overdue: mockEvents.filter(e => e.status === 'overdue').map(e => e.date),
-                    upcoming: mockEvents.filter(e => e.status === 'upcoming').map(e => e.date),
-                    completed: mockEvents.filter(e => e.status === 'completed').map(e => e.date),
+                    overdue: events.filter(e => e.status === 'overdue').map(e => e.date),
+                    upcoming: events.filter(e => e.status === 'upcoming').map(e => e.date),
+                    completed: events.filter(e => e.status === 'completed').map(e => e.date),
                 }}
                 modifiersClassNames={{
                     overdue: 'day-overdue',

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -92,6 +92,44 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
+    const [dynamicData, setDynamicData] = useState<{
+        filings: number;
+        checklist: { id: number; text: string; completed: boolean }[];
+        riskScore: number;
+        alerts: number;
+    }>({ filings: 0, checklist: [], riskScore: 0, alerts: 0 });
+
+    useEffect(() => {
+        if (userProfile?.activeCompanyId) {
+            const companyId = userProfile.activeCompanyId;
+            // Generate pseudo-random mock data based on company ID
+            if (companyId === '1') {
+                setDynamicData({
+                    filings: 3,
+                    checklist: [
+                        { id: 1, text: "GSTR-3B monthly filing", completed: true },
+                        { id: 2, text: "Form AOC-4 annual filing", completed: false },
+                        { id: 3, text: "TDS Payment for Q3", completed: false },
+                    ],
+                    riskScore: 85,
+                    alerts: 1,
+                });
+            } else { // companyId === '2'
+                setDynamicData({
+                    filings: 5,
+                    checklist: [
+                        { id: 1, text: "Verify Form 26AS", completed: true },
+                        { id: 2, text: "File Form MGT-7", completed: true },
+                        { id: 3, text: "Advance Tax Payment", completed: false },
+                        { id: 4, text: "GSTR-1 quarterly filing", completed: false },
+                    ],
+                    riskScore: 92,
+                    alerts: 0,
+                });
+            }
+        }
+    }, [userProfile?.activeCompanyId]);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-4">
@@ -105,10 +143,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     </Button>
                 </Card>
             </div>
-            <StatCard title="Risk Score" value={isPro ? "N/A" : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} />
-            <StatCard title="Upcoming Filings" value="0" subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} />
+            <StatCard title="Risk Score" value={isPro ? `${dynamicData.riskScore}` : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} />
+            <StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} />
             <StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} />
-            <StatCard title="Alerts" value="0" subtext="No overdue tasks" icon={<AlertTriangle className="h-4 w-4" />} />
+            <StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} />
             
             <div className="md:col-span-2 lg:col-span-2">
               <ComplianceActivityChart />
@@ -119,8 +157,19 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
                     <CardDescription>Key compliance items for your company.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 text-center text-muted-foreground p-8">
-                   <p>No items yet. Connect your company data to get started.</p>
+                <CardContent className="space-y-3">
+                    {dynamicData.checklist.length > 0 ? (
+                        dynamicData.checklist.map(item => (
+                            <div key={item.id} className="flex items-center gap-3 text-sm">
+                                <CheckCircle className={cn("h-5 w-5", item.completed ? "text-green-500" : "text-muted-foreground/30")} />
+                                <span className={cn(item.completed && "line-through text-muted-foreground")}>{item.text}</span>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center text-muted-foreground p-8">
+                            <p>No items yet. Connect your company data to get started.</p>
+                        </div>
+                    )}
                 </CardContent>
              </Card>
         </div>
