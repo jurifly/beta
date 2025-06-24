@@ -1,12 +1,15 @@
+
 "use client"
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GitBranch, Mail, MessageSquare, Zap, Bot, Database, ArrowRight, UploadCloud, Lock, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { useToast } from "@/hooks/use-toast";
 
-const integrations = [
+const initialIntegrations = [
   { name: "Slack", description: "Get notifications and interact with LexIQ.AI bot.", icon: MessageSquare, connected: false },
   { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false },
   { name: "Zapier", description: "Connect LexIQ.AI to thousands of other apps.", icon: Zap, connected: false },
@@ -17,6 +20,8 @@ const integrations = [
 
 export default function IntegrationsPage() {
   const { userProfile } = useAuth();
+  const [integrations, setIntegrations] = useState(initialIntegrations);
+  const { toast } = useToast();
   
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -29,6 +34,23 @@ export default function IntegrationsPage() {
       icon={<Zap className="w-12 h-12 text-primary/20"/>}
     />;
   }
+  
+  const handleToggleConnection = (name: string) => {
+    const isConnecting = !integrations.find(i => i.name === name)?.connected;
+    
+    setIntegrations(currentIntegrations =>
+      currentIntegrations.map(integration =>
+        integration.name === name
+          ? { ...integration, connected: !integration.connected }
+          : integration
+      )
+    );
+    
+    toast({
+      title: `Integration ${isConnecting ? 'Connected' : 'Disconnected'}`,
+      description: `Successfully ${isConnecting ? 'connected to' : 'disconnected from'} ${name}.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -50,7 +72,11 @@ export default function IntegrationsPage() {
               </div>
             </CardHeader>
             <CardContent>
-                <Button className="w-full" variant={integration.connected ? "destructive" : "default"}>
+                <Button 
+                  className="w-full interactive-lift" 
+                  variant={integration.connected ? "outline" : "default"}
+                  onClick={() => handleToggleConnection(integration.name)}
+                >
                     {integration.connected ? "Disconnect" : "Connect"}
                 </Button>
             </CardContent>
