@@ -1,3 +1,4 @@
+
 "use client"
 
 import { AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, Area } from "recharts"
@@ -355,10 +356,10 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (userProfile.plan === 'Free') {
+  if (userProfile.plan === 'Free' || userProfile.plan === 'Starter') {
     return <UpgradePrompt 
       title="Unlock Insights &amp; Analytics"
-      description="Get a 360-degree view of your legal health with AI-powered analytics. Upgrade to Pro to track your performance."
+      description="Get a 360-degree view of your legal health with AI-powered analytics. Upgrade to the Founder plan to track your performance."
       icon={<LineChartIcon className="w-12 h-12 text-primary/20"/>}
     />;
   }
@@ -388,4 +389,6 @@ export default function AnalyticsPage() {
     </div>
   )
 }
+    
+
     

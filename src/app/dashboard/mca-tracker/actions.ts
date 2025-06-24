@@ -19,3 +19,5 @@ export async function fetchCompanyDetailsFromCIN(cin: string): Promise<CompanyDe
     throw new Error(`AI is currently unavailable: ${errorMessage}`);
   }
 }
+
+    

@@ -276,7 +276,7 @@ export default function DashboardLayout({
     if (!user) {
       router.replace("/onboarding");
     }
-  }, [user, loading, router.replace]);
+  }, [user, loading, router]);
 
 
   if (loading || !userProfile) {
@@ -519,3 +519,5 @@ const MobileBottomNav = () => {
     </div>
   )
 }
+
+    
