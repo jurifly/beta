@@ -212,6 +212,20 @@ export default function DocumentsPage() {
     hasUserEdited.current = false;
   };
 
+  const handleDownload = () => {
+    if (!generatedDoc) return;
+
+    const blob = new Blob([generatedDoc.content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${generatedDoc.title.replace(/ /g, '_')}.txt`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (!userProfile) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -291,7 +305,7 @@ export default function DocumentsPage() {
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
-                <Button disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
+                <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
          </div>
          
