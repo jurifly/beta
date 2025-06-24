@@ -1,9 +1,9 @@
 'use server';
 
-import { getRegulatoryUpdatesSummary, type RegulatorySummaryInput, type RegulatorySummaryOutput } from '@/ai/flows/regulation-watcher-flow';
+import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 
 type FormState = {
-  data: RegulatorySummaryOutput | null;
+  data: WatcherOutput | null;
   error: string | null;
 };
 
@@ -15,10 +15,10 @@ export async function getRegulatoryUpdates(previousState: FormState, formData: F
     return { data: null, error: 'Portal and frequency are required.' };
   }
 
-  const input: RegulatorySummaryInput = { portal, frequency };
+  const input: WatcherInput = { portal, frequency };
 
   try {
-    const result = await getRegulatoryUpdatesSummary(input);
+    const result = await watchRegulations(input);
     return { data: result, error: null };
   } catch (e: any) {
     console.error('AI Flow Error:', e);
