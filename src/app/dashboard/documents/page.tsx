@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -27,6 +26,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { generateDocument, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
+import { useTypewriter } from '@/hooks/use-typewriter';
+import { Textarea } from '@/components/ui/textarea';
 
 const templates = {
   'Startup Legal': [
@@ -64,6 +65,8 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
   const [recentDocs, setRecentDocs] = useState<DocumentGeneratorOutput[]>([]);
   const { toast } = useToast();
+  
+  const typewriterText = useTypewriter(generatedDoc?.content || '', 10);
 
   const toggleCategory = (category: TemplateCategory) => {
     setOpenCategories(prev => 
@@ -222,9 +225,11 @@ export default function DocumentsPage() {
               <CardTitle>{generatedDoc.title}</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-card-foreground">
-                {generatedDoc.content}
-              </pre>
+              <Textarea
+                readOnly
+                value={typewriterText}
+                className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+              />
             </CardContent>
           </Card>
         ) : (
