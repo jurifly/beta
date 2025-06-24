@@ -41,11 +41,12 @@ type ChecklistState = {
 
 const dealTypesByRole = {
   Founder: [
-    { value: "Seed Funding", label: "Pre-seed / Seed Funding" },
-    { value: "Series A", label: "Series A Funding" },
+    { value: "Pre-seed / Seed Funding", label: "Pre-seed / Seed Funding" },
+    { value: "Series A Funding", label: "Series A Funding" },
     { value: "Series B/C+ Funding", label: "Series B/C+ Funding" },
-    { value: "Merger & Acquisition", label: "Merger & Acquisition (M&A)" },
-    { value: "Internal Audit Prep", label: "Internal Audit Prep" },
+    { value: "Venture Debt Financing", label: "Venture Debt Financing" },
+    { value: "Merger & Acquisition (Sell-Side)", label: "Merger & Acquisition (Sell-Side)" },
+    { value: "General Dataroom Prep", label: "General Dataroom Prep" },
   ],
   CA: [
     { value: "Financial Due Diligence", label: "Financial Due Diligence" },
@@ -53,20 +54,25 @@ const dealTypesByRole = {
     { value: "Statutory Audit", label: "Statutory Audit" },
     { value: "Internal Audit", label: "Internal Audit" },
     { value: "Forensic Audit", label: "Forensic Audit" },
+    { value: "Business Valuation Prep", label: "Business Valuation Prep" },
+    { value: "IFRS / Ind AS Transition", label: "IFRS / Ind AS Transition" },
   ],
   'Legal Advisor': [
-    { value: "Legal Due Diligence", label: "Legal Due Diligence" },
+    { value: "Legal Due Diligence (M&A)", label: "Legal Due Diligence (M&A)" },
     { value: "IP Due Diligence", label: "IP Due Diligence" },
-    { value: "Contract Review Audit", label: "Contract Review Audit" },
-    { value: "Merger & Acquisition", label: "Merger & Acquisition (M&A)" },
-    { value: "Litigation Review", label: "Litigation Review" },
+    { value: "Contract Portfolio Audit", label: "Contract Portfolio Audit" },
+    { value: "Regulatory Compliance Review", label: "Regulatory Compliance Review" },
+    { value: "Corporate Governance Audit", label: "Corporate Governance Audit" },
+    { value: "Litigation Portfolio Review", label: "Litigation Portfolio Review" },
   ],
   Enterprise: [
-    { value: "IPO Readiness", label: "IPO Readiness" },
-    { value: "SOC2 Compliance Prep", label: "SOC2 Compliance Prep" },
+    { value: "IPO Readiness Audit", label: "IPO Readiness Audit" },
+    { value: "SOC 2 Compliance Prep", label: "SOC 2 Compliance Prep" },
     { value: "ISO 27001 Compliance Prep", label: "ISO 27001 Compliance Prep" },
-    { value: "Internal Controls Audit (SOX)", label: "Internal Controls Audit (SOX)" },
-    { value: "GDPR/DPDP Audit", label: "GDPR / DPDP Audit" },
+    { value: "Internal Controls (SOX/IFC)", label: "Internal Controls (SOX/IFC)" },
+    { value: "GDPR / DPDP Compliance Audit", label: "GDPR / DPDP Compliance Audit" },
+    { value: "Third-Party Vendor DD", label: "Third-Party Vendor DD" },
+    { value: "Post-Merger Integration Audit", label: "Post-Merger Integration Audit" },
   ],
 };
 
@@ -524,5 +530,3 @@ export default function DueDiligencePage() {
       </Card>
   )
 }
-
-    
