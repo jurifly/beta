@@ -10,15 +10,13 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { formatDistanceToNow } from 'date-fns';
+import type { Workflow, ActivityLogItem } from "@/lib/types";
 
 
 const initialIntegrations = [
   { name: "Slack", description: "Get notifications and interact with Clausey bot.", icon: MessageSquare, connected: false, authUrl: "https://slack.com/oauth/v2/authorize" },
   { name: "Gmail", description: "Parse incoming notices & create tasks from emails.", icon: Mail, connected: false, authUrl: "https://accounts.google.com/o/oauth2/v2/auth" },
   { name: "Zapier", description: "Connect Clausey to thousands of other apps.", icon: Zap, connected: false, authUrl: "https://zapier.com/apps/clausey/integrations" },
-  { name: "WhatsApp", description: "Receive urgent alerts directly on your phone.", icon: Bot, connected: false, authUrl: "#" }, // No standard web auth flow
-  { name: "Notion", description: "Sync compliance calendars and task lists.", icon: Database, connected: false, authUrl: "https://api.notion.com/v1/oauth/authorize" },
-  { name: "GitHub", description: "Example for another integration.", icon: GitBranch, connected: false, authUrl: "https://github.com/login/oauth/authorize" },
 ];
 
 const workflowTriggers = [
@@ -38,21 +36,6 @@ const workflowNotifications = [
     { value: "email_client", label: "Email Client", desc: "Send an automated email to the client's primary contact." },
     { value: "log_only", label: "Log to Activity Feed", desc: "No notification, just log the event." },
 ];
-
-type Workflow = {
-  id: string;
-  trigger: string;
-  action: string;
-  notification: string;
-};
-
-type ActivityLogItem = {
-    id: string;
-    timestamp: Date;
-    icon: React.ElementType;
-    title: string;
-    description: string;
-};
 
 export default function IntegrationsPage() {
   const { userProfile } = useAuth();
@@ -264,7 +247,7 @@ export default function IntegrationsPage() {
                 </p>
             </div>
              <div className="space-y-4">
-                {integrations.slice(0, 3).map((integration) => (
+                {integrations.map((integration) => (
                 <Card key={integration.name} className="interactive-lift">
                     <CardHeader className="flex flex-row items-center gap-4 p-4">
                     <integration.icon className="w-6 h-6 text-primary" />
