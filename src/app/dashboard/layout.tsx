@@ -27,6 +27,9 @@ import {
   Library,
   ChevronDown,
   Network,
+  Monitor,
+  Scale,
+  MessageSquare,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -65,6 +68,9 @@ const navItemConfig = {
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard, premium: false },
   integrations: { href: "/dashboard/integrations", label: "Integrations", icon: Zap, premium: true, requiredPlan: 'Enterprise' },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings, premium: false },
+  mcaTracker: { href: "/dashboard/mca-tracker", label: "MCA Tracker", icon: Monitor, premium: true },
+  reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale, premium: true, requiredPlan: 'CA Pro' },
+  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare, premium: false },
 } as const;
 
 type NavItem = typeof navItemConfig[keyof typeof navItemConfig];
@@ -76,9 +82,11 @@ const founderNavItems: NavItem[] = [
   navItemConfig.documents,
   navItemConfig.calendar,
   navItemConfig.contractAnalyzer,
+  navItemConfig.mcaTracker,
   navItemConfig.dueDiligence,
   navItemConfig.analytics,
   navItemConfig.integrations,
+  navItemConfig.community,
 ];
 
 const caNavItems: NavItem[] = [
@@ -88,6 +96,8 @@ const caNavItems: NavItem[] = [
   navItemConfig.documents,
   navItemConfig.calendar,
   navItemConfig.regulationWatcher,
+  navItemConfig.mcaTracker,
+  navItemConfig.reconciliation,
   navItemConfig.dueDiligence,
   navItemConfig.analytics,
   navItemConfig.team,
@@ -102,6 +112,7 @@ const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.dueDiligence,
   navItemConfig.clauseLibrary,
   navItemConfig.regulationWatcher,
+  navItemConfig.mcaTracker,
   navItemConfig.analytics,
   navItemConfig.team,
 ];
@@ -114,6 +125,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.calendar,
   navItemConfig.dueDiligence,
   navItemConfig.regulationWatcher,
+  navItemConfig.reconciliation,
   navItemConfig.integrations,
   navItemConfig.team,
   navItemConfig.clients,
