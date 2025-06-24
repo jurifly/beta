@@ -20,8 +20,10 @@ export interface Company {
     location: string;
 }
 
+export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
+
 export interface UserProfile {
-  role: 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
+  role: UserRole;
   plan: 'Free' | 'Pro' | 'CA Pro' | 'Enterprise' | 'Enterprise Pro';
   companies: Company[];
   activeCompanyId: string;
