@@ -10,28 +10,25 @@ import {
   Building,
   Calendar,
   CreditCard,
-  FileScan,
+  FileClock,
   FileText,
-  GanttChartSquare,
+  FolderKanban,
   LayoutDashboard,
+  Library,
   LineChart,
   Loader2,
   Lock,
   Menu,
+  MessageSquare,
+  Monitor,
+  Network,
   RadioTower,
+  Scale,
   Settings,
   Sparkles,
   Users,
   Zap,
-  FolderKanban,
-  Library,
-  ChevronDown,
-  Network,
-  Monitor,
-  Scale,
-  MessageSquare,
-  Briefcase,
-  FileClock,
+  Archive,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,18 +54,14 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network, requiredPlan: 'Founder' },
-  aiCopilot: { href: "/dashboard/ai-copilot", label: "AI Toolkit", icon: Sparkles },
-  documents: { href: "/dashboard/documents", label: "Documents", icon: FileText },
+  aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
+  documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
-  contractAnalyzer: { href: "/dashboard/contract-analyzer", label: "Analyzer", icon: FileScan },
-  dueDiligence: { href: "/dashboard/due-diligence", label: "Audit", icon: GanttChartSquare, requiredPlan: 'Founder' },
   analytics: { href: "/dashboard/analytics", label: "Insights", icon: LineChart, requiredPlan: 'Founder' },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban, requiredPlan: 'Pro' },
-  regulationWatcher: { href: "/dashboard/regulation-watcher", label: "Watcher", icon: RadioTower, requiredPlan: 'Pro' },
   team: { href: "/dashboard/team", label: "Team", icon: Users, requiredPlan: 'Pro' },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library, requiredPlan: 'Founder' },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  integrations: { href: "/dashboard/integrations", label: "Integrations", icon: Zap, requiredPlan: 'Enterprise' },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
   mcaTracker: { href: "/dashboard/mca-tracker", label: "MCA Tracker", icon: Monitor, requiredPlan: 'Founder' },
   reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale, requiredPlan: 'Pro' },
@@ -80,10 +73,9 @@ type NavItem = typeof navItemConfig[keyof typeof navItemConfig] & { requiredPlan
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.businessSetup,
-  navItemConfig.aiCopilot,
+  navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.contractAnalyzer,
   navItemConfig.mcaTracker,
   navItemConfig.analytics,
   navItemConfig.community,
@@ -93,10 +85,9 @@ const founderNavItems: NavItem[] = [
 const caNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
-  navItemConfig.aiCopilot,
+  navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.regulationWatcher,
   navItemConfig.mcaTracker,
   navItemConfig.reconciliation,
   navItemConfig.analytics,
@@ -107,11 +98,9 @@ const caNavItems: NavItem[] = [
 const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
-  navItemConfig.aiCopilot,
-  navItemConfig.contractAnalyzer,
+  navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.clauseLibrary,
-  navItemConfig.regulationWatcher,
   navItemConfig.mcaTracker,
   navItemConfig.analytics,
   navItemConfig.team,
@@ -119,17 +108,16 @@ const legalAdvisorNavItems: NavItem[] = [
 
 const enterpriseNavItems: NavItem[] = [
   navItemConfig.dashboard,
-  navItemConfig.aiCopilot,
+  navItemConfig.aiToolkit,
   navItemConfig.analytics,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.regulationWatcher,
   navItemConfig.reconciliation,
-  navItemConfig.integrations,
   navItemConfig.team,
   navItemConfig.clients,
   navItemConfig.clauseLibrary,
 ];
+
 
 const getNavItems = (role: UserProfile['role']) => {
     switch (role) {
@@ -344,7 +332,8 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
                           href={isLocked ? '#' : item.href}
                           className={cn(
                               "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                              pathname === item.href && "bg-muted text-primary font-semibold",
+                              pathname.startsWith(item.href) && item.href !== '/dashboard' && "bg-muted text-primary font-semibold",
+                              pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary font-semibold",
                               isLocked && "text-muted-foreground/50 hover:text-muted-foreground/50 cursor-not-allowed hover:transform-none hover:shadow-none"
                           )}
                           onClick={(e) => isLocked && e.preventDefault()}
@@ -447,7 +436,8 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
                         key={item.href}
                         href={isLocked ? '#' : item.href}
                         className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
-                            pathname === item.href && "bg-muted text-primary",
+                            pathname.startsWith(item.href) && item.href !== '/dashboard' && "bg-muted text-primary",
+                            pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary",
                             isLocked && "opacity-60 cursor-not-allowed active:transform-none"
                         )}
                         onClick={(e) => {
@@ -491,8 +481,8 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/dashboard/ai-copilot", icon: Sparkles, label: "AI Tools" },
-    { href: "/dashboard/documents", icon: FileText, label: "Docs" },
+    { href: "/dashboard/ai-toolkit", icon: Sparkles, label: "AI Tools" },
+    { href: "/dashboard/documents", icon: Archive, label: "Vault" },
     { href: "/dashboard/analytics", icon: LineChart, label: "Insights" },
     { href: "/dashboard/settings", icon: Settings, label: "Profile" },
   ];
@@ -504,11 +494,11 @@ const MobileBottomNav = () => {
            return (
              <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center relative h-full">
               <div className={cn("flex flex-col items-center justify-center gap-1 p-2 rounded-md w-full h-full relative transition-transform active:scale-90", 
-                  pathname === item.href ? "text-primary" : "text-muted-foreground"
+                  pathname.startsWith(item.href) ? "text-primary" : "text-muted-foreground"
               )}>
                 <item.icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium break-all">{item.label}</span>
-                {pathname === item.href && (
+                {pathname.startsWith(item.href) && (
                   <div className="absolute top-0.5 h-1 w-8 rounded-full bg-primary" />
                 )}
               </div>
@@ -519,5 +509,3 @@ const MobileBottomNav = () => {
     </div>
   )
 }
-
-    
