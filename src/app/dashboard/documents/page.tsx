@@ -135,7 +135,6 @@ export default function DocumentsPage() {
   const [editorContent, setEditorContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const hasUserEdited = useRef(false);
-  const [explainMode, setExplainMode] = useState(false);
 
   const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 10);
   
@@ -243,25 +242,6 @@ export default function DocumentsPage() {
           <CardDescription>Select a template to generate.</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="explain-mode" className="font-medium text-sm">
-                Explain-as-you-build Mode
-              </Label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button"><Info className="h-4 w-4 text-muted-foreground" /></button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Get AI-powered explanations for each field as you fill it out.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <Switch id="explain-mode" checked={explainMode} onCheckedChange={setExplainMode} />
-          </div>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search templates..." className="pl-10" />
