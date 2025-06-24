@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, useRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -472,7 +472,28 @@ function Step4DocumentGenerator({ onComplete }: { onComplete: () => void }) {
     const { toast } = useToast();
     const { userProfile } = useAuth();
     
-    const displayText = useTypewriter(generatedContent?.content || '', 10);
+    const [editorContent, setEditorContent] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const hasUserEdited = useRef(false);
+
+    const typewriterText = useTypewriter(isTyping ? (generatedContent?.content || '') : '', 10);
+    
+    useEffect(() => {
+        if (isTyping && !hasUserEdited.current) {
+          setEditorContent(typewriterText);
+        }
+        if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedContent?.content || '').length) {
+            setIsTyping(false);
+        }
+    }, [typewriterText, isTyping, generatedContent]);
+
+    const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        if (isTyping) {
+          hasUserEdited.current = true;
+          setIsTyping(false);
+        }
+        setEditorContent(e.target.value);
+    };
 
     const handleGenerate = async (templateName: string, isPremium: boolean) => {
         if (isPremium && userProfile?.plan === 'Free') {
@@ -487,9 +508,13 @@ function Step4DocumentGenerator({ onComplete }: { onComplete: () => void }) {
 
         setLoadingDoc(templateName);
         setGeneratedContent(null);
+        setEditorContent('');
+        hasUserEdited.current = false;
+        
         try {
             const doc = await generateDocument({ templateName });
             setGeneratedContent(doc);
+            setIsTyping(true);
         } catch (e: any) {
             toast({ variant: 'destructive', title: 'Generation Failed', description: e.message });
         } finally {
@@ -530,12 +555,12 @@ function Step4DocumentGenerator({ onComplete }: { onComplete: () => void }) {
             
             <div className="bg-muted/50 rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-lg">Document Preview</h3>
+                    <h3 className="font-bold text-lg">{generatedContent?.title || "Document Preview"}</h3>
                     <Button variant="outline" size="sm" disabled={!generatedContent}>
                         <Download className="mr-2 h-4 w-4" /> Download
                     </Button>
                 </div>
-                <div className="flex-1 border rounded-md bg-card p-4 overflow-y-auto min-h-[300px]">
+                <div className="flex-1 border rounded-md bg-card overflow-hidden min-h-[300px]">
                     {loadingDoc && (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                           <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -543,10 +568,11 @@ function Step4DocumentGenerator({ onComplete }: { onComplete: () => void }) {
                         </div>
                     )}
                     {generatedContent && (
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <h4 className="font-bold mb-4">{generatedContent.title}</h4>
-                            <p className="whitespace-pre-wrap">{displayText}</p>
-                        </div>
+                        <Textarea
+                            value={editorContent}
+                            onChange={handleEditorChange}
+                            className="w-full h-full p-4 resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent font-code"
+                        />
                     )}
                     {!loadingDoc && !generatedContent && (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
@@ -641,3 +667,5 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         </div>
     )
 }
+
+    
