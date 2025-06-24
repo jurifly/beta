@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useMemo, useState, useEffect, useTransition, useCallback } from "react"
-import { useFormStatus, useFormState } from "react-dom"
+import { useMemo, useState, useEffect, useTransition, useCallback, useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -100,7 +100,7 @@ function ComplianceValidator() {
     const [fileDataUri, setFileDataUri] = useState<string | null>(null);
     const [framework, setFramework] = useState('SOC2');
 
-    const [state, formAction] = useFormState(validateComplianceAction, initialComplianceState);
+    const [state, formAction] = useActionState(validateComplianceAction, initialComplianceState);
     const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
@@ -229,7 +229,7 @@ function ComplianceValidator() {
 }
 
 export default function DueDiligencePage() {
-  const [serverState, formAction] = useFormState(generateDiligenceChecklist, initialDiligenceState);
+  const [serverState, formAction] = useActionState(generateDiligenceChecklist, initialDiligenceState);
   const [checklistState, setChecklistState] = useState<ChecklistState>({ data: null, timestamp: null });
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
   
@@ -530,3 +530,5 @@ export default function DueDiligencePage() {
       </Card>
   )
 }
+
+    
