@@ -145,10 +145,37 @@ export default function ContractAnalyzerForm() {
             <div className="lg:col-span-3 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg"><FileText className="text-primary"/>Summary</CardTitle>
+                        <CardTitle className="flex items-center gap-3 text-lg"><FileText className="text-primary"/>Contract Overview</CardTitle>
+                        <CardDescription>{state.data.summary.contractType}</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">{state.data.summary}</p>
+                    <CardContent className="space-y-4 text-sm">
+                        <div>
+                            <h4 className="font-semibold text-foreground">Purpose</h4>
+                            <p className="text-muted-foreground">{state.data.summary.purpose}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="font-semibold text-foreground">Parties Involved</h4>
+                                <ul className="list-disc list-inside text-muted-foreground">
+                                    {state.data.summary.parties.map((party, i) => <li key={i}>{party}</li>)}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-foreground">Effective Date</h4>
+                                <p className="text-muted-foreground">{state.data.summary.effectiveDate}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-foreground">Key Obligations</h4>
+                            <ul className="space-y-2 text-muted-foreground">
+                                {state.data.summary.keyObligations.map((obligation, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                        <CheckSquare className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                                        <span>{obligation}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card className="interactive-lift flex flex-col">

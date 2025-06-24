@@ -17,8 +17,16 @@ const RiskFlagSchema = z.object({
   risk: z.string().describe("A concise description of the potential risk."),
 });
 
+const DetailedSummarySchema = z.object({
+    contractType: z.string().describe("The type of contract, e.g., 'Non-Disclosure Agreement', 'Employment Contract'."),
+    parties: z.array(z.string()).describe("The names of the parties involved in the contract."),
+    effectiveDate: z.string().describe("The effective date of the contract, in YYYY-MM-DD format if available."),
+    purpose: z.string().describe("A concise summary of the contract's main purpose."),
+    keyObligations: z.array(z.string()).describe("A bulleted list of the main responsibilities for each party."),
+});
+
 const AnalyzeContractOutputSchema = z.object({
-  summary: z.string().describe("A brief, high-level summary of the contract's purpose and main parties."),
+  summary: DetailedSummarySchema.describe("A detailed breakdown of the contract's key components."),
   riskScore: z.number().min(0).max(100).describe("A numerical score from 0 (very high risk) to 100 (very low risk) representing the overall risk level of the contract."),
   riskFlags: z.array(RiskFlagSchema).describe("A list of potential risks, liabilities, or unfavorable terms for the user."),
   missingClauses: z.array(z.string()).describe("A list of standard clauses that are recommended but appear to be missing from the contract."),
@@ -40,7 +48,12 @@ const prompt = ai.definePrompt({
   {{media url=fileDataUri}}
 
   Please analyze the contract and provide the following:
-  1.  **Summary**: A brief, neutral summary of the contract's purpose.
+  1.  **Summary**: A detailed, structured breakdown of the contract's key components. This should include:
+      - **Contract Type**: The specific type of contract (e.g., "Employment Agreement", "Lease Agreement").
+      - **Parties**: The full legal names of all parties involved.
+      - **Effective Date**: The date the contract becomes effective. State if it is not explicitly mentioned.
+      - **Purpose**: A clear, one or two-sentence summary of what the contract is for.
+      - **Key Obligations**: A list of the most critical obligations and responsibilities for each party.
   2.  **Risk Score**: A numerical score from 0 (very high risk) to 100 (very low risk) representing the overall risk level.
   3.  **Risk Flags**: Identify potential risks, liabilities, or unfavorable terms. For each, specify the clause and the nature of the risk.
   4.  **Missing Clauses**: Suggest any standard or important clauses that seem to be missing.
