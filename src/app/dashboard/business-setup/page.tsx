@@ -676,6 +676,35 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         }
     }
 
+    const handleDownload = () => {
+        if (!checklist) return;
+
+        let content = `${checklist.title}\n\n`;
+        
+        const categories = checklist.checklist.reduce((acc, item) => {
+            (acc[item.category] = acc[item.category] || []).push(item.task);
+            return acc;
+        }, {} as Record<string, string[]>);
+
+        for (const category in categories) {
+            content += `## ${category}\n\n`;
+            categories[category].forEach(task => {
+                content += `- ${task}\n`;
+            });
+            content += '\n';
+        }
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${checklist.title.replace(/\s+/g, '_')}_checklist.txt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="max-w-4xl mx-auto">
              <div className="text-center">
@@ -700,7 +729,7 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
                  <div className="bg-muted/50 rounded-xl animate-in fade-in-50 duration-500">
                     <div className="flex items-center justify-between p-4 border-b">
                         <h3 className="font-bold text-md">{checklist.title}</h3>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={handleDownload} disabled={!checklist}>
                           <Download className="h-4 w-4 mr-2" />
                           Download
                         </Button>
