@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import type { UserProfile, UserPlan } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
+import { Loader2 } from "lucide-react"
 
 const plans = [
   {
@@ -84,15 +85,14 @@ export default function BillingPage() {
   }
   
   const userPlan = userProfile.plan || "Starter";
-  const creditLimitMap = {
-    'Starter': 90, // 3 per day
+  const creditLimitMap: { [key in UserPlan]: number } = {
+    'Starter': 90,
     'Founder': 50,
     'Pro': 1000,
     'Enterprise': 10000,
-    // Deprecated plans, handle gracefully
-    'Free': 30,
-    'CA Pro': 1000,
-    'Enterprise Pro': 10000,
+    'Free': 30, // Kept for graceful degradation
+    'CA Pro': 1000, // Kept for graceful degradation
+    'Enterprise Pro': 10000, // Kept for graceful degradation
   }
   const creditLimit = creditLimitMap[userProfile.plan] || 30;
   const creditUsagePercentage = userProfile.credits ? (userProfile.credits / creditLimit) * 100 : 0;
@@ -158,7 +158,7 @@ export default function BillingPage() {
               <CardHeader className="text-center pt-10">
                  {plan.icon && <plan.icon className="w-8 h-8 mx-auto text-primary" />}
                 <CardTitle className="text-xl font-headline mt-2">{plan.name}</CardTitle>
-                <CardDescription className="mt-2 h-10 text-sm">{plan.description}</CardDescription>
+                <CardDescription className="mt-2 h-16 text-sm">{plan.description}</CardDescription>
                 {plan.cta !== 'Contact Sales' ? (
                     <p className="mt-4">
                         <span className="text-4xl font-bold">{price > 0 ? formatPrice(price) : "Free"}</span>
@@ -274,3 +274,5 @@ export default function BillingPage() {
     </div>
   )
 }
+
+    
