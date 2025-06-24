@@ -36,9 +36,9 @@ export default function ReconciliationPage() {
       }
   }, [toast]);
 
-  const GSTDropzone = useDropzone({ onDrop: handleDrop('gst'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] } });
-  const ROCDropzone = useDropzone({ onDrop: handleDrop('roc'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] } });
-  const ITRDropzone = useDropzone({ onDrop: handleDrop('itr'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] } });
+  const GSTDropzone = useDropzone({ onDrop: handleDrop('gst'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] }, maxSize: 1024 * 1024 });
+  const ROCDropzone = useDropzone({ onDrop: handleDrop('roc'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] }, maxSize: 1024 * 1024 });
+  const ITRDropzone = useDropzone({ onDrop: handleDrop('itr'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] }, maxSize: 1024 * 1024 });
 
   const getFileAsDataURI = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {

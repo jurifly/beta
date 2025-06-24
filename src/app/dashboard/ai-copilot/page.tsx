@@ -585,7 +585,7 @@ const ComplianceValidatorTool = () => {
       }
     }, [toast]);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"]}, maxFiles: 1 });
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"]}, maxFiles: 1, maxSize: 1024 * 1024 });
 
     const handleAnalysis = async () => {
         if (!fileDataUri) { toast({ variant: 'destructive', title: 'File Missing', description: 'Please upload a document to analyze.' }); return; }

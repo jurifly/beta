@@ -241,7 +241,11 @@ const WikiGenerator = () => {
     const { toast } = useToast();
     const { deductCredits } = useAuth();
     
-    const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const onDrop = useCallback(async (acceptedFiles: File[], fileRejections: FileRejection[]) => {
+        if (fileRejections.length > 0) {
+            toast({ variant: "destructive", title: "File Upload Error", description: fileRejections[0].errors[0].message });
+            return;
+        }
         if (acceptedFiles[0]) {
             const uploadedFile = acceptedFiles[0];
             setFile(uploadedFile);
@@ -267,7 +271,7 @@ const WikiGenerator = () => {
         }
     }, [toast, deductCredits]);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'application/pdf': ['.pdf'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }, maxFiles: 1 });
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'application/pdf': ['.pdf'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }, maxFiles: 1, maxSize: 1024 * 1024 });
 
     return (
         <div className="grid lg:grid-cols-2 gap-8">
@@ -344,5 +348,3 @@ export default function DocumentsPage() {
     </div>
   );
 }
-
-    

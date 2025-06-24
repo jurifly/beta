@@ -97,6 +97,7 @@ const RiskAnalyzer = () => {
         onDrop,
         accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"] },
         maxFiles: 1,
+        maxSize: 1024 * 1024, // 1MB limit
         noClick: true,
         noKeyboard: true,
     });
@@ -215,6 +216,7 @@ const DocumentSummarizer = () => {
         onDrop,
         accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"] },
         maxFiles: 1,
+        maxSize: 1024 * 1024, // 1MB limit
     });
     
     if (isProcessing) {
