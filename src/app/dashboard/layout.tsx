@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -60,7 +61,7 @@ const navItemConfig = {
   team: { href: "/dashboard/team", label: "Team", icon: Users, premium: true, requiredPlan: 'CA Pro' },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library, premium: true, requiredPlan: 'Pro' },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard, premium: false },
-  integrations: { href: "/dashboard/integrations", label: "Automations", icon: Zap, premium: true, requiredPlan: 'Enterprise' },
+  integrations: { href: "/dashboard/integrations", label: "Integrations", icon: Zap, premium: true, requiredPlan: 'Enterprise' },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings, premium: false },
 } as const;
 
@@ -74,6 +75,7 @@ const founderNavItems: NavItem[] = [
   navItemConfig.contractAnalyzer,
   navItemConfig.dueDiligence,
   navItemConfig.analytics,
+  navItemConfig.integrations,
 ];
 
 const caNavItems: NavItem[] = [
@@ -508,3 +510,5 @@ const MobileBottomNav = () => {
     </div>
   )
 }
+
+    
