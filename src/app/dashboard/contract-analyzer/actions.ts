@@ -1,27 +1,5 @@
+
 'use server';
 
-import { analyzeContract, type AnalyzeContractInput, type AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
-
-type FormState = {
-  data: AnalyzeContractOutput | null;
-  error: string | null;
-};
-
-export async function analyzeContractAction(previousState: FormState, formData: FormData): Promise<FormState> {
-  const fileDataUri = formData.get('fileDataUri') as string;
-
-  if (!fileDataUri) {
-    return { data: null, error: 'File is required for analysis.' };
-  }
-
-  const input: AnalyzeContractInput = { fileDataUri };
-
-  try {
-    const result = await analyzeContract(input);
-    return { data: result, error: null };
-  } catch (e: any) {
-    console.error('AI Flow Error:', e);
-    const errorMessage = e.message || 'An unexpected error occurred.';
-    return { data: null, error: `AI is currently unavailable: ${errorMessage}` };
-  }
-}
+// This file is no longer used and is kept to avoid breaking imports in a real-world scenario.
+// The new logic is handled directly in the page component.
