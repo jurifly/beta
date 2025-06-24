@@ -18,7 +18,6 @@ import {
   Lock,
   Menu,
   RadioTower,
-  Search,
   Settings,
   Sparkles,
   Users,
@@ -39,10 +38,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
 import type { UserProfile } from "@/lib/types";
@@ -167,7 +165,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                   <Link href="/dashboard" className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                      <span className="sr-only">DashMate</span>
+                      <span className="sr-only">LexIQ.AI</span>
                   </Link>
               </div>
 
@@ -235,7 +233,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </header>
-          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/40 pb-20 md:pb-6 overflow-y-auto">
+          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
             {children}
           </main>
         </div>
@@ -255,7 +253,7 @@ export default function DashboardLayout({
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/");
+      router.replace("/onboarding");
     }
   }, [user, loading, router]);
 
@@ -286,7 +284,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
               <span className="flex items-center">
-                DashMate
+                LexIQ.AI
                  {userProfile.plan !== 'Free' && (
                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
                       <span className="mr-1.5">🔥</span>
@@ -405,7 +403,7 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary" onClick={handleLinkClick}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                 <span className="flex items-center">
-                  DashMate
+                  LexIQ.AI
                    {userProfile.plan !== 'Free' && (
                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
                       <span className="mr-1.5">🔥</span>
