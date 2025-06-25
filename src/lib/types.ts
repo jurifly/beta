@@ -1,7 +1,7 @@
-
 'use client';
 
 import type { LucideIcon } from "lucide-react";
+import type { AssistantOutput } from "@/ai/flows/assistant-flow";
 
 export interface User {
   uid: string;
@@ -97,3 +97,8 @@ export interface Transaction {
   createdAt: string;
   upiTransactionId?: string;
 }
+
+export type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string | AssistantOutput;
+};

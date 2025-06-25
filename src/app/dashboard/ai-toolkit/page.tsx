@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
@@ -12,7 +11,7 @@ import Link from 'next/link';
 
 import * as AiActions from './actions';
 import type { AssistantOutput, ChecklistOutput } from '@/ai/flows/assistant-flow';
-import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem } from "@/lib/types"
+import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage } from "@/lib/types"
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
@@ -43,11 +42,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 // --- Type Definitions and Initial States ---
-
-type ChatMessage = {
-  role: 'user' | 'assistant';
-  content: string | AssistantOutput;
-};
 
 const CHAT_HISTORY_KEY = 'aiCopilotHistory';
 
@@ -101,9 +95,12 @@ const ChatAssistant = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { userProfile, saveChatHistory, getChatHistory } = useAuth();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // No more local storage for history, it's now in Firestore.
+  // We can add a "history" view later if needed.
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -127,13 +124,16 @@ const ChatAssistant = () => {
     setIsProcessing(true);
 
     const userMessage: ChatMessage = { role: 'user', content: topic };
-    setChatHistory(prev => [...prev, userMessage]);
+    const newChatHistory = [...chatHistory, userMessage];
+    setChatHistory(newChatHistory);
     setInput('');
 
     try {
       const response = await AiActions.getAssistantResponse({ topic });
       const assistantMessage: ChatMessage = { role: 'assistant', content: response };
-      setChatHistory(prev => [...prev, assistantMessage]);
+      const finalChatHistory = [...newChatHistory, assistantMessage];
+      setChatHistory(finalChatHistory);
+      await saveChatHistory(finalChatHistory); // Save to Firestore
 
     } catch (error) {
       console.error('Error generating response:', error);

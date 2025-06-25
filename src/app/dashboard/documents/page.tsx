@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,35 +16,38 @@ import { useToast } from '@/hooks/use-toast';
 import type { VaultItem } from '@/lib/types';
 import { AddFolderModal } from '@/components/dashboard/add-folder-modal';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/auth';
 
-
-const VAULT_STORAGE_KEY = 'documentVault';
 
 export default function DocumentsPage() {
   const [vaultItems, setVaultItems] = useState<VaultItem[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { saveVaultItems, getVaultItems } = useAuth();
 
   useEffect(() => {
-    try {
-      const savedItems = localStorage.getItem(VAULT_STORAGE_KEY);
-      if (savedItems) {
-        setVaultItems(JSON.parse(savedItems));
-      }
-    } catch (error) {
-      console.error("Failed to load vault items from localStorage", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    const loadItems = async () => {
+        setIsLoading(true);
+        try {
+            const items = await getVaultItems();
+            setVaultItems(items);
+        } catch (error) {
+            console.error("Failed to load vault items from Firestore", error);
+            toast({ variant: "destructive", title: "Load Error", description: "Could not load vault items." });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    loadItems();
+  }, [getVaultItems, toast]);
 
-  const saveItems = (updatedItems: VaultItem[]) => {
+  const saveItems = async (updatedItems: VaultItem[]) => {
     setVaultItems(updatedItems);
     try {
-      localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(updatedItems));
+      await saveVaultItems(updatedItems);
     } catch (error) {
-      console.error("Failed to save vault items to localStorage", error);
+      console.error("Failed to save vault items to Firestore", error);
       toast({ variant: "destructive", title: "Storage Error", description: "Could not save vault items." });
     }
   };
