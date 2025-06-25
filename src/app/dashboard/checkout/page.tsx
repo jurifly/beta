@@ -138,7 +138,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const upiId = "your-upi-id@okhdfcbank"; // Replace with your actual UPI ID
+  const upiId = "9369797768@ibl"; // Replace with your actual UPI ID
   const upiLink = `upi://pay?pa=${upiId}&pn=Clausey&am=${checkoutItem.amount}&cu=INR&tn=Payment for ${checkoutItem.name}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiLink)}`;
 

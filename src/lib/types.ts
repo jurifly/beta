@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from "lucide-react";
@@ -70,6 +71,7 @@ export type VaultItem = {
     name: string;
     lastModified: string;
     size?: number;
+    parentId: string | null;
 };
 
 export type Workflow = {
