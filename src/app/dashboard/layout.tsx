@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   Bell,
+  Bolt,
   Building,
   Calendar,
   CreditCard,
@@ -183,6 +184,12 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-2 md:gap-4">
+              {userProfile.plan !== 'Enterprise' && (
+                <div className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg">
+                    <Bolt className="h-4 w-4 text-primary" />
+                    <span className="text-muted-foreground">{userProfile.credits ?? 0} Credits</span>
+                </div>
+              )}
               <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -505,3 +512,5 @@ const MobileBottomNav = () => {
     </div>
   )
 }
+
+    
