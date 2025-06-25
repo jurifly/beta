@@ -3,7 +3,6 @@
 
 import type { LucideIcon } from "lucide-react";
 
-// This is a simplified mock. In a real app, you'd get this from your auth provider.
 export interface User {
   uid: string;
   email: string | null;
@@ -23,11 +22,14 @@ export interface Company {
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
-export type UserPlan = 'Starter' | 'Founder' | 'Pro' | 'Enterprise' | 'Free' | 'CA Pro' | 'Enterprise Pro'; // Keep old for graceful degradation
+export type UserPlan = 'Starter' | 'Founder' | 'Pro' | 'Enterprise' | 'Free' | 'CA Pro' | 'Enterprise Pro';
 
 export interface UserProfile {
+  uid: string;
   role: UserRole;
   plan: UserPlan;
+  planStartDate: string;
+  planExpiryDate: string;
   companies: Company[];
   activeCompanyId: string;
   name: string;
@@ -84,3 +86,14 @@ export type ActivityLogItem = {
     title: string;
     description: string;
 };
+
+export interface Transaction {
+  id?: string;
+  userId: string;
+  plan: string;
+  cycle: 'monthly' | 'yearly';
+  amount: number;
+  status: 'initiated' | 'pending_verification' | 'verified' | 'failed';
+  createdAt: string;
+  upiTransactionId?: string;
+}

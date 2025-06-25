@@ -26,23 +26,17 @@ import type { UserProfile, UserRole } from "@/lib/types";
 import { Badge } from "../ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useState } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase/config";
 
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, userProfile, updateUserProfile } = useAuth();
+  const { user, userProfile, updateUserProfile, signOut } = useAuth();
   const [openCompanySwitcher, setOpenCompanySwitcher] = useState(false);
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push("/onboarding");
-    } catch (error) {
-       console.error("Logout failed", error);
-       // still redirect even if firebase signOut fails in mock env
-       router.push("/onboarding");
+    if (signOut) {
+        await signOut();
+        router.push("/login");
     }
   };
 

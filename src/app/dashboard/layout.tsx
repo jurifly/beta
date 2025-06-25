@@ -68,7 +68,8 @@ const navItemConfig = {
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
 } as const;
 
-type NavItem = typeof navItemConfig[keyof typeof navItemConfig] & { requiredPlan?: UserPlan };
+type NavItemKey = keyof typeof navItemConfig;
+type NavItem = typeof navItemConfig[NavItemKey] & { requiredPlan?: UserPlan };
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
@@ -265,7 +266,7 @@ export default function DashboardLayout({
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/onboarding");
+      router.replace("/login");
     }
   }, [user, loading, router]);
 
@@ -286,7 +287,6 @@ const planHierarchy: Record<UserPlan, number> = {
   'Founder': 1,
   'Pro': 2,
   'Enterprise': 3,
-  // Deprecated plans
   'Free': 0, 
   'CA Pro': 2,
   'Enterprise Pro': 3,
@@ -294,7 +294,7 @@ const planHierarchy: Record<UserPlan, number> = {
 
 const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
-    const { userProfile } = useAuth();
+    const { userProfile, isPlanActive } = useAuth();
 
     if (!userProfile) return null;
     
@@ -325,7 +325,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
                 const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
-                const isLocked = item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false;
+                const isLocked = (item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false) || !isPlanActive;
                 
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
@@ -348,7 +348,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
                       </TooltipTrigger>
                       {isLocked && (
                         <TooltipContent side="right">
-                          <p>Upgrade to {item.requiredPlan} to unlock</p>
+                          <p>Upgrade or renew to unlock</p>
                         </TooltipContent>
                       )}
                     </Tooltip>
@@ -387,7 +387,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
 
 const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
-    const { userProfile } = useAuth();
+    const { userProfile, isPlanActive } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
 
     if (!userProfile) return null;
@@ -433,7 +433,7 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
             <nav className="grid gap-2 text-lg font-medium p-4">
               {navItems.map(item => {
                 const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
-                const isLocked = item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false;
+                const isLocked = (item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false) || !isPlanActive;
                 return (
                     <Link
                         key={item.href}
@@ -512,5 +512,3 @@ const MobileBottomNav = () => {
     </div>
   )
 }
-
-    

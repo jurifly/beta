@@ -1,0 +1,37 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can only read and write their own profile.
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
+    }
+
+    // Users can create transactions for themselves.
+    // Users can update their own transactions to add a transaction ID.
+    match /transactions/{transactionId} {
+      allow read, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Community Forum Rules (Future Implementation)
+    // Allow logged-in users to read/write to the forum.
+    match /forum/{threadId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+    }
+
+     match /forum/{threadId}/replies/{replyId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+     }
+
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

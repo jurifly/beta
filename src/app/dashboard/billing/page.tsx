@@ -17,6 +17,7 @@ import type { UserProfile, UserPlan } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Loader2 } from "lucide-react"
+import { add } from "date-fns"
 
 const plans = [
   {
@@ -90,16 +91,23 @@ export default function BillingPage() {
     'Founder': 50,
     'Pro': 1000,
     'Enterprise': 10000,
-    'Free': 30, // Kept for graceful degradation
-    'CA Pro': 1000, // Kept for graceful degradation
-    'Enterprise Pro': 10000, // Kept for graceful degradation
+    'Free': 30, 
+    'CA Pro': 1000, 
+    'Enterprise Pro': 10000, 
   }
   const creditLimit = creditLimitMap[userProfile.plan] || 30;
   const creditUsagePercentage = userProfile.credits ? (userProfile.credits / creditLimit) * 100 : 0;
 
   const handleDowngrade = async () => {
     if (userProfile) {
-        await updateUserProfile({ plan: "Starter", credits: userProfile.credits ? Math.min(userProfile.credits, 90) : 90 });
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + 30);
+        await updateUserProfile({ 
+          plan: "Starter", 
+          credits: userProfile.credits ? Math.min(userProfile.credits, 90) : 90,
+          planStartDate: new Date().toISOString(),
+          planExpiryDate: newExpiry.toISOString(),
+        });
         toast({
             title: "Plan Downgraded",
             description: "You are now on the Starter plan. Premium features have been disabled.",
@@ -159,14 +167,10 @@ export default function BillingPage() {
                  {plan.icon && <plan.icon className="w-8 h-8 mx-auto text-primary" />}
                 <CardTitle className="text-xl font-headline mt-2">{plan.name}</CardTitle>
                 <CardDescription className="mt-2 h-16 text-sm">{plan.description}</CardDescription>
-                {plan.cta !== 'Contact Sales' ? (
-                    <p className="mt-4">
-                        <span className="text-4xl font-bold">{price > 0 ? formatPrice(price) : "Free"}</span>
-                        <span className="text-muted-foreground">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
-                    </p>
-                ) : (
-                    <p className="text-4xl font-bold mt-4">Custom</p>
-                )}
+                <p className="mt-4">
+                    <span className="text-4xl font-bold">{price > 0 ? formatPrice(price) : "Free"}</span>
+                    <span className="text-muted-foreground">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                </p>
               </CardHeader>
               <CardContent className="flex-1 space-y-4">
                 <Separator />
@@ -192,15 +196,13 @@ export default function BillingPage() {
                     )
                   ) : (
                     <Button
-                      asChild={plan.cta !== "Contact Sales" && !isCurrentPlan}
+                      asChild={!isCurrentPlan}
                       className={cn("w-full", isPopular && !isCurrentPlan && "bg-accent hover:bg-accent/90")}
                       disabled={isCurrentPlan}
                       variant={isCurrentPlan ? "outline" : "default"}
                     >
                       {isCurrentPlan ? (
                         <span>Your Current Plan</span>
-                      ) : plan.cta === "Contact Sales" ? (
-                        <a href="mailto:sales@clausey.com">{plan.cta}</a>
                       ) : (
                         <Link href={`/dashboard/checkout?plan=${plan.name.toLowerCase()}&cycle=${billingCycle}`}>
                            {isPopular && <Sparkles className="mr-2 h-4 w-4"/>} {plan.cta}
