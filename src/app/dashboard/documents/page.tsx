@@ -42,6 +42,8 @@ export default function DocumentsPage() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | null; name: string }[]>([{ id: null, name: 'Vault' }]);
   const [selectedFile, setSelectedFile] = useState<VaultItem | null>(null);
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
 
   useEffect(() => {
@@ -66,6 +68,35 @@ export default function DocumentsPage() {
         loadItems();
     }
   }, [user, getVaultItems, toast]);
+
+  useEffect(() => {
+    if (selectedFile && selectedFile.contentType?.startsWith('text/')) {
+        setIsPreviewLoading(true);
+        setPreviewContent(null);
+        fetch(selectedFile.downloadURL!)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                setPreviewContent(text);
+                setIsPreviewLoading(false);
+            })
+            .catch(error => {
+                console.error("Error fetching preview content:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Preview Failed",
+                    description: "Could not load the file preview.",
+                });
+                setIsPreviewLoading(false);
+            });
+    } else {
+        setPreviewContent(null);
+    }
+  }, [selectedFile, toast]);
 
   const saveItems = async (updatedItems: VaultItem[]) => {
     setVaultItems(updatedItems);
@@ -199,7 +230,7 @@ export default function DocumentsPage() {
         toast({ variant: 'destructive', title: 'Upload Failed', description: 'One or more files could not be uploaded.' });
       }
     },
-    [user, currentFolderId, vaultItems, saveVaultItems, toast]
+    [user, currentFolderId, vaultItems, saveItems, toast]
   );
   
   const handleFolderClick = (folder: VaultItem) => {
@@ -253,6 +284,13 @@ export default function DocumentsPage() {
     </div>
   );
 
+  const onModalOpenChange = (open: boolean) => {
+    if (!open) {
+        setSelectedFile(null);
+        setPreviewContent(null);
+    }
+  };
+
   return (
     <>
       <AddFolderModal
@@ -260,7 +298,7 @@ export default function DocumentsPage() {
         onOpenChange={setModalOpen}
         onCreateFolder={handleCreateFolder}
       />
-      <Dialog open={!!selectedFile} onOpenChange={(isOpen) => !isOpen && setSelectedFile(null)}>
+      <Dialog open={!!selectedFile} onOpenChange={onModalOpenChange}>
         <DialogContent className="max-w-3xl h-[90vh] flex flex-col">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 truncate"><FileIcon/> {selectedFile?.name}</DialogTitle>
@@ -268,13 +306,21 @@ export default function DocumentsPage() {
                     {selectedFile?.size ? `${(selectedFile.size / 1024).toFixed(2)} KB` : 'Folder'} | Last Modified: {selectedFile?.lastModified ? format(new Date(selectedFile.lastModified), "PPPpp") : 'N/A'}
                 </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 min-h-0 border rounded-md bg-muted/50 flex items-center justify-center overflow-hidden">
-                {selectedFile?.contentType?.startsWith('image/') ? (
-                    <img src={selectedFile.downloadURL} alt={selectedFile.name} className="max-w-full max-h-full object-contain" />
+            <div className="flex-1 min-h-0 border rounded-md bg-muted/50 overflow-hidden">
+                {isPreviewLoading ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                ) : selectedFile?.contentType?.startsWith('image/') ? (
+                    <div className="w-full h-full flex items-center justify-center p-4">
+                        <img src={selectedFile.downloadURL} alt={selectedFile.name} className="max-w-full max-h-full object-contain" />
+                    </div>
                 ) : selectedFile?.contentType === 'application/pdf' ? (
                     <iframe src={selectedFile.downloadURL} className="w-full h-full" title={selectedFile.name} />
+                ) : previewContent !== null ? (
+                     <pre className="text-sm p-4 w-full h-full whitespace-pre-wrap break-words overflow-auto">{previewContent}</pre>
                 ) : (
-                    <div className="text-center text-muted-foreground p-8">
+                    <div className="w-full h-full flex flex-col items-center justify-center text-center text-muted-foreground p-8">
                         <FileIcon className="w-16 h-16 mx-auto mb-4" />
                         <p>No preview available for this file type.</p>
                     </div>
