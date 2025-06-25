@@ -63,7 +63,6 @@ const navItemConfig = {
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library, requiredPlan: 'Founder' },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  mcaTracker: { href: "/dashboard/mca-tracker", label: "MCA Tracker", icon: Monitor, requiredPlan: 'Founder' },
   reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale, requiredPlan: 'Pro' },
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
 } as const;
@@ -76,7 +75,6 @@ const founderNavItems: NavItem[] = [
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.mcaTracker,
   navItemConfig.analytics,
   navItemConfig.community,
   navItemConfig.clauseLibrary,
@@ -88,7 +86,6 @@ const caNavItems: NavItem[] = [
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.mcaTracker,
   navItemConfig.reconciliation,
   navItemConfig.analytics,
   navItemConfig.team,
@@ -101,7 +98,6 @@ const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.clauseLibrary,
-  navItemConfig.mcaTracker,
   navItemConfig.analytics,
   navItemConfig.team,
 ];
