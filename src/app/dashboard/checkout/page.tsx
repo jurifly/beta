@@ -1,12 +1,11 @@
 
 "use client"
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/auth';
-import { Loader2, CheckCircle, RefreshCw, KeyRound } from 'lucide-react';
-import type { UserPlan } from '@/lib/types';
+import { Loader2, CheckCircle, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,9 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { saveTransactionId } from './actions';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 
 const planDetails = {
   founder: { monthly: 199, yearly: 999 },
@@ -21,14 +23,24 @@ const planDetails = {
   enterprise: { monthly: 2999, yearly: 29990 },
 };
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+      Submit for Verification
+    </Button>
+  );
+}
+
+
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, userProfile } = useAuth();
   const { toast } = useToast();
   
-  const [isPending, startTransition] = useTransition();
-  const [formState, setFormState] = useState({ success: false, message: '' });
+  const [formState, formAction] = useActionState(saveTransactionId, { success: false, message: '' });
 
   const [checkoutItem, setCheckoutItem] = useState<{
     type: 'plan' | 'credits';
@@ -71,11 +83,12 @@ export default function CheckoutPage() {
   }, [searchParams, router, toast]);
 
   useEffect(() => {
-    if (user && checkoutItem && !transactionDocId) {
+    if (user && userProfile && checkoutItem && !transactionDocId) {
       const createTransaction = async () => {
         try {
           const docRef = await addDoc(collection(db, 'transactions'), {
             userId: user.uid,
+            userName: userProfile.name,
             ...checkoutItem,
             status: 'initiated',
             createdAt: new Date().toISOString(),
@@ -88,31 +101,8 @@ export default function CheckoutPage() {
       };
       createTransaction();
     }
-  }, [user, checkoutItem, transactionDocId, toast]);
+  }, [user, userProfile, checkoutItem, transactionDocId, toast]);
   
-  const handleVerificationSubmit = async (formData: FormData) => {
-    const transactionId = formData.get('transactionId') as string;
-    
-    if (!transactionId || !transactionDocId) {
-      setFormState({ success: false, message: 'Missing transaction details.' });
-      return;
-    }
-    
-    startTransition(async () => {
-        try {
-            const transactionRef = doc(db, 'transactions', transactionDocId);
-            await updateDoc(transactionRef, {
-                upiTransactionId: transactionId,
-                status: 'pending_verification',
-            });
-            setFormState({ success: true, message: 'Your transaction ID has been submitted for verification.' });
-        } catch (error: any) {
-            console.error('Error saving transaction ID:', error);
-            setFormState({ success: false, message: error.message || 'An unexpected error occurred.' });
-        }
-    });
-  }
-
 
   if (!userProfile || !checkoutItem) {
     return (
@@ -164,16 +154,14 @@ export default function CheckoutPage() {
                     </AlertDescription>
                   </Alert>
                 ) : (
-                  <form action={handleVerificationSubmit} className="space-y-4">
+                  <form action={formAction} className="space-y-4">
+                    <input type="hidden" name="transactionDocId" value={transactionDocId || ''} />
                     <div className="space-y-1">
                       <Label htmlFor="transactionId">Enter UPI Transaction ID</Label>
                       <Input id="transactionId" name="transactionId" required placeholder="e.g., 202401011234567890"/>
                     </div>
                     {formState.message && !formState.success && <p className="text-sm text-destructive">{formState.message}</p>}
-                    <Button type="submit" disabled={isPending} className="w-full">
-                      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-                      Submit for Verification
-                    </Button>
+                    <SubmitButton />
                   </form>
                 )}
               </div>
