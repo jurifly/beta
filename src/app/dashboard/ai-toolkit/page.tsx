@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus, useFormState } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2, Search } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ import { ToastAction } from "@/components/ui/toast";
 import Link from 'next/link';
 
 import * as AiActions from './actions';
-import type { AssistantOutput } from '@/ai/flows/assistant-flow';
+import type { AssistantOutput, ChecklistOutput } from '@/ai/flows/assistant-flow';
 import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem } from "@/lib/types"
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
@@ -51,17 +51,14 @@ type ChatMessage = {
 
 const CHAT_HISTORY_KEY = 'aiCopilotHistory';
 
-function isChecklist(content: any): content is AssistantOutput {
-  return content && typeof content === 'object' && 'checklist' in content;
-}
 
 // --- Tab: AI Legal Assistant ---
 
-const ChecklistResult = ({ checklist }: { checklist: AssistantOutput }) => {
+const ChecklistResult = ({ checklist }: { checklist: ChecklistOutput }) => {
   const { toast } = useToast();
-  const copyToClipboard = (checklist: AssistantOutput) => {
+  const copyToClipboard = (checklist: ChecklistOutput) => {
     if (!checklist) return;
-    const textToCopy = `${checklist.title}\n\n${checklist.checklist.map(item => `- [ ] ${item.task} (${item.category})`).join('\n')}`;
+    const textToCopy = `${checklist.title}\n\n${checklist.items.map(item => `- [ ] ${item.task} (${item.category})`).join('\n')}`;
     navigator.clipboard.writeText(textToCopy);
     toast({
       title: 'Copied to clipboard!',
@@ -80,7 +77,7 @@ const ChecklistResult = ({ checklist }: { checklist: AssistantOutput }) => {
       </div>
       <div className="p-4 text-sm font-sans">
         <ul className="space-y-3">
-          {checklist.checklist.map((item, index) => (
+          {checklist.items.map((item, index) => (
             <li key={index} className="flex items-start gap-3">
               <Check className="h-4 w-4 text-primary mt-1 shrink-0" />
               <div>
@@ -129,12 +126,12 @@ const ChatAssistant = () => {
     setInput('');
 
     try {
-      const response = await AiActions.generateChecklist({ topic });
+      const response = await AiActions.getAssistantResponse({ topic });
       const assistantMessage: ChatMessage = { role: 'assistant', content: response };
       setChatHistory(prev => [...prev, assistantMessage]);
 
     } catch (error) {
-      console.error('Error generating checklist:', error);
+      console.error('Error generating response:', error);
       toast({
         title: 'An error occurred',
         description: 'Failed to generate the response. Please try again.',
@@ -156,7 +153,7 @@ const ChatAssistant = () => {
   const suggestionPrompts = [
     { text: 'What are the steps to register a Private Limited Company?', icon: FileText, action: () => handleTextSubmit(undefined, 'What are the steps to register a Private Limited Company?') },
     { text: 'What are the compliance requirements for hiring the first employee?', icon: Clock, action: () => handleTextSubmit(undefined, 'What are the compliance requirements for hiring the first employee?') },
-    { text: 'Draft a simple non-disclosure agreement', icon: FileText, action: () => handleTextSubmit(undefined, 'Draft a simple non-disclosure agreement') },
+    { text: 'What happens if I don\'t file my GST returns on time?', icon: FileText, action: () => handleTextSubmit(undefined, 'What happens if I don\'t file my GST returns on time?') },
   ];
 
   return (
@@ -195,12 +192,15 @@ const ChatAssistant = () => {
                 </Avatar>
                 )}
                 
-                <div className={cn('rounded-xl', message.role === 'user' ? 'bg-primary text-primary-foreground p-4 max-w-2xl' : 'w-full')}>
+                <div className={cn(message.role === 'user' ? 'bg-primary text-primary-foreground rounded-xl p-4 max-w-2xl' : 'w-full max-w-4xl')}>
                   {typeof message.content === 'string' ? (
                     <p className="whitespace-pre-wrap">{message.content}</p>
-                  ) : isChecklist(message.content) ? (
-                    <ChecklistResult checklist={message.content} />
-                  ) : null}
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <p className="whitespace-pre-wrap text-card-foreground">{message.content.response}</p>
+                      {message.content.checklist && <ChecklistResult checklist={message.content.checklist} />}
+                    </div>
+                  )}
                 </div>
 
                 {message.role === 'user' && userProfile && (
@@ -434,7 +434,7 @@ const DocumentGeneratorTab = () => {
       <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
         <CardHeader><CardTitle>Template Library</CardTitle><CardDescription>Select a template to generate.</CardDescription></CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
+          <div className="relative"><FileSearch2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
                 <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>

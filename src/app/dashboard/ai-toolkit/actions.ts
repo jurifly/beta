@@ -1,7 +1,7 @@
 
 'use server';
 
-import { generateChecklist as generateAssistantChecklist, type AssistantInput, type AssistantOutput } from '@/ai/flows/assistant-flow';
+import { getAssistantResponse as getAssistantResponseFlow, type AssistantInput, type AssistantOutput } from '@/ai/flows/assistant-flow';
 import { generateChecklist as generateDiligenceChecklistFlow, type GenerateChecklistInput, type GenerateChecklistOutput } from '@/ai/flows/generate-checklist-flow';
 import { validateCompliance, type ComplianceValidatorInput, type ComplianceValidatorOutput } from '@/ai/flows/compliance-validator-flow';
 import { analyzeContract, type AnalyzeContractInput, type AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
@@ -12,9 +12,9 @@ import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/fl
 
 
 // --- AI Assistant Actions ---
-export async function generateChecklist(input: AssistantInput): Promise<AssistantOutput> {
+export async function getAssistantResponse(input: AssistantInput): Promise<AssistantOutput> {
   try {
-    return await generateAssistantChecklist(input);
+    return await getAssistantResponseFlow(input);
   } catch (e: any) {
     console.error('AI Flow Error:', e);
     const errorMessage = e.message || 'An unexpected error occurred.';
