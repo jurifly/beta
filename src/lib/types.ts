@@ -72,6 +72,8 @@ export type VaultItem = {
     lastModified: string;
     size?: number;
     parentId: string | null;
+    downloadURL?: string;
+    contentType?: string;
 };
 
 export type Workflow = {

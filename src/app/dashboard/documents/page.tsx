@@ -11,7 +11,7 @@ import {
   Upload,
   Trash2,
   ChevronRight,
-  X,
+  Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,21 +20,24 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import type { VaultItem } from '@/lib/types';
 import { AddFolderModal } from '@/components/dashboard/add-folder-modal';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/auth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
+import { storage } from '@/lib/firebase/config';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 export default function DocumentsPage() {
   const [vaultItems, setVaultItems] = useState<VaultItem[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { saveVaultItems, getVaultItems } = useAuth();
+  const { user, saveVaultItems, getVaultItems } = useAuth();
   
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | null; name: string }[]>([{ id: null, name: 'Vault' }]);
@@ -43,6 +46,7 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     const loadItems = async () => {
+      if (!user) return;
       setIsLoading(true);
       try {
         const items = await getVaultItems();
@@ -58,8 +62,10 @@ export default function DocumentsPage() {
         setIsLoading(false);
       }
     };
-    loadItems();
-  }, [getVaultItems, toast]);
+    if (user) {
+        loadItems();
+    }
+  }, [user, getVaultItems, toast]);
 
   const saveItems = async (updatedItems: VaultItem[]) => {
     setVaultItems(updatedItems);
@@ -99,60 +105,101 @@ export default function DocumentsPage() {
   };
 
   const handleDeleteItem = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // Prevent folder navigation when clicking delete
+    e.stopPropagation();
     const itemToDelete = vaultItems.find(item => item.id === id);
+    if (!itemToDelete) return;
+
     if (window.confirm(`Are you sure you want to delete "${itemToDelete?.name}"? This will also delete all its contents.`)) {
       
-      const itemsToDelete = new Set<string>([id]);
-      let queue = [id];
-
-      // Find all nested items to delete
-      if(itemToDelete?.type === 'folder') {
-        while (queue.length > 0) {
-            const currentId = queue.shift();
-            const children = vaultItems.filter(item => item.parentId === currentId);
-            for (const child of children) {
-                itemsToDelete.add(child.id);
-                if (child.type === 'folder') {
-                    queue.push(child.id);
-                }
-            }
-        }
+      const itemsToDeleteSet = new Set<string>([id]);
+      const filesInStorageToDelete: VaultItem[] = [];
+      
+      function findChildrenRecursive(folderId: string) {
+          const children = vaultItems.filter(item => item.parentId === folderId);
+          for (const child of children) {
+              itemsToDeleteSet.add(child.id);
+              if (child.type === 'folder') {
+                  findChildrenRecursive(child.id);
+              } else if (child.type === 'file') {
+                  filesInStorageToDelete.push(child);
+              }
+          }
       }
 
-      const updatedItems = vaultItems.filter(item => !itemsToDelete.has(item.id));
-      saveItems(updatedItems);
-      toast({
-        title: 'Item Deleted',
-        description: `"${itemToDelete?.name}" has been deleted.`,
+      if (itemToDelete.type === 'folder') {
+          findChildrenRecursive(itemToDelete.id);
+      } else if (itemToDelete.type === 'file') {
+          filesInStorageToDelete.push(itemToDelete);
+      }
+
+      const deletePromises = filesInStorageToDelete.map(file => {
+          if (file.id) {
+              const fileRef = ref(storage, file.id);
+              return deleteObject(fileRef);
+          }
+          return Promise.resolve();
       });
+
+      Promise.all(deletePromises)
+        .then(() => {
+          const updatedItems = vaultItems.filter(item => !itemsToDeleteSet.has(item.id));
+          saveItems(updatedItems);
+          toast({
+            title: 'Item Deleted',
+            description: `"${itemToDelete.name}" and its contents have been deleted.`,
+          });
+        })
+        .catch((error) => {
+          console.error("Deletion error:", error);
+          toast({
+            variant: 'destructive',
+            title: 'Deletion Failed',
+            description: 'Could not delete files from storage. Please try again.',
+          });
+        });
     }
   };
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFiles: VaultItem[] = acceptedFiles.map(file => ({
-        id: `${file.name}-${file.lastModified}-${Math.random()}`, // Add random to ensure uniqueness
-        type: 'file',
-        name: file.name,
-        lastModified: new Date(file.lastModified).toISOString(),
-        size: file.size,
-        parentId: currentFolderId,
-      }));
+    async (acceptedFiles: File[]) => {
+      if (!user) {
+        toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to upload files.' });
+        return;
+      }
+      
+      toast({ title: "Uploading...", description: `Starting upload of ${acceptedFiles.length} file(s).`});
 
-      const uniqueNewFiles = newFiles.filter(
-        newFile => !vaultItems.some(existing => existing.id === newFile.id)
-      );
+      const uploadPromises = acceptedFiles.map(async (file) => {
+        const uniqueFileName = `${Date.now()}-${file.name}`;
+        // Use a path that includes the parent folder ID to structure storage
+        const storageRef = ref(storage, `vault/${user.uid}/${currentFolderId || 'root'}/${uniqueFileName}`);
+        
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
 
-      saveItems([...uniqueNewFiles, ...vaultItems]);
-      if (uniqueNewFiles.length > 0) {
-        toast({
-          title: 'Upload Successful',
-          description: `${uniqueNewFiles.length} file(s) added to the vault.`,
-        });
+        const newFile: VaultItem = {
+          id: storageRef.fullPath, // Use full path as a unique ID
+          type: 'file',
+          name: file.name,
+          lastModified: new Date(file.lastModified).toISOString(),
+          size: file.size,
+          parentId: currentFolderId,
+          downloadURL,
+          contentType: file.type,
+        };
+        return newFile;
+      });
+
+      try {
+        const newFiles = await Promise.all(uploadPromises);
+        saveItems([...vaultItems, ...newFiles]);
+        toast({ title: 'Upload Successful', description: `${newFiles.length} file(s) added to the vault.` });
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: 'One or more files could not be uploaded.' });
       }
     },
-    [vaultItems, saveItems, toast, currentFolderId]
+    [user, currentFolderId, vaultItems, saveVaultItems, toast]
   );
   
   const handleFolderClick = (folder: VaultItem) => {
@@ -214,17 +261,34 @@ export default function DocumentsPage() {
         onCreateFolder={handleCreateFolder}
       />
       <Dialog open={!!selectedFile} onOpenChange={(isOpen) => !isOpen && setSelectedFile(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl h-[90vh] flex flex-col">
             <DialogHeader>
-                <DialogTitle className="flex items-center gap-2"><FileIcon/> {selectedFile?.name}</DialogTitle>
-                <DialogDescription>File Details</DialogDescription>
+                <DialogTitle className="flex items-center gap-2 truncate"><FileIcon/> {selectedFile?.name}</DialogTitle>
+                <DialogDescription>
+                    {selectedFile?.size ? `${(selectedFile.size / 1024).toFixed(2)} KB` : 'Folder'} | Last Modified: {selectedFile?.lastModified ? format(new Date(selectedFile.lastModified), "PPPpp") : 'N/A'}
+                </DialogDescription>
             </DialogHeader>
-            <div className="space-y-2 text-sm">
-                <p><strong>Name:</strong> {selectedFile?.name}</p>
-                <p><strong>Type:</strong> {selectedFile?.type}</p>
-                <p><strong>Size:</strong> {selectedFile?.size ? `${(selectedFile.size / 1024).toFixed(2)} KB` : 'N/A'}</p>
-                <p><strong>Last Modified:</strong> {selectedFile?.lastModified ? format(new Date(selectedFile.lastModified), "PPPpp") : 'N/A'}</p>
+            <div className="flex-1 min-h-0 border rounded-md bg-muted/50 flex items-center justify-center overflow-hidden">
+                {selectedFile?.contentType?.startsWith('image/') ? (
+                    <img src={selectedFile.downloadURL} alt={selectedFile.name} className="max-w-full max-h-full object-contain" />
+                ) : selectedFile?.contentType === 'application/pdf' ? (
+                    <iframe src={selectedFile.downloadURL} className="w-full h-full" title={selectedFile.name} />
+                ) : (
+                    <div className="text-center text-muted-foreground p-8">
+                        <FileIcon className="w-16 h-16 mx-auto mb-4" />
+                        <p>No preview available for this file type.</p>
+                    </div>
+                )}
             </div>
+            <DialogFooter>
+                {selectedFile?.downloadURL && (
+                    <Button asChild>
+                        <a href={selectedFile.downloadURL} download={selectedFile.name} target="_blank" rel="noopener noreferrer">
+                           <Download className="mr-2"/> Download
+                        </a>
+                    </Button>
+                )}
+            </DialogFooter>
         </DialogContent>
       </Dialog>
       <div className="space-y-6">

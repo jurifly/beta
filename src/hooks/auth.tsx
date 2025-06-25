@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -80,6 +81,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     return newProfile;
   }, [toast]);
+
+  const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
+    if (!user) return;
+    const notification: Omit<AppNotification, 'id'> = {
+        ...notificationData,
+        createdAt: new Date().toISOString(),
+        read: false,
+    };
+    // Check if a similar unread notification already exists
+    const similarNotification = notifications.find(n => n.title === notification.title && !n.read);
+    if(similarNotification) return;
+
+    const notificationsRef = collection(db, `users/${user.uid}/notifications`);
+    const newDocRef = await addDoc(notificationsRef, notification);
+    setNotifications(prev => [{...notification, id: newDocRef.id}, ...prev]);
+  }, [user, notifications]);
 
   const processPendingPurchases = useCallback(async (uid: string) => {
     const userDocRef = doc(db, 'users', uid);
@@ -164,18 +181,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchedNotifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
     setNotifications(fetchedNotifications);
   }, []);
-
-  const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
-    if (!user) return;
-    const notification: Omit<AppNotification, 'id'> = {
-        ...notificationData,
-        createdAt: new Date().toISOString(),
-        read: false,
-    };
-    const notificationsRef = collection(db, `users/${user.uid}/notifications`);
-    await addDoc(notificationsRef, notification);
-    setNotifications(prev => [{...notification, id: 'new'}, ...prev]);
-  }, [user]);
 
   const markNotificationAsRead = useCallback(async (id: string) => {
     if (!user) return;
@@ -315,10 +320,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const vaultCollectionRef = collection(db, `users/${user.uid}/vault`);
     const batch = writeBatch(db);
+    
+    // Get existing doc IDs from Firestore
+    const snapshot = await getDocs(query(vaultCollectionRef));
+    const existingIds = new Set(snapshot.docs.map(d => d.id));
+    
+    const newIds = new Set(items.map(i => i.id));
+
+    // Determine which documents to delete
+    for (const id of existingIds) {
+      if (!newIds.has(id)) {
+        batch.delete(doc(vaultCollectionRef, id));
+      }
+    }
+
+    // Add or update current items
     items.forEach(item => {
-        const docRef = doc(vaultCollectionRef, item.id);
-        batch.set(docRef, item);
+      const docRef = doc(vaultCollectionRef, item.id);
+      batch.set(docRef, item);
     });
+
     await batch.commit();
   };
 
