@@ -27,13 +27,13 @@ const prompt = ai.definePrompt({
   name: 'watchRegulationsPrompt',
   input: {schema: WatcherInputSchema},
   output: {schema: WatcherOutputSchema},
-  prompt: `You are an expert AI legal assistant that monitors Indian regulatory bodies.
-Your task is to generate a concise, markdown-formatted summary of the most important fictional updates for a given regulatory portal and time-frame.
+  prompt: `You are an expert AI legal assistant with access to real-time information from Indian regulatory bodies. Your task is to generate a concise, markdown-formatted summary of the most important and recent updates for a given regulatory portal and time-frame.
 
 Portal: "{{portal}}"
 Frequency: "{{frequency}}"
 
-Generate a summary of 3-5 of the most impactful (but fictional) regulatory updates from the specified portal for the selected frequency.
+Based on your latest knowledge, generate a summary of 3-5 of the most impactful and recent regulatory updates from the specified portal for the selected frequency. The information should be accurate and reflect real circulars, notifications, and press releases.
+
 The summary should be written in professional language, use markdown for formatting (headings, bold text, lists), and be easy to read.
 
 Return ONLY the markdown summary in the 'summary' field of the JSON output.
