@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus, useFormState } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2 } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -56,7 +56,7 @@ const CHAT_HISTORY_KEY = 'aiCopilotHistory';
 
 const TypewriterResponse = ({ text }: { text: string }) => {
     const displayText = useTypewriter(text, 10);
-    return <p className="whitespace-pre-wrap text-card-foreground">{displayText}</p>;
+    return <p className="whitespace-pre-wrap font-code text-sm text-card-foreground">{displayText}</p>;
 };
 
 const ChecklistResult = ({ checklist }: { checklist: ChecklistOutput }) => {
@@ -439,7 +439,7 @@ const DocumentGeneratorTab = () => {
       <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
         <CardHeader><CardTitle>Template Library</CardTitle><CardDescription>Select a template to generate.</CardDescription></CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="relative"><FileSearch2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
+          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
                 <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
@@ -499,8 +499,6 @@ export default function AiToolkitPage() {
         </div>
     );
 }
-
-// Placeholders for moved components, to be filled with their full logic
 
 const ComplianceValidatorTool = () => {
     const { toast } = useToast();
