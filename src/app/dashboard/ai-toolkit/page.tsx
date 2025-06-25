@@ -54,6 +54,11 @@ const CHAT_HISTORY_KEY = 'aiCopilotHistory';
 
 // --- Tab: AI Legal Assistant ---
 
+const TypewriterResponse = ({ text }: { text: string }) => {
+    const displayText = useTypewriter(text, 10);
+    return <p className="whitespace-pre-wrap text-card-foreground">{displayText}</p>;
+};
+
 const ChecklistResult = ({ checklist }: { checklist: ChecklistOutput }) => {
   const { toast } = useToast();
   const copyToClipboard = (checklist: ChecklistOutput) => {
@@ -197,7 +202,7 @@ const ChatAssistant = () => {
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   ) : (
                     <div className="flex flex-col gap-4">
-                      <p className="whitespace-pre-wrap text-card-foreground">{message.content.response}</p>
+                      <TypewriterResponse text={message.content.response} />
                       {message.content.checklist && <ChecklistResult checklist={message.content.checklist} />}
                     </div>
                   )}
