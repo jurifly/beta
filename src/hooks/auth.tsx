@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const q = query(transactionsRef,
         where('userId', '==', uid),
         where('status', '==', 'verified'),
-        where('isProcessed', '!=', true)
+        where('isProcessed', '==', false)
     );
 
     const querySnapshot = await getDocs(q);

@@ -99,7 +99,7 @@ export interface Transaction {
   plan?: string;
   cycle?: 'monthly' | 'yearly';
   credits?: number;
-  isProcessed?: boolean;
+  isProcessed: boolean;
 }
 
 export type ChatMessage = {

@@ -78,6 +78,7 @@ export default function CheckoutPage() {
             ...checkoutItem,
             status: 'initiated',
             createdAt: new Date().toISOString(),
+            isProcessed: false,
           });
           setTransactionDocId(docRef.id);
         } catch (error) {
@@ -92,6 +93,12 @@ export default function CheckoutPage() {
   const handleUpiSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    if (!user) {
+        toast({ variant: "destructive", title: "Error", description: "You must be logged in to perform this action."});
+        setIsSubmitting(false);
+        return;
+    }
 
     const formData = new FormData(e.currentTarget);
     const transactionId = formData.get('transactionId') as string;
