@@ -1,7 +1,6 @@
 
 'use server';
 
-import { auth } from '@/lib/firebase/config';
 import { db } from '@/lib/firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -16,11 +15,6 @@ export async function saveTransactionId(
 ): Promise<FormState> {
   const transactionId = formData.get('transactionId') as string;
   const transactionDocId = formData.get('transactionDocId') as string;
-  const user = auth.currentUser;
-
-  if (!user) {
-    return { success: false, message: 'You must be logged in.' };
-  }
 
   if (!transactionId || !transactionDocId) {
     return { success: false, message: 'Missing transaction details.' };
@@ -39,6 +33,9 @@ export async function saveTransactionId(
     };
   } catch (error: any) {
     console.error('Error saving transaction ID:', error);
+    if (error.code === 'permission-denied') {
+        return { success: false, message: 'You must be logged in to perform this action.' };
+    }
     return { success: false, message: error.message || 'An unexpected error occurred.' };
   }
 }

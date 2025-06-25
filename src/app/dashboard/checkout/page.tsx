@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/auth';
-import { Loader2, CheckCircle, RefreshCw } from 'lucide-react';
+import { Loader2, CheckCircle, RefreshCw, KeyRound } from 'lucide-react';
 import type { UserPlan } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection } from 'firebase/firestore';
@@ -29,7 +29,7 @@ function SubmitButton() {
   const { pending } = useActionState(saveTransactionId, initialFormState);
   return (
     <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
       Submit for Verification
     </Button>
   );
@@ -112,9 +112,14 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-center">
                 <Image src={qrCodeUrl} alt="UPI QR Code" width={250} height={250} />
               </div>
-              <p className="text-center text-sm text-muted-foreground">Or pay to UPI ID: <span className="font-semibold text-foreground">{upiId}</span></p>
               
-              <div className="border-t pt-4">
+              <div className="flex items-center justify-center text-sm text-muted-foreground before:flex-1 before:border-t before:mr-4 after:flex-1 after:border-t after:ml-4">OR</div>
+
+              <Button asChild variant="outline" className="w-full">
+                <a href={upiLink}>Pay with UPI App</a>
+              </Button>
+              
+              <div className="border-t pt-6">
                 {state.success ? (
                   <Alert className="border-green-500/50 text-green-700 [&>svg]:text-green-700">
                     <CheckCircle className="h-4 w-4" />

@@ -298,7 +298,8 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
 
     if (!userProfile) return null;
     
-    const currentUserPlanLevel = planHierarchy[userProfile.plan] ?? 0;
+    const planForPerms: UserPlan = (userProfile.plan !== 'Starter' && userProfile.plan !== 'Free' && !isPlanActive) ? 'Starter' : userProfile.plan;
+    const effectiveUserPlanLevel = planHierarchy[planForPerms];
 
     const bottomNavItems = [navItemConfig.billing, navItemConfig.settings];
 
@@ -325,7 +326,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
                 const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
-                const isLocked = (item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false) || !isPlanActive;
+                const isLocked = item.requiredPlan ? effectiveUserPlanLevel < requiredPlanLevel : false;
                 
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
@@ -348,7 +349,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
                       </TooltipTrigger>
                       {isLocked && (
                         <TooltipContent side="right">
-                          <p>Upgrade or renew to unlock</p>
+                          <p>Upgrade to unlock</p>
                         </TooltipContent>
                       )}
                     </Tooltip>
@@ -392,7 +393,8 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
 
     if (!userProfile) return null;
     
-    const currentUserPlanLevel = planHierarchy[userProfile.plan] ?? 0;
+    const planForPerms: UserPlan = (userProfile.plan !== 'Starter' && userProfile.plan !== 'Free' && !isPlanActive) ? 'Starter' : userProfile.plan;
+    const effectiveUserPlanLevel = planHierarchy[planForPerms];
 
     const handleLinkClick = () => {
       setIsOpen(false);
@@ -433,7 +435,7 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
             <nav className="grid gap-2 text-lg font-medium p-4">
               {navItems.map(item => {
                 const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
-                const isLocked = (item.requiredPlan ? currentUserPlanLevel < requiredPlanLevel : false) || !isPlanActive;
+                const isLocked = item.requiredPlan ? effectiveUserPlanLevel < requiredPlanLevel : false;
                 return (
                     <Link
                         key={item.href}
