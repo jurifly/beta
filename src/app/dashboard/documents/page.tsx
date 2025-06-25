@@ -92,7 +92,7 @@ export default function DocumentsPage() {
     }
   }, [vaultItems, saveItems, toast]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: true });
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({ onDrop, noClick: true });
 
   if (isLoading) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -115,7 +115,7 @@ export default function DocumentsPage() {
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setModalOpen(true)} className="interactive-lift"><FolderPlus className="mr-2"/> New Folder</Button>
-                    <Button onClick={() => toast({ title: "Feature coming soon!" })} className="interactive-lift"><Upload className="mr-2"/> Upload Document</Button>
+                    <Button onClick={open} className="interactive-lift"><Upload className="mr-2"/> Upload Document</Button>
                 </div>
             </CardHeader>
             <CardContent>
