@@ -2,12 +2,12 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, VaultItem, ChatMessage, AppNotification } from '@/lib/types';
+import type { User, UserProfile, UserPlan, VaultItem, ChatMessage, AppNotification, Transaction } from '@/lib/types';
 import { useToast } from './use-toast';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile as updateFirebaseProfile } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, increment } from 'firebase/firestore';
-import { add } from 'date-fns';
+import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, increment, where } from 'firebase/firestore';
+import { add, type Duration } from 'date-fns';
 
 export interface AuthContextType {
   user: User | null;
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
-  const createNewUserProfile = async (firebaseUser: User, refId?: string) => {
+  const createNewUserProfile = useCallback(async (firebaseUser: User, refId?: string): Promise<UserProfile> => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const newExpiry = add(new Date(), { days: 30 });
     const newProfile: UserProfile = {
@@ -78,8 +78,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await setDoc(userDocRef, newProfile);
     }
     
-    setUserProfile(newProfile);
-  }
+    return newProfile;
+  }, [toast]);
+
+  const processPendingPurchases = useCallback(async (uid: string) => {
+    const userDocRef = doc(db, 'users', uid);
+    const freshUserDoc = await getDoc(userDocRef);
+    if (!freshUserDoc.exists()) return;
+    
+    const currentProfile = freshUserDoc.data() as UserProfile;
+    let updatedProfile = { ...currentProfile };
+    let changesMade = false;
+
+    const transactionsRef = collection(db, 'transactions');
+    const q = query(transactionsRef,
+        where('userId', '==', uid),
+        where('status', '==', 'verified'),
+        where('isProcessed', '!=', true)
+    );
+
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) return;
+
+    const batch = writeBatch(db);
+
+    querySnapshot.forEach(transactionDoc => {
+      changesMade = true;
+      const transaction = transactionDoc.data() as Transaction;
+
+      if (transaction.type === 'plan' && transaction.plan && transaction.cycle) {
+        const planDuration: Duration = transaction.cycle === 'monthly' ? { months: 1 } : { years: 1 };
+        const newExpiryDate = add(new Date(), planDuration);
+        
+        updatedProfile.plan = transaction.plan as UserPlan;
+        updatedProfile.planStartDate = new Date().toISOString();
+        updatedProfile.planExpiryDate = newExpiryDate.toISOString();
+        
+        const planCreditMap: Record<string, number> = { 'founder': 50, 'pro': 1000, 'enterprise': 10000 };
+        updatedProfile.credits = planCreditMap[transaction.plan.toLowerCase()] ?? updatedProfile.credits;
+
+      } else if (transaction.type === 'credits' && transaction.credits) {
+        updatedProfile.credits = (updatedProfile.credits || 0) + transaction.credits;
+      }
+
+      const transactionRef = doc(db, 'transactions', transactionDoc.id);
+      batch.update(transactionRef, { isProcessed: true });
+    });
+
+    if (changesMade) {
+      batch.update(userDocRef, {
+          plan: updatedProfile.plan,
+          planStartDate: updatedProfile.planStartDate,
+          planExpiryDate: updatedProfile.planExpiryDate,
+          credits: updatedProfile.credits,
+      });
+
+      await batch.commit();
+      setUserProfile(updatedProfile);
+      
+      toast({
+          title: "Account Updated!",
+          description: "Your recent purchases have been successfully applied.",
+      });
+    }
+  }, [toast]);
 
   const fetchUserProfile = useCallback(async (firebaseUser: User) => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
@@ -89,9 +151,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profile = userDoc.data() as UserProfile;
       setUserProfile(profile);
     } else {
-      await createNewUserProfile(firebaseUser);
+      const newProfile = await createNewUserProfile(firebaseUser);
+      setUserProfile(newProfile);
     }
-  }, []);
+  }, [createNewUserProfile]);
 
   const fetchNotifications = useCallback(async (uid: string) => {
     if (!uid) return;
@@ -101,6 +164,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchedNotifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
     setNotifications(fetchedNotifications);
   }, []);
+
+  const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
+    if (!user) return;
+    const notification: Omit<AppNotification, 'id'> = {
+        ...notificationData,
+        createdAt: new Date().toISOString(),
+        read: false,
+    };
+    const notificationsRef = collection(db, `users/${user.uid}/notifications`);
+    await addDoc(notificationsRef, notification);
+    setNotifications(prev => [{...notification, id: 'new'}, ...prev]);
+  }, [user]);
+
+  const markNotificationAsRead = useCallback(async (id: string) => {
+    if (!user) return;
+    const notificationRef = doc(db, `users/${user.uid}/notifications`, id);
+    await updateDoc(notificationRef, { read: true });
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  }, [user]);
+  
+  const markAllNotificationsAsRead = useCallback(async () => {
+    if (!user) return;
+    const batch = writeBatch(db);
+    notifications.forEach(n => {
+        if (!n.read) {
+             const notificationRef = doc(db, `users/${user.uid}/notifications`, n.id);
+             batch.update(notificationRef, { read: true });
+        }
+    });
+    await batch.commit();
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, [user, notifications]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -113,6 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
         setUser(userData);
         await fetchUserProfile(userData);
+        await processPendingPurchases(userData.uid);
         await fetchNotifications(userData.uid);
       } else {
         setUser(null);
@@ -122,7 +218,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [fetchUserProfile, fetchNotifications]);
+  }, [fetchUserProfile, fetchNotifications, processPendingPurchases]);
   
   useEffect(() => {
     if (userProfile?.planExpiryDate) {
@@ -139,7 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
         setIsPlanActive(true);
     }
-  }, [userProfile]);
+  }, [userProfile, addNotification]);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!user) return;
@@ -166,7 +262,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithEmailAndPassword = async (email: string, pass: string) => {
-      await signInWithEmailAndPassword(auth, email, pass);
+      await signInWithEmail(auth, email, pass);
   };
 
   const signInWithGoogle = async () => {
@@ -250,39 +346,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data().messages as ChatMessage[]);
   };
-
-  const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
-    if (!user) return;
-    const notification: Omit<AppNotification, 'id'> = {
-        ...notificationData,
-        createdAt: new Date().toISOString(),
-        read: false,
-    };
-    const notificationsRef = collection(db, `users/${user.uid}/notifications`);
-    await addDoc(notificationsRef, notification);
-    setNotifications(prev => [{...notification, id: 'new'}, ...prev]);
-  }, [user]);
-
-  const markNotificationAsRead = useCallback(async (id: string) => {
-    if (!user) return;
-    const notificationRef = doc(db, `users/${user.uid}/notifications`, id);
-    await updateDoc(notificationRef, { read: true });
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  }, [user]);
   
-  const markAllNotificationsAsRead = useCallback(async () => {
-    if (!user) return;
-    const batch = writeBatch(db);
-    notifications.forEach(n => {
-        if (!n.read) {
-             const notificationRef = doc(db, `users/${user.uid}/notifications`, n.id);
-             batch.update(notificationRef, { read: true });
-        }
-    });
-    await batch.commit();
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  }, [user, notifications]);
-
   const value = { user, userProfile, loading, isPlanActive, notifications, updateUserProfile, deductCredits, addCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveVaultItems, getVaultItems, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

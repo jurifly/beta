@@ -37,7 +37,7 @@ export default function CheckoutPage() {
 
   const [transactionDocId, setTransactionDocId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formState, setFormState] = useState<{ success: boolean; message: string; } | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
 
   useEffect(() => {
@@ -92,13 +92,12 @@ export default function CheckoutPage() {
   const handleUpiSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setFormState(null);
 
     const formData = new FormData(e.currentTarget);
     const transactionId = formData.get('transactionId') as string;
 
     if (!transactionId || !transactionDocId) {
-        setFormState({ success: false, message: 'Missing transaction details.' });
+        toast({ variant: "destructive", title: "Error", description: "Missing transaction details." });
         setIsSubmitting(false);
         return;
     }
@@ -109,17 +108,14 @@ export default function CheckoutPage() {
             upiTransactionId: transactionId,
             status: 'pending_verification',
         });
-        setFormState({
-            success: true,
-            message: 'Your transaction ID has been submitted for verification.',
+        toast({
+            title: "Submission Successful!",
+            description: "Your purchase will be verified and applied to your account shortly."
         });
+        setIsSubmitted(true);
     } catch (error: any) {
         console.error('Error saving transaction ID:', error);
-        if (error.code === 'permission-denied') {
-            setFormState({ success: false, message: 'An unexpected permission error occurred. Please try again.' });
-        } else {
-            setFormState({ success: false, message: error.message || 'An unexpected error occurred.' });
-        }
+        toast({ variant: "destructive", title: "Submission Failed", description: error.message || 'An unexpected error occurred.' });
     } finally {
         setIsSubmitting(false);
     }
@@ -136,7 +132,7 @@ export default function CheckoutPage() {
   }
 
   const upiId = "your-upi-id@okhdfcbank"; // Replace with your actual UPI ID
-  const upiLink = `upi://pay?pa=${upiId}&pn=LexiQA&am=${checkoutItem.amount}&cu=INR&tn=Payment for ${checkoutItem.name}`;
+  const upiLink = `upi://pay?pa=${upiId}&pn=Clausey&am=${checkoutItem.amount}&cu=INR&tn=Payment for ${checkoutItem.name}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiLink)}`;
 
   return (
@@ -166,12 +162,12 @@ export default function CheckoutPage() {
               </div>
 
               <div className="border-t pt-6">
-                {formState?.success ? (
+                {isSubmitted ? (
                   <Alert className="border-green-500/50 text-green-700 [&>svg]:text-green-700">
                     <CheckCircle className="h-4 w-4" />
-                    <AlertTitle>Submission Successful!</AlertTitle>
+                    <AlertTitle>Verification Pending</AlertTitle>
                     <AlertDescription>
-                      {formState.message} Your plan will be activated within 24 hours after verification.
+                      Your plan will be activated within 24 hours after verification. You can now return to your dashboard.
                       <Button variant="link" onClick={() => router.push('/dashboard')} className="block p-0 h-auto text-green-700">Go to Dashboard</Button>
                     </AlertDescription>
                   </Alert>
@@ -181,7 +177,6 @@ export default function CheckoutPage() {
                       <Label htmlFor="transactionId">Enter UPI Transaction ID</Label>
                       <Input id="transactionId" name="transactionId" required placeholder="e.g., 202401011234567890"/>
                     </div>
-                    {formState?.message && !formState.success && <p className="text-sm text-destructive">{formState.message}</p>}
                     <Button type="submit" disabled={isSubmitting} className="w-full">
                         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
                         Submit for Verification
