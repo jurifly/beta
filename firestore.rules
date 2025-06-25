@@ -2,44 +2,39 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-
-    // User Profile Rules
+    
+    // Rule for the 'users' collection
     match /users/{userId} {
-      // Users can read and write their own profile
-      allow read, update: if isOwner(userId);
-      // Anyone authenticated can create a user profile (on signup)
-      allow create: if request.auth != null;
-
-      // Subcollection Rules
-      match /vault/{docId} {
-        allow list, get, create, update, delete: if isOwner(userId);
-      }
-
-      match /chatHistory/{docId} {
-        allow list, get, create, update, delete: if isOwner(userId);
+      // A user can read and write to their own user document
+      allow read, update, delete: if request.auth.uid == userId;
+      // Anyone can create a user document (on signup)
+      allow create: if request.auth.uid != null;
+      
+      // Rules for subcollections within a user document
+      
+      // Rule for chat history
+      match /chatHistory/{historyId} {
+        allow read, write, create: if request.auth.uid == userId;
       }
       
-      match /notifications/{docId} {
-        allow list, get, create, update, delete: if isOwner(userId);
+      // Rule for document vault
+      match /vault/{itemId} {
+         allow read, write, create, delete: if request.auth.uid == userId;
+      }
+      
+      // Rule for notifications
+      match /notifications/{notificationId} {
+        allow read, write, create, delete: if request.auth.uid == userId;
       }
     }
-
-    // Transaction Rules
+    
+    // Rule for the 'transactions' collection
     match /transactions/{transactionId} {
-      // Users can create their own transactions
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      
-      // Users can update their own transaction to add the UPI ID.
-      // Admins (you) can update status from the Firebase console.
-      allow update: if isOwner(resource.data.userId);
-
-      // Only allow reading your own transactions
-      allow read: if isOwner(resource.data.userId);
+        // Any authenticated user can create a new transaction document
+        allow create: if request.auth != null;
+        
+        // Only the user who created the transaction can read or update it
+        allow read, update: if request.auth.uid == resource.data.userId;
     }
   }
 }
