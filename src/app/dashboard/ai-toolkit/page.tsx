@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus, useFormState } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -358,9 +358,6 @@ const DataroomAudit = () => {
 
 // --- Tab: Contract Analyzer ---
 
-const RiskAnalyzer = () => { /* Component from contract-analyzer page */ };
-const DocumentSummarizer = () => { /* Component from contract-analyzer page */ };
-
 const ContractAnalyzerTab = () => {
     const { userProfile } = useAuth();
     if (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free') {
@@ -468,11 +465,6 @@ const DocumentGeneratorTab = () => {
   )
 }
 
-// --- Tab: Regulation Watcher ---
-const RegulationWatcherTab = () => { /* Component from regulation-watcher/form.tsx */ };
-// --- Tab: Workflow Automation ---
-const WorkflowTab = () => { /* Component from integrations/page.tsx */ };
-
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile } = useAuth();
@@ -537,7 +529,7 @@ const ComplianceValidatorTool = () => {
     );
 }
 
-RiskAnalyzer = () => {
+const RiskAnalyzer = () => {
     const { deductCredits } = useAuth();
     const [analysisResult, setAnalysisResult] = useState<AnalyzeContractOutput | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -557,7 +549,7 @@ RiskAnalyzer = () => {
 
 const TypewriterSummary = ({ text }: { text: string }) => { const displayText = useTypewriter(text, 20); const markdownToHtml = (text: string) => { return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />'); }; return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: markdownToHtml(displayText) }} />; };
 
-DocumentSummarizer = () => {
+const DocumentSummarizer = () => {
     const { deductCredits } = useAuth();
     const [summaryResult, setSummaryResult] = useState<DocumentSummarizerOutput | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -575,7 +567,7 @@ const watcherPortals = [ { id: "MCA", name: "MCA", description: "Corporate Affai
 const WatcherSubmitButton = () => { const { pending } = useFormStatus(); return ( <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto interactive-lift"> {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />} Get Latest Updates </Button> ); }
 const TypewriterWatcher = ({ text }: { text: string }) => { const displayText = useTypewriter(text, 20); return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: displayText.replace(/\n/g, '<br/>') }}/>; };
 
-RegulationWatcherTab = () => {
+const RegulationWatcherTab = () => {
     const [state, formAction] = useFormState(AiActions.getRegulatoryUpdatesAction, {data: null, error: null});
     const [submittedPortal, setSubmittedPortal] = useState("");
     const [submittedFrequency, setSubmittedFrequency] = useState("");
@@ -608,7 +600,7 @@ const workflowTriggers = [ { value: "doc_uploaded", label: "Document Uploaded", 
 const workflowActions = [ { value: "analyze_risk", label: "Analyze for Risks", desc: "Run the document through the Contract Analyzer." }, { value: "gen_checklist", label: "Generate Onboarding Checklist", desc: "Create a standard setup checklist for the client." }, { value: "summarize", label: "Summarize Update", desc: "Use AI to summarize the regulatory changes." }, ];
 const workflowNotifications = [ { value: "slack_legal", label: "Notify #legal on Slack", desc: "Post a summary message to your legal channel." }, { value: "email_client", label: "Email Client", desc: "Send an automated email to the client's primary contact." }, { value: "log_only", label: "Log to Activity Feed", desc: "No notification, just log the event." }, ];
 
-WorkflowTab = () => {
+const WorkflowTab = () => {
     const { userProfile } = useAuth();
     const [workflows, setWorkflows] = useState<WorkflowType[]>([]);
     const [newWorkflow, setNewWorkflow] = useState({ trigger: '', action: '', notification: '' });
