@@ -1,20 +1,18 @@
 
 "use client"
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/auth';
 import { Loader2, CheckCircle, RefreshCw, KeyRound } from 'lucide-react';
 import type { UserPlan } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useActionState } from 'react';
-import { saveTransactionId } from './actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const planDetails = {
@@ -23,55 +21,62 @@ const planDetails = {
   enterprise: { monthly: 2999, yearly: 29990 },
 };
 
-const initialFormState = { success: false, message: '' };
-
-function SubmitButton() {
-  const { pending } = useActionState(saveTransactionId, initialFormState);
-  return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-      Submit for Verification
-    </Button>
-  );
-}
-
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, userProfile } = useAuth();
   const { toast } = useToast();
+  
+  const [isPending, startTransition] = useTransition();
+  const [formState, setFormState] = useState({ success: false, message: '' });
 
-  const [plan, setPlan] = useState<keyof typeof planDetails | null>(null);
-  const [cycle, setCycle] = useState<'monthly' | 'yearly' | null>(null);
-  const [amount, setAmount] = useState(0);
+  const [checkoutItem, setCheckoutItem] = useState<{
+    type: 'plan' | 'credits';
+    name: string;
+    amount: number;
+    plan?: keyof typeof planDetails;
+    cycle?: 'monthly' | 'yearly';
+    credits?: number;
+  } | null>(null);
+
   const [transactionDocId, setTransactionDocId] = useState<string | null>(null);
 
-  const [state, formAction] = useActionState(saveTransactionId, initialFormState);
 
   useEffect(() => {
     const planParam = searchParams.get('plan') as keyof typeof planDetails;
     const cycleParam = searchParams.get('cycle') as 'monthly' | 'yearly';
-    
+    const creditsParam = searchParams.get('credits');
+    const priceParam = searchParams.get('price');
+
     if (planParam && cycleParam && planDetails[planParam]) {
-        setPlan(planParam);
-        setCycle(cycleParam);
         const newAmount = planDetails[planParam][cycleParam];
-        setAmount(newAmount);
+        setCheckoutItem({
+            type: 'plan',
+            name: `${planParam.charAt(0).toUpperCase() + planParam.slice(1)} Plan (${cycleParam})`,
+            amount: newAmount,
+            plan: planParam,
+            cycle: cycleParam,
+        });
+    } else if (creditsParam && priceParam) {
+        setCheckoutItem({
+            type: 'credits',
+            name: `${creditsParam} Credits Pack`,
+            amount: Number(priceParam),
+            credits: Number(creditsParam),
+        });
     } else {
-        toast({ variant: "destructive", title: "Invalid Plan", description: "Redirecting back to billing." });
+        toast({ variant: "destructive", title: "Invalid Request", description: "Redirecting back to billing." });
         router.replace('/dashboard/billing');
     }
   }, [searchParams, router, toast]);
 
   useEffect(() => {
-    if (user && plan && cycle && amount > 0 && !transactionDocId) {
+    if (user && checkoutItem && !transactionDocId) {
       const createTransaction = async () => {
         try {
           const docRef = await addDoc(collection(db, 'transactions'), {
             userId: user.uid,
-            plan,
-            cycle,
-            amount,
+            ...checkoutItem,
             status: 'initiated',
             createdAt: new Date().toISOString(),
           });
@@ -83,9 +88,33 @@ export default function CheckoutPage() {
       };
       createTransaction();
     }
-  }, [user, plan, cycle, amount, transactionDocId, toast]);
+  }, [user, checkoutItem, transactionDocId, toast]);
+  
+  const handleVerificationSubmit = async (formData: FormData) => {
+    const transactionId = formData.get('transactionId') as string;
+    
+    if (!transactionId || !transactionDocId) {
+      setFormState({ success: false, message: 'Missing transaction details.' });
+      return;
+    }
+    
+    startTransition(async () => {
+        try {
+            const transactionRef = doc(db, 'transactions', transactionDocId);
+            await updateDoc(transactionRef, {
+                upiTransactionId: transactionId,
+                status: 'pending_verification',
+            });
+            setFormState({ success: true, message: 'Your transaction ID has been submitted for verification.' });
+        } catch (error: any) {
+            console.error('Error saving transaction ID:', error);
+            setFormState({ success: false, message: error.message || 'An unexpected error occurred.' });
+        }
+    });
+  }
 
-  if (!userProfile || !plan || !cycle) {
+
+  if (!userProfile || !checkoutItem) {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center gap-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -95,7 +124,7 @@ export default function CheckoutPage() {
   }
 
   const upiId = "your-upi-id@okhdfcbank"; // Replace with your actual UPI ID
-  const upiLink = `upi://pay?pa=${upiId}&pn=LexiQA&am=${amount}&cu=INR&tn=Payment for ${plan}`;
+  const upiLink = `upi://pay?pa=${upiId}&pn=LexiQA&am=${checkoutItem.amount}&cu=INR&tn=Payment for ${checkoutItem.name}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiLink)}`;
 
   return (
@@ -104,7 +133,7 @@ export default function CheckoutPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Complete Your Payment</CardTitle>
           <CardDescription>Scan the QR code with any UPI app to pay</CardDescription>
-          <p className="text-3xl font-bold pt-2">₹{amount}</p>
+          <p className="text-3xl font-bold pt-2">₹{checkoutItem.amount}</p>
         </CardHeader>
         <CardContent className="space-y-6">
           {transactionDocId ? (
@@ -114,30 +143,37 @@ export default function CheckoutPage() {
               </div>
               
               <div className="flex items-center justify-center text-sm text-muted-foreground before:flex-1 before:border-t before:mr-4 after:flex-1 after:border-t after:ml-4">OR</div>
-
-              <Button asChild variant="outline" className="w-full">
-                <a href={upiLink}>Pay with UPI App</a>
-              </Button>
               
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button asChild variant="outline" className="w-full">
+                    <a href={upiLink}>Pay with UPI App</a>
+                </Button>
+                 <Button variant="secondary" className="w-full" onClick={() => { navigator.clipboard.writeText(upiId); toast({title: "Copied!", description: "UPI ID copied to clipboard."}) }}>
+                    Copy UPI ID
+                </Button>
+              </div>
+
               <div className="border-t pt-6">
-                {state.success ? (
+                {formState.success ? (
                   <Alert className="border-green-500/50 text-green-700 [&>svg]:text-green-700">
                     <CheckCircle className="h-4 w-4" />
                     <AlertTitle>Submission Successful!</AlertTitle>
                     <AlertDescription>
-                      {state.message} Your plan will be activated within 24 hours after verification.
+                      {formState.message} Your plan will be activated within 24 hours after verification.
                       <Button variant="link" onClick={() => router.push('/dashboard')} className="block p-0 h-auto text-green-700">Go to Dashboard</Button>
                     </AlertDescription>
                   </Alert>
                 ) : (
-                  <form action={formAction} className="space-y-4">
-                    <input type="hidden" name="transactionDocId" value={transactionDocId} />
+                  <form action={handleVerificationSubmit} className="space-y-4">
                     <div className="space-y-1">
                       <Label htmlFor="transactionId">Enter UPI Transaction ID</Label>
                       <Input id="transactionId" name="transactionId" required placeholder="e.g., 202401011234567890"/>
                     </div>
-                    {state.message && !state.success && <p className="text-sm text-destructive">{state.message}</p>}
-                    <SubmitButton />
+                    {formState.message && !formState.success && <p className="text-sm text-destructive">{formState.message}</p>}
+                    <Button type="submit" disabled={isPending} className="w-full">
+                      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+                      Submit for Verification
+                    </Button>
                   </form>
                 )}
               </div>

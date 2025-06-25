@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { CheckCircle, Sparkles, Bolt, Package, Star, Briefcase, Building, User, Users, BrainCircuit, Gift } from "lucide-react"
+import { CheckCircle, Sparkles, Bolt, Package, Star, Briefcase, Building, User, Users, BrainCircuit, Gift, Copy } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Loader2 } from "lucide-react"
 import { add } from "date-fns"
+import { useRouter } from "next/navigation"
 
 const plans = [
   {
@@ -72,6 +73,7 @@ export default function BillingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
   const { userProfile, updateUserProfile, addCredits } = useAuth()
   const { toast } = useToast()
+  const router = useRouter();
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>
@@ -115,11 +117,18 @@ export default function BillingPage() {
     }
   };
 
-  const handleBuyCredits = (credits: number) => {
-    if (addCredits) {
-      addCredits(credits);
-    }
+  const handleBuyCredits = (credits: number, price: number) => {
+    router.push(`/dashboard/checkout?credits=${credits}&price=${price}`);
   }
+
+  const handleGetReferralLink = () => {
+    const referralLink = `${window.location.origin}/register?ref=${userProfile.uid}`;
+    navigator.clipboard.writeText(referralLink);
+    toast({
+        title: "Referral Link Copied!",
+        description: "Share the link with your friends to earn credits.",
+    });
+  };
   
   const availablePlans = plans.filter(p => p.role.includes(userProfile.role || 'Founder'));
 
@@ -232,7 +241,7 @@ export default function BillingPage() {
                             <p className="text-xl font-semibold">{formatPrice(pack.price)}</p>
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full interactive-lift" onClick={() => handleBuyCredits(pack.credits)}>
+                            <Button className="w-full interactive-lift" onClick={() => handleBuyCredits(pack.credits, pack.price)}>
                                 <Bolt className="mr-2 h-4 w-4" /> Buy Now
                             </Button>
                         </CardFooter>
@@ -267,7 +276,10 @@ export default function BillingPage() {
                             <p className="font-semibold">Share & Earn!</p>
                             <p className="text-xs text-muted-foreground">Get 50 free credits for every friend who signs up.</p>
                         </div>
-                        <Button variant="outline" className="w-full sm:w-auto" onClick={() => toast({title: "Coming Soon!"})}>Get Link</Button>
+                        <Button variant="outline" className="w-full sm:w-auto" onClick={handleGetReferralLink}>
+                            <Copy className="mr-2 h-4 w-4"/>
+                            Get Link
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

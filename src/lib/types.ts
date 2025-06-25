@@ -90,15 +90,28 @@ export type ActivityLogItem = {
 export interface Transaction {
   id?: string;
   userId: string;
-  plan: string;
-  cycle: 'monthly' | 'yearly';
+  type: 'plan' | 'credits';
+  name: string;
   amount: number;
   status: 'initiated' | 'pending_verification' | 'verified' | 'failed';
   createdAt: string;
   upiTransactionId?: string;
+  plan?: string;
+  cycle?: 'monthly' | 'yearly';
+  credits?: number;
 }
 
 export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string | AssistantOutput;
 };
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  description: string;
+  read: boolean;
+  createdAt: string;
+  icon: 'AlertTriangle' | 'RadioTower' | 'FileClock' | 'Default';
+  link?: string;
+}

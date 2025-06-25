@@ -48,9 +48,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
-import type { UserProfile, UserPlan } from "@/lib/types";
+import type { UserProfile, UserPlan, AppNotification } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { NotificationModal } from "@/components/dashboard/notification-modal";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -131,24 +132,27 @@ const getNavItems = (role: UserProfile['role']) => {
     }
 }
 
-const MOCK_NOTIFICATIONS = [
-    {id: 1, title: 'GSTR-3B Filing Overdue', description: 'Your GSTR-3B for last month is due in 3 days.', icon: <AlertTriangle className="h-5 w-5 text-destructive" />, read: false},
-    {id: 2, title: 'New Regulation Update', description: 'RBI released a new circular on digital lending.', icon: <RadioTower className="h-5 w-5 text-primary" />, read: false},
-    {id: 3, title: 'Annual Filing Completed', description: 'Form AOC-4 for FY 23-24 has been successfully filed.', icon: <FileClock className="h-5 w-5 text-green-500" />, read: true},
-]
+const getIcon = (iconName: string) => {
+    const icons: { [key: string]: React.ReactNode } = {
+        AlertTriangle: <AlertTriangle className="h-5 w-5 text-destructive" />,
+        RadioTower: <RadioTower className="h-5 w-5 text-primary" />,
+        FileClock: <FileClock className="h-5 w-5 text-green-500" />,
+        Default: <Bell className="h-5 w-5 text-muted-foreground" />,
+    };
+    return icons[iconName] || icons.Default;
+}
 
 function DashboardApp({ children }: { children: React.ReactNode }) {
-  const { userProfile } = useAuth();
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead } = useAuth();
+  const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (id: number) => {
-     setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  const handleNotificationClick = (notification: AppNotification) => {
+     setSelectedNotification(notification);
+     if (!notification.read) {
+         markNotificationAsRead(notification.id);
+     }
   }
 
   if (!userProfile) {
@@ -163,95 +167,102 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
   return (
-      <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
-        <DesktopSidebar navItems={navItems} />
-        <div className="flex flex-col">
-           <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-            <MobileSheetNav navItems={navItems} />
-            <div className="flex-1">
-              <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
-                  <Link href="/dashboard" className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                      <span className="sr-only">Clausey</span>
-                  </Link>
-              </div>
-
-              {activeCompany && (
-                  <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building className="w-4 h-4"/>
-                      <span>{activeCompany.name}</span>
-                  </div>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2 md:gap-4">
-              {userProfile.plan !== 'Enterprise' && (
-                <div className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg">
-                    <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{userProfile.credits ?? 0} Credits</span>
+      <>
+        <NotificationModal 
+            isOpen={!!selectedNotification} 
+            onOpenChange={() => setSelectedNotification(null)}
+            notification={selectedNotification}
+        />
+        <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
+            <DesktopSidebar navItems={navItems} />
+            <div className="flex flex-col">
+            <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
+                <MobileSheetNav navItems={navItems} />
+                <div className="flex-1">
+                <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
+                    <Link href="/dashboard" className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                        <span className="sr-only">Clausey</span>
+                    </Link>
                 </div>
-              )}
-              <ThemeToggle />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative shrink-0 interactive-lift">
-                      <Bell className="h-5 w-5" />
-                      <span className="sr-only">Notifications</span>
-                      {unreadCount > 0 && (
-                          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-                          </span>
-                      )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[90vw] max-w-sm md:w-[380px] p-0">
-                    <DropdownMenuLabel className="flex items-center justify-between p-3 border-b">
-                        <span className="font-semibold">Notifications</span>
+
+                {activeCompany && (
+                    <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                        <Building className="w-4 h-4"/>
+                        <span>{activeCompany.name}</span>
+                    </div>
+                )}
+                </div>
+                
+                <div className="flex items-center gap-2 md:gap-4">
+                {userProfile.plan !== 'Enterprise' && (
+                    <div className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg">
+                        <Bolt className="h-4 w-4 text-primary" />
+                        <span className="text-muted-foreground">{userProfile.credits ?? 0} Credits</span>
+                    </div>
+                )}
+                <ThemeToggle />
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative shrink-0 interactive-lift">
+                        <Bell className="h-5 w-5" />
+                        <span className="sr-only">Notifications</span>
                         {unreadCount > 0 && (
-                        <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={handleMarkAllAsRead}>
-                            Mark all as read
-                        </Button>
+                            <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                            </span>
                         )}
-                    </DropdownMenuLabel>
-                    <ScrollArea className="h-[300px]">
-                        {notifications.length > 0 ? (
-                        notifications.map(notification => (
-                            <DropdownMenuItem
-                            key={notification.id}
-                            className={cn(
-                                "flex items-start gap-3 p-3 cursor-pointer rounded-none border-b",
-                                !notification.read && "bg-primary/5"
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[90vw] max-w-sm md:w-[380px] p-0">
+                        <DropdownMenuLabel className="flex items-center justify-between p-3 border-b">
+                            <span className="font-semibold">Notifications</span>
+                            {unreadCount > 0 && (
+                            <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={markAllNotificationsAsRead}>
+                                Mark all as read
+                            </Button>
                             )}
-                            onClick={() => handleNotificationClick(notification.id)}
-                            >
-                            {notification.icon}
-                            <div className="flex-1">
-                                <p className={cn("font-medium leading-tight", !notification.read ? "text-primary" : "text-card-foreground")}>{notification.title}</p>
-                                <p className={cn("text-xs font-normal", !notification.read ? "text-foreground/80" : "text-muted-foreground")}>{notification.description}</p>
+                        </DropdownMenuLabel>
+                        <ScrollArea className="h-[300px]">
+                            {notifications.length > 0 ? (
+                            notifications.map(notification => (
+                                <DropdownMenuItem
+                                key={notification.id}
+                                className={cn(
+                                    "flex items-start gap-3 p-3 cursor-pointer rounded-none border-b",
+                                    !notification.read && "bg-primary/5"
+                                )}
+                                onClick={() => handleNotificationClick(notification)}
+                                >
+                                {getIcon(notification.icon)}
+                                <div className="flex-1">
+                                    <p className={cn("font-medium leading-tight", !notification.read ? "text-primary" : "text-card-foreground")}>{notification.title}</p>
+                                    <p className={cn("text-xs font-normal", !notification.read ? "text-foreground/80" : "text-muted-foreground")}>{notification.description}</p>
+                                </div>
+                                {!notification.read && <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0 self-start"></div>}
+                                </DropdownMenuItem>
+                            ))
+                            ) : (
+                            <div className="text-center text-sm text-muted-foreground py-10">
+                                You're all caught up!
                             </div>
-                            {!notification.read && <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0 self-start"></div>}
-                            </DropdownMenuItem>
-                        ))
-                        ) : (
-                        <div className="text-center text-sm text-muted-foreground py-10">
-                            You're all caught up!
-                        </div>
-                        )}
-                    </ScrollArea>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <div className="hidden md:block">
-                <UserNav />
-              </div>
+                            )}
+                        </ScrollArea>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="hidden md:block">
+                    <UserNav />
+                </div>
+                </div>
+            </header>
+            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
+                {children}
+            </main>
             </div>
-          </header>
-          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
-            {children}
-          </main>
+            <MobileBottomNav />
         </div>
-        <MobileBottomNav />
-      </div>
+    </>
   );
 }
 

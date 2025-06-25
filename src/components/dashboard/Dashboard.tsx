@@ -105,6 +105,8 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
+    const { addNotification } = useAuth();
+
     const [dynamicData, setDynamicData] = useState<{
         filings: number;
         checklist: { id: number; text: string; completed: boolean }[];
@@ -134,6 +136,14 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const upcomingFilings = response.filings.filter(f => f.status === 'upcoming');
                 const overdueFilings = response.filings.filter(f => f.status === 'overdue');
                 
+                overdueFilings.forEach(filing => {
+                    addNotification({
+                        title: `${filing.title} Overdue`,
+                        description: `Your filing for ${filing.title} was due on ${format(new Date(filing.date), 'do MMM')}. Please address this immediately to avoid penalties.`,
+                        icon: 'AlertTriangle',
+                    });
+                });
+
                 const checklistItems = response.filings.slice(0, 3).map((filing, index) => ({
                     id: index + 1,
                     text: filing.title,
@@ -157,7 +167,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         }
 
         fetchDashboardData();
-    }, [activeCompany]);
+    }, [activeCompany, addNotification]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -445,5 +455,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    

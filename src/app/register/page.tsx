@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/hooks/auth";
-import { useRouter, redirect } from "next/navigation";
+import { useRouter, redirect, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,11 +25,19 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const { user, signUpWithEmailAndPassword, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
+  useEffect(() => {
+    const refId = searchParams.get('ref');
+    if (refId) {
+        localStorage.setItem('referralId', refId);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -39,7 +47,9 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      await signUpWithEmailAndPassword(data.email, data.password, data.name);
+      const refId = localStorage.getItem('referralId');
+      await signUpWithEmailAndPassword(data.email, data.password, data.name, refId || undefined);
+      localStorage.removeItem('referralId'); // Clear after use
       router.push('/dashboard');
     } catch (error: any) {
         toast({

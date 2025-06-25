@@ -2,7 +2,7 @@
 'use server';
 
 import { recommendBusinessStructure, type BusinessRecommenderInput, type BusinessRecommenderOutput } from '@/ai/flows/business-recommender-flow';
-import { generateChecklist, type AssistantInput, type AssistantOutput } from '@/ai/flows/assistant-flow';
+import { getAssistantResponse, type AssistantInput, type AssistantOutput } from '@/ai/flows/assistant-flow';
 import { findIncCode } from '@/ai/flows/inc-code-finder-flow';
 import type { IncCodeFinderInput, IncCodeFinderOutput } from '@/ai/flows/inc-code-finder-flow';
 
@@ -19,7 +19,7 @@ export async function getBusinessRecommendationAction(input: BusinessRecommender
 
 export async function getFinalChecklistAction(input: AssistantInput): Promise<AssistantOutput> {
     try {
-        const result = await generateChecklist(input);
+        const result = await getAssistantResponse(input);
         return result;
     } catch (e: any) {
         console.error('AI Flow Error:', e);
