@@ -19,8 +19,9 @@ import { useAuth } from "@/hooks/auth";
 import { useTypewriter } from "@/hooks/use-typewriter";
 import { useToast } from "@/hooks/use-toast";
 import { getRegulatoryUpdates } from "./actions";
+import { WatcherOutput } from "@/ai/flows/regulation-watcher-flow";
 
-const initialState: { data: { summary: string } | null; error: string | null } = {
+const initialState: { data: WatcherOutput | null; error: string | null } = {
   data: null,
   error: null,
 };
@@ -45,7 +46,7 @@ function SubmitButton() {
 
 const Typewriter = ({ text }: { text: string }) => {
     const displayText = useTypewriter(text, 20);
-    return <>{displayText}</>;
+    return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: displayText.replace(/\n/g, '<br/>') }}/>;
 };
 
 export default function RegulationWatcherForm() {
@@ -140,7 +141,7 @@ export default function RegulationWatcherForm() {
                         <CardDescription>Last updated: Just now</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="prose dark:prose-invert max-w-none text-sm p-6 bg-muted/50 rounded-lg border">
+                        <div className="text-sm p-6 bg-muted/50 rounded-lg border">
                            <Typewriter text={state.data.summary} />
                         </div>
                     </CardContent>
