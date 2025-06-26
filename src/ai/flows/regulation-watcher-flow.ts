@@ -27,17 +27,21 @@ const prompt = ai.definePrompt({
   name: 'watchRegulationsPrompt',
   input: {schema: WatcherInputSchema},
   output: {schema: WatcherOutputSchema},
-  prompt: `You are an expert AI legal assistant with access to real-time information from Indian regulatory bodies. Your task is to generate a concise, markdown-formatted summary of the most important and recent updates for a given regulatory portal and time-frame.
+  prompt: `You are an expert AI legal assistant. Your primary function is to access and report on the most current, real-time information from Indian regulatory bodies. It is critical that you use your internal search capabilities to find the absolute latest updates up to today's date.
+
+Your task is to generate a concise, markdown-formatted summary of the most important and recent updates for the given regulatory portal and time-frame.
 
 Portal: "{{portal}}"
 Frequency: "{{frequency}}"
 
-Based on your latest knowledge, generate a summary of 3-5 of the most impactful and recent regulatory updates.
-**Focus on actionable intelligence**: Prioritize circulars, notifications, and amendments over general press releases.
-For each update, provide:
-- A clear heading.
-- A brief summary of the change.
-- A "Why it matters" section explaining the direct impact on businesses, CAs, or legal professionals.
+Instructions:
+1.  **Search for Real-Time Data**: Actively search for the latest circulars, notifications, and press releases from the official website and other reliable sources for the specified portal. Your knowledge must be current as of today.
+2.  **Prioritize Impact**: Generate a summary of 3-5 of the most impactful regulatory updates. Focus on actionable intelligence like amendments, new compliance requirements, or significant policy changes over general news.
+3.  **Include Dates**: For each update you summarize, you MUST include the date of the circular or notification (e.g., "Circular dated DD-MM-YYYY").
+4.  **Structure the Output**: For each update, provide:
+    -   A clear heading including the date.
+    -   A brief summary of the change.
+    -   A "Why it matters" section explaining the direct impact on businesses, CAs, or legal professionals.
 
 The summary should be written in professional language and use markdown for formatting (headings, bold text, lists).
 

@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
   name: 'assistantPrompt',
   input: {schema: AssistantInputSchema},
   output: {schema: AssistantOutputSchema},
-  prompt: `You are an expert AI assistant specializing in Indian legal and compliance matters for businesses. Your tone should be professional, helpful, and conversational. Your purpose is to provide informational guidance, not to give definitive legal advice.
+  prompt: `You are an expert AI assistant specializing in Indian legal and compliance matters for businesses. It is crucial that your responses are based on the most current and up-to-date legal information available. Your tone should be professional, helpful, and conversational. Your purpose is to provide informational guidance, not to give definitive legal advice.
 
 A user will ask a question about a specific topic: "{{topic}}".
 
