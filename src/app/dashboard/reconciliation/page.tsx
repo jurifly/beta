@@ -9,7 +9,7 @@ import { Loader2, Sparkles, UploadCloud, FileText, CheckCircle, AlertTriangle, S
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
-import { reconcileDocuments, type ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
+import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 
@@ -60,13 +60,25 @@ export default function ReconciliationPage() {
     setIsProcessing(true);
     setResult(null);
     try {
+      if (!userProfile) throw new Error("User profile not available.");
+
       const [gstDataUri, rocDataUri, itrDataUri] = await Promise.all([
         getFileAsDataURI(files.gst),
         getFileAsDataURI(files.roc),
         getFileAsDataURI(files.itr),
       ]);
+      
+      const input: ReconciliationInput = {
+        doc1Name: "GST Filing",
+        doc1DataUri: gstDataUri,
+        doc2Name: "ROC Filing",
+        doc2DataUri: rocDataUri,
+        doc3Name: "ITR Filing",
+        doc3DataUri: itrDataUri,
+        legalRegion: userProfile.legalRegion,
+      };
 
-      const response = await reconcileDocuments({ gstDataUri, rocDataUri, itrDataUri });
+      const response = await reconcileDocuments(input);
       setResult(response);
       toast({ title: "Reconciliation Complete!", description: "Your report is ready below." });
 
@@ -196,7 +208,7 @@ export default function ReconciliationPage() {
                                     {result.matchedItems.map((item, index) => (
                                         <div key={index} className="p-3 border rounded-md flex items-center justify-between bg-muted/50">
                                             <p className="font-medium text-sm flex items-center gap-2"><CheckCircle className="text-green-500"/>{item.field}</p>
-                                            <p className="font-mono text-sm">{item.gstValue}</p>
+                                            <p className="font-mono text-sm">{item.value}</p>
                                         </div>
                                     ))}
                                 </div>

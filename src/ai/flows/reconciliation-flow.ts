@@ -71,7 +71,7 @@ Analyze the key financial figures across these three documents:
 Your goal is to identify matches and discrepancies.
 
 1.  **Reconciliation**: Compare values for key fields like Total Revenue, Gross Profit, Net Profit, Taxes Paid, etc.
-2.  **Matched Items**: For figures that are consistent across all three documents, list them under 'matchedItems'.
+2.  **Matched Items**: For figures that are consistent across all three documents, list them under 'matchedItems'. Each item in this list should be an object with a 'field' (e.g., 'Total Revenue') and a 'value' (the consistent monetary value).
 3.  **Discrepancies**: If a value for a key field differs between any of the documents, flag it as a discrepancy. For each discrepancy, list the values from each source document and provide a likely reason for the mismatch (e.g., "Difference in reporting standards", "Timing differences in tax credits").
 4.  **Summary**: Provide a short, professional summary of your findings.
 5.  **Overall Status**: Set the 'overallStatus' to "Matched" if all key figures align, or "Discrepancies Found" otherwise.

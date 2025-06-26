@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
-import { useFormStatus, useFormState } from "react-dom"
+import { useFormStatus, useFormState, useFormState as useActionStateDOM } from "react-dom"
 import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch, FileSearch2, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from "@/components/ui/toast";
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+import { useSearchParams } from 'next/navigation';
+
 
 import * as AiActions from './actions';
 import type { AssistantOutput, ChecklistOutput } from '@/ai/flows/assistant-flow';
@@ -40,11 +42,6 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-
-// --- Type Definitions and Initial States ---
-
-const CHAT_HISTORY_KEY = 'aiCopilotHistory';
-
 
 // --- Tab: AI Legal Assistant ---
 
@@ -95,12 +92,9 @@ const ChatAssistant = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const { toast } = useToast();
-  const { userProfile, saveChatHistory, getChatHistory } = useAuth();
+  const { userProfile, saveChatHistory } = useAuth();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // No more local storage for history, it's now in Firestore.
-  // We can add a "history" view later if needed.
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -129,7 +123,7 @@ const ChatAssistant = () => {
     setInput('');
 
     try {
-      const response = await AiActions.getAssistantResponse({ topic });
+      const response = await AiActions.getAssistantResponse({ topic, legalRegion: userProfile?.legalRegion || 'India' });
       const assistantMessage: ChatMessage = { role: 'assistant', content: response };
       const finalChatHistory = [...newChatHistory, assistantMessage];
       setChatHistory(finalChatHistory);
@@ -388,6 +382,7 @@ const DocumentIntelligenceTab = () => {
   };
 
   const handleAnalysis = useCallback(async (file: File) => {
+    if (!userProfile) return;
     if (!await deductCredits(10)) return;
     setIsProcessing(true);
 
@@ -397,7 +392,7 @@ const DocumentIntelligenceTab = () => {
       try {
         const fileDataUri = loadEvent.target?.result as string;
         if (!fileDataUri) throw new Error("Could not read file data.");
-        const result = await AiActions.analyzeDocumentAction({ fileDataUri, fileName: file.name });
+        const result = await AiActions.analyzeDocumentAction({ fileDataUri, fileName: file.name, legalRegion: userProfile.legalRegion });
         
         const newAnalysis: DocumentAnalysis = {
           ...result,
@@ -419,7 +414,7 @@ const DocumentIntelligenceTab = () => {
       toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
       setIsProcessing(false);
     };
-  }, [deductCredits, toast, analyzedDocs]);
+  }, [deductCredits, toast, analyzedDocs, userProfile]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles[0]) handleAnalysis(acceptedFiles[0]);
@@ -445,7 +440,7 @@ const DocumentIntelligenceTab = () => {
   }
 
   if (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free') {
-    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan." icon={<FileSearch className="w-12 h-12 text-primary/20"/>} />;
+    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan." icon={<FileSearch2 className="w-12 h-12 text-primary/20"/>} />;
   }
 
   return (
@@ -466,7 +461,7 @@ const DocumentIntelligenceTab = () => {
                   </>
                 ) : (
                   <>
-                    <FileSearch className="w-16 h-16 text-primary/20" />
+                    <FileSearch2 className="w-16 h-16 text-primary/20" />
                     <p className="font-semibold text-lg text-foreground">Drop a document here</p>
                     <p className="text-sm max-w-xs">Or click the button below to select a file.</p>
                     <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
@@ -487,7 +482,7 @@ const DocumentIntelligenceTab = () => {
           <h3 className="text-xl font-semibold">Analysis History ({filteredDocs.length})</h3>
           {filteredDocs.length === 0 ? (
             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40 min-h-[400px] flex items-center justify-center flex-col">
-              <FileSearch className="w-12 h-12 text-primary/20 mb-4" />
+              <FileSearch2 className="w-12 h-12 text-primary/20 mb-4" />
               <p className="font-semibold">{analyzedDocs.length > 0 ? "No documents match filters" : "Upload a document to start"}</p>
             </div>
           ) : (
@@ -590,11 +585,13 @@ const DocumentGeneratorTab = () => {
   
   const handleGenerateClick = async () => {
     if (!selectedTemplate) { toast({ title: 'No Template Selected', description: 'Please select a template from the library first.', variant: 'destructive' }); return; }
+    if (!userProfile) { toast({ title: 'Error', description: 'User profile not found.', variant: 'destructive' }); return; }
+
     const templateDetails = availableCategories.flatMap(c => c.templates).find(t => t.name === selectedTemplate);
     if (templateDetails?.isPremium && (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free')) { toast({ title: 'Upgrade to Pro', description: 'This is a premium template. Please upgrade your plan.', variant: 'destructive', action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction> }); return; }
     if (!await deductCredits(1)) return;
     setLoading(true); setGeneratedDoc(null); setEditorContent(''); hasUserEdited.current = false;
-    try { const result = await AiActions.generateDocumentAction({ templateName: selectedTemplate }); setGeneratedDoc(result); setIsTyping(true); } catch (error: any) { toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); } finally { setLoading(false); }
+    try { const result = await AiActions.generateDocumentAction({ templateName: selectedTemplate, legalRegion: userProfile.legalRegion }); setGeneratedDoc(result); setIsTyping(true); } catch (error: any) { toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); } finally { setLoading(false); }
   };
 
   const handleDownload = () => { if (!generatedDoc) return; const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.setAttribute('download', `${generatedDoc.title.replace(/ /g, '_')}.txt`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
@@ -673,10 +670,12 @@ const RegulationWatcherTab = () => {
     }, [state, toast, deductCredits]);
     
     const handleFormAction = (formData: FormData) => {
+        if (!userProfile) return;
         const portal = formData.get("portal") as string;
         const frequency = formData.get("frequency") as string;
         setSubmittedPortal(portal);
         setSubmittedFrequency(frequency);
+        formData.append('legalRegion', userProfile.legalRegion);
         formAction(formData);
     }
 
@@ -811,6 +810,8 @@ const WorkflowTab = () => {
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile } = useAuth();
+    const searchParams = useSearchParams();
+    const tab = searchParams.get('tab') || 'assistant';
 
     return (
         <div className="space-y-6">
@@ -818,17 +819,17 @@ export default function AiToolkitPage() {
                 <h1 className="text-3xl font-bold font-headline">AI Toolkit</h1>
                 <p className="text-muted-foreground">Your unified AI workspace for legal and compliance tasks.</p>
             </div>
-            <Tabs defaultValue="assistant" className="w-full">
+            <Tabs defaultValue={tab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
                     <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
-                    <TabsTrigger value="documents" className="interactive-lift"><FilePenLine className="mr-2"/>Generator</TabsTrigger>
+                    <TabsTrigger value="generator" className="interactive-lift"><FilePenLine className="mr-2"/>Generator</TabsTrigger>
                     <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
                     <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
                     <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
                     <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
                 </TabsList>
                 <TabsContent value="assistant" className="mt-6"><ChatAssistant /></TabsContent>
-                <TabsContent value="documents" className="mt-6"><DocumentGeneratorTab /></TabsContent>
+                <TabsContent value="generator" className="mt-6"><DocumentGeneratorTab /></TabsContent>
                 <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
                 <TabsContent value="analyzer" className="mt-6"><DocumentIntelligenceTab /></TabsContent>
                 <TabsContent value="watcher" className="mt-6"><RegulationWatcherTab /></TabsContent>
