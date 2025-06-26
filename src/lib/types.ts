@@ -120,3 +120,37 @@ export interface AppNotification {
   icon: 'AlertTriangle' | 'RadioTower' | 'FileClock' | 'Default';
   link?: string;
 }
+
+export type DocumentType =
+  | 'Legal Contract'
+  | 'Government Notice'
+  | 'Termination/Warning Letter'
+  | 'Compliance Filing'
+  | 'Other';
+
+export interface RiskFlag {
+  clause: string;
+  risk: string;
+  severity: 'High' | 'Medium' | 'Low';
+}
+
+export interface ReminderSuggestion {
+  title: string;
+  date: string; // YYYY-MM-DD format
+}
+
+export interface ReplySuggestion {
+  title: string;
+  content: string; // Markdown formatted
+}
+
+export interface DocumentAnalysis {
+  id: string; // will be a timestamp
+  fileName: string;
+  uploadedAt: string;
+  documentType: DocumentType;
+  summary: string;
+  riskFlags: RiskFlag[];
+  replySuggestion: ReplySuggestion | null;
+  reminder: ReminderSuggestion | null;
+}

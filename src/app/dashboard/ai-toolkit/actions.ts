@@ -4,8 +4,7 @@
 import { getAssistantResponse as getAssistantResponseFlow, type AssistantInput, type AssistantOutput } from '@/ai/flows/assistant-flow';
 import { generateChecklist as generateDiligenceChecklistFlow, type GenerateChecklistInput, type GenerateChecklistOutput } from '@/ai/flows/generate-checklist-flow';
 import { validateCompliance, type ComplianceValidatorInput, type ComplianceValidatorOutput } from '@/ai/flows/compliance-validator-flow';
-import { analyzeContract, type AnalyzeContractInput, type AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
-import { summarizeDocument, type DocumentSummarizerInput, type DocumentSummarizerOutput } from '@/ai/flows/document-summarizer-flow';
+import { analyzeDocument, type DocumentIntelligenceInput, type DocumentIntelligenceOutput } from '@/ai/flows/document-intelligence-flow';
 import { generateDocument, type DocumentGeneratorInput, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 import { generateWiki, type WikiGeneratorInput, type WikiGeneratorOutput } from '@/ai/flows/wiki-generator-flow';
 import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
@@ -50,22 +49,13 @@ export async function validateComplianceAction(previousState: ComplianceFormStat
   }
 }
 
-// --- Contract Analyzer Actions ---
-export async function analyzeContractAction(input: AnalyzeContractInput): Promise<AnalyzeContractOutput> {
+// --- Document Intelligence Action ---
+export async function analyzeDocumentAction(input: DocumentIntelligenceInput): Promise<DocumentIntelligenceOutput> {
   try {
-    return await analyzeContract(input);
+    return await analyzeDocument(input);
   } catch (e: any) {
     console.error('AI Flow Error:', e);
-    throw new Error(e.message || 'Could not analyze the contract.');
-  }
-}
-
-export async function summarizeDocumentAction(input: DocumentSummarizerInput): Promise<DocumentSummarizerOutput> {
-  try {
-    return await summarizeDocument(input);
-  } catch (e: any) {
-    console.error('AI Flow Error:', e);
-    throw new Error(e.message || 'Could not summarize the document.');
+    throw new Error(e.message || 'Could not analyze the document.');
   }
 }
 

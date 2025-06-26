@@ -1,21 +1,21 @@
+
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus, useFormState } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2 } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2, AlertCircle, CalendarPlus, StickyNote, Edit, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from "@/components/ui/toast";
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 
 import * as AiActions from './actions';
 import type { AssistantOutput, ChecklistOutput } from '@/ai/flows/assistant-flow';
-import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage } from "@/lib/types"
+import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag } from "@/lib/types"
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
-import type { AnalyzeContractOutput } from '@/ai/flows/contract-analyzer-flow';
-import type { DocumentSummarizerOutput } from '@/ai/flows/document-summarizer-flow';
 import type { DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 import type { WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 
@@ -361,35 +361,202 @@ const DataroomAudit = () => {
 }
 
 
-// --- Tab: Contract Analyzer ---
+// --- Tab: Document Intelligence ---
+const DocumentIntelligenceTab = () => {
+  const { userProfile, deductCredits } = useAuth();
+  const { toast } = useToast();
+  const [analyzedDocs, setAnalyzedDocs] = useState<DocumentAnalysis[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [activeDoc, setActiveDoc] = useState<string | null>(null);
 
-const ContractAnalyzerTab = () => {
-    const { userProfile } = useAuth();
-    if (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free') {
-        return <UpgradePrompt title="Unlock Contract Analyzer & Summarizer" description="Let our AI analyze your legal documents for risks, or summarize them into plain language. This feature requires a Founder plan." icon={<FileScan className="w-12 h-12 text-primary/20"/>} />;
+  const STORAGE_KEY = 'documentIntelligenceHistory';
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setAnalyzedDocs(JSON.parse(saved));
+    } catch (error) {
+      console.error("Failed to load history from localStorage", error);
     }
+  }, []);
 
-    return (
-        <Tabs defaultValue="analyzer" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/> Risk Analysis</TabsTrigger>
-                <TabsTrigger value="summarizer" className="interactive-lift"><BookText className="mr-2"/> AI Summary</TabsTrigger>
-            </TabsList>
-            <TabsContent value="analyzer" className="mt-4">
-                <Card className="min-h-[calc(100vh-20rem)] interactive-lift">
-                    <CardHeader><CardTitle>Contract Analyzer</CardTitle><CardDescription>Upload a contract to identify risks, find missing clauses, and get redline suggestions. Costs 5 credits.</CardDescription></CardHeader>
-                    <CardContent className="p-0"><RiskAnalyzer /></CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="summarizer" className="mt-4">
-                <Card className="min-h-[calc(100vh-20rem)] interactive-lift">
-                    <CardHeader><CardTitle>AI Document Summarizer</CardTitle><CardDescription>Get a quick, plain-language summary of any uploaded document. Costs 2 credits.</CardDescription></CardHeader>
-                    <CardContent className="p-0"><DocumentSummarizer /></CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
-    );
+  const saveDocs = (docs: DocumentAnalysis[]) => {
+    setAnalyzedDocs(docs);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+  };
+
+  const handleAnalysis = useCallback(async (file: File) => {
+    if (!await deductCredits(10)) return;
+    setIsProcessing(true);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async (loadEvent) => {
+      try {
+        const fileDataUri = loadEvent.target?.result as string;
+        if (!fileDataUri) throw new Error("Could not read file data.");
+        const result = await AiActions.analyzeDocumentAction({ fileDataUri, fileName: file.name });
+        
+        const newAnalysis: DocumentAnalysis = {
+          ...result,
+          id: Date.now().toString(),
+          fileName: file.name,
+          uploadedAt: new Date().toISOString(),
+        };
+
+        saveDocs([newAnalysis, ...analyzedDocs]);
+        setActiveDoc(newAnalysis.id);
+        toast({ title: "Analysis Complete", description: `"${file.name}" has been analyzed.` });
+      } catch (error: any) {
+        toast({ variant: "destructive", title: "Analysis Failed", description: error.message });
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    reader.onerror = () => {
+      toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
+      setIsProcessing(false);
+    };
+  }, [deductCredits, toast, analyzedDocs]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles[0]) handleAnalysis(acceptedFiles[0]);
+  }, [handleAnalysis]);
+  
+  const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({ onDrop, noClick: true, noKeyboard: true, maxFiles: 1, maxSize: 5 * 1024 * 1024 });
+
+  const filteredDocs = useMemo(() => {
+    return analyzedDocs.filter(doc => {
+      const searchMatch = doc.fileName.toLowerCase().includes(searchTerm.toLowerCase()) || doc.summary.toLowerCase().includes(searchTerm.toLowerCase());
+      const filterMatch = activeFilters.length === 0 || activeFilters.includes(doc.documentType);
+      return searchMatch && filterMatch;
+    });
+  }, [analyzedDocs, searchTerm, activeFilters]);
+
+  const toggleFilter = (filter: string) => {
+    setActiveFilters(prev => prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]);
+  }
+  
+  const handleDelete = (id: string) => {
+     saveDocs(analyzedDocs.filter(doc => doc.id !== id));
+     toast({ title: "Deleted", description: "Analysis has been removed from history." });
+  }
+
+  if (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free') {
+    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan." icon={<FileSearch className="w-12 h-12 text-primary/20"/>} />;
+  }
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-6 items-start">
+      <div className="lg:col-span-1 space-y-4">
+        <Card {...getRootProps()} className="interactive-lift">
+          <input {...getInputProps()} />
+          <CardHeader>
+            <CardTitle>Document Intelligence</CardTitle>
+            <CardDescription>Upload a document for AI analysis. Costs 10 credits.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={cn("text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed h-full w-full transition-colors cursor-pointer", isDragActive ? "border-primary bg-primary/10" : "")}>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                    <p className="font-semibold text-lg text-foreground">Analyzing...</p>
+                  </>
+                ) : (
+                  <>
+                    <FileSearch className="w-16 h-16 text-primary/20" />
+                    <p className="font-semibold text-lg text-foreground">Drop a document here</p>
+                    <p className="text-sm max-w-xs">Or click the button below to select a file.</p>
+                    <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
+                  </>
+                )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="interactive-lift">
+            <CardHeader><CardTitle>Filter & Search</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search documents..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Filter by type</Label><div className="flex flex-wrap gap-2">{['Legal Contract', 'Government Notice', 'Compliance Filing', 'Other'].map(f => (<Button key={f} variant={activeFilters.includes(f) ? 'default' : 'outline'} size="sm" onClick={() => toggleFilter(f)}>{f}</Button>))}</div></div>
+            </CardContent>
+        </Card>
+      </div>
+      <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-xl font-semibold">Analysis History ({filteredDocs.length})</h3>
+          {filteredDocs.length === 0 ? (
+            <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40 min-h-[400px] flex items-center justify-center flex-col">
+              <FileSearch className="w-12 h-12 text-primary/20 mb-4" />
+              <p className="font-semibold">{analyzedDocs.length > 0 ? "No documents match filters" : "Upload a document to start"}</p>
+            </div>
+          ) : (
+            <Accordion type="single" collapsible value={activeDoc || undefined} onValueChange={setActiveDoc} className="w-full space-y-4">
+              {filteredDocs.map(doc => <AnalyzedDocItem key={doc.id} doc={doc} onDelete={handleDelete} />)}
+            </Accordion>
+          )}
+      </div>
+    </div>
+  )
+}
+
+const getRiskColor = (severity: 'High' | 'Medium' | 'Low') => {
+  switch (severity) {
+    case 'High': return 'border-red-500 bg-red-500/10 text-red-500';
+    case 'Medium': return 'border-yellow-500 bg-yellow-500/10 text-yellow-500';
+    case 'Low': return 'border-green-500 bg-green-500/10 text-green-500';
+    default: return 'border-muted';
+  }
 };
+
+const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (id: string) => void }) => {
+  const { toast } = useToast();
+  const highestSeverity = useMemo(() => {
+    if (doc.riskFlags.some(f => f.severity === 'High')) return 'High';
+    if (doc.riskFlags.some(f => f.severity === 'Medium')) return 'Medium';
+    if (doc.riskFlags.length > 0) return 'Low';
+    return null;
+  }, [doc.riskFlags]);
+  
+  const copyToClipboard = (text: string, title: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Copied to clipboard!', description: `${title} has been copied.` });
+  };
+
+  return (
+    <AccordionItem value={doc.id} className="border-b-0">
+       <Card className="interactive-lift">
+          <AccordionTrigger className="p-4 hover:no-underline text-left">
+              <div className="flex-1 flex items-center gap-4">
+                  <div className="flex-1 space-y-1">
+                      <p className="font-semibold truncate">{doc.fileName}</p>
+                      <p className="text-sm text-muted-foreground">{formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {highestSeverity && <Badge variant="outline" className={getRiskColor(highestSeverity)}>{highestSeverity} Risk</Badge>}
+                    <Badge variant="secondary">{doc.documentType}</Badge>
+                  </div>
+              </div>
+          </AccordionTrigger>
+          <AccordionContent>
+              <Tabs defaultValue="summary" className="w-full px-4 pb-4">
+                  <TabsList className="grid w-full grid-cols-4 mb-4">
+                      <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
+                      <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
+                      <TabsTrigger value="reply" disabled={!doc.replySuggestion}><MessageSquare/>Reply</TabsTrigger>
+                      <TabsTrigger value="reminder" disabled={!doc.reminder}><CalendarPlus/>Reminder</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
+                  <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
+                  <TabsContent value="reply">{doc.replySuggestion && <div className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><div className="flex justify-between items-center not-prose mb-4"><h4 className="font-bold text-lg my-0">{doc.replySuggestion.title}</h4><Button variant="ghost" size="sm" onClick={() => copyToClipboard(doc.replySuggestion!.content, doc.replySuggestion!.title)}><Copy className="mr-2"/>Copy</Button></div><ReactMarkdown>{doc.replySuggestion.content}</ReactMarkdown></div>}</TabsContent>
+                  <TabsContent value="reminder">{doc.reminder && <div className="p-4 bg-blue-500/10 text-blue-800 dark:text-blue-300 rounded-lg border border-blue-500/20 flex items-center justify-between gap-4"><div className="flex items-center gap-3"><CalendarPlus className="w-5 h-5"/><div><p className="font-semibold">{doc.reminder.title}</p><p className="text-sm">Suggested Date: {doc.reminder.date}</p></div></div><Button size="sm" onClick={() => toast({title:"Feature coming soon"})}>Add to Calendar</Button></div>}</TabsContent>
+              </Tabs>
+               <div className="px-4 pt-2 flex justify-end"><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => onDelete(doc.id)}><Trash2 className="mr-2"/>Delete</Button></div>
+          </AccordionContent>
+       </Card>
+    </AccordionItem>
+  )
+}
 
 
 // --- Tab: Document Generator ---
@@ -470,102 +637,6 @@ const DocumentGeneratorTab = () => {
   )
 }
 
-// --- Main AI Toolkit Page ---
-export default function AiToolkitPage() {
-    const { userProfile } = useAuth();
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold font-headline">AI Toolkit</h1>
-                <p className="text-muted-foreground">Your unified AI workspace for legal and compliance tasks.</p>
-            </div>
-            <Tabs defaultValue="assistant" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                    <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
-                    <TabsTrigger value="documents" className="interactive-lift"><FilePenLine className="mr-2"/>Generator</TabsTrigger>
-                    <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
-                    <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Analyzer</TabsTrigger>
-                    <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
-                    <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
-                </TabsList>
-                <TabsContent value="assistant" className="mt-6"><ChatAssistant /></TabsContent>
-                <TabsContent value="documents" className="mt-6"><DocumentGeneratorTab /></TabsContent>
-                <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
-                <TabsContent value="analyzer" className="mt-6"><ContractAnalyzerTab /></TabsContent>
-                <TabsContent value="watcher" className="mt-6"><RegulationWatcherTab /></TabsContent>
-                <TabsContent value="workflows" className="mt-6"><WorkflowTab /></TabsContent>
-            </Tabs>
-        </div>
-    );
-}
-
-const ComplianceValidatorTool = () => {
-    const { toast } = useToast();
-    const { deductCredits, userProfile } = useAuth();
-    const [file, setFile] = useState<File | null>(null);
-    const [fileDataUri, setFileDataUri] = useState<string | null>(null);
-    const [framework, setFramework] = useState('SOC2');
-    const [state, formAction] = useActionState(AiActions.validateComplianceAction, initialComplianceState);
-    const [isPending, startTransition] = useTransition();
-
-    useEffect(() => { if (state.error) toast({ variant: "destructive", title: "Analysis Failed", description: state.error }); if (state.data) toast({ title: "Analysis Complete", description: "Your compliance report is ready." }); }, [state, toast]);
-    const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => { if (fileRejections.length > 0) { toast({ variant: "destructive", title: "File Upload Error", description: fileRejections[0].errors[0].message }); return; } if (acceptedFiles[0]) { const uploadedFile = acceptedFiles[0]; setFile(uploadedFile); const reader = new FileReader(); reader.onload = (loadEvent) => setFileDataUri(loadEvent.target?.result as string); reader.readAsDataURL(uploadedFile); } }, [toast]);
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"]}, maxFiles: 1, maxSize: 5 * 1024 * 1024 });
-
-    const handleAnalysis = async () => { if (!fileDataUri) { toast({ variant: 'destructive', title: 'File Missing', description: 'Please upload a document to analyze.' }); return; } if (!await deductCredits(10)) return; startTransition(() => { const formData = new FormData(); formData.append('fileDataUri', fileDataUri); formData.append('framework', framework); formAction(formData); }); };
-
-    if (!userProfile?.plan || !['Enterprise'].includes(userProfile.plan)) return <UpgradePrompt title="Unlock Compliance Toolkits" description="Validate your policy documents against frameworks like SOC2, ISO27001, and GDPR. This is an Enterprise feature." icon={<ShieldCheck className="w-12 h-12 text-primary/20"/>} />;
-    
-    return (
-         <div className="space-y-6">
-            <Card className="interactive-lift">
-                <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="text-primary"/> SOC2 / ISO / GDPR Toolkit</CardTitle><CardDescription>Upload your IT and policy documents. Our AI will validate them against compliance checklists and suggest fixes. Costs 10 credits per analysis.</CardDescription></CardHeader>
-                <CardContent className="space-y-4">
-                    <div {...getRootProps()} className={cn("p-6 border-2 border-dashed rounded-lg text-center bg-muted/40 cursor-pointer", isDragActive && "border-primary bg-primary/10")}><input {...getInputProps()} /><UploadCloud className="mx-auto h-12 w-12 text-primary/20" /><p className="mt-4 font-semibold">{file ? `Selected: ${file.name}` : "Drag & drop policy documents here"}</p><p className="text-sm text-muted-foreground">or click to select a file</p></div>
-                    <div className="space-y-2"><Label>Select Framework</Label><Select value={framework} onValueChange={setFramework}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="SOC2">SOC2 Type I/II</SelectItem><SelectItem value="ISO27001">ISO 27001</SelectItem><SelectItem value="GDPR">GDPR</SelectItem><SelectItem value="DPDP">DPDP</SelectItem></SelectContent></Select></div>
-                    <Button className="w-full" onClick={handleAnalysis} disabled={isPending || !file}>{isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>} Run Compliance Analysis</Button>
-                </CardContent>
-            </Card>
-            {isPending ? <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Running analysis...</p></div> : (state.data) && <Card><CardHeader><CardTitle>{framework} Analysis Report</CardTitle><CardDescription>Readiness Score: <span className="font-bold text-primary">{state.data.readinessScore}/100</span></CardDescription></CardHeader><CardContent className="space-y-4"><div><h4 className="font-semibold mb-2">Summary</h4><p className="text-sm text-muted-foreground">{state.data.summary}</p></div><div><h4 className="font-semibold mb-2">Recommendations</h4><div className="space-y-2">{state.data.missingItems.map((item, index) => (<div key={index} className="p-3 border rounded-md bg-muted/50"><p className="font-medium text-sm">{item.item}</p><p className="text-xs text-muted-foreground">{item.recommendation}</p></div>))}</div></div></CardContent></Card>}
-        </div>
-    );
-}
-
-const RiskAnalyzer = () => {
-    const { deductCredits } = useAuth();
-    const [analysisResult, setAnalysisResult] = useState<AnalyzeContractOutput | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const { toast } = useToast();
-    const reportRef = useRef<HTMLDivElement>(null);
-
-    const handleAnalysis = useCallback(async (fileToAnalyze: File) => { if (!await deductCredits(5)) return; setFile(fileToAnalyze); setIsProcessing(true); setAnalysisResult(null); const reader = new FileReader(); reader.readAsDataURL(fileToAnalyze); reader.onload = async (loadEvent) => { try { const fileDataUri = loadEvent.target?.result as string; if (!fileDataUri) throw new Error("Could not read file data."); const result = await AiActions.analyzeContractAction({ fileDataUri }); setAnalysisResult(result); toast({ title: "Analysis Complete", description: "Your contract report is ready." }); } catch (error: any) { console.error('Error analyzing contract:', error); toast({ variant: "destructive", title: "Analysis Failed", description: error.message }); } finally { setIsProcessing(false); } }; reader.onerror = () => { toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." }); setIsProcessing(false); }; }, [deductCredits, toast]);
-    const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => { if (fileRejections.length > 0) { toast({ variant: "destructive", title: "File Upload Error", description: fileRejections[0].errors[0].message }); return; } if (acceptedFiles[0]) handleAnalysis(acceptedFiles[0]); }, [handleAnalysis, toast]);
-    const handleExport = async () => { if (!analysisResult || !reportRef.current) return; toast({ title: "Preparing Report...", description: "Please wait while we generate your PDF." }); try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: null, useCORS: true }); const imgData = canvas.toDataURL('image/png'); const pdf = new jsPDF('p', 'mm', 'a4'); const pdfWidth = pdf.internal.pageSize.getWidth(); const pdfHeight = pdf.internal.pageSize.getHeight(); const imgWidth = canvas.width; const imgHeight = canvas.height; const ratio = Math.min((pdfWidth - 20) / imgWidth, (pdfHeight - 20) / imgHeight); const imgX = (pdfWidth - imgWidth * ratio) / 2; const imgY = 10; pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio); pdf.save('contract-analysis-report.pdf'); } catch(e) { console.error("Error generating PDF", e); toast({ variant: "destructive", title: "PDF Export Failed", description: "There was an error generating the PDF report." }); } }
-    const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({ onDrop, accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"] }, maxFiles: 1, maxSize: 5 * 1024 * 1024, noClick: true, noKeyboard: true });
-
-    if (isProcessing) return <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 h-full min-h-[400px]"><Loader2 className="w-16 h-16 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Analyzing {file?.name || "Document"}...</p><p className="text-sm max-w-xs">Our AI is reading your contract. Key insights will be ready in just a moment.</p></div>;
-    if (analysisResult) { const riskScore = analysisResult.riskScore; const riskLevel = riskScore > 75 ? "Low" : riskScore > 50 ? "Medium" : "High"; const riskColor = riskScore > 75 ? "text-green-500" : riskScore > 50 ? "text-yellow-500" : "text-red-500"; return <div className="h-full overflow-y-auto rounded-b-lg p-4 md:p-6 space-y-4"><div className="flex items-center justify-between"><h3 className="font-semibold">Analysis Report for: <span className="font-normal">{file?.name}</span></h3><div className="flex gap-2"><Button variant="outline" size="sm" onClick={openFileDialog} className="interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Upload New</Button><Button variant="default" size="sm" onClick={handleExport} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Export Report</Button></div></div><div className="bg-muted/30 p-4 md:p-6" ref={reportRef}><Card className="max-w-5xl mx-auto"><CardHeader><CardTitle className="text-lg">Contract Analysis Report</CardTitle></CardHeader><CardContent className="p-4 md:p-6 grid md:grid-cols-5 gap-6"><div className="md:col-span-3 space-y-6"><Accordion type="multiple" defaultValue={['summary', 'risks']} className="w-full"><AccordionItem value="summary"><AccordionTrigger>Contract Summary</AccordionTrigger><AccordionContent><div className="space-y-3 text-sm p-4 bg-muted/50 rounded-md border"><div><span className="font-semibold">Type:</span> {analysisResult.summary.contractType}</div><div><span className="font-semibold">Parties:</span> {analysisResult.summary.parties.join(', ')}</div><div><span className="font-semibold">Effective Date:</span> {analysisResult.summary.effectiveDate}</div><div className="pt-2"><p className="font-semibold mb-1">Purpose:</p><p className="text-muted-foreground">{analysisResult.summary.purpose}</p></div></div></AccordionContent></AccordionItem><AccordionItem value="risks"><AccordionTrigger>Risk Flags ({analysisResult.riskFlags.length})</AccordionTrigger><AccordionContent>{analysisResult.riskFlags.length > 0 ? (<div className="space-y-3">{analysisResult.riskFlags.map((flag, i) => (<div key={i} className="p-3 bg-muted/50 rounded-lg border-l-4 border-l-red-500"><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>))}</div>) : <p className="text-sm text-muted-foreground p-4">No significant risks found.</p>}</AccordionContent></AccordionItem></Accordion></div><div className="md:col-span-2 space-y-6"><Card className="text-center interactive-lift"><CardHeader><CardTitle>Overall Risk Score</CardTitle></CardHeader><CardContent><p className={`text-6xl font-bold ${riskColor}`}>{riskScore}</p><p className={`text-lg font-medium ${riskColor}`}>{riskLevel} Risk</p></CardContent></Card><Accordion type="single" collapsible className="w-full"><AccordionItem value="missing"><AccordionTrigger>Missing Clauses ({analysisResult.missingClauses.length})</AccordionTrigger><AccordionContent>{analysisResult.missingClauses.length > 0 ? (<ul className="space-y-2 list-disc list-inside p-4 bg-muted/50 rounded-md border">{analysisResult.missingClauses.map((clause, i) => (<li key={i} className="flex items-start gap-2 text-sm text-muted-foreground"><FileWarning className="w-4 h-4 mt-0.5 text-yellow-600 shrink-0"/><span>{clause}</span></li>))}</ul>) : <p className="text-sm text-muted-foreground p-4">No critical clauses seem to be missing.</p>}</AccordionContent></AccordionItem></Accordion></div></CardContent></Card></div></div>; }
-    return <div {...getRootProps()} className="h-full w-full cursor-pointer min-h-[400px]"><input {...getInputProps()} /><div className={cn("text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 rounded-b-lg border-2 border-dashed h-full w-full transition-colors", isDragActive ? "border-primary bg-primary/10" : "")}><FileSearch2 className="w-16 h-16 text-primary/20" /><p className="font-semibold text-lg text-foreground">Analyze Your Contract for Risks</p><p className="text-sm max-w-xs">Drag and drop a PDF or DOCX file here to get a detailed risk assessment.</p><Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Or Select a File</Button></div></div>;
-};
-
-const TypewriterSummary = ({ text }: { text: string }) => { const displayText = useTypewriter(text, 20); const markdownToHtml = (text: string) => { return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />'); }; return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: markdownToHtml(displayText) }} />; };
-
-const DocumentSummarizer = () => {
-    const { deductCredits } = useAuth();
-    const [summaryResult, setSummaryResult] = useState<DocumentSummarizerOutput | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const { toast } = useToast();
-    const handleSummarize = useCallback(async (fileToAnalyze: File) => { if (!await deductCredits(2)) return; setFile(fileToAnalyze); setIsProcessing(true); setSummaryResult(null); const reader = new FileReader(); reader.readAsDataURL(fileToAnalyze); reader.onload = async (loadEvent) => { try { const fileDataUri = loadEvent.target?.result as string; if (!fileDataUri) throw new Error("Could not read file data."); const result = await AiActions.summarizeDocumentAction({ fileDataUri, fileName: fileToAnalyze.name }); setSummaryResult(result); toast({ title: "Summary Complete", description: "Your document summary is ready." }); } catch (error: any) { console.error('Error summarizing document:', error); toast({ variant: "destructive", title: "Summarization Failed", description: error.message }); } finally { setIsProcessing(false); } }; reader.onerror = () => { toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." }); setIsProcessing(false); }; }, [deductCredits, toast]);
-    const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => { if (fileRejections.length > 0) { toast({ variant: "destructive", title: "File Upload Error", description: fileRejections[0].errors[0].message }); return; } if (acceptedFiles[0]) handleSummarize(acceptedFiles[0]); }, [handleSummarize, toast]);
-    const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({ onDrop, accept: { "application/pdf": [".pdf"], "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"] }, maxFiles: 1, maxSize: 5 * 1024 * 1024 });
-    if (isProcessing) return <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 h-full min-h-[400px]"><Loader2 className="w-16 h-16 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Summarizing {file?.name || "Document"}...</p><p className="text-sm max-w-xs">Our AI is distilling the key points of your document.</p></div>;
-    if (summaryResult) return <div className="h-full overflow-y-auto rounded-b-lg p-4 md:p-6 space-y-4"><div className="flex items-center justify-between"><h3 className="font-semibold">Summary for: <span className="font-normal">{file?.name}</span></h3><Button variant="outline" size="sm" onClick={openFileDialog} className="interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Upload New</Button></div><div className="text-sm p-6 bg-muted/50 rounded-lg border"><TypewriterSummary text={summaryResult.summary} /></div></div>;
-    return <div {...getRootProps()} className="h-full w-full cursor-pointer min-h-[400px]"><input {...getInputProps()} /><div className={cn("text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 rounded-b-lg border-2 border-dashed h-full w-full transition-colors", isDragActive ? "border-primary bg-primary/10" : "")}><BookText className="w-16 h-16 text-primary/20" /><p className="font-semibold text-lg text-foreground">Get an AI-Powered Summary</p><p className="text-sm max-w-xs">Upload a document to get a simple, plain-language breakdown of its contents.</p><Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Or Select a File</Button></div></div>;
-}
-
 const watcherPortals = [ { id: "MCA", name: "MCA", description: "Corporate Affairs", icon: <Building2 className="w-6 h-6" /> }, { id: "RBI", name: "RBI", description: "Banking Regulations", icon: <Banknote className="w-6 h-6" /> }, { id: "SEBI", name: "SEBI", description: "Securities", icon: <ShieldCheck className="w-6 h-6" /> }, { id: "DPDP", name: "DPDP", description: "Data Privacy", icon: <DatabaseZap className="w-6 h-6" /> }, { id: "GDPR", name: "GDPR", description: "EU Privacy", icon: <Globe className="w-6 h-6" /> }, ];
 const WatcherSubmitButton = () => { const { pending } = useFormStatus(); return ( <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto interactive-lift"> {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />} Get Latest Updates </Button> ); }
 const TypewriterWatcher = ({ text }: { text: string }) => { const displayText = useTypewriter(text, 20); return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: displayText.replace(/\n/g, '<br/>') }}/>; };
@@ -643,3 +714,34 @@ const WorkflowTab = () => {
         </div>
     );
 };
+
+
+// --- Main AI Toolkit Page ---
+export default function AiToolkitPage() {
+    const { userProfile } = useAuth();
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold font-headline">AI Toolkit</h1>
+                <p className="text-muted-foreground">Your unified AI workspace for legal and compliance tasks.</p>
+            </div>
+            <Tabs defaultValue="assistant" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+                    <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
+                    <TabsTrigger value="documents" className="interactive-lift"><FilePenLine className="mr-2"/>Generator</TabsTrigger>
+                    <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
+                    <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
+                    <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
+                    <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
+                </TabsList>
+                <TabsContent value="assistant" className="mt-6"><ChatAssistant /></TabsContent>
+                <TabsContent value="documents" className="mt-6"><DocumentGeneratorTab /></TabsContent>
+                <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
+                <TabsContent value="analyzer" className="mt-6"><DocumentIntelligenceTab /></TabsContent>
+                <TabsContent value="watcher" className="mt-6"><RegulationWatcherTab /></TabsContent>
+                <TabsContent value="workflows" className="mt-6"><WorkflowTab /></TabsContent>
+            </Tabs>
+        </div>
+    );
+}
