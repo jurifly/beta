@@ -167,6 +167,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (userDoc.exists()) {
       const profile = userDoc.data() as UserProfile;
+      // Data migration for users created before legalRegion was introduced
+      if (!profile.legalRegion) {
+        profile.legalRegion = 'India'; // Default to India
+        // Silently update the profile in the background
+        updateDoc(userDocRef, { legalRegion: 'India' }).catch(e => console.error("Failed to backfill legalRegion", e));
+      }
       setUserProfile(profile);
     } else {
       const newProfile = await createNewUserProfile(firebaseUser, 'India');
