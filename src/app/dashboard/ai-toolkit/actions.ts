@@ -25,9 +25,10 @@ export async function getAssistantResponse(input: AssistantInput): Promise<Assis
 type DiligenceFormState = { data: GenerateChecklistOutput | null; error: string | null; };
 export async function generateDiligenceChecklistAction(previousState: DiligenceFormState, formData: FormData): Promise<DiligenceFormState> {
   const dealType = formData.get('dealType') as string;
-  if (!dealType) return { data: null, error: 'Deal type is required.' };
+  const legalRegion = formData.get('legalRegion') as string;
+  if (!dealType || !legalRegion) return { data: null, error: 'Deal type and legal region are required.' };
   try {
-    const result = await generateDiligenceChecklistFlow({ dealType });
+    const result = await generateDiligenceChecklistFlow({ dealType, legalRegion });
     return { data: result, error: null };
   } catch (e: any) {
     console.error('AI Flow Error:', e);
@@ -39,9 +40,10 @@ type ComplianceFormState = { data: ComplianceValidatorOutput | null; error: stri
 export async function validateComplianceAction(previousState: ComplianceFormState, formData: FormData): Promise<ComplianceFormState> {
   const fileDataUri = formData.get('fileDataUri') as string;
   const framework = formData.get('framework') as string;
-  if (!fileDataUri || !framework) return { data: null, error: 'File and framework are required.' };
+  const legalRegion = formData.get('legalRegion') as string;
+  if (!fileDataUri || !framework || !legalRegion) return { data: null, error: 'File, framework and legalRegion are required.' };
   try {
-    const result = await validateCompliance({ fileDataUri, framework });
+    const result = await validateCompliance({ fileDataUri, framework, legalRegion });
     return { data: result, error: null };
   } catch (e: any) {
     console.error('AI Flow Error:', e);
@@ -74,9 +76,10 @@ type WatcherFormState = { data: WatcherOutput | null; error: string | null; };
 export async function getRegulatoryUpdatesAction(previousState: WatcherFormState, formData: FormData): Promise<WatcherFormState> {
   const portal = formData.get('portal') as string;
   const frequency = formData.get('frequency') as string;
-  if (!portal || !frequency) return { data: null, error: 'Portal and frequency are required.' };
+  const legalRegion = formData.get('legalRegion') as string;
+  if (!portal || !frequency || !legalRegion) return { data: null, error: 'Portal, frequency, and legal region are required.' };
   try {
-    const result = await watchRegulations({ portal, frequency });
+    const result = await watchRegulations({ portal, frequency, legalRegion });
     return { data: result, error: null };
   } catch (e: any) {
     console.error('AI Flow Error:', e);

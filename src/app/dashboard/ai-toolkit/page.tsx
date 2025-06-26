@@ -319,6 +319,7 @@ const DataroomAudit = () => {
           <CardHeader><CardTitle>{checklistState.data?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process. Costs 2 credits.</CardDescription></CardHeader>
           <CardContent>
               <form action={formAction} className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b">
+                <input type="hidden" name="legalRegion" value={userProfile.legalRegion} />
                 <div className="space-y-1.5 w-full sm:w-auto sm:flex-1"><Label htmlFor="dealType">Deal / Audit Type</Label><Select name="dealType" defaultValue={availableDealTypes[0].value}><SelectTrigger id="dealType" className="min-w-[200px]"><SelectValue placeholder="Select type" /></SelectTrigger><SelectContent>{availableDealTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select></div>
                 <div className="w-full sm:w-auto self-end"><DataroomAuditSubmitButton isRegenerate={!!checklistState.data} /></div>
                 <div className="flex items-center gap-2 self-end"><Button variant="outline" size="icon" disabled={!checklistState.data} className="interactive-lift" onClick={handleShare}><Share2 className="h-4 w-4"/></Button></div>
@@ -544,8 +545,8 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                   <TabsList className="grid w-full grid-cols-4 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
-                      <TabsTrigger value="reply"><MessageSquare/>Reply</TabsTrigger>
-                      <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
+                      <TabsTrigger value="reply" disabled={!doc.replySuggestion}><MessageSquare/>Reply</TabsTrigger>
+                      <TabsTrigger value="reminder" disabled={!doc.reminder}><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
