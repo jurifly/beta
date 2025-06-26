@@ -12,6 +12,7 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { planHierarchy } from "@/lib/types";
 
 type FileState = {
   gst: File | null;
@@ -106,7 +107,8 @@ export default function ReconciliationPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   
-  if (!['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+  const userPlanLevel = planHierarchy[userProfile.plan];
+  if (userPlanLevel < 2) {
     return <UpgradePrompt 
       title="Unlock AI Reconciliation Assistant"
       description="Automatically compare GST, ROC, and ITR filings to find discrepancies and ensure accuracy. This is a Pro feature."

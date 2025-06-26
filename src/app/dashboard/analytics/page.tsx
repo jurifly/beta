@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress"
 import { Activity, AlertTriangle, ArrowRight, Award, Briefcase, CalendarClock, CheckSquare, FileText, LineChart as LineChartIcon, ListTodo, Loader2, MessageSquare, Scale, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import type { UserProfile, GenerateDDChecklistOutput } from "@/lib/types"
+import { planHierarchy } from "@/lib/types"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/auth"
 import { UpgradePrompt } from "@/components/upgrade-prompt"
@@ -213,7 +214,7 @@ function FounderAnalytics() {
             </CardContent>
             <CardFooter>
                 <Button asChild variant="link" className="p-0 h-auto">
-                    <Link href="/dashboard/due-diligence">
+                    <Link href="/dashboard/ai-toolkit?tab=audit">
                         Go to Audit Hub <ArrowRight className="ml-2 h-4 w-4"/>
                     </Link>
                 </Button>
@@ -356,8 +357,10 @@ export default function AnalyticsPage() {
       </div>
     );
   }
+  
+  const userPlanLevel = planHierarchy[userProfile.plan];
 
-  if (userProfile.plan === 'Free' || userProfile.plan === 'Starter') {
+  if (userPlanLevel < 1) {
     return <UpgradePrompt 
       title="Unlock Insights &amp; Analytics"
       description="Get a 360-degree view of your legal health with AI-powered analytics. Upgrade to the Founder plan to track your performance."
@@ -390,6 +393,3 @@ export default function AnalyticsPage() {
     </div>
   )
 }
-    
-
-    

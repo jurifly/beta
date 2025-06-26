@@ -12,23 +12,27 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InviteMemberModal } from "@/components/dashboard/invite-member-modal";
+import { planHierarchy } from "@/lib/types";
 
 export default function TeamPage() {
     const { userProfile } = useAuth();
-    const isEnterprise = userProfile?.plan === 'Enterprise';
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+    const userPlanLevel = planHierarchy[userProfile.plan];
+
+    if (userPlanLevel < 2) {
         return <UpgradePrompt
             title="Unlock Team Management"
             description="Collaborate with your team, assign roles, and manage compliance together. This is a Pro feature."
             icon={<Users className="w-12 h-12 text-primary/20" />}
         />;
     }
+
+    const isEnterprise = userPlanLevel >= 3;
 
     return (
         <>

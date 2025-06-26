@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import type { UserProfile, UserPlan } from "@/lib/types"
+import { planHierarchy } from "@/lib/types"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Loader2 } from "lucide-react"
@@ -88,6 +89,7 @@ export default function BillingPage() {
   }
   
   const userPlan = userProfile.plan || "Starter";
+  const currentUserPlanLevel = planHierarchy[userPlan];
   const creditLimitMap: { [key in UserPlan]: number } = {
     'Starter': 90,
     'Founder': 50,
@@ -157,19 +159,17 @@ export default function BillingPage() {
         availablePlans.length > 3 ? "lg:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-3"
       )}>
         {availablePlans.map((plan) => {
-           const isCurrentPlan = userPlan.startsWith(plan.name);
-           const isPopular = plan.popular;
            const price = plan.price[billingCycle];
            return (
             <Card
               key={plan.name}
               className={cn(
                 "flex flex-col relative interactive-lift",
-                isCurrentPlan && "border-2 border-primary ring-4 ring-primary/10",
-                isPopular && !isCurrentPlan && "border-2 border-accent",
+                 planHierarchy[plan.name as UserPlan] === currentUserPlanLevel && "border-2 border-primary ring-4 ring-primary/10",
+                 plan.popular && planHierarchy[plan.name as UserPlan] !== currentUserPlanLevel && "border-2 border-accent",
               )}
             >
-              {isPopular && (
+              {plan.popular && (
                 <Badge className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground">Most Popular</Badge>
               )}
               <CardHeader className="text-center pt-10">
@@ -193,32 +193,49 @@ export default function BillingPage() {
                 </ul>
               </CardContent>
               <CardFooter>
-                 {plan.name === 'Starter' ? (
-                    isCurrentPlan ? (
-                      <Button className="w-full" disabled variant="outline">
-                        Your Current Plan
-                      </Button>
-                    ) : (
-                      <Button className="w-full" variant="outline" onClick={handleDowngrade}>
-                        Downgrade to Starter
-                      </Button>
-                    )
-                  ) : (
-                    <Button
-                      asChild={!isCurrentPlan}
-                      className={cn("w-full", isPopular && !isCurrentPlan && "bg-accent hover:bg-accent/90")}
-                      disabled={isCurrentPlan}
-                      variant={isCurrentPlan ? "outline" : "default"}
-                    >
-                      {isCurrentPlan ? (
-                        <span>Your Current Plan</span>
-                      ) : (
-                        <Link href={`/dashboard/checkout?plan=${plan.name.toLowerCase()}&cycle=${billingCycle}`}>
-                           {isPopular && <Sparkles className="mr-2 h-4 w-4"/>} {plan.cta}
-                        </Link>
-                      )}
-                    </Button>
-                  )}
+                 {(() => {
+                    const cardPlanLevel = planHierarchy[plan.name as UserPlan];
+                    const isCurrentPlan = cardPlanLevel === currentUserPlanLevel;
+                    const isUpgrade = cardPlanLevel > currentUserPlanLevel;
+                    const isDowngrade = cardPlanLevel < currentUserPlanLevel;
+
+                    if (isCurrentPlan) {
+                      return (
+                        <Button className="w-full" disabled variant="outline">
+                          Your Current Plan
+                        </Button>
+                      );
+                    }
+
+                    if (plan.name === 'Starter') {
+                      return (
+                        <Button className="w-full" variant="outline" onClick={handleDowngrade}>
+                          Downgrade to Starter
+                        </Button>
+                      );
+                    }
+                    
+                    if (isUpgrade) {
+                      return (
+                        <Button
+                          asChild
+                          className={cn("w-full", plan.popular && "bg-accent hover:bg-accent/90")}
+                        >
+                          <Link href={`/dashboard/checkout?plan=${plan.name.toLowerCase()}&cycle=${billingCycle}`}>
+                            {plan.popular && <Sparkles className="mr-2 h-4 w-4"/>} {plan.cta}
+                          </Link>
+                        </Button>
+                      );
+                    }
+
+                    if (isDowngrade) {
+                      return (
+                        <Button className="w-full" variant="outline" disabled>
+                          Plan Available
+                        </Button>
+                      );
+                    }
+                  })()}
               </CardFooter>
             </Card>
            )

@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useAuth } from "@/hooks/auth";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
+import { planHierarchy } from "@/lib/types";
 
 export default function ClientsPage() {
   const { userProfile } = useAuth();
@@ -29,10 +30,11 @@ export default function ClientsPage() {
     />;
   }
   
-  if (!['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+  const userPlanLevel = planHierarchy[userProfile.plan];
+  if (userPlanLevel < 2) {
     return <UpgradePrompt 
       title="Unlock Client Workspace"
-      description="Manage your entire client portfolio, track compliance, and automate communication with a Pro plan."
+      description="Manage your entire client portfolio, track compliance, and automate communication with a Pro plan or higher."
       icon={<Users className="w-12 h-12 text-primary/20"/>}
     />;
   }

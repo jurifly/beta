@@ -9,6 +9,7 @@ import { Library, PlusCircle, Search, Loader2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AddClauseModal } from "@/components/dashboard/add-clause-modal";
 import type { Clause } from "@/lib/types";
+import { planHierarchy } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const CLAUSE_STORAGE_KEY = "clauseLibrary";
@@ -59,7 +60,9 @@ export default function ClauseLibraryPage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!['Founder', 'Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+    const userPlanLevel = planHierarchy[userProfile.plan];
+
+    if (userPlanLevel < 1) {
         return <UpgradePrompt
             title="Unlock the Clause Library"
             description="Access a library of pre-approved legal clauses, add your own, and build contracts faster. This is a Founder plan feature."
@@ -67,7 +70,7 @@ export default function ClauseLibraryPage() {
         />;
     }
     
-    const isReadOnly = userProfile.plan === 'Founder';
+    const isReadOnly = userPlanLevel < 2;
 
     const filteredClauses = useMemo(() => {
         return clauses.filter(clause => 

@@ -44,6 +44,7 @@ import { useTypewriter } from "@/hooks/use-typewriter";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UserProfile } from "@/lib/types";
+import { planHierarchy } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 
 
@@ -60,11 +61,13 @@ const businessTypeFormSchema = z.object({
   investmentPlan: z.string().min(1, "Investment plan is required."),
   revenueGoal: z.string().min(1, "Revenue goal is required."),
   businessDescription: z.string().min(20, "Please provide a more detailed description (min 20 characters).").max(500),
+  legalRegion: z.string().min(1, "Legal region is required."),
 });
 type BusinessTypeFormData = z.infer<typeof businessTypeFormSchema>;
 
 const incCodeFormSchema = z.object({
   businessDescription: z.string().min(20, "Please provide a more detailed description (min 20 characters).").max(500),
+  legalRegion: z.string().min(1, "Legal region is required."),
 });
 type IncCodeFormData = z.infer<typeof incCodeFormSchema>;
 
@@ -195,7 +198,8 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.businessTypeResult);
     const { userProfile } = useAuth();
-    const isLocked = userProfile?.plan === 'Free';
+    const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
+    const isLocked = userPlanLevel < 1;
 
     const { control, handleSubmit, formState: { errors } } = useForm<BusinessTypeFormData>({
         resolver: zodResolver(businessTypeFormSchema),
@@ -204,6 +208,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
           investmentPlan: "",
           revenueGoal: "",
           businessDescription: "",
+          legalRegion: userProfile?.legalRegion || "India",
         },
     });
 
@@ -229,9 +234,9 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                     <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-8 rounded-lg">
                         <Lock className="w-12 h-12 text-primary/20 mb-4" />
                         <h3 className="text-xl font-bold mb-2">Unlock AI Recommendations</h3>
-                        <p className="text-muted-foreground mb-6">Upgrade to our Pro plan to get personalized business structure recommendations from our AI.</p>
+                        <p className="text-muted-foreground mb-6">Upgrade to the Founder plan to get personalized business structure recommendations from our AI.</p>
                         <Button asChild>
-                            <Link href="/dashboard/billing">Upgrade to Pro</Link>
+                            <Link href="/dashboard/billing">Upgrade Plan</Link>
                         </Button>
                     </div>
                 )}
@@ -387,11 +392,13 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<IncCodeFinderOutput | undefined>(initialState.incCodeResult);
+  const { userProfile } = useAuth();
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<IncCodeFormData>({
     resolver: zodResolver(incCodeFormSchema),
-    defaultValues: initialState.incCodeForm || {
+    defaultValues: {
       businessDescription: initialState.businessTypeForm?.businessDescription || "",
+      legalRegion: userProfile?.legalRegion || "India",
     },
   });
 
@@ -535,6 +542,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
     const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
     const { toast } = useToast();
+    const userPlanLevel = planHierarchy[userProfile.plan];
     
     const [editorContent, setEditorContent] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -560,10 +568,10 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     };
 
     const handleGenerate = async (templateName: string, isPremium: boolean) => {
-        if (isPremium && userProfile?.plan === 'Free') {
+        if (isPremium && userPlanLevel < 1) {
             toast({
                 title: 'Upgrade Required',
-                description: 'This is a premium document. Please upgrade to generate.',
+                description: 'This is a premium document. Please upgrade to the Founder plan or higher to generate.',
                 variant: 'destructive',
                 action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction>,
             });
@@ -576,7 +584,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
         hasUserEdited.current = false;
         
         try {
-            const doc = await generateDocument({ templateName });
+            const doc = await generateDocument({ templateName, legalRegion: userProfile.legalRegion });
             setGeneratedContent(doc);
             setIsTyping(true);
         } catch (e: any) {
@@ -656,8 +664,10 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
 // --- Step 5: Final Checklist ---
 function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorState }) {
     const [isLoading, setIsLoading] = useState(false);
-    const [checklist, setChecklist] = useState<AssistantOutput | undefined>(navigatorState.finalChecklist);
+    const [checklist, setChecklist] = useState<AssistantOutput['checklist'] | undefined>(navigatorState.finalChecklist?.checklist);
+    const [checklistTitle, setChecklistTitle] = useState<string>(navigatorState.finalChecklist?.checklist?.title || "Final Checklist");
     const { toast } = useToast();
+    const { userProfile } = useAuth();
 
     const handleGenerateChecklist = async () => {
         setIsLoading(true);
@@ -667,8 +677,13 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         const topic = `Generate a final business setup checklist for a startup. Their recommended business structure is "${businessType}". Their business is: "${businessDesc}". Include sections for Legal/Registration, Banking, and Initial Operations.`;
 
         try {
-            const response = await getFinalChecklistAction({ topic });
-            setChecklist(response);
+            const response = await getFinalChecklistAction({ topic, legalRegion: userProfile?.legalRegion || 'India' });
+            if (response.checklist) {
+                setChecklist(response.checklist.items);
+                setChecklistTitle(response.checklist.title);
+            } else {
+                toast({ variant: 'destructive', title: 'Checklist Generation Failed', description: 'The AI could not generate a checklist for this topic.' });
+            }
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Checklist Generation Failed', description: error.message });
         } finally {
@@ -679,9 +694,9 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
     const handleDownload = () => {
         if (!checklist) return;
 
-        let content = `${checklist.title}\n\n`;
+        let content = `${checklistTitle}\n\n`;
         
-        const categories = checklist.checklist.reduce((acc, item) => {
+        const categories = checklist.reduce((acc, item) => {
             (acc[item.category] = acc[item.category] || []).push(item.task);
             return acc;
         }, {} as Record<string, string[]>);
@@ -698,7 +713,7 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `${checklist.title.replace(/\s+/g, '_')}_checklist.txt`);
+        link.setAttribute('download', `${checklistTitle.replace(/\s+/g, '_')}_checklist.txt`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -728,14 +743,14 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
             {checklist && (
                  <div className="bg-muted/50 rounded-xl animate-in fade-in-50 duration-500">
                     <div className="flex items-center justify-between p-4 border-b">
-                        <h3 className="font-bold text-md">{checklist.title}</h3>
+                        <h3 className="font-bold text-md">{checklistTitle}</h3>
                         <Button variant="outline" size="sm" onClick={handleDownload} disabled={!checklist}>
                           <Download className="h-4 w-4 mr-2" />
                           Download
                         </Button>
                     </div>
                     <ul className="space-y-3 p-4">
-                    {checklist.checklist.map((item, itemIndex) => (
+                    {checklist.map((item, itemIndex) => (
                         <li key={itemIndex} className="flex items-start gap-3 p-3 bg-card rounded-md border">
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 mt-0.5">
                               <Check className="h-3 w-3" />
