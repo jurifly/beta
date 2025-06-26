@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, FileSearch, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,7 @@ import { useSearchParams } from 'next/navigation';
 
 
 import * as AiActions from './actions';
-import type { AssistantOutput, ChecklistOutput } from '@/ai/flows/assistant-flow';
+import type { AssistantOutput } from '@/ai/flows/assistant-flow';
 import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag } from "@/lib/types"
 import { planHierarchy } from '@/lib/types';
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
@@ -51,9 +51,11 @@ const TypewriterResponse = ({ text }: { text: string }) => {
     return <p className="whitespace-pre-wrap font-code text-sm text-card-foreground">{displayText}</p>;
 };
 
-const ChecklistResult = ({ checklist }: { checklist: ChecklistOutput }) => {
+const ChecklistResult = ({ checklist }: { checklist: AssistantOutput['checklist'] }) => {
   const { toast } = useToast();
-  const copyToClipboard = (checklist: ChecklistOutput) => {
+  if (!checklist) return null;
+  
+  const copyToClipboard = (checklist: AssistantOutput['checklist']) => {
     if (!checklist) return;
     const textToCopy = `${checklist.title}\n\n${checklist.items.map(item => `- [ ] ${item.task} (${item.category})`).join('\n')}`;
     navigator.clipboard.writeText(textToCopy);
@@ -545,8 +547,8 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                   <TabsList className="grid w-full grid-cols-4 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
-                      <TabsTrigger value="reply"><MessageSquare/>Reply</TabsTrigger>
-                      <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
+                      <TabsTrigger value="reply" disabled={!doc.replySuggestion}><MessageSquare/>Reply</TabsTrigger>
+                      <TabsTrigger value="reminder" disabled={!doc.reminder}><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
@@ -662,7 +664,7 @@ const DocumentGeneratorTab = () => {
       <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
         <CardHeader><CardTitle>Template Library</CardTitle><CardDescription>Select a template to generate.</CardDescription></CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="relative"><FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
+          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
                 <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
@@ -723,10 +725,18 @@ const RegulationWatcherTab = () => {
     const { deductCredits, userProfile } = useAuth();
     const { toast } = useToast();
     const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
+    const lastSuccessfulData = useRef<WatcherOutput | null>(null);
 
     useEffect(() => {
-        if (state.error) toast({ variant: "destructive", title: "Update Failed", description: state.error });
-        if (state.data) deductCredits(1);
+        if (state.error) {
+            toast({ variant: "destructive", title: "Update Failed", description: state.error });
+            lastSuccessfulData.current = null; // Reset on error
+        }
+        // Only deduct credits if we have new, valid data that we haven't processed before.
+        if (state.data && state.data !== lastSuccessfulData.current) {
+            deductCredits(1);
+            lastSuccessfulData.current = state.data;
+        }
     }, [state, toast, deductCredits]);
     
     const handleFormAction = (formData: FormData) => {
