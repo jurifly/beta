@@ -22,7 +22,7 @@ export default function TeamPage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!['Pro', 'Enterprise'].includes(userProfile.plan)) {
+    if (!['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
         return <UpgradePrompt
             title="Unlock Team Management"
             description="Collaborate with your team, assign roles, and manage compliance together. This is a Pro feature."

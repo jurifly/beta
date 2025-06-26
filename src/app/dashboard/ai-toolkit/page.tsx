@@ -304,7 +304,9 @@ const DataroomAudit = () => {
 
   const filteredChecklist = useMemo(() => { if (!checklistState.data) return []; if (activeFilter === 'all') return checklistState.data.checklist; return checklistState.data.checklist.map(category => ({ ...category, items: category.items.filter(item => { if (activeFilter === 'completed') return item.status === 'Completed'; if (activeFilter === 'pending') return ['Pending', 'In Progress', 'Not Applicable'].includes(item.status); return true; }), })).filter(category => category.items.length > 0); }, [checklistState.data, activeFilter]);
 
-  if (['Starter', 'Free'].includes(userProfile.plan)) return <UpgradePrompt title="Unlock the Dataroom Audit" description="Generate comprehensive due diligence checklists and prepare for audits with our AI-powered tools. This feature is available on the Founder plan and above." icon={<FolderCheck className="w-12 h-12 text-primary/20"/>} />;
+  if (!userProfile || !['Founder', 'Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
+      return <UpgradePrompt title="Unlock the Dataroom Audit" description="Generate comprehensive due diligence checklists and prepare for audits with our AI-powered tools. This feature is available on the Founder plan and above." icon={<FolderCheck className="w-12 h-12 text-primary/20"/>} />;
+  }
 
   const availableDealTypes = dealTypesByRole[userProfile.role] || dealTypesByRole.Founder;
 
@@ -439,7 +441,7 @@ const DocumentIntelligenceTab = () => {
      toast({ title: "Deleted", description: "Analysis has been removed from history." });
   }
 
-  if (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free') {
+  if (!userProfile || !['Founder', 'Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
     return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan." icon={<FileSearch2 className="w-12 h-12 text-primary/20"/>} />;
   }
 
@@ -576,19 +578,27 @@ const DocumentGeneratorTab = () => {
   const [editorContent, setEditorContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const hasUserEdited = useRef(false);
-  const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 10);
-  
+  const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 1);
+
   useEffect(() => { if (isTyping && !hasUserEdited.current) setEditorContent(typewriterText); if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedDoc?.content || '').length) setIsTyping(false); }, [typewriterText, isTyping, generatedDoc]);
   const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { if (isTyping) { hasUserEdited.current = true; setIsTyping(false); } setEditorContent(e.target.value); };
   const availableCategories = useMemo(() => { if (!userProfile) return []; return templateLibrary.filter(category => category.roles.includes(userProfile.role)); }, [userProfile]);
   useEffect(() => { if (availableCategories.length > 0 && !activeAccordion) setActiveAccordion(availableCategories[0].name); }, [availableCategories, activeAccordion]);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
   
+  useEffect(() => {
+    if (editorRef.current) {
+        editorRef.current.scrollTop = editorRef.current.scrollHeight;
+    }
+  }, [editorContent]);
+
+
   const handleGenerateClick = async () => {
     if (!selectedTemplate) { toast({ title: 'No Template Selected', description: 'Please select a template from the library first.', variant: 'destructive' }); return; }
     if (!userProfile) { toast({ title: 'Error', description: 'User profile not found.', variant: 'destructive' }); return; }
 
     const templateDetails = availableCategories.flatMap(c => c.templates).find(t => t.name === selectedTemplate);
-    if (templateDetails?.isPremium && (userProfile?.plan === 'Starter' || userProfile?.plan === 'Free')) { toast({ title: 'Upgrade to Pro', description: 'This is a premium template. Please upgrade your plan.', variant: 'destructive', action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction> }); return; }
+    if (templateDetails?.isPremium && !['Founder', 'Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) { toast({ title: 'Upgrade to Pro', description: 'This is a premium template. Please upgrade your plan.', variant: 'destructive', action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction> }); return; }
     if (!await deductCredits(1)) return;
     setLoading(true); setGeneratedDoc(null); setEditorContent(''); hasUserEdited.current = false;
     try { const result = await AiActions.generateDocumentAction({ templateName: selectedTemplate, legalRegion: userProfile.legalRegion }); setGeneratedDoc(result); setIsTyping(true); } catch (error: any) { toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); } finally { setLoading(false); }
@@ -610,7 +620,7 @@ const DocumentGeneratorTab = () => {
                     {availableCategories.map((category) => (
                         <AccordionItem value={category.name} key={category.name}>
                             <AccordionTrigger className="text-base font-medium hover:no-underline interactive-lift py-3 px-2">{category.name}</AccordionTrigger>
-                            <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium && (userProfile.plan === 'Starter' || userProfile.plan === 'Free'); return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted", isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer")}><RadioGroupItem value={template.name} id={template.name} disabled={isLocked} /><span className="font-normal text-sm">{template.name}</span>{isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500" />}</Label> ) })}</div></AccordionContent>
+                            <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium && !['Founder', 'Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan); return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted", isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer")}><RadioGroupItem value={template.name} id={template.name} disabled={isLocked} /><span className="font-normal text-sm">{template.name}</span>{isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500" />}</Label> ) })}</div></AccordionContent>
                         </AccordionItem>
                     ))}
                 </Accordion>
@@ -628,7 +638,7 @@ const DocumentGeneratorTab = () => {
                 <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
         </div>
-        {loading ? <Card className="min-h-[400px]"><CardHeader><p className="h-6 w-1/2">loading</p></CardHeader><CardContent className="space-y-4 pt-4"><p className="h-4 w-full">loading</p></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p></Card>}
+        {loading ? <Card className="min-h-[400px]"><CardHeader><p className="h-6 w-1/2">loading</p></CardHeader><CardContent className="space-y-4 pt-4"><p className="h-4 w-full">loading</p></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p></Card>}
       </div>
     </div>
   )
@@ -679,7 +689,7 @@ const RegulationWatcherTab = () => {
         formAction(formData);
     }
 
-    if (!userProfile || !['Pro', 'Enterprise'].includes(userProfile.plan)) {
+    if (!userProfile || !['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
         return <UpgradePrompt title="Unlock Regulation Watcher" description="Stay ahead of regulatory changes with AI-powered summaries from government portals. This feature requires a Pro plan." icon={<RadioTower className="w-12 h-12 text-primary/20" />} />;
     }
 
@@ -771,7 +781,7 @@ const WorkflowTab = () => {
     const [newWorkflow, setNewWorkflow] = useState({ trigger: '', action: '', notification: '' });
     const [activityLog, setActivityLog] = useState<ActivityLogItem[]>([]);
     const { toast } = useToast();
-    if (!userProfile || !['Enterprise'].includes(userProfile.plan)) return <UpgradePrompt title="Unlock the Workflow & Automation Studio" description="Connect Clausey to your favorite tools and build powerful, automated workflows. This is an Enterprise feature." icon={<Zap className="w-12 h-12 text-primary/20"/>} />;
+    if (!userProfile || !['Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) return <UpgradePrompt title="Unlock the Workflow & Automation Studio" description="Connect Clausey to your favorite tools and build powerful, automated workflows. This is an Enterprise feature." icon={<Zap className="w-12 h-12 text-primary/20"/>} />;
     const getLabel = (value: string, list: {value: string, label: string}[]) => list.find(item => item.value === value)?.label || 'N/A';
     const handleCreateWorkflow = () => { if (!newWorkflow.trigger || !newWorkflow.action || !newWorkflow.notification) { toast({ variant: "destructive", title: "Incomplete Workflow", description: "Please select a trigger, action, and notification." }); return; } const workflow: WorkflowType = { id: `wf_${Date.now()}`, ...newWorkflow }; setWorkflows(prev => [...prev, workflow]); const newActivity: ActivityLogItem = { id: `act_${Date.now()}`, timestamp: new Date(), icon: Workflow, title: `Workflow Created: "${getLabel(workflow.action, workflowActions)}"`, description: `Triggered by: "${getLabel(workflow.trigger, workflowTriggers)}"`, }; setActivityLog(prev => [newActivity, ...prev]); setNewWorkflow({ trigger: '', action: '', notification: '' }); toast({ title: "Workflow Created!", description: "Your new automation is now active." }); }
     const handleDeleteWorkflow = (id: string) => { const workflowToDelete = workflows.find(w => w.id === id); if (workflowToDelete) { const newActivity: ActivityLogItem = { id: `act_${Date.now()}`, timestamp: new Date(), icon: Trash2, title: `Workflow Deleted: "${getLabel(workflowToDelete.action, workflowActions)}"`, description: "The automation rule has been removed.", }; setActivityLog(prev => [newActivity, ...prev]); } setWorkflows(wfs => wfs.filter(w => w.id !== id)); toast({ title: "Workflow Deleted", description: "The automation has been removed." }); }

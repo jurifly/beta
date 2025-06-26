@@ -157,7 +157,7 @@ export default function BillingPage() {
         availablePlans.length > 3 ? "lg:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-3"
       )}>
         {availablePlans.map((plan) => {
-           const isCurrentPlan = plan.name === userPlan;
+           const isCurrentPlan = userPlan.startsWith(plan.name);
            const isPopular = plan.popular;
            const price = plan.price[billingCycle];
            return (

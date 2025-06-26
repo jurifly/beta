@@ -29,7 +29,7 @@ export default function ClientsPage() {
     />;
   }
   
-  if (!['Pro', 'Enterprise'].includes(userProfile.plan)) {
+  if (!['Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
     return <UpgradePrompt 
       title="Unlock Client Workspace"
       description="Manage your entire client portfolio, track compliance, and automate communication with a Pro plan."

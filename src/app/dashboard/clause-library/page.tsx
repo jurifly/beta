@@ -59,7 +59,7 @@ export default function ClauseLibraryPage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!['Founder', 'Pro', 'Enterprise'].includes(userProfile.plan)) {
+    if (!['Founder', 'Pro', 'CA Pro', 'Enterprise', 'Enterprise Pro'].includes(userProfile.plan)) {
         return <UpgradePrompt
             title="Unlock the Clause Library"
             description="Access a library of pre-approved legal clauses, add your own, and build contracts faster. This is a Founder plan feature."
