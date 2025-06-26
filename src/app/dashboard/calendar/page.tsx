@@ -50,7 +50,7 @@ type LegendProps = {
 type Event = {
   date: Date;
   title: string;
-  type: "ROC Filing" | "ITR Filing" | "GST Filing" | "Task";
+  type: "Corporate Filing" | "Tax Filing" | "Other Task";
   status: "overdue" | "upcoming" | "completed";
 }
 
@@ -83,6 +83,7 @@ export default function CalendarPage() {
             companyType: activeCompany.type,
             incorporationDate: activeCompany.incorporationDate,
             currentDate: currentDate,
+            legalRegion: activeCompany.legalRegion,
           });
           
           const generatedEvents = response.filings.map(filing => ({

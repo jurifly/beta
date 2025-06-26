@@ -131,6 +131,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     companyType: activeCompany.type,
                     incorporationDate: activeCompany.incorporationDate,
                     currentDate: currentDate,
+                    legalRegion: activeCompany.legalRegion,
                 });
 
                 const upcomingFilings = response.filings.filter(f => f.status === 'upcoming');

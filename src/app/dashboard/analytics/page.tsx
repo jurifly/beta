@@ -70,6 +70,7 @@ function FounderAnalytics() {
             companyType: activeCompany.type,
             incorporationDate: activeCompany.incorporationDate,
             currentDate: currentDate,
+            legalRegion: activeCompany.legalRegion,
           });
 
           const generatedEvents = response.filings.map(filing => ({
