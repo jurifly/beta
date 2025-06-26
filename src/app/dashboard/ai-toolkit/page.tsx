@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, FileSearch, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -447,7 +447,7 @@ const DocumentIntelligenceTab = () => {
   }
 
   if (userPlanLevel < 1) {
-    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan or higher." icon={<FileSearch className="w-12 h-12 text-primary/20"/>} />;
+    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan or higher." icon={<FileScan className="w-12 h-12 text-primary/20"/>} />;
   }
 
   return (
@@ -468,7 +468,7 @@ const DocumentIntelligenceTab = () => {
                   </>
                 ) : (
                   <>
-                    <FileSearch className="w-16 h-16 text-primary/20" />
+                    <FileScan className="w-16 h-16 text-primary/20" />
                     <p className="font-semibold text-lg text-foreground">Drop a document here</p>
                     <p className="text-sm max-w-xs">Or click the button below to select a file.</p>
                     <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
@@ -489,7 +489,7 @@ const DocumentIntelligenceTab = () => {
           <h3 className="text-xl font-semibold">Analysis History ({filteredDocs.length})</h3>
           {filteredDocs.length === 0 ? (
             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40 min-h-[400px] flex items-center justify-center flex-col">
-              <FileSearch className="w-12 h-12 text-primary/20 mb-4" />
+              <FileScan className="w-12 h-12 text-primary/20 mb-4" />
               <p className="font-semibold">{analyzedDocs.length > 0 ? "No documents match filters" : "Upload a document to start"}</p>
             </div>
           ) : (
@@ -545,8 +545,8 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                   <TabsList className="grid w-full grid-cols-4 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
-                      <TabsTrigger value="reply" disabled={!doc.replySuggestion}><MessageSquare/>Reply</TabsTrigger>
-                      <TabsTrigger value="reminder" disabled={!doc.reminder}><CalendarPlus/>Reminder</TabsTrigger>
+                      <TabsTrigger value="reply"><MessageSquare/>Reply</TabsTrigger>
+                      <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
