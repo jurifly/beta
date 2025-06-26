@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -544,13 +544,48 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                   <TabsList className="grid w-full grid-cols-4 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
-                      <TabsTrigger value="reply" disabled={!doc.replySuggestion}><MessageSquare/>Reply</TabsTrigger>
-                      <TabsTrigger value="reminder" disabled={!doc.reminder}><CalendarPlus/>Reminder</TabsTrigger>
+                      <TabsTrigger value="reply"><MessageSquare/>Reply</TabsTrigger>
+                      <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
-                  <TabsContent value="reply">{doc.replySuggestion && <div className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><div className="flex justify-between items-center not-prose mb-4"><h4 className="font-bold text-lg my-0">{doc.replySuggestion.title}</h4><Button variant="ghost" size="sm" onClick={() => copyToClipboard(doc.replySuggestion!.content, doc.replySuggestion!.title)}><Copy className="mr-2"/>Copy</Button></div><ReactMarkdown>{doc.replySuggestion.content}</ReactMarkdown></div>}</TabsContent>
-                  <TabsContent value="reminder">{doc.reminder && <div className="p-4 bg-blue-500/10 text-blue-800 dark:text-blue-300 rounded-lg border border-blue-500/20 flex items-center justify-between gap-4"><div className="flex items-center gap-3"><CalendarPlus className="w-5 h-5"/><div><p className="font-semibold">{doc.reminder.title}</p><p className="text-sm">Suggested Date: {doc.reminder.date}</p></div></div><Button size="sm" onClick={() => toast({title:"Feature coming soon"})}>Add to Calendar</Button></div>}</TabsContent>
+                   <TabsContent value="reply" className="p-4 bg-muted/50 rounded-lg border min-h-[200px] flex items-center justify-center">
+                    {doc.replySuggestion ? (
+                        <div className="prose dark:prose-invert max-w-none text-sm w-full">
+                            <div className="flex justify-between items-center not-prose mb-4">
+                                <h4 className="font-bold text-lg my-0">{doc.replySuggestion.title}</h4>
+                                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(doc.replySuggestion!.content, doc.replySuggestion!.title)}><Copy className="mr-2"/>Copy</Button>
+                            </div>
+                            <ReactMarkdown>{doc.replySuggestion.content}</ReactMarkdown>
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground">
+                            <MessageSquare className="mx-auto w-8 h-8 mb-2 opacity-50" />
+                            <p className="font-semibold">No Reply Suggested</p>
+                            <p className="text-xs">The AI did not detect a need for a reply for this document.</p>
+                        </div>
+                    )}
+                  </TabsContent>
+                   <TabsContent value="reminder" className="p-4 bg-muted/50 rounded-lg border min-h-[200px] flex items-center justify-center">
+                    {doc.reminder ? (
+                       <div className="bg-blue-500/10 text-blue-800 dark:text-blue-300 rounded-lg border border-blue-500/20 flex items-center justify-between gap-4 p-4 w-full">
+                          <div className="flex items-center gap-3">
+                            <CalendarPlus className="w-5 h-5"/>
+                            <div>
+                                <p className="font-semibold">{doc.reminder.title}</p>
+                                <p className="text-sm">Suggested Date: {doc.reminder.date}</p>
+                            </div>
+                          </div>
+                          <Button size="sm" onClick={() => toast({title:"Feature coming soon"})}>Add to Calendar</Button>
+                        </div>
+                    ) : (
+                       <div className="text-center text-muted-foreground">
+                            <CalendarPlus className="mx-auto w-8 h-8 mb-2 opacity-50" />
+                            <p className="font-semibold">No Reminder Needed</p>
+                            <p className="text-xs">The AI did not find a specific deadline in this document.</p>
+                        </div>
+                    )}
+                  </TabsContent>
               </Tabs>
                <div className="px-4 pt-2 flex justify-end"><Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => onDelete(doc.id)}><Trash2 className="mr-2"/>Delete</Button></div>
           </AccordionContent>
