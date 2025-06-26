@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   name: 'filingGeneratorPrompt',
   input: {schema: FilingGeneratorInputSchema},
   output: {schema: FilingGeneratorOutputSchema},
-  prompt: `You are an expert Indian compliance officer. Your task is to generate a realistic and plausible list of 5-7 key compliance filings for a company.
+  prompt: `You are an expert Indian compliance officer. Your task is to generate a realistic and plausible list of 5-7 key compliance filings for a company, considering its lifecycle.
 
 Reference Current Date: {{currentDate}}
 
@@ -44,11 +44,12 @@ Company Details:
 Based on the company's details and the current date, generate a list of upcoming, recently overdue, and recently completed filings.
 
 Instructions:
-1.  The filings should be relevant to the company type (e.g., ROC filings like AOC-4/MGT-7 for a Pvt Ltd company, GST filings for most businesses, ITR filings).
-2.  The due dates MUST be realistic. For example, a company incorporated a month ago cannot have an annual filing due yet. Monthly or quarterly filings are more likely.
-3.  The 'status' for each filing must be correctly set relative to the provided 'currentDate'.
-4.  Generate a mix of statuses (upcoming, overdue, completed) to make the data look realistic for a dashboard.
-5.  Dates must be in YYYY-MM-DD format.
+1.  **Lifecycle Awareness**: The filings must be relevant to the company's age. For a company incorporated recently (e.g., within the last few months), prioritize initial filings like INC-20A (Declaration of Commencement of Business). For a company older than a year, include annual filings like AOC-4 (Financial Statements) and MGT-7 (Annual Return).
+2.  **Company Type Relevance**: Filings should be relevant to the company type. Pvt Ltd companies have ROC filings; most businesses have GST and ITR filings.
+3.  **Realistic Due Dates**: The due dates MUST be realistic. An annual filing cannot be due a month after incorporation. Monthly/quarterly filings (like GST) are more likely for new companies.
+4.  **Status Accuracy**: The 'status' for each filing must be correctly set relative to the provided 'currentDate'.
+5.  **Data Diversity**: Generate a mix of statuses (upcoming, overdue, completed) to make the data look realistic for a dashboard.
+6.  **Date Formatting**: Dates must be in YYYY-MM-DD format.
 
 Return the response in the specified JSON format.
 `,

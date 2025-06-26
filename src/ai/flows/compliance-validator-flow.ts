@@ -37,19 +37,23 @@ const prompt = ai.definePrompt({
   name: 'complianceValidatorPrompt',
   input: {schema: ComplianceValidatorInputSchema},
   output: {schema: ComplianceValidatorOutputSchema},
-  prompt: `You are an expert AI compliance auditor. Your task is to review a policy document against a specified compliance framework and provide a structured analysis.
+  prompt: `You are an expert AI compliance auditor with deep knowledge of frameworks like SOC 2, ISO 27001, GDPR, and DPDP. Your task is to review a policy document against a specified compliance framework and provide a structured, actionable analysis.
 
 Compliance Framework: "{{framework}}"
 
 Document to Analyze:
 {{media url=fileDataUri}}
 
-Please analyze the document and provide the following:
-1.  **Readiness Score**: A numerical score from 0 (not ready) to 100 (fully compliant) representing the document's readiness for the selected framework.
-2.  **Summary**: A concise summary of the document's strengths and weaknesses in relation to the framework.
-3.  **Missing Items**: Identify key policies, controls, or sections that are required by the framework but seem to be missing or insufficient in the document. For each missing item, provide a clear recommendation.
+Please perform a detailed analysis by following these steps:
+1.  **Cross-Reference Controls**: Systematically check the document against the key control families of the selected framework. For example, for SOC2, analyze against the Trust Services Criteria (Security, Availability, Processing Integrity, Confidentiality, Privacy). For ISO 27001, check against Annex A controls. For GDPR/DPDP, check against principles like data minimization, consent, and user rights.
 
-Return your analysis in the specified JSON format. Be thorough and professional.
+2.  **Calculate Readiness Score**: Based on your analysis, provide a numerical score from 0 (not ready) to 100 (fully compliant). A higher score indicates better alignment with the framework.
+
+3.  **Write a Summary**: Provide a concise executive summary of the document's strengths and weaknesses in relation to the framework.
+
+4.  **Identify Gaps & Recommendations**: Identify key policies, controls, or sections that are required by the framework but seem to be missing or insufficient in the document. For each missing item, provide a clear, actionable recommendation on how to remediate the gap.
+
+Return your analysis in the specified JSON format. Be thorough, professional, and precise.
 `,
 });
 

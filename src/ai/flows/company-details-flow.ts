@@ -31,18 +31,18 @@ const prompt = ai.definePrompt({
   output: { schema: CompanyDetailsOutputSchema },
   prompt: `You are an expert corporate data retrieval AI. Your task is to act as a mock API for the Indian Ministry of Corporate Affairs (MCA).
 
-  Given a Corporate Identification Number (CIN), you must provide the corresponding company details. The details must be realistic and plausible for a real Indian company.
+  Given a Corporate Identification Number (CIN), you must provide realistic and plausible company details.
 
   CIN: "{{cin}}"
 
-  Generate the following details based on the CIN:
-  - Company Name: The full legal name of the company.
-  - PAN: A valid 10-character PAN. The 4th character must be 'C' for Company.
-  - Date of Incorporation: The date of incorporation in YYYY-MM-DD format.
-  - Industry/Sector: A plausible business sector.
-  - Location: The registered office location in "City, State" format.
+  Generate the following details based on the CIN. The details should be internally consistent.
+  - **Company Name**: The full legal name of the company.
+  - **PAN**: A valid 10-character PAN. The 4th character must be 'C' for Company (e.g., AARPC1234A).
+  - **Date of Incorporation**: A date in YYYY-MM-DD format. The year should plausibly match the year encoded in the CIN (characters 7-10).
+  - **Industry/Sector**: A plausible business sector.
+  - **Location**: The registered office location in "City, State" format. The state should plausibly match the state code in the CIN (characters 11-12).
 
-  Return the data in the specified JSON format. Do not add any extra explanations.
+  Return the data in the specified JSON format. Do not add any extra explanations or introductory text.
   `,
 });
 

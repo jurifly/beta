@@ -37,11 +37,12 @@ Your task is to analyze a user's business description and suggest the most appro
 
 Business Description: "{{businessDescription}}"
 
-Based on this description:
-1.  Identify the single best NIC code.
-2.  Provide the official title for that code.
-3.  Give a short, clear reason for your choice, linking it to the user's business.
-4.  Optionally, suggest 1-2 alternative codes if the business could fit into multiple categories.
+Follow this process:
+1.  **Identify Core Activity**: Analyze the description to determine the primary economic activity. Is it software development, manufacturing, trading, consulting, etc.?
+2.  **Map to NIC Structure**: Mentally map this activity to the NIC 2008 structure (Section -> Division -> Group -> Class).
+3.  **Determine Best Fit Code**: Select the single best 5-digit NIC code that accurately represents the main business activity.
+4.  **Provide Rationale**: Explain *why* you chose this code, linking it directly to the business description.
+5.  **Suggest Alternatives**: If the business description is broad or could fit into multiple categories, suggest 1-2 plausible alternative codes.
 
 Return the response in the specified JSON format.
 `,

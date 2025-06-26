@@ -32,9 +32,14 @@ const prompt = ai.definePrompt({
 Portal: "{{portal}}"
 Frequency: "{{frequency}}"
 
-Based on your latest knowledge, generate a summary of 3-5 of the most impactful and recent regulatory updates from the specified portal for the selected frequency. The information should be accurate and reflect real circulars, notifications, and press releases.
+Based on your latest knowledge, generate a summary of 3-5 of the most impactful and recent regulatory updates.
+**Focus on actionable intelligence**: Prioritize circulars, notifications, and amendments over general press releases.
+For each update, provide:
+- A clear heading.
+- A brief summary of the change.
+- A "Why it matters" section explaining the direct impact on businesses, CAs, or legal professionals.
 
-The summary should be written in professional language, use markdown for formatting (headings, bold text, lists), and be easy to read.
+The summary should be written in professional language and use markdown for formatting (headings, bold text, lists).
 
 Return ONLY the markdown summary in the 'summary' field of the JSON output.
 `,
