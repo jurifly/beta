@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
-import { useFormStatus, useFormState, useFormState as useActionStateDOM } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch2, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
+import { useFormStatus } from "react-dom"
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, FileSearch, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -446,7 +446,7 @@ const DocumentIntelligenceTab = () => {
   }
 
   if (userPlanLevel < 1) {
-    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan or higher." icon={<FileSearch2 className="w-12 h-12 text-primary/20"/>} />;
+    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan or higher." icon={<FileSearch className="w-12 h-12 text-primary/20"/>} />;
   }
 
   return (
@@ -467,7 +467,7 @@ const DocumentIntelligenceTab = () => {
                   </>
                 ) : (
                   <>
-                    <FileSearch2 className="w-16 h-16 text-primary/20" />
+                    <FileSearch className="w-16 h-16 text-primary/20" />
                     <p className="font-semibold text-lg text-foreground">Drop a document here</p>
                     <p className="text-sm max-w-xs">Or click the button below to select a file.</p>
                     <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
@@ -488,7 +488,7 @@ const DocumentIntelligenceTab = () => {
           <h3 className="text-xl font-semibold">Analysis History ({filteredDocs.length})</h3>
           {filteredDocs.length === 0 ? (
             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40 min-h-[400px] flex items-center justify-center flex-col">
-              <FileSearch2 className="w-12 h-12 text-primary/20 mb-4" />
+              <FileSearch className="w-12 h-12 text-primary/20 mb-4" />
               <p className="font-semibold">{analyzedDocs.length > 0 ? "No documents match filters" : "Upload a document to start"}</p>
             </div>
           ) : (
@@ -626,7 +626,7 @@ const DocumentGeneratorTab = () => {
       <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
         <CardHeader><CardTitle>Template Library</CardTitle><CardDescription>Select a template to generate.</CardDescription></CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="relative"><FileSearch2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
+          <div className="relative"><FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
                 <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
@@ -681,7 +681,7 @@ const TypewriterWatcher = ({ text }: { text: string }) => {
 };
 
 const RegulationWatcherTab = () => {
-    const [state, formAction] = useFormState(AiActions.getRegulatoryUpdatesAction, { data: null, error: null });
+    const [state, formAction] = useActionState(AiActions.getRegulatoryUpdatesAction, { data: null, error: null });
     const [submittedPortal, setSubmittedPortal] = useState("");
     const [submittedFrequency, setSubmittedFrequency] = useState("");
     const { deductCredits, userProfile } = useAuth();
