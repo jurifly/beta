@@ -61,7 +61,7 @@ const ComplianceActivityChart = dynamic(
 // --- Helper Components ---
 
 const StatCard = ({ title, value, subtext, icon, colorClass, isLoading }: { title: string, value: string, subtext: string, icon: React.ReactNode, colorClass?: string, isLoading?: boolean }) => (
-    <Card className="interactive-lift">
+    <Card className="interactive-lift h-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
             <div className="text-muted-foreground">{icon}</div>
@@ -182,10 +182,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     </Button>
                 </Card>
             </div>
-            <StatCard title="Risk Score" value={isPro ? `${dynamicData.riskScore}` : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} isLoading={dynamicData.loading} />
-            <StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} isLoading={dynamicData.loading} />
-            <StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} isLoading={false} />
-            <StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} />
+            <Link href="/dashboard/analytics" className="block"><StatCard title="Risk Score" value={isPro ? `${dynamicData.riskScore}` : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/calendar" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} isLoading={false} /></Link>
+            <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2">
               <ComplianceActivityChart />
@@ -225,15 +225,15 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 function CADashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <StatCard title="Client Portfolio Risk" value="N/A" subtext="Connect clients to see risk" icon={<ShieldCheck className="h-4 w-4" />} />
-            <StatCard title="Docs Generated" value="0" subtext="This month" icon={<FileText className="h-4 w-4" />} />
-            <StatCard title="Pending Actions" value="0" subtext="Across all clients" icon={<FileClock className="h-4 w-4" />} />
+            <Link href="/dashboard/analytics" className="block"><StatCard title="Client Portfolio Risk" value="N/A" subtext="Connect clients to see risk" icon={<ShieldCheck className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Docs Generated" value="0" subtext="This month" icon={<FileText className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="0" subtext="Across all clients" icon={<FileClock className="h-4 w-4" />} /></Link>
 
             <div className="lg:col-span-3">
                  <ComplianceActivityChart />
             </div>
             
-            <QuickLinkCard title="AI Assistant" description="Generate board resolutions or draft replies to notices using AI tailored for CAs." href="/dashboard/ai-copilot" icon={<Sparkles className="text-primary"/>} />
+            <QuickLinkCard title="AI Assistant" description="Generate board resolutions or draft replies to notices using AI tailored for CAs." href="/dashboard/ai-toolkit" icon={<Sparkles className="text-primary"/>} />
             
             <Card className="interactive-lift">
                 <CardHeader>
@@ -254,12 +254,12 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title="AI Contract Analyzer" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/contract-analyzer" icon={<FileScan className="text-primary"/>} />
+                <QuickLinkCard title="AI Contract Analyzer" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit" icon={<FileScan className="text-primary"/>} />
             </div>
-            <StatCard title="Contracts in Review" value="0" subtext="Across all clients" icon={<ClipboardList className="h-4 w-4" />} />
-            <StatCard title="Clauses Flagged" value="0" subtext="High-risk clauses found" icon={<Target className="h-4 w-4" />} />
-            <StatCard title="Redlines Pending" value="0" subtext="Documents awaiting your review" icon={<FileClock className="h-4 w-4" />} />
-            <StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning className="h-4 w-4" />} />
+            <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Contracts in Review" value="0" subtext="Across all clients" icon={<ClipboardList className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/clause-library" className="block"><StatCard title="Clauses Flagged" value="0" subtext="High-risk clauses found" icon={<Target className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Documents awaiting your review" icon={<FileClock className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning className="h-4 w-4" />} /></Link>
             <div className="md:col-span-2 lg:col-span-2">
               <ComplianceActivityChart />
             </div>
@@ -284,9 +284,9 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
 function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-             <StatCard title="Overall Risk Score" value="N/A" subtext="Connect data sources" icon={<ShieldCheck className="h-4 w-4" />} />
-             <StatCard title="Data Room Readiness" value="0%" subtext="For upcoming M&amp;A" icon={<GanttChartSquare className="h-4 w-4" />} />
-             <StatCard title="Team Tasks" value="0/0" subtext="Completed this week" icon={<Users className="h-4 w-4" />} />
+             <Link href="/dashboard/analytics" className="block"><StatCard title="Overall Risk Score" value="N/A" subtext="Connect data sources" icon={<ShieldCheck className="h-4 w-4" />} /></Link>
+             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Data Room Readiness" value="0%" subtext="For upcoming M&amp;A" icon={<GanttChartSquare className="h-4 w-4" />} /></Link>
+             <Link href="/dashboard/team" className="block"><StatCard title="Team Tasks" value="0/0" subtext="Completed this week" icon={<Users className="h-4 w-4" />} /></Link>
              <div className="lg:col-span-3">
                 <ComplianceActivityChart />
              </div>
@@ -299,7 +299,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
                    <p>No team activity yet.</p>
                 </CardContent>
              </Card>
-             <QuickLinkCard title="AI Audit Assistant" description="Prepare for SOC2, ISO, or internal audits by validating your documents against compliance checklists." href="/dashboard/due-diligence" icon={<Sparkles className="text-primary"/>} />
+             <QuickLinkCard title="AI Audit Assistant" description="Prepare for SOC2, ISO, or internal audits by validating your documents against compliance checklists." href="/dashboard/ai-toolkit" icon={<Sparkles className="text-primary"/>} />
         </div>
     );
 }
@@ -309,17 +309,17 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
   const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
 
   const stats = [
-    { title: "Risk Score", value: "Low", subtext: "All Good", icon: <ShieldCheck />, color: "text-green-500" },
-    { title: "Upcoming", value: "0", subtext: "Filings", icon: <Calendar />, color: "text-orange-500" },
-    { title: "Generated", value: "0", subtext: "Documents", icon: <FileText />, color: "text-blue-500" },
-    { title: "Alerts", value: "0", subtext: "Overdue", icon: <AlertTriangle />, color: "text-red-500" },
+    { title: "Risk Score", value: "Low", subtext: "All Good", icon: <ShieldCheck />, color: "text-green-500", href: "/dashboard/analytics" },
+    { title: "Upcoming", value: "0", subtext: "Filings", icon: <Calendar />, color: "text-orange-500", href: "/dashboard/calendar" },
+    { title: "Generated", value: "0", subtext: "Documents", icon: <FileText />, color: "text-blue-500", href: "/dashboard/ai-toolkit" },
+    { title: "Alerts", value: "0", subtext: "Overdue", icon: <AlertTriangle />, color: "text-red-500", href: "/dashboard/calendar" },
   ];
 
   const actions = [
-    { title: "Ask AI", icon: <Sparkles />, href: "/dashboard/ai-copilot", color: "bg-blue-100 text-blue-600" },
+    { title: "Ask AI", icon: <Sparkles />, href: "/dashboard/ai-toolkit", color: "bg-blue-100 text-blue-600" },
     { title: "New Doc", icon: <FileText />, href: "/dashboard/documents", color: "bg-green-100 text-green-600" },
     { title: "Calendar", icon: <Calendar />, href: "/dashboard/calendar", color: "bg-purple-100 text-purple-600" },
-    { title: "Analyze", icon: <FileScan />, href: "/dashboard/contract-analyzer", color: "bg-orange-100 text-orange-600" },
+    { title: "Analyze", icon: <FileScan />, href: "/dashboard/ai-toolkit", color: "bg-orange-100 text-orange-600" },
   ];
 
   return (
@@ -332,13 +332,15 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
       <div className="grid grid-cols-2 gap-4">
         {stats.map(stat => (
-          <Card key={stat.title} className="interactive-lift">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">{stat.title}</p>
-              <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.subtext}</p>
-            </CardContent>
-          </Card>
+          <Link href={stat.href} key={stat.title} className="block">
+            <Card className="interactive-lift h-full">
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">{stat.title}</p>
+                <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.subtext}</p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
