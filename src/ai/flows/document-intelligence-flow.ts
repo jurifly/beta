@@ -14,6 +14,7 @@ const DocumentIntelligenceInputSchema = z.object({
       "The document to analyze, as a data URI that must include a MIME type and use Base64 encoding."
     ),
   fileName: z.string().describe('The name of the file being analyzed.'),
+  legalRegion: z.string().describe('The country/legal region for the compliance context, e.g., "India", "USA".'),
 });
 export type DocumentIntelligenceInput = z.infer<typeof DocumentIntelligenceInputSchema>;
 
@@ -37,7 +38,7 @@ const ReminderSuggestionSchema = z.object({
 });
 
 const ReplySuggestionSchema = z.object({
-    title: z.string().describe("A suitable title for the suggested reply, e.g., 'Draft Reply to Income Tax Notice'."),
+    title: z.string().describe("A suitable title for the suggested reply, e.g., 'Draft Reply to Tax Notice'."),
     content: z.string().describe("A professionally drafted, complete reply to the notice. Use markdown for formatting."),
 });
 
@@ -58,9 +59,10 @@ const prompt = ai.definePrompt({
   name: 'documentIntelligencePrompt',
   input: {schema: DocumentIntelligenceInputSchema},
   output: {schema: DocumentIntelligenceOutputSchema},
-  prompt: `You are an expert AI Legal and Compliance Analyst with deep expertise in Indian corporate law. Your task is to comprehensively analyze the provided document and return a structured analysis.
+  prompt: `You are an expert AI Legal and Compliance Analyst with deep expertise in corporate law for {{legalRegion}}. Your task is to comprehensively analyze the provided document and return a structured analysis.
 
 Document to Analyze: "{{fileName}}"
+Legal Region for Context: {{legalRegion}}
 {{media url=fileDataUri}}
 
 Perform the following steps and provide the output in the specified JSON format:
@@ -69,13 +71,13 @@ Perform the following steps and provide the output in the specified JSON format:
 
 2.  **Generate a Smart Summary**: Create a concise, easy-to-understand summary of the document. Explain what it's about, its purpose, and any key takeaways in simple bullet points.
 
-3.  **Identify Risk Flags**: Scrutinize the document for any potential risks, liabilities, or unfavorable terms. Be highly specific.
+3.  **Identify Risk Flags**: Scrutinize the document for any potential risks, liabilities, or unfavorable terms relevant to {{legalRegion}}. Be highly specific.
     *   For a 'Legal Contract', look for penalty clauses, unilateral indemnity clauses, ambiguous termination conditions, restrictive non-compete clauses, unfavorable jurisdiction, or long lock-in periods.
-    *   For a 'Government Notice', identify the core issue, potential legal implications (e.g., citation of a specific section of the Income Tax Act or Companies Act), and any mentioned deadlines.
+    *   For a 'Government Notice', identify the core issue, potential legal implications (e.g., citation of a specific section of the relevant tax or companies act for {{legalRegion}}), and any mentioned deadlines.
     *   For any document, flag items that require urgent attention.
-    *   Assign a 'High', 'Medium', or 'Low' severity to each risk. If no risks are found, return an empty array.
+    *   Assign a 'High', 'Medium', o 'Low' severity to each risk. If no risks are found, return an empty array.
 
-4.  **Suggest a Reply (If Applicable)**: If and only if the document is a 'Government Notice', a 'Termination/Warning Letter', or any other document that clearly requires a formal response, generate a complete, professionally drafted reply. The reply should be structured, respectful, and address the core points of the notice. Use markdown for formatting. If no reply is needed, omit the 'replySuggestion' field.
+4.  **Suggest a Reply (If Applicable)**: If and only if the document is a 'Government Notice', a 'Termination/Warning Letter', or any other document that clearly requires a formal response, generate a complete, professionally drafted reply. The reply should be structured, respectful, and address the core points of the notice, using language and tone appropriate for {{legalRegion}}. Use markdown for formatting. If no reply is needed, omit the 'replySuggestion' field.
 
 5.  **Suggest a Reminder (If Applicable)**: If the document contains a specific deadline, response date, or a clear follow-up action with a timeframe, suggest a reminder. The reminder date should be set a few days *before* the actual deadline. If no clear date or timeframe is found, omit the 'reminder' field.
 `,

@@ -14,6 +14,7 @@ const ComplianceValidatorInputSchema = z.object({
       "The policy document as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
   framework: z.string().describe('The compliance framework to validate against (e.g., "SOC2", "ISO27001", "GDPR").'),
+  legalRegion: z.string().describe('The country/legal region for the compliance context, e.g., "India", "USA".'),
 });
 export type ComplianceValidatorInput = z.infer<typeof ComplianceValidatorInputSchema>;
 
@@ -37,19 +38,20 @@ const prompt = ai.definePrompt({
   name: 'complianceValidatorPrompt',
   input: {schema: ComplianceValidatorInputSchema},
   output: {schema: ComplianceValidatorOutputSchema},
-  prompt: `You are an expert AI compliance auditor with deep knowledge of frameworks like SOC 2, ISO 27001, GDPR, and DPDP. Your task is to review a policy document against a specified compliance framework and provide a structured, actionable analysis.
+  prompt: `You are an expert AI compliance auditor with deep knowledge of frameworks like SOC 2, ISO 27001, and data privacy laws (like GDPR, DPDP), with specific expertise in the regulations of {{legalRegion}}. Your task is to review a policy document against a specified compliance framework and provide a structured, actionable analysis.
 
 Compliance Framework: "{{framework}}"
+Legal Region: "{{legalRegion}}"
 
 Document to Analyze:
 {{media url=fileDataUri}}
 
 Please perform a detailed analysis by following these steps:
-1.  **Cross-Reference Controls**: Systematically check the document against the key control families of the selected framework. For example, for SOC2, analyze against the Trust Services Criteria (Security, Availability, Processing Integrity, Confidentiality, Privacy). For ISO 27001, check against Annex A controls. For GDPR/DPDP, check against principles like data minimization, consent, and user rights.
+1.  **Cross-Reference Controls**: Systematically check the document against the key control families of the selected framework, considering any specific requirements or nuances for {{legalRegion}}. For example, for SOC2, analyze against the Trust Services Criteria. For GDPR, check against principles like data minimization, consent, and user rights, noting any local variations.
 
 2.  **Calculate Readiness Score**: Based on your analysis, provide a numerical score from 0 (not ready) to 100 (fully compliant). A higher score indicates better alignment with the framework.
 
-3.  **Write a Summary**: Provide a concise executive summary of the document's strengths and weaknesses in relation to the framework.
+3.  **Write a Summary**: Provide a concise executive summary of the document's strengths and weaknesses in relation to the framework and {{legalRegion}} regulations.
 
 4.  **Identify Gaps & Recommendations**: Identify key policies, controls, or sections that are required by the framework but seem to be missing or insufficient in the document. For each missing item, provide a clear, actionable recommendation on how to remediate the gap.
 

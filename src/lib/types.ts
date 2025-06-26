@@ -14,6 +14,7 @@ export interface Company {
     id: string;
     name: string;
     type: string;
+    legalRegion: string;
     cin?: string;
     pan: string;
     gstin?: string;
@@ -35,6 +36,7 @@ export interface UserProfile {
   activeCompanyId: string;
   name: string;
   email: string;
+  legalRegion: string;
   phone?: string;
   credits?: number;
 }

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow for generating legal documents from templates.
@@ -8,6 +9,7 @@ import {z} from 'genkit';
 
 const DocumentGeneratorInputSchema = z.object({
   templateName: z.string().describe('The name of the legal template to generate.'),
+  legalRegion: z.string().describe('The country/legal region for which to generate the document, e.g., "India", "USA".'),
 });
 export type DocumentGeneratorInput = z.infer<typeof DocumentGeneratorInputSchema>;
 
@@ -25,11 +27,12 @@ const prompt = ai.definePrompt({
   name: 'documentGeneratorPrompt',
   input: {schema: DocumentGeneratorInputSchema},
   output: {schema: DocumentGeneratorOutputSchema},
-  prompt: `You are an expert AI legal document assistant. Your task is to generate a complete and professional legal document based on the provided template name.
+  prompt: `You are an expert AI legal document assistant. Your task is to generate a complete and professional legal document based on the provided template name, tailored for use in {{legalRegion}}.
 
 Template Name: "{{templateName}}"
+Legal Region: "{{legalRegion}}"
 
-Generate the full document text as plain text. The document should be comprehensive and ready for use. Use placeholders like "[Party A Name]" or "[Date]" where user input would be required. The 'title' field in your output should be the document's main title. Ensure the content is well-structured with clear paragraphs and line breaks.
+Generate the full document text as plain text. The document should be comprehensive and ready for use. Use placeholders like "[Party A Name]" or "[Date]" where user input would be required. The 'title' field in your output should be the document's main title. Ensure the content is well-structured with clear paragraphs, line breaks, and terminology appropriate for {{legalRegion}}.
 `,
 });
 

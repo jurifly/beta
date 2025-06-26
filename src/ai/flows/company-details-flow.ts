@@ -8,13 +8,14 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const CompanyDetailsInputSchema = z.object({
-  cin: z.string().length(21).describe('The 21-character Corporate Identification Number of the company.'),
+  cin: z.string().describe('The Corporate Identification Number or equivalent business identifier of the company.'),
+  legalRegion: z.string().describe('The country/legal region for the business, e.g., "India", "USA".'),
 });
 export type CompanyDetailsInput = z.infer<typeof CompanyDetailsInputSchema>;
 
 const CompanyDetailsOutputSchema = z.object({
   name: z.string().describe("The full legal name of the company."),
-  pan: z.string().length(10).describe("The 10-character Permanent Account Number (PAN) of the company."),
+  pan: z.string().describe("The Tax ID (e.g., PAN, EIN) of the company."),
   incorporationDate: z.string().describe("The date of incorporation in YYYY-MM-DD format."),
   sector: z.string().describe("The primary industry or sector the company operates in."),
   location: z.string().describe("The location of the registered office in 'City, State' format."),
@@ -29,18 +30,19 @@ const prompt = ai.definePrompt({
   name: 'companyDetailsPrompt',
   input: { schema: CompanyDetailsInputSchema },
   output: { schema: CompanyDetailsOutputSchema },
-  prompt: `You are an expert corporate data retrieval AI. Your task is to act as a mock API for the Indian Ministry of Corporate Affairs (MCA).
+  prompt: `You are an expert corporate data retrieval AI. Your task is to act as a mock API for the corporate affairs ministry of {{legalRegion}}.
 
-  Given a Corporate Identification Number (CIN), you must provide realistic and plausible company details.
+  Given a Corporate Identification Number (or equivalent business identifier), you must provide realistic and plausible company details.
 
-  CIN: "{{cin}}"
+  Identifier: "{{cin}}"
+  Country: "{{legalRegion}}"
 
-  Generate the following details based on the CIN. The details should be internally consistent.
+  Generate the following details based on the identifier and country. The details should be internally consistent and appropriate for {{legalRegion}}.
   - **Company Name**: The full legal name of the company.
-  - **PAN**: A valid 10-character PAN. The 4th character must be 'C' for Company (e.g., AARPC1234A).
-  - **Date of Incorporation**: A date in YYYY-MM-DD format. The year should plausibly match the year encoded in the CIN (characters 7-10).
+  - **Tax ID / PAN / EIN**: The primary tax identifier for the company.
+  - **Date of Incorporation**: A plausible date in YYYY-MM-DD format.
   - **Industry/Sector**: A plausible business sector.
-  - **Location**: The registered office location in "City, State" format. The state should plausibly match the state code in the CIN (characters 11-12).
+  - **Location**: The registered office location in "City, State/Region" format.
 
   Return the data in the specified JSON format. Do not add any extra explanations or introductory text.
   `,

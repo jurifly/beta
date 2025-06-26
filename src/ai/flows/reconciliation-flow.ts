@@ -8,29 +8,31 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ReconciliationInputSchema = z.object({
-  gstDataUri: z
+  doc1Name: z.string().describe("Name of the first document (e.g., GST Filing)."),
+  doc1DataUri: z
     .string()
     .describe(
-      "The GST filing document as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "The first document as a data URI."
     ),
-  rocDataUri: z
+  doc2Name: z.string().describe("Name of the second document (e.g., ROC Filing)."),
+  doc2DataUri: z
     .string()
     .describe(
-      "The ROC filing document as a data URI that must include a MIME type and use Base64 encoding."
+      "The second document as a data URI."
     ),
-    itrDataUri: z
+  doc3Name: z.string().describe("Name of the third document (e.g., ITR Filing)."),
+  doc3DataUri: z
     .string()
     .describe(
-      "The ITR filing document as a data URI that must include a MIME type and use Base64 encoding."
+      "The third document as a data URI."
     ),
+  legalRegion: z.string().describe("The country/legal region for the compliance context."),
 });
 export type ReconciliationInput = z.infer<typeof ReconciliationInputSchema>;
 
 const MatchedItemSchema = z.object({
     field: z.string().describe("The financial field being matched, e.g., 'Total Revenue', 'Profit Before Tax'."),
-    gstValue: z.string().describe("The value from the GST document."),
-    rocValue: z.string().describe("The value from the ROC document."),
-    itrValue: z.string().describe("The value from the ITR document."),
+    value: z.string().describe("The consistent value found across documents."),
 });
 
 const DiscrepancySchema = z.object({
@@ -59,18 +61,18 @@ const prompt = ai.definePrompt({
   name: 'reconciliationPrompt',
   input: {schema: ReconciliationInputSchema},
   output: {schema: ReconciliationOutputSchema},
-  prompt: `You are an expert AI financial auditor specializing in reconciling Indian compliance documents. Your task is to compare three documents: a GST filing, an ROC (MCA) filing, and an ITR (Income Tax Return).
+  prompt: `You are an expert AI financial auditor specializing in reconciling compliance documents for companies in {{legalRegion}}. Your task is to compare three financial documents.
 
 Analyze the key financial figures across these three documents:
-- GST Filing: {{media url=gstDataUri}}
-- ROC Filing: {{media url=rocDataUri}}
-- ITR Filing: {{media url=itrDataUri}}
+- Document 1 ({{doc1Name}}): {{media url=doc1DataUri}}
+- Document 2 ({{doc2Name}}): {{media url=doc2DataUri}}
+- Document 3 ({{doc3Name}}): {{media url=doc3DataUri}}
 
 Your goal is to identify matches and discrepancies.
 
 1.  **Reconciliation**: Compare values for key fields like Total Revenue, Gross Profit, Net Profit, Taxes Paid, etc.
 2.  **Matched Items**: For figures that are consistent across all three documents, list them under 'matchedItems'.
-3.  **Discrepancies**: If a value for a key field differs between any of the documents, flag it as a discrepancy. For each discrepancy, list the values from each source document and provide a likely reason for the mismatch (e.g., "Difference in reporting standards", "Input tax credit differences").
+3.  **Discrepancies**: If a value for a key field differs between any of the documents, flag it as a discrepancy. For each discrepancy, list the values from each source document and provide a likely reason for the mismatch (e.g., "Difference in reporting standards", "Timing differences in tax credits").
 4.  **Summary**: Provide a short, professional summary of your findings.
 5.  **Overall Status**: Set the 'overallStatus' to "Matched" if all key figures align, or "Discrepancies Found" otherwise.
 

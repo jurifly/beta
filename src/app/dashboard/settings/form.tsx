@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { Company, UserProfile, UserRole } from "@/lib/types";
-import { Loader2, Save, PlusCircle, Building, Info, KeyRound, MapPin, Calendar, Briefcase, User as UserIcon, Edit } from "lucide-react";
+import { Loader2, Save, PlusCircle, Building, Info, KeyRound, MapPin, Calendar, Briefcase, User as UserIcon, Edit, Globe } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -34,6 +35,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   phone: z.string().min(10, "Please enter a valid phone number.").or(z.literal('')),
   role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"]),
+  legalRegion: z.string().min(1, "Legal region is required."),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -45,6 +47,14 @@ const roles: { id: UserRole, label: string, description: string }[] = [
     { id: "Enterprise", label: "Enterprise / Finance Head", description: "Legal/compliance heads in medium/large organizations handling internal audits and multi-entity filings" },
 ];
 
+const legalRegions = [
+    { value: 'India', label: 'India' },
+    { value: 'USA', label: 'United States' },
+    { value: 'UK', label: 'United Kingdom' },
+    { value: 'Singapore', label: 'Singapore' },
+    { value: 'Other', label: 'Other' },
+]
+
 export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: { onAddCompanyClick: () => void; onEditCompanyClick: (company: Company) => void }) {
   const { user, userProfile, updateUserProfile } = useAuth();
   const { toast } = useToast();
@@ -55,6 +65,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
         name: userProfile?.name || "",
         phone: userProfile?.phone || "",
         role: userProfile?.role || "Founder",
+        legalRegion: userProfile?.legalRegion || "India",
     },
   });
 
@@ -65,10 +76,10 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
         title: "Success!",
         description: "Your settings have been updated.",
       });
-      if (data.role !== userProfile?.role) {
+      if (data.role !== userProfile?.role || data.legalRegion !== userProfile?.legalRegion) {
         toast({
-            title: "Role updated",
-            description: "Some navigation items may have changed. Please refresh to see them.",
+            title: "Settings updated",
+            description: "Some navigation items or AI features may have changed. Please refresh to see them.",
         })
       }
     } catch (error) {
@@ -161,6 +172,35 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
                 </div>
               )}
           />
+           <Controller
+              name="legalRegion"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
+                    <div className="space-y-1">
+                        <Label>Legal Region</Label>
+                        <p className="text-xs text-muted-foreground">This sets the context for all AI and compliance features.</p>
+                    </div>
+                    <div className="md:col-span-2">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select country..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {legalRegions.map(region => (
+                                    <SelectItem key={region.value} value={region.value}>
+                                        <div className="flex items-center gap-2">
+                                           <span>{region.label}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
+                    </div>
+                </div>
+              )}
+          />
         </CardContent>
          <CardFooter className="flex justify-end border-t pt-6">
             <Button type="submit" disabled={isSubmitting}>
@@ -189,7 +229,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
                     <div key={company.id} className="p-4 border rounded-lg flex items-center justify-between interactive-lift">
                         <div>
                             <p className="font-semibold">{company.name}</p>
-                            <p className="text-sm text-muted-foreground">{company.type}</p>
+                            <p className="text-sm text-muted-foreground">{company.type} - {company.legalRegion}</p>
                         </div>
                         <div className="flex items-center gap-2">
                            {company.id === userProfile.activeCompanyId && <Badge>Active</Badge>}

@@ -30,6 +30,7 @@ import {
   Users,
   Zap,
   Archive,
+  Globe,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -186,12 +187,19 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     </Link>
                 </div>
 
-                {activeCompany && (
-                    <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                        <Building className="w-4 h-4"/>
-                        <span>{activeCompany.name}</span>
-                    </div>
-                )}
+                <div className="hidden md:flex items-center gap-4">
+                  {activeCompany && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Building className="w-4 h-4"/>
+                          <span>{activeCompany.name}</span>
+                      </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground border-l pl-4">
+                      <Globe className="w-4 h-4"/>
+                      <span>{userProfile.legalRegion}</span>
+                  </div>
+                </div>
+
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-4">

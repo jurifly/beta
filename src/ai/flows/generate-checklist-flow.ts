@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow for generating due diligence checklists.
@@ -8,6 +9,7 @@ import {z} from 'genkit';
 
 const GenerateChecklistInputSchema = z.object({
   dealType: z.string().describe('The type of deal or audit, e.g., "Seed Funding", "Series A", "Merger & Acquisition".'),
+  legalRegion: z.string().describe('The country/legal region for the company, e.g., "India", "USA".'),
 });
 export type GenerateChecklistInput = z.infer<typeof GenerateChecklistInputSchema>;
 
@@ -30,11 +32,11 @@ const prompt = ai.definePrompt({
   name: 'generateChecklistPrompt',
   input: {schema: GenerateChecklistInputSchema},
   output: {schema: GenerateChecklistOutputSchema},
-  prompt: `You are an expert AI assistant for legal and financial due diligence. A user will ask for a due diligence checklist for a specific deal or audit type.
+  prompt: `You are an expert AI assistant for legal and financial due diligence. A user will ask for a due diligence checklist for a specific deal or audit type for a company based in {{legalRegion}}.
 
-Generate a comprehensive due diligence checklist based on the user's request: "{{dealType}}".
+Generate a comprehensive due diligence checklist based on the user's request: "{{dealType}}" for a company in {{legalRegion}}.
 
-Your response should be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant due diligence category (e.g., "Corporate Records", "Financial Information", "Intellectual Property", "Material Contracts", "Employee Matters", "Litigation"). Be thorough and professional.
+Your response should be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant due diligence category (e.g., "Corporate Records", "Financial Information", "Intellectual Property", "Material Contracts", "Employee Matters", "Litigation"). The checklist items should be relevant to the legal and business environment of {{legalRegion}}. Be thorough and professional.
 `,
 });
 

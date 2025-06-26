@@ -1,9 +1,10 @@
+
 "use client"
 
 import { useAuth } from "@/hooks/auth";
 import { useRouter, redirect, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,14 +14,24 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  legalRegion: z.string({ required_error: "Please select a region." }).min(1, "Please select a region."),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
+
+const legalRegions = [
+    { value: 'India', label: 'India' },
+    { value: 'USA', label: 'United States' },
+    { value: 'UK', label: 'United Kingdom' },
+    { value: 'Singapore', label: 'Singapore' },
+    { value: 'Other', label: 'Other' },
+]
 
 export default function RegisterPage() {
   const { user, signUpWithEmailAndPassword, loading } = useAuth();
@@ -28,7 +39,7 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, control } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
@@ -48,7 +59,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const refId = localStorage.getItem('referralId');
-      await signUpWithEmailAndPassword(data.email, data.password, data.name, refId || undefined);
+      await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, refId || undefined);
       localStorage.removeItem('referralId'); // Clear after use
       router.push('/dashboard');
     } catch (error: any) {
@@ -92,6 +103,26 @@ export default function RegisterPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register("password")} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+            </div>
+             <div className="space-y-1">
+              <Label>Legal Region</Label>
+                <Controller
+                    name="legalRegion"
+                    control={control}
+                    render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select your country..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {legalRegions.map(region => (
+                                    <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                />
+              {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

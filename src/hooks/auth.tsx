@@ -21,7 +21,7 @@ export interface AuthContextType {
   addCredits: (amount: number) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
-  signUpWithEmailAndPassword: (email: string, pass: string, name: string, refId?: string) => Promise<void>;
+  signUpWithEmailAndPassword: (email: string, pass: string, name: string, legalRegion: string, refId?: string) => Promise<void>;
   signOut: () => Promise<void>;
   saveVaultItems: (items: VaultItem[]) => Promise<void>;
   getVaultItems: () => Promise<VaultItem[]>;
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
-  const createNewUserProfile = useCallback(async (firebaseUser: User, refId?: string): Promise<UserProfile> => {
+  const createNewUserProfile = useCallback(async (firebaseUser: User, legalRegion: string, refId?: string): Promise<UserProfile> => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const newExpiry = add(new Date(), { days: 30 });
     const newProfile: UserProfile = {
@@ -56,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       companies: [],
       activeCompanyId: '',
       credits: 90,
+      legalRegion: legalRegion || 'India',
     };
     
     // Handle referral
@@ -168,7 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profile = userDoc.data() as UserProfile;
       setUserProfile(profile);
     } else {
-      const newProfile = await createNewUserProfile(firebaseUser);
+      const newProfile = await createNewUserProfile(firebaseUser, 'India');
       setUserProfile(newProfile);
     }
   }, [createNewUserProfile]);
@@ -253,7 +254,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [user]);
   
-  const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, refId?: string) => {
+  const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, legalRegion: string, refId?: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
         await updateFirebaseProfile(userCredential.user, { displayName: name });
@@ -262,7 +263,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: userCredential.user.email,
             displayName: name,
         };
-        await createNewUserProfile(userData, refId);
+        await createNewUserProfile(userData, legalRegion, refId);
       }
   };
 

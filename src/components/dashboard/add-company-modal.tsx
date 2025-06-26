@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { fetchCompanyDetailsFromCIN } from "@/app/dashboard/settings/actions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const companyTypes = [
     { id: "pvt_ltd", name: "Private Limited Company" },
@@ -31,34 +32,46 @@ const companyTypes = [
     { id: "opc", name: "One Person Company" },
     { id: "sole_prop", name: "Sole Proprietorship" },
     { id: "partnership", name: "Partnership Firm" },
+    { id: "llc", name: "Limited Liability Company (LLC)" },
+    { id: "c_corp", name: "C Corporation" },
+    { id: "s_corp", name: "S Corporation" },
 ];
 
 const companySchema = z.object({
   name: z.string().min(2, "Company name is required."),
   type: z.string().min(1, "Please select a company type."),
+  legalRegion: z.string().min(1, "Legal region is required."),
   cin: z.string().optional(),
-  pan: z.string().length(10, "PAN must be 10 characters."),
-  gstin: z.string().length(15, "GSTIN must be 15 characters.").optional().or(z.literal('')),
+  pan: z.string().length(10, "PAN/Tax ID must be 10 characters.").or(z.string().min(1, "PAN/Tax ID is required.")),
+  gstin: z.string().length(15, "GSTIN/VAT ID must be 15 characters.").optional().or(z.literal('')),
   incorporationDate: z.string().min(1, "Incorporation date is required."),
   sector: z.string().min(1, "Industry / Sector is required."),
   location: z.string().min(1, "Location is required."),
 }).refine((data) => {
     const cinRequiredTypes = ["Private Limited Company", "One Person Company", "Limited Liability Partnership"];
-    if (cinRequiredTypes.includes(data.type)) {
+    if (data.legalRegion === 'India' && cinRequiredTypes.includes(data.type)) {
         return data.cin && data.cin.length === 21;
     }
     return true;
 }, {
-    message: "A 21-character CIN is required for this company type.",
+    message: "A 21-character CIN is required for this company type in India.",
     path: ["cin"],
 });
 
 type FormData = z.infer<typeof companySchema>;
 
+const legalRegions = [
+    { value: 'India', label: 'India' },
+    { value: 'USA', label: 'United States' },
+    { value: 'UK', label: 'United Kingdom' },
+    { value: 'Singapore', label: 'Singapore' },
+    { value: 'Other', label: 'Other' },
+]
+
 const STEPS = [
-  { id: 1, name: "Company Type", fields: ["type", "name"] as const },
+  { id: 1, name: "Company Details", fields: ["type", "name", "legalRegion"] as const },
   { id: 2, name: "Identification", fields: ["cin", "pan", "gstin"] as const },
-  { id: 3, name: "Details", fields: ["incorporationDate", "sector", "location"] as const },
+  { id: 3, name: "Profile", fields: ["incorporationDate", "sector", "location"] as const },
 ];
 
 interface AddCompanyModalProps {
@@ -77,13 +90,14 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
   const { control, handleSubmit, trigger, formState: { errors, isSubmitting }, reset, getValues, setValue } = useForm<FormData>({
     resolver: zodResolver(companySchema),
     defaultValues: {
-      name: "", type: "", cin: "", pan: "", gstin: "",
+      name: "", type: "", cin: "", pan: "", gstin: "", legalRegion: userProfile?.legalRegion || 'India',
       incorporationDate: "", sector: "", location: "",
     }
   });
   
   const cinValue = useWatch({ control, name: 'cin' });
   const selectedCompanyType = useWatch({ control, name: 'type' });
+  const selectedRegion = useWatch({ control, name: 'legalRegion' });
 
   useEffect(() => {
     if (isOpen) {
@@ -91,13 +105,13 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
         reset(companyToEdit);
       } else {
         reset({
-          name: "", type: "", cin: "", pan: "", gstin: "",
+          name: "", type: "", cin: "", pan: "", gstin: "", legalRegion: userProfile?.legalRegion || 'India',
           incorporationDate: "", sector: "", location: "",
         });
       }
       setStep(1);
     }
-  }, [isOpen, companyToEdit, isEditMode, reset]);
+  }, [isOpen, companyToEdit, isEditMode, reset, userProfile]);
 
 
   const nextStep = async () => {
@@ -177,6 +191,10 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
   };
 
   const progressValue = (step / STEPS.length) * 100;
+  
+  const panLabel = selectedRegion === 'India' ? 'Company PAN' : 'Tax ID / EIN';
+  const gstinLabel = selectedRegion === 'India' ? 'GSTIN (Optional)' : 'VAT ID (Optional)';
+
 
   const renderAddForm = () => (
     <>
@@ -203,12 +221,26 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
               {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
             </div>
           )} />
+          <Controller
+                name="legalRegion"
+                control={control}
+                render={({ field }) => (
+                <div className="space-y-2">
+                    <Label>Legal Region</Label>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger><SelectValue placeholder="Select country..." /></SelectTrigger>
+                        <SelectContent>{legalRegions.map(region => <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
+                </div>
+              )}
+          />
         </div>
       )}
       
       {step === 2 && (
         <div className="space-y-4">
-           <Controller name="cin" control={control} render={({ field }) => (
+           {selectedRegion === 'India' && <Controller name="cin" control={control} render={({ field }) => (
               <div className="space-y-2">
                   <Label htmlFor="cin" className="flex items-center gap-2">
                     CIN (Corporate Identification Number)
@@ -236,10 +268,10 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Bot className="w-3.5 h-3.5" /> Enter a valid CIN and let our AI auto-fill the details for you.</p>
                   {errors.cin && <p className="text-sm text-destructive">{errors.cin.message}</p>}
               </div>
-           )}/>
+           )}/>}
             <Controller name="pan" control={control} render={({ field }) => (
               <div className="space-y-2">
-                  <Label htmlFor="pan">Company PAN</Label>
+                  <Label htmlFor="pan">{panLabel}</Label>
                   <Input id="pan" {...field} />
                   {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
               </div>
@@ -247,13 +279,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
             <Controller name="gstin" control={control} render={({ field }) => (
               <div className="space-y-2">
                   <Label htmlFor="gstin" className="flex items-center gap-2">
-                    GSTIN (Optional)
-                    <TooltipProvider>
-                      <Tooltip>
-                          <TooltipTrigger asChild><button type="button"><Info className="w-4 h-4 text-muted-foreground"/></button></TooltipTrigger>
-                          <TooltipContent>Your 15-digit Goods and Services Tax Identification Number.</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    {gstinLabel}
                   </Label>
                   <Input id="gstin" {...field} />
                   {errors.gstin && <p className="text-sm text-destructive">{errors.gstin.message}</p>}
@@ -280,7 +306,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
               )}/>
                <Controller name="location" control={control} render={({ field }) => (
                   <div className="space-y-2">
-                      <Label htmlFor="location">Registered Office (City, State)</Label>
+                      <Label htmlFor="location">Registered Office (City, State/Country)</Label>
                       <Input id="location" placeholder="e.g. Mumbai, Maharashtra" {...field} />
                       {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
                   </div>
@@ -312,23 +338,32 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
           </RadioGroup>
         </div>
       )}/>
-      <Controller name="cin" control={control} render={({ field }) => (
+      <Controller name="legalRegion" control={control} render={({ field }) => (
+        <div className="space-y-2">
+          <Label>Legal Region</Label>
+          <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{legalRegions.map(region => <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      )}/>
+      {selectedRegion === 'India' && <Controller name="cin" control={control} render={({ field }) => (
         <div className="space-y-2">
           <Label htmlFor="cin">CIN</Label>
           <Input id="cin" {...field} />
           {errors.cin && <p className="text-sm text-destructive">{errors.cin.message}</p>}
         </div>
-      )}/>
+      )}/>}
       <Controller name="pan" control={control} render={({ field }) => (
         <div className="space-y-2">
-          <Label htmlFor="pan">PAN</Label>
+          <Label htmlFor="pan">{panLabel}</Label>
           <Input id="pan" {...field} />
           {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
         </div>
       )}/>
       <Controller name="gstin" control={control} render={({ field }) => (
         <div className="space-y-2">
-          <Label htmlFor="gstin">GSTIN</Label>
+          <Label htmlFor="gstin">{gstinLabel}</Label>
           <Input id="gstin" {...field} />
           {errors.gstin && <p className="text-sm text-destructive">{errors.gstin.message}</p>}
         </div>

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI assistant flow for generating compliance checklists.
@@ -8,6 +9,7 @@ import {z} from 'genkit';
 
 const AssistantInputSchema = z.object({
   topic: z.string().describe('The topic or question for the AI assistant.'),
+  legalRegion: z.string().describe('The country/legal region for the query, e.g., "India", "USA".'),
 });
 export type AssistantInput = z.infer<typeof AssistantInputSchema>;
 
@@ -36,17 +38,17 @@ const prompt = ai.definePrompt({
   name: 'assistantPrompt',
   input: {schema: AssistantInputSchema},
   output: {schema: AssistantOutputSchema},
-  prompt: `You are an expert AI assistant specializing in Indian legal and compliance matters for businesses. It is crucial that your responses are based on the most current and up-to-date legal information available. Your tone should be professional, helpful, and conversational. Your purpose is to provide informational guidance, not to give definitive legal advice.
+  prompt: `You are an expert AI assistant specializing in legal and compliance matters for businesses in {{legalRegion}}. It is crucial that your responses are based on the most current and up-to-date legal information available for {{legalRegion}}. Your tone should be professional, helpful, and conversational. Your purpose is to provide informational guidance, not to give definitive legal advice.
 
 A user will ask a question about a specific topic: "{{topic}}".
 
-1.  **Provide a direct, conversational answer**: First, address the user's question directly in the \`response\` field. Explain the concepts clearly, referencing specific Indian laws or acts (e.g., Companies Act 2013, GST Act, Income Tax Act) where relevant to add credibility. Always frame your answer as informational guidance. For example, instead of saying "You must do X," say "Under the Companies Act 2013, companies are generally required to do X."
+1.  **Provide a direct, conversational answer**: First, address the user's question directly in the \`response\` field. Explain the concepts clearly, referencing specific laws or acts relevant to {{legalRegion}} (e.g., Companies Act 2013 for India, Delaware General Corporation Law for USA) where relevant to add credibility. Always frame your answer as informational guidance. For example, instead of saying "You must do X," say "Under the relevant companies act in {{legalRegion}}, companies are generally required to do X."
 
 2.  **Generate a checklist (if appropriate)**: If and only if the user's request explicitly asks for a checklist or would strongly benefit from one (e.g., "steps to register a company," "monthly compliance checklist"), generate a structured checklist in the \`checklist\` field. If a checklist is not relevant, do not include this field.
 
-For example, if the user asks "what if I don't file gst return", your \`response\` should explain the potential consequences like penalties and interest as per the GST Act. A checklist would not be appropriate, so you would omit that field.
+For example, if the user asks "what if I don't file a tax return", your \`response\` should explain the potential consequences like penalties and interest as per the tax laws of {{legalRegion}}. A checklist would not be appropriate, so you would omit that field.
 
-If the user asks for "monthly compliance for a private limited company", your \`response\` can be a brief introduction, and you should provide a detailed checklist in the \`checklist\` field, with tasks categorized appropriately.
+If the user asks for "monthly compliance for a private company", your \`response\` can be a brief introduction, and you should provide a detailed checklist in the \`checklist\` field, with tasks categorized appropriately for {{legalRegion}}.
 `,
 });
 
