@@ -279,6 +279,7 @@ const DataroomAudit = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const { toast } = useToast();
   const { pending } = useFormStatus();
+  const processedDataRef = useRef<RawChecklistOutput | null>(null);
   
   const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
 
@@ -289,8 +290,13 @@ const DataroomAudit = () => {
   useEffect(() => { try { const savedState = localStorage.getItem(checklistKey); if (savedState) setChecklistState(JSON.parse(savedState)); } catch (error) { console.error("Failed to parse checklist data from localStorage", error); localStorage.removeItem(checklistKey); } }, [checklistKey]);
   
   useEffect(() => {
-    if (serverState.error) toast({ variant: "destructive", title: "Checklist Generation Failed", description: serverState.error });
-    if (serverState.data) {
+    if (serverState.error) {
+        toast({ variant: "destructive", title: "Checklist Generation Failed", description: serverState.error });
+    }
+    
+    if (serverState.data && serverState.data !== processedDataRef.current) {
+      processedDataRef.current = serverState.data;
+      
       deductCredits(2);
       const rawData = serverState.data;
       const groupedData = rawData.checklist.reduce<ChecklistCategory[]>((acc, item) => { let category = acc.find(c => c.category === item.category); if (!category) { category = { category: item.category, items: [] }; acc.push(category); } category.items.push({ id: `${item.category.replace(/\s+/g, '-')}-${category.items.length}`, task: item.task, description: '', status: 'Pending' }); return acc; }, []);
@@ -547,8 +553,8 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                   <TabsList className="grid w-full grid-cols-4 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
-                      <TabsTrigger value="reply" disabled={!doc.replySuggestion}><MessageSquare/>Reply</TabsTrigger>
-                      <TabsTrigger value="reminder" disabled={!doc.reminder}><CalendarPlus/>Reminder</TabsTrigger>
+                      <TabsTrigger value="reply" ><MessageSquare/>Reply</TabsTrigger>
+                      <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
@@ -732,8 +738,8 @@ const RegulationWatcherTab = () => {
             toast({ variant: "destructive", title: "Update Failed", description: state.error });
             lastSuccessfulData.current = null; // Reset on error
         }
-        // Only deduct credits if we have new, valid data that we haven't processed before.
-        if (state.data && state.data !== lastSuccessfulData.current) {
+        
+        if (state.data && JSON.stringify(state.data) !== JSON.stringify(lastSuccessfulData.current)) {
             deductCredits(1);
             lastSuccessfulData.current = state.data;
         }
