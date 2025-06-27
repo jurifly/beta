@@ -48,7 +48,7 @@ import html2canvas from 'html2canvas';
 
 const TypewriterResponse = ({ text }: { text: string }) => {
     const displayText = useTypewriter(text, 10);
-    return <p className="whitespace-pre-wrap font-code text-sm text-card-foreground">{displayText}</p>;
+    return <ReactMarkdown className="prose dark:prose-invert max-w-none text-sm leading-relaxed">{displayText}</ReactMarkdown>;
 };
 
 const ChecklistResult = ({ checklist }: { checklist: AssistantOutput['checklist'] }) => {
@@ -159,7 +159,7 @@ const ChatAssistant = () => {
   ];
 
   return (
-    <div className={cn("flex flex-col bg-card border rounded-lg shadow-sm h-full max-h-[calc(100vh-14rem)] min-h-[calc(100vh-14rem)]")}>
+    <div className={cn("flex flex-col bg-card border rounded-lg shadow-sm h-full")}>
       <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
         {chatHistory.length === 0 && !isProcessing && (
             <div className="flex flex-col items-center justify-center text-center p-6 h-full">
@@ -168,24 +168,24 @@ const ChatAssistant = () => {
               </div>
               <h2 className="text-2xl font-bold mb-1">Your AI Legal Assistant</h2>
               <p className="text-muted-foreground mb-6">Ask a legal question or try a suggestion.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full max-w-3xl mb-4">
                 {suggestionPrompts.map((prompt) => (
                   <button
                     key={prompt.text}
                     onClick={prompt.action}
-                    className="p-4 border rounded-lg text-left hover:bg-muted transition-colors flex items-center gap-3 interactive-lift"
+                    className="p-3 md:p-4 border rounded-lg text-left hover:bg-muted transition-colors flex items-start sm:items-center gap-3 interactive-lift"
                   >
-                    <prompt.icon className="w-5 h-5 text-muted-foreground" />
-                    <span className="font-medium text-sm">{prompt.text}</span>
+                    <prompt.icon className="w-5 h-5 text-muted-foreground shrink-0 mt-1 sm:mt-0" />
+                    <span className="font-medium text-sm break-words">{prompt.text}</span>
                   </button>
                 ))}
               </div>
             </div>
         )}
 
-        <div className="p-6 space-y-8">
+        <div className="p-4 md:p-6 space-y-8">
             {chatHistory.map((message, index) => (
-            <div key={index} className={cn('flex items-start gap-4', message.role === 'user' ? 'justify-end' : '')}>
+            <div key={index} className={cn('flex items-start gap-3 md:gap-4', message.role === 'user' ? 'justify-end' : '')}>
                 {message.role === 'assistant' && (
                 <Avatar className="w-8 h-8 border">
                     <div className="w-full h-full flex items-center justify-center bg-primary/10 rounded-full">
@@ -194,9 +194,9 @@ const ChatAssistant = () => {
                 </Avatar>
                 )}
                 
-                <div className={cn(message.role === 'user' ? 'bg-primary text-primary-foreground rounded-xl p-4 max-w-2xl' : 'w-full max-w-4xl')}>
+                <div className={cn(message.role === 'user' ? 'bg-primary text-primary-foreground rounded-xl p-3 md:p-4 max-w-[85%] md:max-w-2xl' : 'w-full max-w-full md:max-w-4xl')}>
                   {typeof message.content === 'string' ? (
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
                   ) : (
                     <div className="flex flex-col gap-4">
                       <TypewriterResponse text={message.content.response} />
@@ -550,7 +550,7 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
           </AccordionTrigger>
           <AccordionContent>
               <Tabs defaultValue="summary" className="w-full px-4 pb-4">
-                  <TabsList className="grid w-full grid-cols-4 mb-4">
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
                       <TabsTrigger value="reply" ><MessageSquare/>Reply</TabsTrigger>
@@ -894,12 +894,12 @@ export default function AiToolkitPage() {
     const tab = searchParams.get('tab') || 'assistant';
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
             <div>
                 <h1 className="text-3xl font-bold font-headline">AI Toolkit</h1>
                 <p className="text-muted-foreground">Your unified AI workspace for legal and compliance tasks.</p>
             </div>
-            <Tabs defaultValue={tab} className="w-full">
+            <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
                 <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
                     <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
                     <TabsTrigger value="generator" className="interactive-lift"><FilePenLine className="mr-2"/>Generator</TabsTrigger>
@@ -908,7 +908,7 @@ export default function AiToolkitPage() {
                     <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
                     <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
                 </TabsList>
-                <TabsContent value="assistant" className="mt-6"><ChatAssistant /></TabsContent>
+                <TabsContent value="assistant" className="mt-6 md:flex-1 md:min-h-0"><ChatAssistant /></TabsContent>
                 <TabsContent value="generator" className="mt-6"><DocumentGeneratorTab /></TabsContent>
                 <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
                 <TabsContent value="analyzer" className="mt-6"><DocumentIntelligenceTab /></TabsContent>

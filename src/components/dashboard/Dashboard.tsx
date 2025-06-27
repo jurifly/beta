@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -24,11 +24,7 @@ import {
   MailWarning,
   ClipboardList,
   Target,
-  Clock,
-  Coffee,
-  Receipt,
-  Ticket,
-  Loader2,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +35,6 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
@@ -86,10 +81,10 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
     <Card className="interactive-lift col-span-1 lg:col-span-2 hover:border-primary/50 transition-colors">
         <Link href={href} className="block h-full">
             <CardHeader>
-                <CardTitle className="flex items-center gap-3">
+                <CardTitle className="flex items-center gap-3 break-words">
                     {icon} {title}
                 </CardTitle>
-                <CardDescription>{description}</CardDescription>
+                <CardDescription className="break-words">{description}</CardDescription>
             </CardHeader>
             <CardFooter>
                  <Button variant="link" className="p-0 h-auto">
@@ -176,7 +171,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 <Card className="bg-gradient-to-r from-primary/10 via-card to-card border-primary/20 p-6 flex flex-col md:flex-row items-center justify-between gap-6 interactive-lift">
                     <div>
                         <CardTitle className="flex items-center gap-3 font-headline"><Network/> Setup Assistant</CardTitle>
-                        <CardDescription className="mt-2 max-w-2xl">Get a step-by-step AI-guided roadmap for registering your company, getting your GST number, and more.</CardDescription>
+                        <CardDescription className="mt-2 max-w-2xl break-words">Get a step-by-step AI-guided roadmap for registering your company, getting your GST number, and more.</CardDescription>
                     </div>
                     <Button asChild size="lg" className="shrink-0 w-full md:w-auto">
                         <Link href="/dashboard/business-setup">Start Setup <ArrowRight className="ml-2 h-4 w-4"/></Link>
@@ -306,89 +301,63 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
 }
 
 function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
-  const { toast } = useToast();
-  const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
-
   const stats = [
-    { title: "Risk Score", value: "Low", subtext: "All Good", icon: <ShieldCheck />, color: "text-green-500", href: "/dashboard/analytics" },
-    { title: "Upcoming", value: "0", subtext: "Filings", icon: <Calendar />, color: "text-orange-500", href: "/dashboard/calendar" },
-    { title: "Generated", value: "0", subtext: "Documents", icon: <FileText />, color: "text-blue-500", href: "/dashboard/ai-toolkit" },
-    { title: "Alerts", value: "0", subtext: "Overdue", icon: <AlertTriangle />, color: "text-red-500", href: "/dashboard/calendar" },
+    { title: "Risk Score", value: "Low", icon: <ShieldCheck />, color: "text-green-500", href: "/dashboard/analytics" },
+    { title: "Upcoming", value: "0", icon: <Calendar />, color: "text-orange-500", href: "/dashboard/calendar" },
+    { title: "Generated", value: "0", icon: <FileText />, color: "text-blue-500", href: "/dashboard/ai-toolkit?tab=generator" },
+    { title: "Alerts", value: "0", icon: <AlertTriangle />, color: "text-red-500", href: "/dashboard/calendar" },
   ];
 
   const actions = [
-    { title: "Ask AI", icon: <Sparkles />, href: "/dashboard/ai-toolkit", color: "bg-blue-100 text-blue-600" },
-    { title: "New Doc", icon: <FileText />, href: "/dashboard/documents", color: "bg-green-100 text-green-600" },
-    { title: "Calendar", icon: <Calendar />, href: "/dashboard/calendar", color: "bg-purple-100 text-purple-600" },
-    { title: "Analyze", icon: <FileScan />, href: "/dashboard/ai-toolkit", color: "bg-orange-100 text-orange-600" },
+    { title: "Ask AI Assistant", icon: <Sparkles />, href: "/dashboard/ai-toolkit?tab=assistant", color: "bg-blue-100 text-blue-700" },
+    { title: "Analyze Document", icon: <FileScan />, href: "/dashboard/ai-toolkit?tab=analyzer", color: "bg-orange-100 text-orange-700" },
+    { title: "Dataroom Audit", icon: <GanttChartSquare />, href: "/dashboard/ai-toolkit?tab=audit", color: "bg-purple-100 text-purple-700" },
+    { title: "Upload to Vault", icon: <Upload />, href: "/dashboard/documents", color: "bg-green-100 text-green-700" },
   ];
 
   return (
     <div className="space-y-6">
-      <Card className="bg-primary text-primary-foreground p-4 shadow-lg interactive-lift">
-        <h2 className="text-lg font-semibold">Welcome, {userProfile.name.split(' ')[0]}!</h2>
-        <p className="text-sm text-primary-foreground/80 mt-1">Here's your legal and compliance overview.</p>
-        <Button variant="secondary" className="mt-4 h-9" onClick={() => toast({title: "Feature coming soon!"})}>View Guide</Button>
+      <Card className="bg-primary text-primary-foreground p-6 shadow-lg interactive-lift">
+        <h2 className="text-xl font-semibold">Welcome, {userProfile.name.split(' ')[0]}!</h2>
+        <p className="text-sm text-primary-foreground/80 mt-1">Your legal and compliance overview.</p>
       </Card>
 
       <div className="grid grid-cols-2 gap-4">
         {stats.map(stat => (
           <Link href={stat.href} key={stat.title} className="block">
-            <Card className="interactive-lift h-full">
-              <CardContent className="p-4">
+            <Card className="interactive-lift h-full text-center">
+              <CardContent className="p-3 flex flex-col items-center justify-center">
+                <div className={cn("mb-2 h-10 w-10 flex items-center justify-center rounded-full", stat.color.replace('text-', 'bg-') + '/20')}>
+                    {React.cloneElement(stat.icon, { className: cn("h-5 w-5", stat.color) })}
+                </div>
+                <p className="text-xl font-bold">{stat.value}</p>
                 <p className="text-xs text-muted-foreground">{stat.title}</p>
-                <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.subtext}</p>
               </CardContent>
             </Card>
           </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-4 gap-4 text-center">
-        {actions.map(action => (
-          <Link href={action.href} key={action.title} className="flex flex-col items-center gap-2 interactive-lift p-2 rounded-lg">
-            <div className={cn("w-14 h-14 rounded-full flex items-center justify-center", action.color)}>
-              {action.icon}
-            </div>
-            <span className="text-xs font-medium">{action.title}</span>
-          </Link>
-        ))}
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Quick Actions</h3>
+        <div className="space-y-3">
+            {actions.map(action => (
+                <Link href={action.href} key={action.title}>
+                    <Card className="interactive-lift hover:border-primary/50">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", action.color)}>
+                                    {React.cloneElement(action.icon, { className: "h-5 w-5"})}
+                                </div>
+                                <span className="font-medium text-sm">{action.title}</span>
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-muted-foreground" />
+                        </CardContent>
+                    </Card>
+                </Link>
+            ))}
+        </div>
       </div>
-
-      <Card className="interactive-lift">
-        <CardHeader>
-          <CardTitle className="text-base">Company Status</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Company Online</p>
-              <p className="text-xs text-muted-foreground">Accepting tasks</p>
-            </div>
-            <Switch defaultChecked onCheckedChange={() => toast({title: "This is a demo toggle."})}/>
-          </div>
-           <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Email Alerts</p>
-              <p className="text-xs text-muted-foreground">For deadlines</p>
-            </div>
-            <Switch onCheckedChange={() => toast({title: "This is a demo toggle."})}/>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="interactive-lift">
-        <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-            <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => toast({title: "Feature coming soon!"})}>View All</Button>
-        </CardHeader>
-        <CardContent>
-            <div className="text-center text-muted-foreground py-8">
-                <p>No recent activity</p>
-            </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -452,7 +421,6 @@ export default function Dashboard() {
       </div>
 
       <div className="block md:hidden">
-        <h1 className="text-2xl font-bold tracking-tight mb-4">Dashboard</h1>
         {userProfile && <MobileDashboardView userProfile={userProfile} />}
       </div>
     </>

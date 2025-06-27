@@ -515,16 +515,18 @@ const MobileBottomNav = () => {
     <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-50">
       <div className="grid h-full grid-cols-5">
         {navItems.map(item => {
+           const isActive = item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href);
            return (
-             <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center relative h-full">
-              <div className={cn("flex flex-col items-center justify-center gap-1 p-2 rounded-md w-full h-full relative transition-transform active:scale-90", 
-                  pathname.startsWith(item.href) ? "text-primary" : "text-muted-foreground"
+             <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center h-full p-1 text-center">
+              <div className={cn(
+                  "flex flex-col items-center justify-center gap-1 w-full h-full rounded-md transition-colors active:scale-90", 
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}>
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium break-all">{item.label}</span>
-                {pathname.startsWith(item.href) && (
-                  <div className="absolute top-0.5 h-1 w-8 rounded-full bg-primary" />
+                {isActive && (
+                  <div className="absolute top-0 h-1 w-8 rounded-b-full bg-primary" />
                 )}
+                <item.icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium leading-tight break-all">{item.label}</span>
               </div>
              </Link>
            )
