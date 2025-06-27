@@ -45,7 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
@@ -434,6 +434,7 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="flex flex-col p-0 w-full max-w-[300px]">
+           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
            <div className="flex h-14 items-center border-b px-4">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary" onClick={handleLinkClick}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
@@ -535,3 +536,5 @@ const MobileBottomNav = () => {
     </div>
   )
 }
+
+    
