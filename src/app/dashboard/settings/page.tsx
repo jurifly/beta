@@ -13,7 +13,7 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import type { Company } from "@/lib/types";
+import { planHierarchy, type Company } from "@/lib/types";
 
 export default function SettingsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -23,9 +23,11 @@ export default function SettingsPage() {
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-
-  const companyLimit = userProfile.plan === 'Starter' || userProfile.plan === 'Free' ? 1 : userProfile.plan === 'Founder' ? 5 : Infinity;
+  
+  const userPlanLevel = planHierarchy[userProfile.plan];
+  const companyLimit = userPlanLevel < 1 ? 1 : userPlanLevel === 1 ? 5 : Infinity;
   const canAddCompany = userProfile.companies.length < companyLimit;
+
 
   const handleAddCompanyClick = () => {
     if (canAddCompany) {
