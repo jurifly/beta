@@ -85,19 +85,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
     if (!user) return;
-    const notification: Omit<AppNotification, 'id'> = {
-        ...notificationData,
-        createdAt: new Date().toISOString(),
-        read: false,
-    };
-    // Check if a similar unread notification already exists
-    const similarNotification = notifications.find(n => n.title === notification.title && !n.read);
-    if(similarNotification) return;
-
     const notificationsRef = collection(db, `users/${user.uid}/notifications`);
+
+    // Check for existing similar unread notification in Firestore to prevent duplicates
+    const q = query(notificationsRef, where('title', '==', notificationData.title), where('read', '==', false));
+    const existing = await getDocs(q);
+    if (!existing.empty) {
+      return; // Don't add duplicate
+    }
+
+    const notification: Omit<AppNotification, 'id'> = {
+      ...notificationData,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
     const newDocRef = await addDoc(notificationsRef, notification);
-    setNotifications(prev => [{...notification, id: newDocRef.id}, ...prev]);
-  }, [user, notifications]);
+    setNotifications(prev => [{ ...notification, id: newDocRef.id }, ...prev]);
+  }, [user]);
 
   const processPendingPurchases = useCallback(async (uid: string) => {
     const userDocRef = doc(db, 'users', uid);
