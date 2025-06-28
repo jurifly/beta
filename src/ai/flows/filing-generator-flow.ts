@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   name: 'filingGeneratorPrompt',
   input: {schema: FilingGeneratorInputSchema},
   output: {schema: FilingGeneratorOutputSchema},
-  prompt: `You are an expert compliance officer for {{legalRegion}}. Your task is to generate a realistic and plausible list of 5-7 key compliance filings for a company, considering its lifecycle and jurisdiction.
+  prompt: `You are an expert compliance officer for {{legalRegion}}. Your task is to generate a realistic and actionable list of 5-7 key compliance filings for a company.
 
 Reference Current Date: {{currentDate}}
 
@@ -44,15 +44,26 @@ Company Details:
 - Incorporation Date: {{incorporationDate}}
 - Legal Region: {{legalRegion}}
 
-Based on the company's details and the current date, generate a list of upcoming, recently overdue, and recently completed filings.
+Based on the company's details, generate a list of compliance tasks. Your primary focus is on what the user needs to do *now* and in the near future.
 
 Instructions:
-1.  **Lifecycle Awareness**: The filings must be relevant to the company's age. For a newly incorporated company, prioritize initial filings. For an older company, include annual filings.
-2.  **Jurisdiction Relevance**: Filings MUST be relevant to the company type and legal region. For example, a Pvt Ltd in India has ROC filings, while an LLC in the USA has annual reports. Tax filings (like GST in India or Sales Tax in the US) are common.
-3.  **Realistic Due Dates**: The due dates MUST be realistic. An annual filing cannot be due a month after incorporation. Monthly/quarterly filings are more likely for new companies.
-4.  **Status Accuracy**: The 'status' for each filing must be correctly set relative to the provided 'currentDate'.
-5.  **Data Diversity**: Generate a mix of statuses (upcoming, overdue, completed) to make the data look realistic for a dashboard.
-6.  **Date Formatting**: Dates must be in YYYY-MM-DD format.
+1.  **Focus on Actionable Timeline**: Generate filings that are due within the following timeframe:
+    - Recently overdue (within the last 2 months from the current date).
+    - Due in the current month.
+    - Upcoming in the next 3 months.
+    This should be the bulk of your response.
+
+2.  **Include Initial Setup Tasks**: For newly incorporated companies (within 3 months of incorporation), ALWAYS include critical one-time setup tasks like "Open Company Bank Account", "Apply for GSTIN", and "Shops & Establishment Act Registration", even if they don't have a specific deadline. Set their due dates within a reasonable timeframe from the incorporation date.
+
+3.  **Lifecycle Awareness**: Other filings must be relevant to the company's age. For a newly incorporated company, prioritize initial filings. For an older company, include annual filings that fall within the specified timeline.
+
+4.  **Jurisdiction Relevance**: Filings MUST be relevant to the company type and legal region (e.g., ROC filings for India, Annual Reports for USA).
+
+5.  **Status Accuracy**: The 'status' for each filing must be correctly set to 'overdue', 'upcoming', or 'completed' based on the 'date' relative to the 'currentDate'. A task should only be 'completed' if its due date is in the past.
+
+6.  **Prioritize Upcoming Tasks**: Ensure the list is not just historical. The majority of the items should be 'upcoming' to provide a forward-looking checklist.
+
+7.  **Date Formatting**: Dates must be in YYYY-MM-DD format.
 
 Return the response in the specified JSON format.
 `,
@@ -68,6 +79,14 @@ const filingGeneratorFlow = ai.defineFlow(
     const {output} = await prompt(input);
     if (!output) {
         throw new Error("The AI failed to generate a list of filings.");
+    }
+    // If the AI fails to generate filings, return some generic ones.
+    if (output.filings.length === 0) {
+      output.filings.push(
+        { date: format(new Date(), 'yyyy-MM-dd'), title: 'Open Company Bank Account', type: 'Other Task', status: 'upcoming' },
+        { date: format(new Date(), 'yyyy-MM-dd'), title: 'Apply for GST Registration', type: 'Tax Filing', status: 'upcoming' },
+        { date: format(new Date(), 'yyyy-MM-dd'), title: 'Finalize Founders Agreement', type: 'Corporate Filing', status: 'upcoming' },
+      )
     }
     return output;
   }
