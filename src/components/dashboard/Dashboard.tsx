@@ -137,74 +137,28 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     currentDate: currentDate,
                     legalRegion: activeCompany.legalRegion,
                 });
+                
+                let processedFilings = response.filings;
+                
+                // Smart GST Logic based on Company Profile
+                const hasGst = activeCompany.gstin && activeCompany.gstin.trim().length > 0;
+                if (hasGst) {
+                    // If company has GSTIN, remove any task asking to apply for it.
+                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().includes('gst registration'));
+                } else {
+                    // If no GSTIN, remove all GSTR filing tasks.
+                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
+                }
 
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
-                let processedFilings = response.filings.slice();
-                const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
-
-                // --- Smart GST Logic ---
-                const hasGst = activeCompany.gstin && activeCompany.gstin.trim().length > 0;
-                if (hasGst) {
-                    // If company has GSTIN, remove any task asking to apply for it.
-                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().includes('apply for gst'));
-                } else {
-                    // If no GSTIN, remove all GSTR filing tasks.
-                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
-                    // And ensure a task to apply for GST exists.
-                    const hasApplyGstTask = processedFilings.some(f => f.title.toLowerCase().includes('apply for gst'));
-                    if (!hasApplyGstTask) {
-                        processedFilings.unshift({
-                            date: format(addDays(incDate, 30), 'yyyy-MM-dd'),
-                            title: 'Apply for GST Registration',
-                            type: 'Tax Filing',
-                            status: 'upcoming',
-                        });
-                    }
-                }
-
-                // --- Hard-coded Critical Filings Logic ---
-                if (activeCompany.legalRegion === 'India') {
-                    // 1. Filter out any incorrect INC-20A from AI, then add our correct one.
-                    processedFilings = processedFilings.filter(f => 
-                        !f.title.toLowerCase().includes('inc-20a') && 
-                        !f.title.toLowerCase().includes('commencement of business')
-                    );
-                    processedFilings.unshift({
-                        date: format(addDays(incDate, 180), 'yyyy-MM-dd'),
-                        title: 'File for Commencement of Business (INC-20A)',
-                        type: 'Corporate Filing',
-                        status: 'upcoming',
-                    });
-                }
-                
-                // --- Map to checklist items and apply hard-coded date overrides ---
-                const checklistItems = processedFilings.map((filing) => {
-                    let finalDueDate = filing.date;
-                    const titleLower = filing.title.toLowerCase();
-
-                    // Hard-coded overrides for critical initial filings for accuracy
-                    if (activeCompany.legalRegion === 'India') {
-                      if (titleLower.includes('first board meeting')) {
-                          finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
-                      } else if (titleLower.includes('appointment of first auditor')) {
-                          finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
-                      } else if (titleLower.includes('commencement of business') || titleLower.includes('inc-20a')) {
-                          finalDueDate = format(addDays(incDate, 180), 'yyyy-MM-dd');
-                      }
-                    }
-                    if (titleLower.includes('open company bank account')) {
-                        finalDueDate = format(addMonths(incDate, 6), 'yyyy-MM-dd');
-                    }
-                    
-                    return {
-                        id: filing.title,
-                        text: filing.title,
-                        dueDate: finalDueDate,
-                        completed: savedStatuses[filing.title] ?? false,
-                    }
-                });
+                const checklistItems = processedFilings.map((filing) => ({
+                    id: filing.title,
+                    text: filing.title,
+                    dueDate: filing.date,
+                    completed: savedStatuses[filing.title] ?? false,
+                }));
 
                 const today = startOfToday();
 
@@ -223,10 +177,8 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     return aDueDate.getTime() - bDueDate.getTime();
                 });
                 
-                // Set final state for checklist
                 setChecklist(sortedChecklist);
                 
-                // Set state for stat cards
                 const upcomingFilings = checklistItems.filter(item => {
                     return new Date(item.dueDate + 'T00:00:00') >= today && !item.completed;
                 });

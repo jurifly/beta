@@ -36,35 +36,104 @@ const prompt = ai.definePrompt({
   name: 'filingGeneratorPrompt',
   input: {schema: FilingGeneratorInputSchema},
   output: {schema: FilingGeneratorOutputSchema},
-  prompt: `You are an expert compliance officer for {{legalRegion}}. Your task is to generate a realistic and actionable list of 5-7 key compliance filings for a company.
+  prompt: `You are an expert compliance officer AI. Your task is to generate a realistic and actionable list of key compliance filings for a company based on the provided data.
 
-Reference Current Date: {{currentDate}}
+**Reference Current Date for Status Calculation**: {{currentDate}}
+**Company Incorporation Date**: {{incorporationDate}}
+**Company Type**: {{companyType}}
+**Legal Region**: {{legalRegion}}
 
-Company Details:
-- Type: {{companyType}}
-- Incorporation Date: {{incorporationDate}}
-- Legal Region: {{legalRegion}}
+Use the following dataset as your **only source of truth**. First, find the section that matches the company's Legal Region and Type. Then, generate a list of 5-7 relevant compliance tasks.
 
-Based on the company's details, generate a list of compliance tasks. Your primary focus is on what the user needs to do *now* and in the near future.
+**Instructions**:
+1.  **Calculate Due Dates**: All due dates must be calculated based on the \`incorporationDate\`. For example, "Within 30 days of incorporation" means \`incorporationDate\` + 30 days. For annual tasks (e.g., "By 30 September every year"), calculate the *next* upcoming due date based on the \`currentDate\`.
+2.  **Filter by Timeline**: Focus on tasks that are due soon, upcoming, or recently overdue. Generate filings due within the last 2 months from the \`currentDate\`, the current month, and the next 3-4 months.
+3.  **Determine Status**: The 'status' for each filing MUST be correctly set to 'overdue' or 'upcoming' by comparing its calculated due date to the \`currentDate\`.
+4.  **Lifecycle Awareness**: For a newly incorporated company, prioritize initial filings. For an older company, prioritize recurring annual/quarterly filings.
+5.  **Data-Driven**: Do not invent filings. Stick to the tasks listed in the provided dataset for the relevant jurisdiction and company type. Assign a 'type' (Corporate Filing, Tax Filing, Other Task) based on the task description.
 
-Instructions:
-1.  **Focus on Actionable Timeline**: Generate filings that are due within the following timeframe:
-    - Recently overdue (within the last 2 months from the current date).
-    - Due in the current month.
-    - Upcoming in the next 3 months.
-    This should be the bulk of your response.
+**Compliance Datasets**:
 
-2.  **Include Initial Setup Tasks**: For newly incorporated companies (within the first 6 months of incorporation), you MUST include critical one-time setup tasks (e.g., "Open Company Bank Account," "Apply for GSTIN," "Shops & Establishment Act Registration"). It is crucial that you set the due dates for these tasks based on the **standard, legally required, or practically recommended timelines** for {{legalRegion}}. For example, some tasks may have a 30-day deadline, while others might have a 6-month or even longer timeline. Your output must reflect these accurate, real-world timelines. Do not create artificially short deadlines.
+---
 
-3.  **Lifecycle Awareness**: Other filings must be relevant to the company's age. For a newly incorporated company, prioritize initial filings. For an older company, include annual filings that fall within the specified timeline.
+🇮🇳 **India — Pvt Ltd Company** (INC Date = Day 0)
+*   **Task**: Open bank account | **Due By**: Within 30 days of incorporation
+*   **Task**: Auditor appointment (ADT-1) | **Due By**: Within 30 days of incorporation
+*   **Task**: Issue share certificates | **Due By**: Within 60 days of incorporation
+*   **Task**: First board meeting | **Due By**: Within 30 days of incorporation
+*   **Task**: File for Commencement of Business (INC-20A) | **Due By**: Within 180 days of incorporation
+*   **Task**: GST registration (if turnover > 40L) | **Due By**: As soon as threshold crossed
+*   **Task**: MSME registration (optional) | **Due By**: Recommended within 90 days
+*   **Task**: Professional tax registration | **Due By**: Within 30 days (in applicable states)
+*   **Task**: ROC annual return (MGT-7) | **Due By**: Every year within 60 days of AGM
+*   **Task**: Financial statements (AOC-4) | **Due By**: Every year within 30 days of AGM
+*   **Task**: Director KYC (DIR-3 KYC) | **Due By**: Before 30 September every year
+*   **Task**: Income tax return (ITR-6) | **Due By**: By 31 October every year (if audited)
+*   **Task**: TDS returns | **Due By**: Quarterly (15th of April, July, Oct, Jan)
+*   **Task**: Board meetings | **Due By**: At least 4 times per year (suggest quarterly)
 
-4.  **Jurisdiction Relevance**: Filings MUST be relevant to the company type and legal region (e.g., ROC filings for India, Annual Reports for USA).
+---
 
-5.  **Status Accuracy**: The 'status' for each filing must be correctly set to 'overdue', 'upcoming', 'completed' based on the 'date' relative to the 'currentDate'. A task should only be 'completed' if its due date is in the past.
+🇮🇳 **India — LLP (Limited Liability Partnership)**
+*   **Task**: LLP Agreement filing (Form 3) | **Due By**: Within 30 days of incorporation
+*   **Task**: PAN/TAN application | **Due By**: Immediately after incorporation
+*   **Task**: GST registration (if applicable) | **Due By**: ASAP if threshold crossed
+*   **Task**: Annual return (Form 11) | **Due By**: By 30 May every year
+*   **Task**: Statement of accounts (Form 8) | **Due By**: By 30 October every year
+*   **Task**: Income tax return | **Due By**: By 31 July (non-audit) or 31 Oct (audit) every year
 
-6.  **Prioritize Upcoming Tasks**: Ensure the list is not just historical. The majority of the items should be 'upcoming' to provide a forward-looking checklist.
+---
 
-7.  **Date Formatting**: Dates must be in YYYY-MM-DD format.
+🇮🇳 **India — Sole Proprietorship**
+*   **Task**: GST registration | **Due By**: If turnover exceeds ₹40 lakhs
+*   **Task**: Shop & establishment license | **Due By**: Within 30 days of start
+*   **Task**: Udyam/MSME registration | **Due By**: Optional but recommended
+*   **Task**: Income tax return | **Due By**: By 31 July every year
+*   **Task**: TDS (if hiring employees/contractors) | **Due By**: Monthly deduction & quarterly filing
+
+---
+
+🇺🇸 **USA — Delaware C-Corp**
+*   **Task**: Obtain EIN (Employer ID Number) | **Due By**: Immediately after incorporation
+*   **Task**: Open US bank account | **Due By**: Within 3 months
+*   **Task**: Appoint Registered Agent | **Due By**: Annually
+*   **Task**: Delaware Franchise Tax & Annual Report | **Due By**: By 1 March every year
+*   **Task**: Federal income tax filing (Form 1120) | **Due By**: By 15 April every year
+*   **Task**: State income tax filing (if applicable) | **Due By**: Varies by state (use a placeholder)
+
+---
+
+🇬🇧 **UK — Limited Company**
+*   **Task**: Register for Corporation Tax | **Due By**: Within 3 months of starting trade
+*   **Task**: VAT registration (if >£85,000 turnover) | **Due By**: ASAP upon crossing threshold
+*   **Task**: Confirmation Statement (annual return) | **Due By**: Every year within 14 days of anniversary of incorporation date
+*   **Task**: Annual accounts filing | **Due By**: 9 months after financial year-end
+*   **Task**: Corporation tax return | **Due By**: 12 months after financial year-end
+
+---
+
+🇸🇬 **Singapore — Private Limited Company**
+*   **Task**: Register for GST (if >S$1M turnover) | **Due By**: Within 30 days of threshold
+*   **Task**: Open Corporate bank account | **Due By**: Within 2 months
+*   **Task**: Hold Annual General Meeting (AGM) | **Due By**: Within 6 months of financial year-end
+*   **Task**: File Annual Return (AR) with ACRA | **Due By**: Within 7 months of financial year-end
+*   **Task**: File Estimated Chargeable Income (ECI) | **Due By**: Within 3 months of financial year-end
+
+---
+
+🇦🇺 **Australia — Proprietary Limited Company (Pty Ltd)**
+*   **Task**: Apply for TFN/ABN | **Due By**: Immediately after incorporation
+*   **Task**: Register for GST (if >AUD 75,000 turnover) | **Due By**: ASAP upon crossing threshold
+*   **Task**: Complete ASIC annual review | **Due By**: Every year on anniversary date
+*   **Task**: Lodge income tax return | **Due By**: By 31 October every year
+
+---
+
+🇨🇦 **Canada — Federal Corporation**
+*   **Task**: Obtain CRA business number | **Due By**: Immediately after incorporation
+*   **Task**: Register for GST/HST (if >CAD 30,000 turnover) | **Due By**: ASAP upon crossing threshold
+*   **Task**: File annual return (Corporations Canada) | **Due By**: Every year within 60 days of anniversary date
+*   **Task**: File T2 corporate tax return | **Due By**: Within 6 months of fiscal year-end
 
 Return the response in the specified JSON format.
 `,
