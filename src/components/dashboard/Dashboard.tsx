@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -46,6 +46,7 @@ import { generateFilings } from "@/ai/flows/filing-generator-flow";
 import { addDays, addMonths, format, startOfToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -140,16 +141,27 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 
                 let processedFilings = response.filings;
                 
-                // Smart GST Logic based on Company Profile
                 const hasGst = activeCompany.gstin && activeCompany.gstin.trim().length > 0;
                 if (hasGst) {
-                    // If company has GSTIN, remove any task asking to apply for it.
                     processedFilings = processedFilings.filter(f => !f.title.toLowerCase().includes('gst registration'));
                 } else {
-                    // If no GSTIN, remove all GSTR filing tasks.
                     processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
                 }
 
+                if (activeCompany.legalRegion === 'India') {
+                  const hasINC20A = processedFilings.some(f => f.title.includes('INC-20A'));
+                  if (!hasINC20A) {
+                      const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
+                      const dueDate = addDays(incDate, 180);
+                      processedFilings.push({
+                          date: format(dueDate, 'yyyy-MM-dd'),
+                          title: 'File for Commencement of Business (INC-20A)',
+                          type: 'Corporate Filing',
+                          status: 'upcoming'
+                      });
+                  }
+                }
+                
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
@@ -160,30 +172,16 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     completed: savedStatuses[filing.title] ?? false,
                 }));
 
+                setChecklist(checklistItems);
+                
                 const today = startOfToday();
-
-                const sortedChecklist = checklistItems.sort((a, b) => {
-                    const aDueDate = new Date(a.dueDate + 'T00:00:00');
-                    const bDueDate = new Date(b.dueDate + 'T00:00:00');
-                    const aIsOverdue = aDueDate < today && !a.completed;
-                    const bIsOverdue = bDueDate < today && !b.completed;
-
-                    if (aIsOverdue && !bIsOverdue) return -1;
-                    if (!aIsOverdue && bIsOverdue) return 1;
-                    
-                    if(a.completed && !b.completed) return 1;
-                    if(!a.completed && b.completed) return -1;
-
-                    return aDueDate.getTime() - bDueDate.getTime();
-                });
-                
-                setChecklist(sortedChecklist);
-                
                 const upcomingFilings = checklistItems.filter(item => {
-                    return new Date(item.dueDate + 'T00:00:00') >= today && !item.completed;
+                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                    return dueDate >= today && !item.completed;
                 });
                 const overdueFilings = checklistItems.filter(item => {
-                    return new Date(item.dueDate + 'T00:00:00') < today && !item.completed;
+                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                    return dueDate < today && !item.completed;
                 });
                 const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
 
@@ -219,6 +217,45 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         
         localStorage.setItem(storageKey, JSON.stringify(newStatuses));
     };
+    
+    const groupedChecklist = useMemo(() => {
+        if (!checklist || checklist.length === 0) return {};
+
+        const grouped = checklist.reduce((acc, item) => {
+            const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
+            if (!acc[monthKey]) {
+                acc[monthKey] = [];
+            }
+            acc[monthKey].push(item);
+            return acc;
+        }, {} as Record<string, DashboardChecklistItem[]>);
+
+        const today = startOfToday();
+        for (const monthKey in grouped) {
+            grouped[monthKey].sort((a, b) => {
+                const aDueDate = new Date(a.dueDate + 'T00:00:00');
+                const bDueDate = new Date(b.dueDate + 'T00:00:00');
+
+                if (a.completed && !b.completed) return 1;
+                if (!a.completed && b.completed) return -1;
+
+                const aIsOverdue = aDueDate < today && !a.completed;
+                const bIsOverdue = bDueDate < today && !b.completed;
+                if (aIsOverdue && !bIsOverdue) return -1;
+                if (!aIsOverdue && bIsOverdue) return 1;
+
+                return aDueDate.getTime() - bDueDate.getTime();
+            });
+        }
+
+        return grouped;
+    }, [checklist]);
+
+    const sortedMonths = useMemo(() => {
+        return Object.keys(groupedChecklist).sort((a, b) => {
+            return new Date(`01 ${a}`).getTime() - new Date(`01 ${b}`).getTime();
+        });
+    }, [groupedChecklist]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -245,42 +282,55 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
              <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                    <CardDescription>Key compliance items for your company.</CardDescription>
+                    <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                     {dynamicData.loading ? (
+                    {dynamicData.loading ? (
                         <div className="space-y-3">
                             <Skeleton className="h-10 w-full" />
                             <Skeleton className="h-10 w-5/6" />
                             <Skeleton className="h-10 w-full" />
                         </div>
-                    ) : checklist.length > 0 ? (
-                        checklist.map(item => {
-                            const today = startOfToday();
-                            const dueDate = new Date(item.dueDate + 'T00:00:00');
-                            const isItemOverdue = dueDate < today && !item.completed;
-                            return (
-                                <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
-                                    <Checkbox
-                                        id={item.id}
-                                        checked={item.completed}
-                                        onCheckedChange={() => handleToggleComplete(item.id)}
-                                        className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
-                                    />
-                                    <div className="flex-1 grid gap-0.5">
-                                      <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
-                                          {item.text}
-                                      </label>
-                                      <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-                                        Due: {format(dueDate, 'do MMM, yyyy')}
-                                      </span>
-                                    </div>
-                                    {isItemOverdue && (
-                                      <Badge variant="destructive" className="self-center">Overdue</Badge>
-                                    )}
-                                </div>
-                            )
-                        })
+                    ) : sortedMonths.length > 0 ? (
+                        <Accordion type="multiple" defaultValue={sortedMonths} className="w-full">
+                            {sortedMonths.map(month => (
+                                <AccordionItem value={month} key={month}>
+                                    <AccordionTrigger className="font-semibold text-base hover:no-underline">
+                                        {month}
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="space-y-3">
+                                            {groupedChecklist[month].map(item => {
+                                                const today = startOfToday();
+                                                const dueDate = new Date(item.dueDate + 'T00:00:00');
+                                                const isItemOverdue = dueDate < today && !item.completed;
+                                                return (
+                                                    <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
+                                                        <Checkbox
+                                                            id={item.id}
+                                                            checked={item.completed}
+                                                            onCheckedChange={() => handleToggleComplete(item.id)}
+                                                            className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                                        />
+                                                        <div className="flex-1 grid gap-0.5">
+                                                            <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
+                                                                {item.text}
+                                                            </label>
+                                                            <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
+                                                            Due: {format(dueDate, 'do MMM, yyyy')}
+                                                            </span>
+                                                        </div>
+                                                        {isItemOverdue && (
+                                                            <Badge variant="destructive" className="self-center">Overdue</Badge>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
                             <p>No items yet. AI couldn't generate a checklist.</p>
