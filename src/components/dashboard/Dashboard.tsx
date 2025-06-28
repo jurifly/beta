@@ -43,7 +43,7 @@ import type { UserProfile } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
-import { addDays, addMonths, format } from "date-fns";
+import { addDays, addMonths, format, startOfToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -145,10 +145,13 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 // Initial list from AI
                 let processedFilings = response.filings.slice();
 
-                // 1. Ensure INC-20A is present for Indian companies
-                const hasInc20a = processedFilings.some(f => f.title.toLowerCase().includes('inc-20a') || f.title.toLowerCase().includes('commencement of business'));
-                if (activeCompany.legalRegion === 'India' && !hasInc20a) {
-                    processedFilings.push({
+                // 1. Filter out any incorrect INC-20A from AI, then add our correct one.
+                if (activeCompany.legalRegion === 'India') {
+                    processedFilings = processedFilings.filter(f => 
+                        !f.title.toLowerCase().includes('inc-20a') && 
+                        !f.title.toLowerCase().includes('commencement of business')
+                    );
+                    processedFilings.unshift({
                         date: format(addDays(incDate, 180), 'yyyy-MM-dd'),
                         title: 'File for Commencement of Business (INC-20A)',
                         type: 'Corporate Filing',
@@ -157,7 +160,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 }
 
                 // 2. Handle GST filing dependency
-                const gstRegistrationTaskTitle = 'Apply for GST Registration';
                 const isGstRegistered = Object.keys(savedStatuses).some(key => 
                     key.toLowerCase().includes('gst registration') && savedStatuses[key] === true
                 );
@@ -195,14 +197,12 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 
                 // Set state for stat cards
                 const upcomingFilings = checklistItems.filter(item => {
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
+                    const today = startOfToday();
                     return new Date(item.dueDate) >= today && !item.completed;
                 });
                 const overdueFilings = checklistItems.filter(item => {
-                     const today = new Date();
-                    today.setHours(0,0,0,0);
-                    return new Date(item.dueDate) < today && !item.completed;
+                    const today = startOfToday();
+                    return new Date(item.dueDate + 'T00:00:00') < today && !item.completed;
                 });
                 const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
 
@@ -275,8 +275,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         </div>
                     ) : checklist.length > 0 ? (
                         checklist.map(item => {
-                            const today = new Date();
-                            today.setHours(0,0,0,0);
+                            const today = startOfToday();
                             const dueDate = new Date(item.dueDate + 'T00:00:00');
                             const isItemOverdue = dueDate < today && !item.completed;
                             return (
