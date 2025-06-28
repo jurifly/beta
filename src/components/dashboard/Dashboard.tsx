@@ -25,6 +25,7 @@ import {
   ClipboardList,
   Target,
   Upload,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -104,12 +105,10 @@ type DashboardChecklistItem = {
     text: string;
     completed: boolean;
     dueDate: string;
-    isOverdue: boolean;
 };
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
-    const { addNotification } = useAuth();
 
     const [dynamicData, setDynamicData] = useState<{
         filings: number;
@@ -142,52 +141,15 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const upcomingFilings = response.filings.filter(f => f.status === 'upcoming');
                 const overdueFilings = response.filings.filter(f => f.status === 'overdue');
                 
-                overdueFilings.forEach(filing => {
-                    addNotification({
-                        title: `${filing.title} Overdue`,
-                        description: `Your filing for ${filing.title} was due on ${format(new Date(filing.date), 'do MMM')}. Please address this immediately to avoid penalties.`,
-                        icon: 'AlertTriangle',
-                        link: '/dashboard/calendar',
-                    });
-                });
-
-                const today = new Date();
-                const twoWeeksFromNow = new Date();
-                twoWeeksFromNow.setDate(today.getDate() + 14);
-
-                const upcomingSoon = upcomingFilings.filter(filing => {
-                    const dueDate = new Date(filing.date + 'T00:00:00'); // Avoid timezone issues
-                    return dueDate > today && dueDate <= twoWeeksFromNow;
-                });
-
-                upcomingSoon.forEach(filing => {
-                    addNotification({
-                        title: `Upcoming Filing: ${filing.title}`,
-                        description: `This filing is due on ${format(new Date(filing.date + 'T00:00:00'), 'do MMM, yyyy')}.`,
-                        icon: 'FileClock',
-                        link: '/dashboard/calendar'
-                    });
-                });
-
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
-                const todayForOverdueCheck = new Date();
-                todayForOverdueCheck.setHours(0, 0, 0, 0);
-
-                const checklistItems = response.filings.map((filing) => {
-                    const dueDate = new Date(filing.date + 'T00:00:00');
-                    const isCompleted = savedStatuses[filing.title] ?? false;
-                    const isTaskOverdue = dueDate < todayForOverdueCheck;
-
-                    return {
-                        id: filing.title,
-                        text: filing.title,
-                        dueDate: filing.date,
-                        isOverdue: isTaskOverdue,
-                        completed: isCompleted,
-                    }
-                });
+                const checklistItems = response.filings.map((filing) => ({
+                    id: filing.title,
+                    text: filing.title,
+                    dueDate: filing.date,
+                    completed: savedStatuses[filing.title] ?? false,
+                }));
                 setChecklist(checklistItems);
 
 
@@ -207,7 +169,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         }
 
         fetchDashboardData();
-    }, [activeCompany, addNotification]);
+    }, [activeCompany]);
 
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
@@ -262,7 +224,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         </div>
                     ) : checklist.length > 0 ? (
                         checklist.map(item => {
-                            const isItemOverdue = item.isOverdue && !item.completed;
+                            const today = new Date();
+                            today.setHours(0,0,0,0);
+                            const dueDate = new Date(item.dueDate + 'T00:00:00');
+                            const isItemOverdue = dueDate < today && !item.completed;
                             return (
                                 <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                     <Checkbox
@@ -276,7 +241,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                           {item.text}
                                       </label>
                                       <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-                                        Due: {format(new Date(item.dueDate + 'T00:00:00'), 'do MMM, yyyy')}
+                                        Due: {format(dueDate, 'do MMM, yyyy')}
                                       </span>
                                     </div>
                                     {isItemOverdue && (
@@ -360,7 +325,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
              <Link href="/dashboard/analytics" className="block"><StatCard title="Overall Risk Score" value="N/A" subtext="Connect data sources" icon={<ShieldCheck className="h-4 w-4" />} /></Link>
-             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Data Room Readiness" value="0%" subtext="For upcoming M&amp;A" icon={<GanttChartSquare className="h-4 w-4" />} /></Link>
+             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Data Room Readiness" value="0%" subtext="For upcoming M&A" icon={<GanttChartSquare className="h-4 w-4" />} /></Link>
              <Link href="/dashboard/team" className="block"><StatCard title="Team Tasks" value="0/0" subtext="Completed this week" icon={<Users className="h-4 w-4" />} /></Link>
              <div className="lg:col-span-3">
                 <ComplianceActivityChart />
@@ -448,15 +413,11 @@ export default function Dashboard() {
   const fetchDashboardDataCalled = React.useRef(false);
 
   useEffect(() => {
-    if (fetchDashboardDataCalled.current || !userProfile?.activeCompanyId) {
-        return;
-    }
-    fetchDashboardDataCalled.current = true;
-    
-    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-    if (!activeCompany) return;
-
+    if (!userProfile) return;
     const fetchDashboardData = async () => {
+        const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+        if (!activeCompany) return;
+
         try {
             const currentDate = format(new Date(), 'yyyy-MM-dd');
             const response = await generateFilings({
@@ -466,15 +427,7 @@ export default function Dashboard() {
                 legalRegion: activeCompany.legalRegion,
             });
             const overdueFilings = response.filings.filter(f => f.status === 'overdue');
-            overdueFilings.forEach(filing => {
-                addNotification({
-                    title: `${filing.title} Overdue`,
-                    description: `Your filing for ${filing.title} was due on ${format(new Date(filing.date), 'do MMM')}. Please address this immediately to avoid penalties.`,
-                    icon: 'AlertTriangle',
-                    link: '/dashboard/calendar',
-                });
-            });
-
+            
             const today = new Date();
             const twoWeeksFromNow = new Date();
             twoWeeksFromNow.setDate(today.getDate() + 14);
@@ -482,15 +435,6 @@ export default function Dashboard() {
             const upcomingSoon = response.filings.filter(filing => {
                 const dueDate = new Date(filing.date + 'T00:00:00');
                 return filing.status === 'upcoming' && dueDate > today && dueDate <= twoWeeksFromNow;
-            });
-            
-            upcomingSoon.forEach(filing => {
-                addNotification({
-                    title: `Upcoming Filing: ${filing.title}`,
-                    description: `This filing is due on ${format(new Date(filing.date + 'T00:00:00'), 'do MMM, yyyy')}.`,
-                    icon: 'FileClock',
-                    link: '/dashboard/calendar'
-                });
             });
 
         } catch (error) {
