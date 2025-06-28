@@ -76,31 +76,6 @@ body {
 }
 
 @layer utilities {
-  .day-overdue:not([aria-selected]) .rdp-button::after,
-  .day-upcoming:not([aria-selected]) .rdp-button::after,
-  .day-completed:not([aria-selected]) .rdp-button::after {
-    content: '';
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .day-completed:not([aria-selected]) .rdp-button::after {
-    @apply bg-green-500;
-  }
-
-  .day-upcoming:not([aria-selected]) .rdp-button::after {
-    @apply bg-yellow-500;
-  }
-
-  .day-overdue:not([aria-selected]) .rdp-button::after {
-    @apply bg-red-500;
-  }
-
   .interactive-lift {
     @apply transition-all duration-300 ease-out;
   }

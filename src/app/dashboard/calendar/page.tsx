@@ -8,32 +8,24 @@ import * as z from 'zod';
 import {
   AlertTriangle,
   Briefcase,
-  Check,
-  ChevronDown,
+  CheckCircle,
+  Clock,
   Loader2,
   Plus,
   Calendar as CalendarIcon,
-  Filter,
   Receipt,
   ClipboardCheck,
   Save,
+  ListX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Tabs,
   TabsContent,
@@ -50,7 +42,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/auth';
 import { cn } from '@/lib/utils';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, formatDistanceToNowStrict } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
@@ -58,6 +50,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type EventType = "Corporate Filing" | "Tax Filing" | "Other Task" | "Custom";
 
@@ -148,27 +141,72 @@ const EventIcon = ({ type }: { type: EventType }) => {
 }
 
 const statusConfig = {
-    overdue: { color: "bg-red-500", label: "Overdue" },
-    upcoming: { color: "bg-yellow-500", label: "Upcoming" },
-    completed: { color: "bg-green-500", label: "Completed" },
+    overdue: { color: "border-red-500/50 bg-red-500/10 text-red-500", label: "Overdue", icon: <AlertTriangle className="h-3 w-3" /> },
+    upcoming: { color: "border-yellow-500/50 bg-yellow-500/10 text-yellow-500", label: "Upcoming", icon: <Clock className="h-3 w-3" /> },
+    completed: { color: "border-green-500/50 bg-green-500/10 text-green-500", label: "Completed", icon: <CheckCircle className="h-3 w-3" /> },
 };
 
+
+const EventItem = ({ event, onToggleComplete }: { event: Event; onToggleComplete: (id: string, completed: boolean) => void }) => {
+  const { status, title, date, type } = event;
+  const config = statusConfig[status];
+  const distance = formatDistanceToNowStrict(date, { addSuffix: true });
+
+  return (
+    <Card className={cn("interactive-lift transition-all", config.color)}>
+      <CardContent className="p-4 flex items-start gap-4">
+        <Checkbox 
+            id={`task-${event.id}`}
+            checked={status === 'completed'}
+            onCheckedChange={(checked) => onToggleComplete(event.id, !!checked)}
+            className="mt-1"
+        />
+        <div className="flex-1 space-y-1">
+          <label htmlFor={`task-${event.id}`} className={cn("font-semibold cursor-pointer", status === 'completed' && 'line-through text-muted-foreground')}>
+            {title}
+          </label>
+          <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5"><CalendarIcon className="h-3 w-3" /> Due {format(date, 'do MMM, yyyy')}</span>
+            <span className="flex items-center gap-1.5"><EventIcon type={type}/> {type}</span>
+          </div>
+        </div>
+        <div className="text-right flex flex-col items-end gap-1">
+          <Badge variant="outline" className={cn("whitespace-nowrap", config.color)}>
+            {config.icon}
+            {config.label}
+          </Badge>
+          {status !== 'completed' && <p className="text-xs text-muted-foreground">{distance}</p>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const EmptyState = ({ tab }: { tab: string }) => {
+  const messages = {
+    upcoming: { title: "All clear!", description: "You have no upcoming deadlines."},
+    overdue: { title: "Great work!", description: "You have no overdue tasks."},
+    completed: { title: "Nothing completed yet.", description: "Completed tasks will appear here."},
+    all: { title: "No tasks found.", description: "Add a custom task or check back later."},
+  }
+  const message = messages[tab] || messages.all;
+  return (
+    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+        <ListX className="w-16 h-16 text-primary/20"/>
+        <p className="font-semibold text-lg">{message.title}</p>
+        <p className="text-sm max-w-sm">{message.description}</p>
+    </div>
+  )
+}
+
 export default function CalendarPage() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [activeTab, setActiveTab] = useState('upcoming');
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
   const { userProfile } = useAuth();
   const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
   const { toast } = useToast();
-  
-  const [filters, setFilters] = useState<string[]>(['overdue', 'upcoming']);
-
-  const handleFilterChange = (status: string, checked: boolean) => {
-    setFilters(prev => checked ? [...prev, status] : prev.filter(s => s !== status));
-  };
-  
-  const filteredEvents = useMemo(() => events.filter(e => filters.includes(e.status)), [events, filters]);
 
   useEffect(() => {
     const fetchFilings = async () => {
@@ -204,7 +242,6 @@ export default function CalendarPage() {
     setEvents(prev => prev.map(e => {
         if (e.id === eventId) {
             if (completed) return { ...e, status: 'completed' };
-            // Revert status based on date if unchecking
             const isOverdue = e.date < startOfToday();
             return { ...e, status: isOverdue ? 'overdue' : 'upcoming' };
         }
@@ -225,146 +262,72 @@ export default function CalendarPage() {
       toast({ title: 'Task Added', description: `${data.title} has been added to your calendar.`});
   };
 
-  const selectedDayEvents = useMemo(() => {
-    if (!date) return [];
-    return filteredEvents
-        .filter(event => format(event.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
-        .sort((a,b) => (a.status === 'overdue' ? -1 : 1));
-  }, [date, filteredEvents]);
-  
-  const upcomingEvents = useMemo(() => {
-    const today = startOfToday();
-    return events
-        .filter(event => event.status === 'upcoming' && event.date >= today)
-        .sort((a, b) => a.date.getTime() - b.date.getTime())
-        .slice(0, 5);
+  const { upcomingEvents, overdueEvents, completedEvents, allEvents } = useMemo(() => {
+    const upcoming = events.filter(e => e.status === 'upcoming').sort((a,b) => a.date.getTime() - b.date.getTime());
+    const overdue = events.filter(e => e.status === 'overdue').sort((a,b) => a.date.getTime() - b.date.getTime());
+    const completed = events.filter(e => e.status === 'completed').sort((a,b) => b.date.getTime() - a.date.getTime());
+    const all = [...events].sort((a, b) => {
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        if (a.status === 'overdue' && b.status !== 'overdue') return -1;
+        if (a.status !== 'overdue' && b.status === 'overdue') return 1;
+        return a.date.getTime() - b.date.getTime();
+    });
+
+    return { upcomingEvents: upcoming, overdueEvents: overdue, completedEvents: completed, allEvents: all };
   }, [events]);
+
+  const tabs = [
+    { value: 'upcoming', label: 'Upcoming', data: upcomingEvents },
+    { value: 'overdue', label: 'Overdue', data: overdueEvents },
+    { value: 'completed', label: 'Completed', data: completedEvents },
+    { value: 'all', label: 'All', data: allEvents },
+  ];
 
   return (
     <>
       <AddTaskModal isOpen={isModalOpen} onOpenChange={setModalOpen} onAddTask={handleAddTask} />
-      <div className="flex flex-col gap-6 h-full">
+      <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold font-headline">Compliance Calendar</h1>
             <p className="text-muted-foreground">Never miss a deadline. All your compliance dates, in one place.</p>
           </div>
           <div className='flex items-center gap-2'>
-              <Button variant="outline" onClick={() => toast({title: "Feature coming soon!"})}>Sync Calendar</Button>
               <Button onClick={() => setModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Add Task</Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-          <Card className="lg:col-span-2 flex flex-col interactive-lift">
-            <CardContent className="p-2 sm:p-4 flex-1 flex items-center justify-center">
-              <Calendar
-                  mode="single" selected={date} onSelect={setDate}
-                  className="rounded-md [&:first-child]:border-0"
-                  modifiers={{ ...Object.fromEntries(Object.keys(statusConfig).map(status => [status, filteredEvents.filter(e => e.status === status).map(e => e.date)]))}}
-                  modifiersClassNames={{ ...Object.fromEntries(Object.keys(statusConfig).map(status => [status, `day-${status}`])) }}
-              />
-            </CardContent>
-            <CardFooter className="flex items-center justify-between border-t p-4 flex-wrap gap-2">
-                <div className="flex items-center gap-4">
-                    {Object.entries(statusConfig).map(([status, {color, label}]) => (
-                        <div key={status} className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className={cn('h-2 w-2 rounded-full', color)} />
-                            <span>{label}</span>
-                        </div>
-                    ))}
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setDate(new Date())}>Today</Button>
-            </CardFooter>
-          </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+                {tabs.map(tab => (
+                    <TabsTrigger key={tab.value} value={tab.value} className="flex gap-2 items-center interactive-lift">
+                        {tab.label} <Badge variant={activeTab === tab.value ? 'default' : 'secondary'} className="px-2">{tab.data.length}</Badge>
+                    </TabsTrigger>
+                ))}
+            </TabsList>
 
-          <Card className="lg:col-span-1 interactive-lift flex flex-col">
-            <CardHeader>
-              <CardTitle>Agenda</CardTitle>
-              <CardDescription>Tasks and deadlines overview.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col min-h-0">
-                <Tabs defaultValue="day" className="flex flex-col flex-1">
-                    <div className="flex items-start justify-between">
-                        <TabsList className="grid grid-cols-2 w-[200px]">
-                            <TabsTrigger value="day">Day</TabsTrigger>
-                            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                        </TabsList>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm"><Filter className="mr-2 h-4 w-4"/>Filter</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <div className="p-2 space-y-2">
-                                {Object.entries(statusConfig).map(([key, { label }]) => (
-                                    <div key={key} className="flex items-center space-x-2">
-                                        <Checkbox id={`filter-${key}`} checked={filters.includes(key)} onCheckedChange={(checked) => handleFilterChange(key, !!checked)} />
-                                        <Label htmlFor={`filter-${key}`}>{label}</Label>
-                                    </div>
-                                ))}
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <TabsContent value="day" className="flex-1 overflow-y-auto mt-4 pr-2 -mr-4">
-                      <h4 className="font-semibold text-sm mb-2 text-muted-foreground">{format(date || new Date(), 'EEEE, do MMMM')}</h4>
-                      {isLoading ? ( <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> ) 
-                      : selectedDayEvents.length > 0 ? (
-                          <div className="space-y-3">
-                              {selectedDayEvents.map(event => (
-                                  <div key={event.id} className="flex items-start gap-3 p-3 text-sm border rounded-lg bg-background">
-                                      <Checkbox id={event.id} className="mt-1" checked={event.status === 'completed'} onCheckedChange={checked => handleMarkComplete(event.id, !!checked)} />
-                                      <div className="flex-1 grid gap-1.5">
-                                          <label htmlFor={event.id} className={cn("font-medium", event.status==='completed' && 'line-through text-muted-foreground')}>{event.title}</label>
-                                          <div className="flex items-center gap-2 text-xs text-muted-foreground"><EventIcon type={event.type} /> {event.type}</div>
-                                      </div>
-                                      <Badge variant={event.status === 'completed' ? 'secondary' : 'outline'} className={cn(
-                                        event.status === 'completed' && "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-transparent",
-                                        event.status === 'overdue' && "border-destructive text-destructive"
-                                      )}>{statusConfig[event.status].label}</Badge>
-                                  </div>
-                              ))}
-                          </div>
-                      ) : ( <div className="text-center text-muted-foreground p-8 h-full flex flex-col items-center justify-center"><p>All clear for today!</p></div> )}
-                    </TabsContent>
-                    <TabsContent value="upcoming" className="flex-1 overflow-y-auto mt-4 pr-2 -mr-4">
-                       <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Next 5 Upcoming Events</h4>
-                        {isLoading ? ( <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> ) 
-                        : upcomingEvents.length > 0 ? (
-                           <div className="space-y-3">
-                               {upcomingEvents.map(event => (
-                                   <div key={event.id} className="flex items-start gap-3 p-3 text-sm border rounded-lg bg-background">
-                                       <div className={cn("mt-1.5 w-2 h-2 rounded-full shrink-0", statusConfig[event.status].color)}/>
-                                       <div className="flex-1 grid gap-1.5">
-                                           <p className="font-medium">{event.title}</p>
-                                           <div className="flex items-center gap-2 text-xs text-muted-foreground"><EventIcon type={event.type} /> {format(event.date, 'do MMM, yyyy')}</div>
-                                       </div>
-                                   </div>
-                               ))}
-                           </div>
-                        ) : ( <div className="text-center text-muted-foreground p-8 h-full flex flex-col items-center justify-center"><p>No upcoming events.</p></div> )}
-                    </TabsContent>
-                </Tabs>
-            </CardContent>
-          </Card>
-        </div>
+            {tabs.map(tab => (
+              <TabsContent key={tab.value} value={tab.value} className="mt-6">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                  </div>
+                ) : tab.data.length > 0 ? (
+                  <div className="space-y-4">
+                    {tab.data.map(event => (
+                      <EventItem key={event.id} event={event} onToggleComplete={handleMarkComplete} />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState tab={tab.value} />
+                )}
+              </TabsContent>
+            ))}
+        </Tabs>
       </div>
     </>
   );
 }
-
-// Add custom day styles for calendar
-const style = document.createElement('style');
-style.innerHTML = `
-  .day-overdue:not([aria-selected]) .rdp-button::after,
-  .day-upcoming:not([aria-selected]) .rdp-button::after,
-  .day-completed:not([aria-selected]) .rdp-button::after {
-    content: ''; position: absolute; width: 6px; height: 6px; border-radius: 9999px; bottom: 4px; left: 50%; transform: translateX(-50%);
-  }
-  .day-completed:not([aria-selected]) .rdp-button::after { background-color: ${statusConfig.completed.color}; }
-  .day-upcoming:not([aria-selected]) .rdp-button::after { background-color: ${statusConfig.upcoming.color}; }
-  .day-overdue:not([aria-selected]) .rdp-button::after { background-color: ${statusConfig.overdue.color}; }
-`;
-document.head.appendChild(style);
-
-    
