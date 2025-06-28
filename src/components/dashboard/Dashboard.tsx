@@ -172,13 +172,19 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
-                const checklistItems = response.filings.slice(0, 3).map((filing) => ({
-                    id: filing.title,
-                    text: filing.title,
-                    dueDate: filing.date,
-                    isOverdue: filing.status === 'overdue',
-                    completed: savedStatuses[filing.title] ?? filing.status === 'completed',
-                }));
+                const todayForOverdueCheck = new Date();
+                todayForOverdueCheck.setHours(0, 0, 0, 0);
+
+                const checklistItems = response.filings.slice(0, 3).map((filing) => {
+                    const dueDate = new Date(filing.date + 'T00:00:00');
+                    return {
+                        id: filing.title,
+                        text: filing.title,
+                        dueDate: filing.date,
+                        isOverdue: dueDate < todayForOverdueCheck,
+                        completed: savedStatuses[filing.title] ?? filing.status === 'completed',
+                    }
+                });
                 setChecklist(checklistItems);
 
 
