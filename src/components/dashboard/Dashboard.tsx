@@ -148,20 +148,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
                 }
 
-                if (activeCompany.legalRegion === 'India') {
-                  const hasINC20A = processedFilings.some(f => f.title.includes('INC-20A'));
-                  if (!hasINC20A) {
-                      const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
-                      const dueDate = addDays(incDate, 180);
-                      processedFilings.push({
-                          date: format(dueDate, 'yyyy-MM-dd'),
-                          title: 'File for Commencement of Business (INC-20A)',
-                          type: 'Corporate Filing',
-                          status: 'upcoming'
-                      });
-                  }
-                }
-                
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
@@ -293,15 +279,26 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         </div>
                     ) : sortedMonths.length > 0 ? (
                         <Accordion type="multiple" defaultValue={sortedMonths} className="w-full">
-                            {sortedMonths.map(month => (
+                            {sortedMonths.map(month => {
+                                const today = startOfToday();
+                                const hasOverdueItems = groupedChecklist[month].some(item => {
+                                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                                    return dueDate < today && !item.completed;
+                                });
+
+                                return (
                                 <AccordionItem value={month} key={month}>
                                     <AccordionTrigger className="font-semibold text-base hover:no-underline">
-                                        {month}
+                                        <div className="flex items-center gap-2">
+                                            <span>{month}</span>
+                                            {hasOverdueItems && (
+                                                <AlertTriangle className="h-4 w-4 text-destructive" />
+                                            )}
+                                        </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
                                         <div className="space-y-3">
                                             {groupedChecklist[month].map(item => {
-                                                const today = startOfToday();
                                                 const dueDate = new Date(item.dueDate + 'T00:00:00');
                                                 const isItemOverdue = dueDate < today && !item.completed;
                                                 return (
@@ -329,7 +326,8 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
-                            ))}
+                                )}
+                            )}
                         </Accordion>
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
