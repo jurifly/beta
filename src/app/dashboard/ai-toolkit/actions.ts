@@ -61,7 +61,7 @@ export async function analyzeDocumentAction(input: DocumentIntelligenceInput): P
   }
 }
 
-// --- Document Generator Actions ---
+// --- Document Studio Actions ---
 export async function generateDocumentAction(input: DocumentGeneratorInput): Promise<DocumentGeneratorOutput> {
   try {
     return await generateDocument(input);
@@ -70,6 +70,16 @@ export async function generateDocumentAction(input: DocumentGeneratorInput): Pro
     throw new Error(e.message || 'There was an error generating your document.');
   }
 }
+
+export async function generateWikiAction(input: WikiGeneratorInput): Promise<WikiGeneratorOutput> {
+  try {
+    return await generateWiki(input);
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    throw new Error(e.message || 'There was an error generating the wiki page.');
+  }
+}
+
 
 // --- Regulation Watcher Actions ---
 type WatcherFormState = { data: WatcherOutput | null; error: string | null; };

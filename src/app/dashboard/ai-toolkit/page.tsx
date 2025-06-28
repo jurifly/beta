@@ -20,6 +20,7 @@ import { planHierarchy } from '@/lib/types';
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
+import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
 import type { WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 
 
@@ -604,7 +605,26 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
 }
 
 
-// --- Tab: Document Generator ---
+// --- Tab: Document Studio ---
+const DocumentStudioTab = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Document Studio</CardTitle>
+            <CardDescription>Generate legal documents from templates or convert existing policies into internal wikis.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Tabs defaultValue="generator">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="generator"><FilePenLine className="mr-2"/>From a Template</TabsTrigger>
+                    <TabsTrigger value="wiki"><BookText className="mr-2"/>From a Policy</TabsTrigger>
+                </TabsList>
+                <TabsContent value="generator" className="pt-6"><DocumentGenerator/></TabsContent>
+                <TabsContent value="wiki" className="pt-6"><WikiGenerator/></TabsContent>
+            </Tabs>
+        </CardContent>
+    </Card>
+)
+
 type Template = { name: string; isPremium: boolean; };
 type TemplateCategoryData = { name: string; roles: UserRole[]; templates: Template[]; };
 const templateLibrary: TemplateCategoryData[] = [
@@ -616,7 +636,7 @@ const templateLibrary: TemplateCategoryData[] = [
   { name: 'Enterprise Suite', roles: ['Enterprise'], templates: [ { name: 'HR Policy Docs', isPremium: true }, { name: 'Cross-border NDA', isPremium: true }, ], },
 ];
 
-const DocumentGeneratorTab = () => {
+const DocumentGenerator = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [activeAccordion, setActiveAccordion] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
@@ -666,17 +686,17 @@ const DocumentGeneratorTab = () => {
   if (!userProfile) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start h-full max-h-[calc(100vh-16rem)]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start h-full max-h-[calc(100vh-24rem)]">
       <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
-        <CardHeader><CardTitle>Template Library</CardTitle><CardDescription>Select a template to generate.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="text-base">Template Library</CardTitle><CardDescription className="text-xs">Select a template to generate.</CardDescription></CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10" /></div>
+          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10 h-9" /></div>
           <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
                 <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
                     {availableCategories.map((category) => (
                         <AccordionItem value={category.name} key={category.name}>
-                            <AccordionTrigger className="text-base font-medium hover:no-underline interactive-lift py-3 px-2">{category.name}</AccordionTrigger>
+                            <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
                             <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium && userPlanLevel < 1; return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted", isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer")}><RadioGroupItem value={template.name} id={template.name} disabled={isLocked} /><span className="font-normal text-sm">{template.name}</span>{isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500" />}</Label> ) })}</div></AccordionContent>
                         </AccordionItem>
                     ))}
@@ -684,22 +704,116 @@ const DocumentGeneratorTab = () => {
              </RadioGroup>
           </div>
         </CardContent>
-        <CardFooter className="mt-auto pt-6"><Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><FilePenLine className="mr-2 h-4 w-4" /> Generate Document</>}</Button></CardFooter>
+        <CardFooter className="mt-auto pt-4"><Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><FilePenLine className="mr-2 h-4 w-4" /> Generate Document</>}</Button></CardFooter>
       </Card>
-      <div className="lg:col-span-2 xl:col-span-3 h-full overflow-y-auto -mr-2 pr-4 space-y-8">
+      <div className="lg:col-span-2 xl:col-span-3 h-full overflow-y-auto -mr-2 pr-4 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div><h2 className="text-2xl font-bold font-headline">Document Preview</h2><p className="text-muted-foreground">Generate a new document or view a recent one.</p></div>
+            <div><h2 className="text-xl font-bold font-headline">Document Preview</h2></div>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
                 <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
         </div>
-        {loading ? <Card className="min-h-[400px]"><CardHeader><p className="h-6 w-1/2">loading</p></CardHeader><CardContent className="space-y-4 pt-4"><p className="h-4 w-full">loading</p></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p></Card>}
+        {loading ? <Card className="min-h-[400px]"><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent className="space-y-4 pt-4"><Skeleton className="h-4 w-full"/><Skeleton className="h-4 w-5/6"/></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p></Card>}
       </div>
     </div>
   )
 }
+
+const WikiGenerator = () => {
+    const [file, setFile] = useState<File | null>(null);
+    const [title, setTitle] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState<WikiGeneratorOutput | null>(null);
+    const { toast } = useToast();
+    const { userProfile, deductCredits } = useAuth();
+    
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+      if (acceptedFiles[0]) {
+        setFile(acceptedFiles[0]);
+        setTitle(acceptedFiles[0].name.replace(/\.[^/.]+$/, ""));
+      }
+    }, []);
+
+    const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({ onDrop, noClick: true, noKeyboard: true, maxFiles: 1, maxSize: 5 * 1024 * 1024 });
+
+    const handleGenerate = async () => {
+        if (!file || !title.trim()) {
+            toast({ variant: "destructive", title: "Missing Input", description: "Please provide a file and a title."});
+            return;
+        }
+        if (!userProfile) return;
+        if (!await deductCredits(5)) return;
+        
+        setLoading(true);
+        setResult(null);
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async (e) => {
+            const fileDataUri = e.target?.result as string;
+            try {
+                const response = await AiActions.generateWikiAction({ fileDataUri, documentTitle: title });
+                setResult(response);
+            } catch (error: any) {
+                toast({ variant: "destructive", title: "Generation Failed", description: error.message });
+            } finally {
+                setLoading(false);
+            }
+        };
+        reader.onerror = () => {
+            setLoading(false);
+            toast({ variant: "destructive", title: "File Error", description: "Could not read the selected file."});
+        }
+    }
+
+    return (
+      <div className="grid lg:grid-cols-2 gap-8 items-start">
+        <div className="space-y-4">
+            <Card {...getRootProps()} className="interactive-lift">
+                <input {...getInputProps()} />
+                <CardContent className="pt-6">
+                    <div className={cn("text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed h-full w-full transition-colors cursor-pointer", isDragActive ? "border-primary bg-primary/10" : "")}>
+                       <BookText className="w-16 h-16 text-primary/20" />
+                        <p className="font-semibold text-lg text-foreground">Drop a policy document here</p>
+                        <p className="text-sm max-w-xs">Or click the button below to select a file (PDF, TXT, DOCX).</p>
+                        <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
+                    </div>
+                </CardContent>
+            </Card>
+            {file && (
+                <Card className="animate-in fade-in-50">
+                    <CardContent className="pt-6 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="wiki-title">Wiki Page Title</Label>
+                            <Input id="wiki-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Employee Code of Conduct"/>
+                        </div>
+                        <Button onClick={handleGenerate} disabled={loading} className="w-full">
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>}
+                            Generate Internal Wiki (5 Credits)
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+        <Card className="lg:col-span-1 min-h-[400px]">
+            <CardHeader><CardTitle>Generated Wiki Content</CardTitle></CardHeader>
+            <CardContent>
+                {loading && <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary"/></div>}
+                {result ? (
+                    <div className="prose dark:prose-invert max-w-none text-sm p-4 bg-muted/50 rounded-lg border">
+                        <ReactMarkdown>{result.wikiContent}</ReactMarkdown>
+                    </div>
+                ) : !loading && (
+                    <div className="text-center text-muted-foreground py-10">Your simplified wiki page will appear here.</div>
+                )}
+            </CardContent>
+        </Card>
+      </div>
+    );
+};
+
 
 const watcherPortals = [
   { id: "MCA", name: "MCA", description: "Corporate Affairs", icon: <Building2 className="w-6 h-6" /> },
@@ -902,14 +1016,14 @@ export default function AiToolkitPage() {
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
                 <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
                     <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
-                    <TabsTrigger value="generator" className="interactive-lift"><FilePenLine className="mr-2"/>Generator</TabsTrigger>
+                    <TabsTrigger value="studio" className="interactive-lift"><FilePenLine className="mr-2"/>Doc Studio</TabsTrigger>
                     <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
                     <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
                     <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
                     <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
                 </TabsList>
                 <TabsContent value="assistant" className="mt-6 md:flex-1 md:min-h-0"><ChatAssistant /></TabsContent>
-                <TabsContent value="generator" className="mt-6"><DocumentGeneratorTab /></TabsContent>
+                <TabsContent value="studio" className="mt-6"><DocumentStudioTab /></TabsContent>
                 <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
                 <TabsContent value="analyzer" className="mt-6"><DocumentIntelligenceTab /></TabsContent>
                 <TabsContent value="watcher" className="mt-6"><RegulationWatcherTab /></TabsContent>
