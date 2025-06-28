@@ -43,7 +43,7 @@ import type { UserProfile } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
-import { addMonths, format } from "date-fns";
+import { addDays, addMonths, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -146,11 +146,18 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
                 const checklistItems = response.filings.map((filing) => {
                     let finalDueDate = filing.date;
+                    const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
+                    const titleLower = filing.title.toLowerCase();
 
                     // Override specific initial deadlines for guaranteed accuracy.
-                    if (filing.title.toLowerCase().includes('open company bank account')) {
-                        const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
+                    if (titleLower.includes('open company bank account')) {
                         finalDueDate = format(addMonths(incDate, 6), 'yyyy-MM-dd');
+                    } else if (titleLower.includes('first board meeting')) {
+                        finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
+                    } else if (titleLower.includes('appointment of first auditor')) {
+                        finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
+                    } else if (titleLower.includes('commencement of business') || titleLower.includes('inc-20a')) {
+                         finalDueDate = format(addDays(incDate, 180), 'yyyy-MM-dd');
                     }
                     
                     return {
@@ -513,3 +520,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    
