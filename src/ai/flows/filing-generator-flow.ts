@@ -24,7 +24,7 @@ const FilingItemSchema = z.object({
 });
 
 const FilingGeneratorOutputSchema = z.object({
-    filings: z.array(FilingItemSchema).describe("A list of 5-7 plausible compliance filings.")
+    filings: z.array(FilingItemSchema).describe("A list of plausible compliance filings for a full year.")
 });
 export type FilingGeneratorOutput = z.infer<typeof FilingGeneratorOutputSchema>;
 
@@ -43,11 +43,11 @@ const prompt = ai.definePrompt({
 **Company Type**: {{companyType}}
 **Legal Region**: {{legalRegion}}
 
-Use the following dataset as your **only source of truth**. First, find the section that matches the company's Legal Region and Type. Then, generate a list of 5-7 relevant compliance tasks.
+Use the following dataset as your **only source of truth**. First, find the section that matches the company's Legal Region and Type. Then, generate a list of all relevant compliance tasks.
 
 **Instructions**:
 1.  **Calculate Due Dates**: All due dates must be calculated based on the \`incorporationDate\`. For example, "Within 30 days of incorporation" means \`incorporationDate\` + 30 days. For annual tasks (e.g., "By 30 September every year"), calculate the *next* upcoming due date based on the \`currentDate\`.
-2.  **Filter by Timeline**: Focus on tasks that are due soon, upcoming, or recently overdue. Generate filings due within the last 2 months from the \`currentDate\`, the current month, and the next 3-4 months.
+2.  **Calculate for Full Year**: Generate all relevant compliance tasks for a full 12-month period starting from the \`currentDate\`. Include any recently overdue tasks from the last 2 months.
 3.  **Determine Status**: The 'status' for each filing MUST be correctly set to 'overdue' or 'upcoming' by comparing its calculated due date to the \`currentDate\`.
 4.  **Lifecycle Awareness**: For a newly incorporated company, prioritize initial filings. For an older company, prioritize recurring annual/quarterly filings.
 5.  **Data-Driven**: Do not invent filings. Stick to the tasks listed in the provided dataset for the relevant jurisdiction and company type. Assign a 'type' (Corporate Filing, Tax Filing, Other Task) based on the task description.
