@@ -140,13 +140,33 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                
+                let processedFilings = response.filings.slice();
                 const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
 
-                // Initial list from AI
-                let processedFilings = response.filings.slice();
+                // --- Smart GST Logic ---
+                const hasGst = activeCompany.gstin && activeCompany.gstin.trim().length > 0;
+                if (hasGst) {
+                    // If company has GSTIN, remove any task asking to apply for it.
+                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().includes('apply for gst'));
+                } else {
+                    // If no GSTIN, remove all GSTR filing tasks.
+                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
+                    // And ensure a task to apply for GST exists.
+                    const hasApplyGstTask = processedFilings.some(f => f.title.toLowerCase().includes('apply for gst'));
+                    if (!hasApplyGstTask) {
+                        processedFilings.unshift({
+                            date: format(addDays(incDate, 30), 'yyyy-MM-dd'),
+                            title: 'Apply for GST Registration',
+                            type: 'Tax Filing',
+                            status: 'upcoming',
+                        });
+                    }
+                }
 
-                // 1. Filter out any incorrect INC-20A from AI, then add our correct one.
+                // --- Hard-coded Critical Filings Logic ---
                 if (activeCompany.legalRegion === 'India') {
+                    // 1. Filter out any incorrect INC-20A from AI, then add our correct one.
                     processedFilings = processedFilings.filter(f => 
                         !f.title.toLowerCase().includes('inc-20a') && 
                         !f.title.toLowerCase().includes('commencement of business')
@@ -158,30 +178,24 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         status: 'upcoming',
                     });
                 }
-
-                // 2. Handle GST filing dependency
-                const isGstRegistered = Object.keys(savedStatuses).some(key => 
-                    key.toLowerCase().includes('gst registration') && savedStatuses[key] === true
-                );
-
-                if (!isGstRegistered) {
-                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
-                }
-
-                // 3. Map to checklist items and apply hard-coded date overrides
+                
+                // --- Map to checklist items and apply hard-coded date overrides ---
                 const checklistItems = processedFilings.map((filing) => {
                     let finalDueDate = filing.date;
                     const titleLower = filing.title.toLowerCase();
 
-                    // Hard-coded overrides for critical initial filings
+                    // Hard-coded overrides for critical initial filings for accuracy
+                    if (activeCompany.legalRegion === 'India') {
+                      if (titleLower.includes('first board meeting')) {
+                          finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
+                      } else if (titleLower.includes('appointment of first auditor')) {
+                          finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
+                      } else if (titleLower.includes('commencement of business') || titleLower.includes('inc-20a')) {
+                          finalDueDate = format(addDays(incDate, 180), 'yyyy-MM-dd');
+                      }
+                    }
                     if (titleLower.includes('open company bank account')) {
                         finalDueDate = format(addMonths(incDate, 6), 'yyyy-MM-dd');
-                    } else if (titleLower.includes('first board meeting')) {
-                        finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
-                    } else if (titleLower.includes('appointment of first auditor')) {
-                        finalDueDate = format(addDays(incDate, 30), 'yyyy-MM-dd');
-                    } else if (titleLower.includes('commencement of business') || titleLower.includes('inc-20a')) {
-                         finalDueDate = format(addDays(incDate, 180), 'yyyy-MM-dd');
                     }
                     
                     return {
@@ -202,6 +216,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
                     if (aIsOverdue && !bIsOverdue) return -1;
                     if (!aIsOverdue && bIsOverdue) return 1;
+                    
+                    if(a.completed && !b.completed) return 1;
+                    if(!a.completed && b.completed) return -1;
 
                     return aDueDate.getTime() - bDueDate.getTime();
                 });
@@ -211,11 +228,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 
                 // Set state for stat cards
                 const upcomingFilings = checklistItems.filter(item => {
-                    const today = startOfToday();
-                    return new Date(item.dueDate) >= today && !item.completed;
+                    return new Date(item.dueDate + 'T00:00:00') >= today && !item.completed;
                 });
                 const overdueFilings = checklistItems.filter(item => {
-                    const today = startOfToday();
                     return new Date(item.dueDate + 'T00:00:00') < today && !item.completed;
                 });
                 const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
