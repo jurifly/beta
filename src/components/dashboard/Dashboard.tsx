@@ -44,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -98,17 +99,26 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
 
 // --- Dashboards ---
 
+type DashboardChecklistItem = {
+    id: string;
+    text: string;
+    completed: boolean;
+    dueDate: string;
+    isOverdue: boolean;
+};
+
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
     const { addNotification } = useAuth();
 
     const [dynamicData, setDynamicData] = useState<{
         filings: number;
-        checklist: { id: number; text: string; completed: boolean }[];
         riskScore: number;
         alerts: number;
         loading: boolean;
-    }>({ filings: 0, checklist: [], riskScore: 0, alerts: 0, loading: true });
+    }>({ filings: 0, riskScore: 0, alerts: 0, loading: true });
+    
+    const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
 
@@ -159,18 +169,23 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     });
                 });
 
+                const storageKey = `dashboard-checklist-${activeCompany.id}`;
+                const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
-                const checklistItems = response.filings.slice(0, 3).map((filing, index) => ({
-                    id: index + 1,
+                const checklistItems = response.filings.slice(0, 3).map((filing) => ({
+                    id: filing.title,
                     text: filing.title,
-                    completed: filing.status === 'completed'
+                    dueDate: filing.date,
+                    isOverdue: filing.status === 'overdue',
+                    completed: savedStatuses[filing.title] ?? filing.status === 'completed',
                 }));
+                setChecklist(checklistItems);
+
 
                 const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
 
                 setDynamicData({
                     filings: upcomingFilings.length,
-                    checklist: checklistItems,
                     riskScore: riskScore,
                     alerts: overdueFilings.length,
                     loading: false
@@ -178,12 +193,29 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
             } catch (error) {
                 console.error("Failed to fetch AI-generated dashboard data:", error);
-                setDynamicData({ filings: 0, checklist: [], riskScore: 0, alerts: 0, loading: false });
+                setDynamicData({ filings: 0, riskScore: 0, alerts: 0, loading: false });
             }
         }
 
         fetchDashboardData();
     }, [activeCompany, addNotification]);
+
+    const handleToggleComplete = (itemId: string) => {
+        if (!activeCompany) return;
+
+        const newChecklist = checklist.map(item =>
+            item.id === itemId ? { ...item, completed: !item.completed } : item
+        );
+        setChecklist(newChecklist);
+
+        const storageKey = `dashboard-checklist-${activeCompany.id}`;
+        const newStatuses = newChecklist.reduce((acc, item) => {
+            acc[item.id] = item.completed;
+            return acc;
+        }, {} as Record<string, boolean>);
+        
+        localStorage.setItem(storageKey, JSON.stringify(newStatuses));
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -213,19 +245,29 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     <CardDescription>Key compliance items for your company.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    {dynamicData.loading ? (
+                     {dynamicData.loading ? (
                         <div className="space-y-3">
                             <Skeleton className="h-6 w-full" />
                             <Skeleton className="h-6 w-5/6" />
                             <Skeleton className="h-6 w-full" />
                         </div>
-                    ) : dynamicData.checklist.length > 0 ? (
-                        dynamicData.checklist.map(item => (
-                            <div key={item.id} className="flex items-center gap-3 text-sm">
-                                <CheckCircle className={cn("h-5 w-5", item.completed ? "text-green-500" : "text-muted-foreground/30")} />
-                                <span className={cn(item.completed && "line-through text-muted-foreground")}>{item.text}</span>
-                            </div>
-                        ))
+                    ) : checklist.length > 0 ? (
+                        checklist.map(item => {
+                            const isItemOverdue = item.isOverdue && !item.completed;
+                            return (
+                                <div key={item.id} className={cn("flex items-center gap-3 text-sm p-2 rounded-md transition-colors", isItemOverdue && "bg-destructive/10")}>
+                                    <Checkbox
+                                        id={item.id}
+                                        checked={item.completed}
+                                        onCheckedChange={() => handleToggleComplete(item.id)}
+                                        className={cn(isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                    />
+                                    <label htmlFor={item.id} className={cn("flex-1 cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive font-medium")}>
+                                        {item.text}
+                                    </label>
+                                </div>
+                            )
+                        })
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
                             <p>No items yet. AI couldn't generate a checklist.</p>
