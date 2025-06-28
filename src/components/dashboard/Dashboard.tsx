@@ -138,18 +138,40 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     legalRegion: activeCompany.legalRegion,
                 });
 
-                const upcomingFilings = response.filings.filter(f => f.status === 'upcoming');
-                const overdueFilings = response.filings.filter(f => f.status === 'overdue');
-                
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
 
-                const checklistItems = response.filings.map((filing) => {
+                // Initial list from AI
+                let processedFilings = response.filings.slice();
+
+                // 1. Ensure INC-20A is present for Indian companies
+                const hasInc20a = processedFilings.some(f => f.title.toLowerCase().includes('inc-20a') || f.title.toLowerCase().includes('commencement of business'));
+                if (activeCompany.legalRegion === 'India' && !hasInc20a) {
+                    processedFilings.push({
+                        date: format(addDays(incDate, 180), 'yyyy-MM-dd'),
+                        title: 'File for Commencement of Business (INC-20A)',
+                        type: 'Corporate Filing',
+                        status: 'upcoming',
+                    });
+                }
+
+                // 2. Handle GST filing dependency
+                const gstRegistrationTaskTitle = 'Apply for GST Registration';
+                const isGstRegistered = Object.keys(savedStatuses).some(key => 
+                    key.toLowerCase().includes('gst registration') && savedStatuses[key] === true
+                );
+
+                if (!isGstRegistered) {
+                    processedFilings = processedFilings.filter(f => !f.title.toLowerCase().startsWith('gstr'));
+                }
+
+                // 3. Map to checklist items and apply hard-coded date overrides
+                const checklistItems = processedFilings.map((filing) => {
                     let finalDueDate = filing.date;
-                    const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
                     const titleLower = filing.title.toLowerCase();
 
-                    // Override specific initial deadlines for guaranteed accuracy.
+                    // Hard-coded overrides for critical initial filings
                     if (titleLower.includes('open company bank account')) {
                         finalDueDate = format(addMonths(incDate, 6), 'yyyy-MM-dd');
                     } else if (titleLower.includes('first board meeting')) {
@@ -167,9 +189,21 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         completed: savedStatuses[filing.title] ?? false,
                     }
                 });
+
+                // Set final state for checklist
                 setChecklist(checklistItems);
-
-
+                
+                // Set state for stat cards
+                const upcomingFilings = checklistItems.filter(item => {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    return new Date(item.dueDate) >= today && !item.completed;
+                });
+                const overdueFilings = checklistItems.filter(item => {
+                     const today = new Date();
+                    today.setHours(0,0,0,0);
+                    return new Date(item.dueDate) < today && !item.completed;
+                });
                 const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
 
                 setDynamicData({
@@ -520,5 +554,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    
