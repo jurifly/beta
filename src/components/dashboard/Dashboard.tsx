@@ -43,7 +43,7 @@ import type { UserProfile } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
-import { format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -144,12 +144,22 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
-                const checklistItems = response.filings.map((filing) => ({
-                    id: filing.title,
-                    text: filing.title,
-                    dueDate: filing.date,
-                    completed: savedStatuses[filing.title] ?? false,
-                }));
+                const checklistItems = response.filings.map((filing) => {
+                    let finalDueDate = filing.date;
+
+                    // Override specific initial deadlines for guaranteed accuracy.
+                    if (filing.title.toLowerCase().includes('open company bank account')) {
+                        const incDate = new Date(activeCompany.incorporationDate + 'T00:00:00');
+                        finalDueDate = format(addMonths(incDate, 6), 'yyyy-MM-dd');
+                    }
+                    
+                    return {
+                        id: filing.title,
+                        text: filing.title,
+                        dueDate: finalDueDate,
+                        completed: savedStatuses[filing.title] ?? false,
+                    }
+                });
                 setChecklist(checklistItems);
 
 
