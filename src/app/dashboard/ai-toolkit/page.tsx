@@ -44,6 +44,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // --- Tab: AI Legal Assistant ---
 
@@ -686,12 +687,12 @@ const DocumentGenerator = () => {
   if (!userProfile) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start h-full max-h-[calc(100vh-24rem)]">
-      <Card className="lg:col-span-1 xl:col-span-1 h-full flex flex-col bg-card interactive-lift">
+    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
+      <Card className="lg:col-span-1 xl:col-span-1 flex flex-col bg-card interactive-lift lg:max-h-[calc(100vh-22rem)]">
         <CardHeader><CardTitle className="text-base">Template Library</CardTitle><CardDescription className="text-xs">Select a template to generate.</CardDescription></CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
           <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10 h-9" /></div>
-          <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-2">
+          <div className="flex-1 overflow-y-auto -mr-4 pr-4 py-2">
              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
                 <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
                     {availableCategories.map((category) => (
@@ -706,7 +707,7 @@ const DocumentGenerator = () => {
         </CardContent>
         <CardFooter className="mt-auto pt-4"><Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><FilePenLine className="mr-2 h-4 w-4" /> Generate Document</>}</Button></CardFooter>
       </Card>
-      <div className="lg:col-span-2 xl:col-span-3 h-full overflow-y-auto -mr-2 pr-4 space-y-4">
+      <div className="lg:col-span-2 xl:col-span-3 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div><h2 className="text-xl font-bold font-headline">Document Preview</h2></div>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
@@ -1032,3 +1033,6 @@ export default function AiToolkitPage() {
         </div>
     );
 }
+
+
+    
