@@ -177,12 +177,15 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
                 const checklistItems = response.filings.map((filing) => {
                     const dueDate = new Date(filing.date + 'T00:00:00');
+                    const isCompleted = savedStatuses[filing.title] ?? false;
+                    const isTaskOverdue = dueDate < todayForOverdueCheck;
+
                     return {
                         id: filing.title,
                         text: filing.title,
                         dueDate: filing.date,
-                        isOverdue: dueDate < todayForOverdueCheck && filing.status !== 'completed',
-                        completed: savedStatuses[filing.title] ?? filing.status === 'completed',
+                        isOverdue: isTaskOverdue,
+                        completed: isCompleted,
                     }
                 });
                 setChecklist(checklistItems);
