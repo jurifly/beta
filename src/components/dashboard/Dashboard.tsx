@@ -192,8 +192,22 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     }
                 });
 
+                const today = startOfToday();
+
+                const sortedChecklist = checklistItems.sort((a, b) => {
+                    const aDueDate = new Date(a.dueDate + 'T00:00:00');
+                    const bDueDate = new Date(b.dueDate + 'T00:00:00');
+                    const aIsOverdue = aDueDate < today && !a.completed;
+                    const bIsOverdue = bDueDate < today && !b.completed;
+
+                    if (aIsOverdue && !bIsOverdue) return -1;
+                    if (!aIsOverdue && bIsOverdue) return 1;
+
+                    return aDueDate.getTime() - bDueDate.getTime();
+                });
+                
                 // Set final state for checklist
-                setChecklist(checklistItems);
+                setChecklist(sortedChecklist);
                 
                 // Set state for stat cards
                 const upcomingFilings = checklistItems.filter(item => {
