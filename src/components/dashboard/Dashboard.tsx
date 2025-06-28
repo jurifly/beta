@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -175,13 +175,13 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const todayForOverdueCheck = new Date();
                 todayForOverdueCheck.setHours(0, 0, 0, 0);
 
-                const checklistItems = response.filings.slice(0, 3).map((filing) => {
+                const checklistItems = response.filings.map((filing) => {
                     const dueDate = new Date(filing.date + 'T00:00:00');
                     return {
                         id: filing.title,
                         text: filing.title,
                         dueDate: filing.date,
-                        isOverdue: dueDate < todayForOverdueCheck,
+                        isOverdue: dueDate < todayForOverdueCheck && filing.status !== 'completed',
                         completed: savedStatuses[filing.title] ?? filing.status === 'completed',
                     }
                 });
@@ -253,24 +253,32 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 <CardContent className="space-y-3">
                      {dynamicData.loading ? (
                         <div className="space-y-3">
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-5/6" />
-                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-5/6" />
+                            <Skeleton className="h-10 w-full" />
                         </div>
                     ) : checklist.length > 0 ? (
                         checklist.map(item => {
                             const isItemOverdue = item.isOverdue && !item.completed;
                             return (
-                                <div key={item.id} className={cn("flex items-center gap-3 text-sm p-2 rounded-md transition-colors", isItemOverdue && "bg-destructive/10")}>
+                                <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                     <Checkbox
                                         id={item.id}
                                         checked={item.completed}
                                         onCheckedChange={() => handleToggleComplete(item.id)}
-                                        className={cn(isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                        className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
                                     />
-                                    <label htmlFor={item.id} className={cn("flex-1 cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive font-medium")}>
-                                        {item.text}
-                                    </label>
+                                    <div className="flex-1 grid gap-0.5">
+                                      <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
+                                          {item.text}
+                                      </label>
+                                      <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
+                                        Due: {format(new Date(item.dueDate + 'T00:00:00'), 'do MMM, yyyy')}
+                                      </span>
+                                    </div>
+                                    {isItemOverdue && (
+                                      <Badge variant="destructive" className="self-center">Overdue</Badge>
+                                    )}
                                 </div>
                             )
                         })
@@ -432,8 +440,62 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile } = useAuth();
+  const { userProfile, addNotification } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
+  const fetchDashboardDataCalled = React.useRef(false);
+
+  useEffect(() => {
+    if (fetchDashboardDataCalled.current || !userProfile?.activeCompanyId) {
+        return;
+    }
+    fetchDashboardDataCalled.current = true;
+    
+    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+    if (!activeCompany) return;
+
+    const fetchDashboardData = async () => {
+        try {
+            const currentDate = format(new Date(), 'yyyy-MM-dd');
+            const response = await generateFilings({
+                companyType: activeCompany.type,
+                incorporationDate: activeCompany.incorporationDate,
+                currentDate: currentDate,
+                legalRegion: activeCompany.legalRegion,
+            });
+            const overdueFilings = response.filings.filter(f => f.status === 'overdue');
+            overdueFilings.forEach(filing => {
+                addNotification({
+                    title: `${filing.title} Overdue`,
+                    description: `Your filing for ${filing.title} was due on ${format(new Date(filing.date), 'do MMM')}. Please address this immediately to avoid penalties.`,
+                    icon: 'AlertTriangle',
+                    link: '/dashboard/calendar',
+                });
+            });
+
+            const today = new Date();
+            const twoWeeksFromNow = new Date();
+            twoWeeksFromNow.setDate(today.getDate() + 14);
+
+            const upcomingSoon = response.filings.filter(filing => {
+                const dueDate = new Date(filing.date + 'T00:00:00');
+                return filing.status === 'upcoming' && dueDate > today && dueDate <= twoWeeksFromNow;
+            });
+            
+            upcomingSoon.forEach(filing => {
+                addNotification({
+                    title: `Upcoming Filing: ${filing.title}`,
+                    description: `This filing is due on ${format(new Date(filing.date + 'T00:00:00'), 'do MMM, yyyy')}.`,
+                    icon: 'FileClock',
+                    link: '/dashboard/calendar'
+                });
+            });
+
+        } catch (error) {
+            console.error("Failed to fetch initial dashboard notifications:", error);
+        }
+    }
+    fetchDashboardData();
+  }, [userProfile, addNotification]);
 
   const renderDesktopDashboardByRole = () => {
     if (!userProfile) return <div className="space-y-6">
