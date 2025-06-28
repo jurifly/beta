@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -31,6 +30,8 @@ import {
   Zap,
   Archive,
   Globe,
+  LifeBuoy,
+  PenSquare,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,22 +58,24 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network, requiredPlan: 'Founder' },
+  businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
-  analytics: { href: "/dashboard/analytics", label: "Insights", icon: LineChart, requiredPlan: 'Founder' },
-  clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban, requiredPlan: 'Pro' },
-  team: { href: "/dashboard/team", label: "Team", icon: Users, requiredPlan: 'Pro' },
-  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library, requiredPlan: 'Founder' },
+  analytics: { href: "/dashboard/analytics", label: "Insights", icon: LineChart },
+  clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
+  team: { href: "/dashboard/team", label: "Team", icon: Users },
+  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
+  reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale },
+  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale, requiredPlan: 'Pro' },
-  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
+  help: { href: "mailto:support@clausey.com", label: "Help & Support", icon: LifeBuoy },
+  feedback: { href: "mailto:feedback@clausey.com", label: "Feedback", icon: PenSquare },
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
-type NavItem = typeof navItemConfig[NavItemKey] & { requiredPlan?: UserPlan };
+type NavItem = typeof navItemConfig[NavItemKey];
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
@@ -204,12 +207,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-4">
-                {userProfile.plan !== 'Enterprise' && (
-                    <div className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg">
-                        <Bolt className="h-4 w-4 text-primary" />
-                        <span className="text-muted-foreground">{userProfile.credits ?? 0} Credits</span>
-                    </div>
-                )}
+                <div className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg">
+                    <Bolt className="h-4 w-4 text-primary" />
+                    <span className="text-muted-foreground">{userProfile.credits ?? 0} Credits</span>
+                </div>
                 <ThemeToggle />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -303,26 +304,10 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
-const planHierarchy: Record<UserPlan, number> = {
-  'Starter': 0,
-  'Founder': 1,
-  'Pro': 2,
-  'Enterprise': 3,
-  'Free': 0, 
-  'CA Pro': 2,
-  'Enterprise Pro': 3,
-};
-
 const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
-    const { userProfile, isPlanActive } = useAuth();
 
-    if (!userProfile) return null;
-    
-    const planForPerms: UserPlan = (userProfile.plan !== 'Starter' && userProfile.plan !== 'Free' && !isPlanActive) ? 'Starter' : userProfile.plan;
-    const effectiveUserPlanLevel = planHierarchy[planForPerms];
-
-    const bottomNavItems = [navItemConfig.billing, navItemConfig.settings];
+    const bottomNavItems = [navItemConfig.billing, navItemConfig.settings, navItemConfig.help, navItemConfig.feedback];
 
     return (
       <div className="hidden border-r bg-card md:block">
@@ -332,47 +317,29 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
               <span className="flex items-center">
                 Clausey
-                 {userProfile.plan !== 'Starter' && (
-                    <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
-                      <span className="mr-1.5">
-                        {userProfile.plan === 'Founder' ? '💡' : userProfile.plan === 'Pro' ? '💼' : '🏢'}
-                      </span>
-                      {userProfile.plan}
-                    </Badge>
-                  )}
+                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
               </span>
             </Link>
           </div>
           <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
-                const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
-                const isLocked = item.requiredPlan ? effectiveUserPlanLevel < requiredPlanLevel : false;
-                
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Link
-                          href={isLocked ? '#' : item.href}
+                          href={item.href}
                           className={cn(
                               "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
                               pathname.startsWith(item.href) && item.href !== '/dashboard' && "bg-muted text-primary font-semibold",
-                              pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary font-semibold",
-                              isLocked && "text-muted-foreground/50 hover:text-muted-foreground/50 cursor-not-allowed hover:transform-none hover:shadow-none"
+                              pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary font-semibold"
                           )}
-                          onClick={(e) => isLocked && e.preventDefault()}
                         >
                           <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                           {item.label}
-                          {isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500"/>}
                         </Link>
                       </TooltipTrigger>
-                      {isLocked && (
-                        <TooltipContent side="right">
-                          <p>Upgrade to unlock</p>
-                        </TooltipContent>
-                      )}
                     </Tooltip>
                   </TooltipProvider>
                 )
@@ -409,19 +376,13 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
 
 const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
-    const { userProfile, isPlanActive } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
-
-    if (!userProfile) return null;
     
-    const planForPerms: UserPlan = (userProfile.plan !== 'Starter' && userProfile.plan !== 'Free' && !isPlanActive) ? 'Starter' : userProfile.plan;
-    const effectiveUserPlanLevel = planHierarchy[planForPerms];
-
     const handleLinkClick = () => {
       setIsOpen(false);
     }
     
-    const bottomNavItems = [navItemConfig.billing, navItemConfig.settings];
+    const bottomNavItems = [navItemConfig.billing, navItemConfig.settings, navItemConfig.help, navItemConfig.feedback];
 
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -442,39 +403,25 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                 <span className="flex items-center">
                   Clausey
-                   {userProfile.plan !== 'Starter' && (
-                     <Badge variant="outline" className="ml-2 border-accent/30 bg-accent/10 text-accent dark:text-accent">
-                        <span className="mr-1.5">
-                          {userProfile.plan === 'Founder' ? '💡' : userProfile.plan === 'Pro' ? '💼' : '🏢'}
-                        </span>
-                        {userProfile.plan}
-                    </Badge>
-                  )}
+                  <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
                 </span>
             </Link>
           </div>
           <ScrollArea className="flex-1">
             <nav className="grid gap-2 text-lg font-medium p-4">
               {navItems.map(item => {
-                const requiredPlanLevel = item.requiredPlan ? planHierarchy[item.requiredPlan] : 0;
-                const isLocked = item.requiredPlan ? effectiveUserPlanLevel < requiredPlanLevel : false;
                 return (
                     <Link
                         key={item.href}
-                        href={isLocked ? '#' : item.href}
+                        href={item.href}
                         className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
                             pathname.startsWith(item.href) && item.href !== '/dashboard' && "bg-muted text-primary",
-                            pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary",
-                            isLocked && "opacity-60 cursor-not-allowed active:transform-none"
+                            pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary"
                         )}
-                        onClick={(e) => {
-                          if (isLocked) e.preventDefault();
-                          else handleLinkClick();
-                        }}
+                        onClick={handleLinkClick}
                     >
                         <item.icon className="h-5 w-5 transition-transform" />
                         {item.label}
-                        {isLocked && <Lock className="h-4 w-4 ml-auto text-amber-500" />}
                     </Link>
                 )
               })}
