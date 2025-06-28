@@ -54,7 +54,7 @@ Instructions:
     - Upcoming in the next 3 months.
     This should be the bulk of your response.
 
-2.  **Include Initial Setup Tasks**: For newly incorporated companies (within the first 6 months), ALWAYS include critical one-time setup tasks like "Open Company Bank Account", "Apply for GSTIN", and "Shops & Establishment Act Registration". Set their due dates realistically to encourage prompt action. For example, the deadline for opening a bank account should be set within 60 days of the incorporation date, not 6 months. Apply similar logic to other initial tasks.
+2.  **Include Initial Setup Tasks**: For newly incorporated companies (within the first 6 months), ALWAYS include critical one-time setup tasks like "Open Company Bank Account", "Apply for GSTIN", and "Shops & Establishment Act Registration". Set their due dates based on the standard, legally or practically recommended timelines for {{legalRegion}}. For example, the deadline for opening a bank account is typically within 30-60 days of incorporation in India to deposit share capital, but other tasks might have longer timelines. Ensure the generated dates are accurate and reflect these norms.
 
 3.  **Lifecycle Awareness**: Other filings must be relevant to the company's age. For a newly incorporated company, prioritize initial filings. For an older company, include annual filings that fall within the specified timeline.
 
