@@ -53,6 +53,7 @@ import type { UserProfile, UserPlan, AppNotification } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
+import { BetaBanner } from "@/components/dashboard/beta-banner";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -265,6 +266,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
+                <BetaBanner />
                 {children}
             </main>
             </div>
@@ -536,5 +538,3 @@ const MobileBottomNav = () => {
     </div>
   )
 }
-
-    
