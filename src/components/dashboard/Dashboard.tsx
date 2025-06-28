@@ -137,8 +137,28 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         title: `${filing.title} Overdue`,
                         description: `Your filing for ${filing.title} was due on ${format(new Date(filing.date), 'do MMM')}. Please address this immediately to avoid penalties.`,
                         icon: 'AlertTriangle',
+                        link: '/dashboard/calendar',
                     });
                 });
+
+                const today = new Date();
+                const twoWeeksFromNow = new Date();
+                twoWeeksFromNow.setDate(today.getDate() + 14);
+
+                const upcomingSoon = upcomingFilings.filter(filing => {
+                    const dueDate = new Date(filing.date + 'T00:00:00'); // Avoid timezone issues
+                    return dueDate > today && dueDate <= twoWeeksFromNow;
+                });
+
+                upcomingSoon.forEach(filing => {
+                    addNotification({
+                        title: `Upcoming Filing: ${filing.title}`,
+                        description: `This filing is due on ${format(new Date(filing.date + 'T00:00:00'), 'do MMM, yyyy')}.`,
+                        icon: 'FileClock',
+                        link: '/dashboard/calendar'
+                    });
+                });
+
 
                 const checklistItems = response.filings.slice(0, 3).map((filing, index) => ({
                     id: index + 1,
