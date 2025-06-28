@@ -151,12 +151,15 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
-                const checklistItems = processedFilings.map((filing) => ({
-                    id: filing.title,
-                    text: filing.title,
-                    dueDate: filing.date,
-                    completed: savedStatuses[filing.title] ?? false,
-                }));
+                const checklistItems = processedFilings.map((filing) => {
+                    const uniqueId = `${filing.title}-${filing.date}`;
+                    return {
+                        id: uniqueId,
+                        text: filing.title,
+                        dueDate: filing.date,
+                        completed: savedStatuses[uniqueId] ?? false,
+                    };
+                });
 
                 setChecklist(checklistItems);
                 
