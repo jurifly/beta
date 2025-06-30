@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -70,8 +71,8 @@ const navItemConfig = {
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  help: { href: "mailto:support@clausey.com", label: "Help & Support", icon: LifeBuoy },
-  feedback: { href: "mailto:feedback@clausey.com", label: "Feedback", icon: PenSquare },
+  help: { href: "/dashboard/help", label: "Help & Support", icon: LifeBuoy },
+  feedback: { href: "/dashboard/feedback", label: "Feedback", icon: PenSquare },
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
