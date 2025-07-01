@@ -35,9 +35,9 @@ export default function ReconciliationPage() {
       }
   }, [toast]);
 
-  const GSTDropzone = useDropzone({ onDrop: handleDrop('gst'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] }, maxSize: 1024 * 1024 });
-  const ROCDropzone = useDropzone({ onDrop: handleDrop('roc'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] }, maxSize: 1024 * 1024 });
-  const ITRDropzone = useDropzone({ onDrop: handleDrop('itr'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'] }, maxSize: 1024 * 1024 });
+  const GSTDropzone = useDropzone({ onDrop: handleDrop('gst'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 });
+  const ROCDropzone = useDropzone({ onDrop: handleDrop('roc'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 });
+  const ITRDropzone = useDropzone({ onDrop: handleDrop('itr'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 });
 
   const getFileAsDataURI = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -96,7 +96,7 @@ export default function ReconciliationPage() {
       {file ? (
         <p className="text-sm text-green-600 mt-2 flex items-center gap-2"><FileText className="w-4 h-4"/>{file.name}</p>
       ) : (
-        <p className="text-xs text-muted-foreground">Drag 'n' drop a PDF here, or click to select</p>
+        <p className="text-xs text-muted-foreground">Drag 'n' drop a file here, or click</p>
       )}
     </div>
   );
