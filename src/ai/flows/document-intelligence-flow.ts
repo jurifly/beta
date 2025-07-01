@@ -42,12 +42,20 @@ const ReplySuggestionSchema = z.object({
     content: z.string().describe("A professionally drafted, complete reply to the notice. Use markdown for formatting."),
 });
 
+const ContractDetailsSchema = z.object({
+  contractingParties: z.array(z.string()).describe("The names of the primary parties in the contract."),
+  effectiveDate: z.string().describe("The effective date of the agreement in YYYY-MM-DD format."),
+  term: z.string().describe("The term or duration of the contract, e.g., '3 years', 'Perpetual'."),
+  renewalNoticeDate: z.string().optional().describe("The deadline for providing notice of non-renewal in YYYY-MM-DD format, if specified."),
+}).nullable().describe("If the document is a 'Legal Contract', extract these key details. Otherwise, set to null.");
+
 const DocumentIntelligenceOutputSchema = z.object({
   documentType: DocumentTypeEnum.describe("The detected type of the document."),
   summary: z.string().describe("A concise, bullet-point summary of the document's key points, purpose, and obligations, in layman's terms."),
   riskFlags: z.array(RiskFlagSchema).describe("A list of potential risks, liabilities, or unfavorable terms identified in the document."),
   replySuggestion: ReplySuggestionSchema.optional().nullable().describe("If the document is a notice that requires a response, provide a suggested draft reply here. Otherwise, omit this field."),
   reminder: ReminderSuggestionSchema.optional().nullable().describe("If a deadline or follow-up date is mentioned, suggest a reminder. Otherwise, omit this field."),
+  contractDetails: ContractDetailsSchema.describe("If the document is a 'Legal Contract', extract these key details. Otherwise, this field will be null."),
 });
 export type DocumentIntelligenceOutput = z.infer<typeof DocumentIntelligenceOutputSchema>;
 
@@ -80,6 +88,8 @@ Perform the following steps and provide the output in the specified JSON format:
 4.  **Suggest a Reply (If Applicable)**: If and only if the document is a 'Government Notice', a 'Termination/Warning Letter', or any other document that clearly requires a formal response, generate a complete, professionally drafted reply. The reply should be structured, respectful, and address the core points of the notice, using language and tone appropriate for {{legalRegion}}. Use markdown for formatting. If no reply is needed, omit the 'replySuggestion' field.
 
 5.  **Suggest a Reminder (If Applicable)**: If the document contains a specific deadline, response date, or a clear follow-up action with a timeframe, suggest a reminder. The reminder date should be set a few days *before* the actual deadline. If no clear date or timeframe is found, omit the 'reminder' field.
+
+6.  **Extract Contract Details (If Applicable)**: If and only if the document is classified as a 'Legal Contract', analyze the text to extract key structured data. Identify the primary contracting parties, the effective date of the agreement, the contract term (e.g., "2 years", "1 year, auto-renewing"), and any specified date or period for renewal notice. If it's not a contract, the \`contractDetails\` field should be null.
 `,
 });
 

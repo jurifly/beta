@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -14,13 +14,14 @@ import { useSearchParams } from 'next/navigation';
 
 import * as AiActions from './actions';
 import type { AssistantOutput } from '@/ai/flows/assistant-flow';
-import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag } from "@/lib/types"
+import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails } from "@/lib/types"
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
 import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
 import type { WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 import type { ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
+import type { LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,7 +36,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { Input } from '@/components/ui/input';
@@ -563,14 +564,45 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
           </AccordionTrigger>
           <AccordionContent>
               <Tabs defaultValue="summary" className="w-full px-4 pb-4">
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-4">
                       <TabsTrigger value="summary"><StickyNote/>Summary</TabsTrigger>
                       <TabsTrigger value="risks"><AlertCircle/>Risks</TabsTrigger>
+                      <TabsTrigger value="details"><FileSignature/>Details</TabsTrigger>
                       <TabsTrigger value="reply" ><MessageSquare/>Reply</TabsTrigger>
                       <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
+                  <TabsContent value="details" className="min-h-[200px] flex items-center justify-center">
+                    {doc.contractDetails ? (
+                      <div className="w-full space-y-3">
+                        <div className="p-3 border rounded-md">
+                          <p className="text-xs text-muted-foreground">Parties</p>
+                          <p className="font-medium">{doc.contractDetails.contractingParties.join(', ')}</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="p-3 border rounded-md">
+                            <p className="text-xs text-muted-foreground">Effective Date</p>
+                            <p className="font-medium">{format(new Date(doc.contractDetails.effectiveDate), "PPP")}</p>
+                          </div>
+                          <div className="p-3 border rounded-md">
+                            <p className="text-xs text-muted-foreground">Term</p>
+                            <p className="font-medium">{doc.contractDetails.term}</p>
+                          </div>
+                          <div className="p-3 border rounded-md">
+                            <p className="text-xs text-muted-foreground">Renewal Notice</p>
+                            <p className="font-medium">{doc.contractDetails.renewalNoticeDate ? format(new Date(doc.contractDetails.renewalNoticeDate), "PPP") : 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground">
+                        <FileSignature className="mx-auto w-8 h-8 mb-2 opacity-50" />
+                        <p className="font-semibold">No Contract Details Extracted</p>
+                        <p className="text-xs">The AI did not identify this as a standard contract.</p>
+                      </div>
+                    )}
+                  </TabsContent>
                    <TabsContent value="reply" className="p-4 bg-muted/50 rounded-lg border min-h-[200px] flex items-center justify-center">
                     {doc.replySuggestion ? (
                         <div className="prose dark:prose-invert max-w-none text-sm w-full">
@@ -1109,12 +1141,90 @@ const ReconciliationTab = () => {
     )
   }
 
+const LegalResearchTab = () => {
+    const [query, setQuery] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [result, setResult] = useState<LegalResearchOutput | null>(null);
+    const { toast } = useToast();
+    const { userProfile, deductCredits } = useAuth();
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleQuerySubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!query.trim() || !userProfile) return;
+
+        if (!await deductCredits(20)) return;
+        setIsProcessing(true);
+        setResult(null);
+
+        try {
+            const response = await AiActions.performLegalResearchAction({ query, legalRegion: userProfile.legalRegion });
+            setResult(response);
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "Research Failed", description: error.message });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+    
+    return (
+        <div className="grid lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-1 space-y-4">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Gavel/> AI Legal Research</CardTitle>
+                        <CardDescription>Ask complex legal questions and get AI-powered analysis and precedents.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleQuerySubmit} className="space-y-4">
+                            <Textarea
+                                ref={textareaRef}
+                                placeholder="e.g., Explain the concept of 'force majeure' in commercial contracts under Indian law."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                className="w-full resize-none min-h-[150px]"
+                                disabled={isProcessing}
+                            />
+                            <Button type="submit" className="w-full" disabled={isProcessing || !query.trim()}>
+                                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                Start Research
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+                <Card className="min-h-[500px]">
+                    <CardHeader><CardTitle>Research Analysis</CardTitle></CardHeader>
+                    <CardContent>
+                        {isProcessing && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Researching precedents and statutes...</p></div>}
+                        {!isProcessing && result && (
+                            <div className="space-y-6 animate-in fade-in-50">
+                                <Accordion type="multiple" defaultValue={['summary', 'analysis', 'precedents']} className="w-full">
+                                    <AccordionItem value="summary"><AccordionTrigger>Summary</AccordionTrigger><AccordionContent className="prose dark:prose-invert max-w-none text-sm p-4"><ReactMarkdown>{result.summary}</ReactMarkdown></AccordionContent></AccordionItem>
+                                    <AccordionItem value="analysis"><AccordionTrigger>Detailed Analysis</AccordionTrigger><AccordionContent className="prose dark:prose-invert max-w-none text-sm p-4"><ReactMarkdown>{result.analysis}</ReactMarkdown></AccordionContent></AccordionItem>
+                                    <AccordionItem value="precedents"><AccordionTrigger>Relevant Precedents</AccordionTrigger><AccordionContent className="space-y-3 pt-2">{result.precedents.map((p,i) => <div key={i} className="p-3 border rounded-md"><p className="font-semibold text-sm">{p.caseName}</p><p className="text-xs text-muted-foreground mt-1">{p.summary}</p></div>)}</AccordionContent></AccordionItem>
+                                </Accordion>
+                            </div>
+                        )}
+                         {!isProcessing && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gavel className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your legal analysis will appear here.</p></div>}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+};
+
 
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile } = useAuth();
     const searchParams = useSearchParams();
     const tab = searchParams.get('tab') || 'assistant';
+    
+    const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
+    const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
+
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1124,14 +1234,15 @@ export default function AiToolkitPage() {
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
                 <div className="w-full overflow-x-auto pb-2">
-                  <TabsList className="grid w-max grid-cols-7">
+                  <TabsList className="grid w-max grid-cols-8">
                       <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
                       <TabsTrigger value="studio" className="interactive-lift"><FilePenLine className="mr-2"/>Doc Studio</TabsTrigger>
                       <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
                       <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
-                      <TabsTrigger value="reconciliation" className="interactive-lift"><Scale className="mr-2"/>Reconciliation</TabsTrigger>
+                      {showReconciliation && <TabsTrigger value="reconciliation" className="interactive-lift"><Scale className="mr-2"/>Reconciliation</TabsTrigger>}
                       <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
                       <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
+                      {showLegalResearch && <TabsTrigger value="research" className="interactive-lift"><Gavel className="mr-2"/>Research</TabsTrigger>}
                   </TabsList>
                 </div>
                 <div className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto">
@@ -1139,9 +1250,10 @@ export default function AiToolkitPage() {
                     <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
                     <TabsContent value="audit"><DataroomAudit /></TabsContent>
                     <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
-                    <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>
+                    {showReconciliation && <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>}
                     <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
                     <TabsContent value="workflows"><WorkflowTab /></TabsContent>
+                    {showLegalResearch && <TabsContent value="research"><LegalResearchTab/></TabsContent>}
                 </div>
             </Tabs>
         </div>

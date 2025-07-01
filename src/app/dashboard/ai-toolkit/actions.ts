@@ -9,6 +9,7 @@ import { generateDocument, type DocumentGeneratorInput, type DocumentGeneratorOu
 import { generateWiki, type WikiGeneratorInput, type WikiGeneratorOutput } from '@/ai/flows/wiki-generator-flow';
 import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
+import { performLegalResearch, type LegalResearchInput, type LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 
 
 // --- AI Assistant Actions ---
@@ -106,4 +107,14 @@ export async function reconcileDocumentsAction(input: ReconciliationInput): Prom
         console.error('AI Flow Error:', e);
         throw new Error(e.message || 'Could not reconcile the documents.');
     }
+}
+
+// --- Legal Research Action ---
+export async function performLegalResearchAction(input: LegalResearchInput): Promise<LegalResearchOutput> {
+  try {
+    return await performLegalResearch(input);
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    throw new Error(e.message || 'Could not perform legal research.');
+  }
 }

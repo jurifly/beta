@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2, TrendingUp } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { CapTableModal } from '@/components/dashboard/cap-table-modal';
 import { useToast } from '@/hooks/use-toast';
+import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling-modal';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -30,6 +31,7 @@ export default function CapTablePage() {
     
     const [capTable, setCapTable] = useState<CapTableEntry[]>(activeCompany?.capTable || initialCapTable);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
@@ -129,6 +131,11 @@ export default function CapTablePage() {
                 onSave={handleAddOrEdit}
                 entryToEdit={entryToEdit}
             />
+            <CapTableModelingModal
+                isOpen={isModelingModalOpen}
+                onOpenChange={setIsModelingModalOpen}
+                currentCapTable={capTable}
+            />
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">Capitalization Table</h2>
@@ -149,7 +156,10 @@ export default function CapTablePage() {
                                 <CardTitle>Shareholder Ledger</CardTitle>
                                 <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
                             </div>
-                            <Button onClick={() => handleOpenModal()}><PlusCircle className="mr-2"/>Add Issuance</Button>
+                             <div className="flex gap-2">
+                                <Button variant="outline" onClick={() => setIsModelingModalOpen(true)}><TrendingUp className="mr-2"/>Model Round</Button>
+                                <Button onClick={() => handleOpenModal()}><PlusCircle className="mr-2"/>Add Issuance</Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <Table>

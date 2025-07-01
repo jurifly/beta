@@ -65,6 +65,10 @@ export interface Company {
     matters?: ClientMatter[];
     docRequests?: DocumentRequest[];
     boardMeetings?: BoardMeeting[];
+    financials?: {
+        monthlyRevenue: number;
+        monthlyExpenses: number;
+    };
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
@@ -200,6 +204,13 @@ export interface ReplySuggestion {
   content: string; // Markdown formatted
 }
 
+export interface ContractDetails {
+    contractingParties: string[];
+    effectiveDate: string;
+    term: string;
+    renewalNoticeDate?: string;
+}
+
 export interface DocumentAnalysis {
   id: string; // will be a timestamp
   fileName: string;
@@ -210,4 +221,5 @@ export interface DocumentAnalysis {
   replySuggestion: ReplySuggestion | null;
   reminder: ReminderSuggestion | null;
   redlineContent?: string;
+  contractDetails?: ContractDetails | null;
 }
