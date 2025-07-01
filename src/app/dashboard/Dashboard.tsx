@@ -26,6 +26,7 @@ import {
   Target,
   Upload,
   Loader2,
+  Library,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,7 +82,7 @@ const StatCard = ({ title, value, subtext, icon, colorClass, isLoading }: { titl
 );
 
 const QuickLinkCard = ({ title, description, href, icon }: { title: string, description: string, href: string, icon: React.ReactNode }) => (
-    <Card className="interactive-lift col-span-1 lg:col-span-2 hover:border-primary/50 transition-colors">
+    <Card className="interactive-lift hover:border-primary/50 transition-colors h-full">
         <Link href={href} className="block h-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-3 break-words">
@@ -438,28 +439,19 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 function CADashboard({ userProfile }: { userProfile: UserProfile }) {
     const clientCount = userProfile.companies.length;
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users className="h-4 w-4" />} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck className="h-4 w-4" />} /></Link>
-            <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock className="h-4 w-4" />} /></Link>
-
-            <div className="lg:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="col-span-1 lg:col-span-2">
                  <ComplianceActivityChart dataByYear={staticChartDataByYear} />
             </div>
-            
+
             <QuickLinkCard title="AI Assistant" description="Generate board resolutions or draft replies to notices using AI tailored for CAs." href="/dashboard/ai-toolkit?tab=assistant" icon={<Sparkles className="text-primary"/>} />
+            <QuickLinkCard title="Clause Library" description="Manage standard clauses for client engagement letters and other documents." href="/dashboard/clause-library" icon={<Library className="text-primary"/>} />
             
-            <Card className="interactive-lift">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Folders/> Client Filings</CardTitle>
-                    <CardDescription>Go to the calendar for a detailed view of all client deadlines.</CardDescription>
-                </CardHeader>
-                 <CardFooter>
-                    <Button asChild className="w-full">
-                        <Link href="/dashboard/calendar">View Calendar <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
+            <div className="col-span-1 lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users className="h-4 w-4" />} /></Link>
+                <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck className="h-4 w-4" />} /></Link>
+                <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock className="h-4 w-4" />} /></Link>
+            </div>
         </div>
     );
 }
@@ -468,30 +460,19 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
     const clientCount = userProfile.companies.length;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title="AI Document Intelligence" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
+            <div className="md:col-span-2">
+                 <QuickLinkCard title="AI Document Intelligence" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
+            </div>
+            <div className="md:col-span-2">
+                 <QuickLinkCard title="Clause Library" description="Build and manage your own library of reusable legal clauses for faster contract drafting." href="/dashboard/clause-library" icon={<Library className="text-primary"/>} />
             </div>
             <Link href="/dashboard/clients" className="block"><StatCard title="Active Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/ai-toolkit?tab=studio" className="block"><StatCard title="Contracts in Review" value="0" subtext="Across all clients" icon={<ClipboardList className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Documents awaiting your review" icon={<FileClock className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning className="h-4 w-4" />} /></Link>
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="md:col-span-4">
               <ComplianceActivityChart dataByYear={staticChartDataByYear} />
             </div>
-             <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><RadioTower /> Regulation Watch Digest</CardTitle>
-                    <CardDescription>The latest updates from key regulatory bodies.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-center text-muted-foreground p-8">
-                   <p>No new updates. Use Regulation Watcher to fetch the latest.</p>
-                </CardContent>
-                 <CardFooter>
-                    <Button asChild variant="outline">
-                        <Link href="/dashboard/ai-toolkit?tab=watcher">Go to Regulation Watcher</Link>
-                    </Button>
-                 </CardFooter>
-             </Card>
         </div>
     );
 }

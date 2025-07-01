@@ -86,7 +86,6 @@ const founderNavItems: NavItem[] = [
   navItemConfig.calendar,
   navItemConfig.analytics,
   navItemConfig.community,
-  navItemConfig.clauseLibrary,
 ];
 
 const caNavItems: NavItem[] = [

@@ -8,7 +8,6 @@ import { Library, PlusCircle, Search, Loader2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AddClauseModal } from "@/components/dashboard/add-clause-modal";
 import type { Clause } from "@/lib/types";
-import { planHierarchy } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const CLAUSE_STORAGE_KEY = "clauseLibrary";
