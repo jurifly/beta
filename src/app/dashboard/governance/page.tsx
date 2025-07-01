@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import ReactMarkdown from 'react-markdown';
 import type { GovernanceActionItem, BoardMeeting } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { ScheduleMeetingModal } from '@/components/dashboard/schedule-meeting-modal';
 
 
 const mockMeetings: BoardMeeting[] = [
@@ -37,69 +38,93 @@ export default function GovernancePage() {
   const { userProfile } = useAuth();
   const [isLoading, setIsLoading] = useState({ agenda: false, minutes: false });
   const [activeTab, setActiveTab] = useState('meetings');
+  const [meetings, setMeetings] = useState<BoardMeeting[]>(mockMeetings);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;
   }
+  
+  const handleScheduleMeeting = (data: Omit<BoardMeeting, 'id' | 'actionItems' | 'minutes'>) => {
+    const newMeeting: BoardMeeting = {
+        id: `meeting-${Date.now()}`,
+        ...data,
+        actionItems: [],
+    };
+    setMeetings(prev => [newMeeting, ...prev]);
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Governance Hub</h2>
-        <p className="text-muted-foreground">Manage board meetings, generate minutes, and track action items with AI.</p>
+    <>
+      <ScheduleMeetingModal 
+        isOpen={isModalOpen}
+        onOpenChange={setModalOpen}
+        onScheduleMeeting={handleScheduleMeeting}
+      />
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Governance Hub</h2>
+          <p className="text-muted-foreground">Manage board meetings, generate minutes, and track action items with AI.</p>
+        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="flex justify-between items-center">
+               <TabsList>
+                  <TabsTrigger value="meetings">Board Meetings</TabsTrigger>
+                  <TabsTrigger value="generator">AI Tools</TabsTrigger>
+               </TabsList>
+               {activeTab === 'meetings' && <Button onClick={() => setModalOpen(true)}><Plus className="mr-2"/>Schedule Meeting</Button>}
+            </div>
+            <TabsContent value="meetings" className="mt-6">
+              <Card>
+                  <CardHeader><CardTitle>Upcoming & Past Meetings</CardTitle></CardHeader>
+                  <CardContent>
+                      {meetings.length > 0 ? meetings.map(meeting => (
+                          <Card key={meeting.id} className="mb-4">
+                              <CardHeader>
+                                  <div className="flex justify-between items-start">
+                                      <div>
+                                        <CardTitle className="text-lg">{meeting.title}</CardTitle>
+                                        <CardDescription>Date: {format(new Date(meeting.date), 'PPP')}</CardDescription>
+                                      </div>
+                                      <div className="flex gap-2">
+                                          <Button variant="outline" size="sm" disabled>View Minutes</Button>
+                                          <Button variant="outline" size="sm" disabled>View Agenda</Button>
+                                      </div>
+                                  </div>
+                              </CardHeader>
+                              <CardContent>
+                                  <h4 className="font-semibold text-sm mb-2">Action Items</h4>
+                                  <div className="space-y-2">
+                                      {meeting.actionItems.map(item => (
+                                          <div key={item.id} className="flex items-center gap-3 p-2 border rounded-md bg-muted/50">
+                                              <Checkbox checked={item.completed} disabled />
+                                              <div className="flex-1">
+                                                  <p className="text-sm font-medium">{item.task}</p>
+                                                  <p className="text-xs text-muted-foreground">Assignee: {item.assignee} | Due: {format(new Date(item.dueDate), 'PPP')}</p>
+                                              </div>
+                                              <Badge variant={item.completed ? "secondary" : "outline"}>{item.completed ? "Done" : "Pending"}</Badge>
+                                          </div>
+                                      ))}
+                                  </div>
+                              </CardContent>
+                          </Card>
+                      )) : (
+                        <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md">
+                            <CalendarIcon className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                            <p className="font-semibold">No Meetings Scheduled</p>
+                            <p className="text-sm">Click "Schedule Meeting" to get started.</p>
+                        </div>
+                      )}
+                  </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="generator" className="mt-6 grid md:grid-cols-2 gap-6 items-start">
+               <AgendaGenerator legalRegion={userProfile.legalRegion} />
+               <MinutesGenerator legalRegion={userProfile.legalRegion} />
+            </TabsContent>
+        </Tabs>
       </div>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex justify-between items-center">
-             <TabsList>
-                <TabsTrigger value="meetings">Board Meetings</TabsTrigger>
-                <TabsTrigger value="generator">AI Tools</TabsTrigger>
-             </TabsList>
-             {activeTab === 'meetings' && <Button disabled><Plus className="mr-2"/>Schedule Meeting</Button>}
-          </div>
-          <TabsContent value="meetings" className="mt-6">
-            <Card>
-                <CardHeader><CardTitle>Upcoming & Past Meetings</CardTitle></CardHeader>
-                <CardContent>
-                    {mockMeetings.map(meeting => (
-                        <Card key={meeting.id} className="mb-4">
-                            <CardHeader>
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                      <CardTitle className="text-lg">{meeting.title}</CardTitle>
-                                      <CardDescription>Date: {format(new Date(meeting.date), 'PPP')}</CardDescription>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" disabled>View Minutes</Button>
-                                        <Button variant="outline" size="sm" disabled>View Agenda</Button>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <h4 className="font-semibold text-sm mb-2">Action Items</h4>
-                                <div className="space-y-2">
-                                    {meeting.actionItems.map(item => (
-                                        <div key={item.id} className="flex items-center gap-3 p-2 border rounded-md bg-muted/50">
-                                            <Checkbox checked={item.completed} disabled />
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium">{item.task}</p>
-                                                <p className="text-xs text-muted-foreground">Assignee: {item.assignee} | Due: {format(new Date(item.dueDate), 'PPP')}</p>
-                                            </div>
-                                            <Badge variant={item.completed ? "secondary" : "outline"}>{item.completed ? "Done" : "Pending"}</Badge>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="generator" className="mt-6 grid md:grid-cols-2 gap-6 items-start">
-             <AgendaGenerator legalRegion={userProfile.legalRegion} />
-             <MinutesGenerator legalRegion={userProfile.legalRegion} />
-          </TabsContent>
-      </Tabs>
-    </div>
+    </>
   );
 }
 
