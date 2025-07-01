@@ -147,6 +147,36 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
     const docRequests = activeCompany?.docRequests?.filter(r => r.status === 'Pending') || [];
 
+    const { equityIssued, equityIssuedSubtext } = useMemo(() => {
+        const capTable = activeCompany?.capTable;
+        if (!capTable || capTable.length === 0) {
+            return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
+        }
+        
+        const totalShares = capTable.reduce((acc, entry) => acc + entry.shares, 0);
+        if (totalShares === 0) {
+            return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
+        }
+        
+        const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.vesting === 'Unissued')?.shares || 0;
+        
+        const issuedShares = totalShares - esopPoolShares;
+        const percentage = (issuedShares / totalShares) * 100;
+        
+        const hasFounders = capTable.some(e => e.type === 'Founder');
+        const hasInvestors = capTable.some(e => e.type === 'Investor');
+        
+        let subtext = "of total equity";
+        if (hasFounders && hasInvestors) subtext = "Founders & Investors";
+        else if (hasFounders) subtext = "Founder shares";
+        else if (hasInvestors) subtext = "Investor shares";
+        
+        return {
+            equityIssued: `${percentage.toFixed(0)}%`,
+            equityIssuedSubtext: subtext,
+        };
+    }, [activeCompany]);
+
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!activeCompany) {
@@ -173,8 +203,14 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 setChecklist(checklistItems);
                 
                 const today = startOfToday();
-                const upcomingFilings = checklistItems.filter(item => !item.completed && new Date(item.dueDate) >= today && new Date(item.dueDate) <= addDays(today, 30));
-                const overdueFilings = checklistItems.filter(item => !item.completed && new Date(item.dueDate) < today);
+                const upcomingFilings = checklistItems.filter(item => {
+                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                    return !item.completed && dueDate >= today && dueDate <= addDays(today, 30);
+                });
+                const overdueFilings = checklistItems.filter(item => {
+                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                    return !item.completed && dueDate < today;
+                });
 
                 const totalFilings = checklistItems.length;
                 const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
@@ -231,7 +267,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     
     const groupedChecklist = useMemo(() => {
         const grouped = checklist.reduce((acc, item) => {
-            const monthKey = format(new Date(item.dueDate), 'MMMM yyyy');
+            const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
             (acc[monthKey] = acc[monthKey] || []).push(item);
             return acc;
         }, {} as Record<string, DashboardChecklistItem[]>);
@@ -294,7 +330,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             </div>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar />} isLoading={dynamicData.loading} /></Link>
-            <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value="0%" subtext="Founder shares" icon={<PieChart />} isLoading={false} /></Link>
+            <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext="Overdue tasks" icon={<AlertTriangle />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
@@ -309,7 +345,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                 <AccordionItem value={month} key={month}>
                                     <AccordionTrigger className="text-base font-semibold">{month}</AccordionTrigger>
                                     <AccordionContent>{groupedChecklist[month].map(item => (
-                                        <div key={item.id} className="flex items-start gap-3 p-3 text-sm rounded-md"><Checkbox id={item.id} checked={item.completed} onCheckedChange={() => handleToggleComplete(item.id)} className="mt-1" /><div className="grid gap-0.5"><label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground")}>{item.text}</label><span className="text-xs text-muted-foreground">Due: {format(new Date(item.dueDate), 'do MMM, yyyy')}</span></div></div>
+                                        <div key={item.id} className="flex items-start gap-3 p-3 text-sm rounded-md"><Checkbox id={item.id} checked={item.completed} onCheckedChange={() => handleToggleComplete(item.id)} className="mt-1" /><div className="grid gap-0.5"><label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground")}>{item.text}</label><span className="text-xs text-muted-foreground">Due: {format(new Date(item.dueDate + 'T00:00:00'), 'do MMM, yyyy')}</span></div></div>
                                     ))}</AccordionContent>
                                 </AccordionItem>
                             ))}

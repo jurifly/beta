@@ -6,7 +6,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-import { format } from 'date-fns';
+import { format, addDays, addMonths } from 'date-fns';
 
 const FilingGeneratorInputSchema = z.object({
   companyType: z.string().describe('The legal type of the company (e.g., "Private Limited Company", "LLC").'),
@@ -155,33 +155,44 @@ const filingGeneratorFlow = ai.defineFlow(
     outputSchema: FilingGeneratorOutputSchema,
   },
   async input => {
+    const generateFallback = () => {
+        const incDate = new Date(input.incorporationDate + 'T00:00:00');
+        const currDate = new Date(input.currentDate + 'T00:00:00');
+
+        // A more realistic set of fallback filings
+        const fallbackFilings = [
+            // Overdue tasks for a company older than 6 months
+            { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'First Board Meeting Held', type: 'Corporate Filing' as const },
+            { date: format(addDays(incDate, 60), 'yyyy-MM-dd'), title: 'Issue Share Certificates', type: 'Corporate Filing' as const },
+            { date: format(addDays(incDate, 180), 'yyyy-MM-dd'), title: 'File for Commencement of Business (INC-20A)', type: 'Corporate Filing' as const },
+            // Upcoming tasks
+            { date: format(addMonths(currDate, 1), 'yyyy-MM-dd'), title: 'Monthly TDS Payment', type: 'Tax Filing' as const },
+            { date: format(addMonths(currDate, 2), 'yyyy-MM-dd'), title: 'Quarterly Board Meeting', type: 'Corporate Filing' as const },
+            { date: format(addMonths(currDate, 3), 'yyyy-MM-dd'), title: 'Quarterly TDS Return Filing', type: 'Tax Filing' as const },
+        ];
+
+        return {
+          filings: fallbackFilings.map(f => ({
+            ...f,
+            status: new Date(f.date + 'T00:00:00') < currDate ? 'overdue' : 'upcoming'
+          }))
+        };
+    };
+    
     try {
       const {output} = await prompt(input);
 
       // The AI call succeeded, but returned no data or no filings.
       if (!output || output.filings.length === 0) {
         console.log("AI returned no filings, using fallback.");
-        return {
-          filings: [
-            { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Open Company Bank Account', type: 'Other Task', status: 'upcoming' },
-            { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Apply for GST Registration', type: 'Tax Filing', status: 'upcoming' },
-            { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Finalize Founders Agreement', type: 'Corporate Filing', status: 'upcoming' },
-          ]
-        };
+        return generateFallback();
       }
       
       return output;
 
     } catch (e) {
       console.error("AI call to generate filings failed due to an exception, using fallback.", e);
-      // The AI call itself failed (e.g., 503 error, network issue).
-      return {
-        filings: [
-          { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Open Company Bank Account', type: 'Other Task', status: 'upcoming' },
-          { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Apply for GST Registration', type: 'Tax Filing', status: 'upcoming' },
-          { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Finalize Founders Agreement', type: 'Corporate Filing', status: 'upcoming' },
-        ]
-      };
+      return generateFallback();
     }
   }
 );
