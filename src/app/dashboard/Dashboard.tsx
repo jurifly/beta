@@ -282,9 +282,16 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     };
     
     const checklistYears = useMemo(() => {
-        const years = new Set(checklist.map(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString()));
+        const currentYear = new Date().getFullYear();
+        const years = new Set(
+            checklist
+                .map(item => new Date(item.dueDate + 'T00:00:00').getFullYear())
+                .filter(year => year <= currentYear)
+                .map(year => year.toString())
+        );
+
         if (years.size === 0) {
-            years.add(new Date().getFullYear().toString());
+            years.add(currentYear.toString());
         }
         return Array.from(years).sort((a, b) => Number(b) - Number(a));
     }, [checklist]);
