@@ -24,6 +24,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 
@@ -48,6 +49,8 @@ export default function GovernancePage() {
   const [meetings, setMeetings] = useState<BoardMeeting[]>(mockMeetings);
   const [isModalOpen, setModalOpen] = useState(false);
   const [viewingContent, setViewingContent] = useState<{ title: string; content: string; } | null>(null);
+  const [emailPreview, setEmailPreview] = useState<{ title: string; subject: string; body: string; } | null>(null);
+  const { toast } = useToast();
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -92,11 +95,23 @@ export default function GovernancePage() {
       content: meeting.agenda
     });
   };
+  
+  const copyToClipboard = (text: string, message: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+        title: message,
+    });
+  };
 
   const handleEmailAgenda = (meeting: BoardMeeting) => {
-    const subject = encodeURIComponent(`Agenda: ${meeting.title}`);
-    const body = encodeURIComponent(`Hi team,\n\nPlease find the agenda for our upcoming meeting on ${format(new Date(meeting.date), 'PPP')}:\n\n${meeting.agenda}\n\nMeeting Link: ${meeting.meetingLink || 'To be shared.'}\n\nBest regards`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    const subject = `Agenda: ${meeting.title}`;
+    const body = `Hi team,\n\nPlease find the agenda for our upcoming meeting on ${format(new Date(meeting.date), 'PPP')}:\n\n${meeting.agenda}\n\nMeeting Link: ${meeting.meetingLink || 'To be shared.'}\n\nBest regards,`;
+    
+    setEmailPreview({
+        title: meeting.title,
+        subject: subject,
+        body: body,
+    });
   };
 
 
@@ -117,6 +132,33 @@ export default function GovernancePage() {
           </div>
           <DialogFooter>
               <Button variant="secondary" onClick={() => setViewingContent(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!emailPreview} onOpenChange={() => setEmailPreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Email Preview: {emailPreview?.title}</DialogTitle>
+            <DialogDescription>Copy the content below to send the agenda to your attendees.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+              <div className="space-y-1">
+                  <Label>Subject</Label>
+                  <div className="flex items-center gap-2">
+                      <Input readOnly value={emailPreview?.subject} className="bg-muted"/>
+                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(emailPreview?.subject || '', 'Subject copied to clipboard!')}><Clipboard className="h-4 w-4"/></Button>
+                  </div>
+              </div>
+              <div className="space-y-1">
+                  <Label>Body</Label>
+                  <div className="relative">
+                      <Textarea readOnly value={emailPreview?.body} className="h-48 resize-none bg-muted" />
+                      <Button variant="outline" size="icon" className="absolute top-2 right-2" onClick={() => copyToClipboard(emailPreview?.body || '', 'Email body copied to clipboard!')}><Clipboard className="h-4 w-4"/></Button>
+                  </div>
+              </div>
+          </div>
+          <DialogFooter>
+              <Button variant="secondary" onClick={() => setEmailPreview(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
