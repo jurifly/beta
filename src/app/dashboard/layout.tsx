@@ -179,9 +179,9 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             onOpenChange={() => setSelectedNotification(null)}
             notification={selectedNotification}
         />
-        <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
+        <div className="grid h-screen w-full md:grid-cols-[280px_1fr]">
             <DesktopSidebar navItems={navItems} />
-            <div className="flex flex-col">
+            <div className="flex flex-col overflow-hidden">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <MobileSheetNav navItems={navItems} />
                 <div className="flex-1">
