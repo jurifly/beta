@@ -74,7 +74,7 @@ const navItemConfig = {
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
-  analytics: { href: "/dashboard/analytics", label: "Insights", icon: LineChart },
+  analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
@@ -473,7 +473,7 @@ const MobileBottomNav = () => {
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/dashboard/ai-toolkit", icon: Sparkles, label: "AI Tools" },
     { href: "/dashboard/documents", icon: Archive, label: "Vault" },
-    { href: "/dashboard/analytics", icon: LineChart, label: "Insights" },
+    { href: "/dashboard/analytics", icon: LineChart, label: "Analytics" },
     { href: "/dashboard/settings", icon: Settings, label: "Profile" },
   ];
 
