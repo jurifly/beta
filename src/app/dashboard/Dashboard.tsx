@@ -28,10 +28,11 @@ import {
   Loader2,
   PieChart,
   Briefcase,
-  Building,
+  Building2,
   Zap,
   Gavel,
   FileSignature,
+  Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -322,11 +323,11 @@ function CADashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users />} /></Link>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck />} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
-            <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.credits ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
+            <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.credits ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
 
             <div className="md:col-span-4 lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
             
-            <div className="md:col-span-2 lg:col-span-4"><QuickLinkCard title="AI Toolkit" description="Generate board resolutions, draft replies to notices, or reconcile financials using AI." href="/dashboard/ai-toolkit" icon={<Sparkles className="text-primary"/>} /></div>
+            <div className="md:col-span-2 lg:col-span-4"><QuickLinkCard title="AI Financial Reconciliation" description="Upload GST, ROC, and ITR filings to automatically find discrepancies and ensure financial accuracy." href="/dashboard/ai-toolkit?tab=reconciliation" icon={<Scale className="text-primary"/>} /></div>
         </div>
     );
 }
@@ -350,7 +351,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
     const entityCount = userProfile.companies.length;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-             <Link href="/dashboard/team" className="block"><StatCard title="Managed Entities" value={`${entityCount}`} subtext="Across the organization" icon={<Building />} /></Link>
+             <Link href="/dashboard/team" className="block"><StatCard title="Managed Entities" value={`${entityCount}`} subtext="Across the organization" icon={<Building2 />} /></Link>
              <Link href="/dashboard/analytics" className="block"><StatCard title="Overall Risk Score" value="N/A" subtext="Connect data sources" icon={<ShieldCheck />} /></Link>
              <Link href="/dashboard/team" className="block"><StatCard title="Pending Approvals" value="0" subtext="In your workflows" icon={<Users />} /></Link>
              <Link href="/dashboard/ai-toolkit?tab=audit" className="block"><StatCard title="Data Room Readiness" value="N/A" subtext="For upcoming M&A" icon={<GanttChartSquare />} /></Link>
