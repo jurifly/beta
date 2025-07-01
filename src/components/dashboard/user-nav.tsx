@@ -78,6 +78,9 @@ export function UserNav() {
   }
 
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+  const creditsUsed = userProfile.dailyCreditsUsed ?? 0;
+  const creditLimit = userProfile.dailyCreditLimit ?? 0;
+  const creditsRemaining = Math.max(0, creditLimit - creditsUsed);
 
   return (
     <DropdownMenu>
@@ -108,9 +111,9 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled>
+           <DropdownMenuItem disabled>
             <Bolt className="mr-2 h-4 w-4" />
-            <span>Credits: {userProfile.credits ?? 0}</span>
+            <span>Daily AI Actions: {creditsRemaining}/{creditLimit}</span>
           </DropdownMenuItem>
            <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             <Sparkles className="mr-2 h-4 w-4" />

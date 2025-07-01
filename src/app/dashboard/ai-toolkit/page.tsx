@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
-import { useFormStatus } from "react-dom"
+import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
 import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,9 +18,9 @@ import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/g
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
 import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
-import type { WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
+import type { WatcherOutput } from "@/ai/flows/regulation-watcher-flow";
 import type { ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
-import type { LegalResearchOutput } from '@/ai/flows/legal-research-flow';
+import type { LegalResearchOutput } from "@/ai/flows/legal-research-flow';
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -94,7 +93,7 @@ const ChatAssistant = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const { toast } = useToast();
-  const { userProfile, saveChatHistory } = useAuth();
+  const { userProfile, saveChatHistory, deductCredits } = useAuth();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -116,6 +115,8 @@ const ChatAssistant = () => {
     if (e) e.preventDefault();
     const topic = suggestion || input;
     if (!topic.trim()) return;
+
+    if (!await deductCredits(1)) return;
 
     setIsProcessing(true);
 
@@ -266,21 +267,19 @@ const dealTypesByRole = {
   Enterprise: [ { value: "IPO Readiness Audit", label: "IPO Readiness Audit" }, { value: "SOC 2 Compliance Prep", label: "SOC 2 Compliance Prep" }, { value: "ISO 27001 Compliance Prep", label: "ISO 27001 Compliance Prep" }, { value: "Internal Controls (SOX/IFC)", label: "Internal Controls (SOX/IFC)" }, { value: "GDPR / DPDP Compliance Audit", label: "GDPR / DPDP Compliance Audit" }, { value: "Third-Party Vendor DD", label: "Third-Party Vendor DD" }, { value: "Post-Merger Integration Audit", label: "Post-Merger Integration Audit" }, ],
 };
 
-function DataroomAuditSubmitButton({ isRegenerate }: { isRegenerate: boolean }) {
-  const { pending } = useFormStatus();
-  return ( <Button type="submit" disabled={pending} className="w-full sm:w-auto interactive-lift"> {pending ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : isRegenerate ? (<RefreshCw className="mr-2 h-4 w-4" />) : (<Sparkles className="mr-2 h-4 w-4" />)} {isRegenerate ? "Regenerate" : "Generate Checklist"} </Button> );
+function DataroomAuditSubmitButton({ isRegenerate, isPending }: { isRegenerate: boolean, isPending: boolean }) {
+  return ( <Button type="submit" disabled={isPending} className="w-full sm:w-auto interactive-lift"> {isPending ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : isRegenerate ? (<RefreshCw className="mr-2 h-4 w-4" />) : (<Sparkles className="mr-2 h-4 w-4" />)} {isRegenerate ? "Regenerate" : "Generate Checklist"} </Button> );
 }
 
 const DataroomAudit = () => {
   const { userProfile, deductCredits } = useAuth();
-  const [serverState, formAction] = useActionState(AiActions.generateDiligenceChecklistAction, initialDiligenceState);
+  const [serverState, setServerState] = useState(initialDiligenceState);
   const [checklistState, setChecklistState] = useState<ChecklistState>({ data: null, timestamp: null });
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { pending } = useFormStatus();
-  const processedDataRef = useRef<RawChecklistOutput | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   
-
   if (!userProfile) return <Loader2 className="animate-spin" />;
 
   const checklistKey = `ddChecklistData-${userProfile.activeCompanyId}`;
@@ -292,18 +291,27 @@ const DataroomAudit = () => {
         toast({ variant: "destructive", title: "Checklist Generation Failed", description: serverState.error });
     }
     
-    if (serverState.data && serverState.data !== processedDataRef.current) {
-      processedDataRef.current = serverState.data;
-      
-      deductCredits(2);
+    if (serverState.data) {
       const rawData = serverState.data;
       const groupedData = rawData.checklist.reduce<ChecklistCategory[]>((acc, item) => { let category = acc.find(c => c.category === item.category); if (!category) { category = { category: item.category, items: [] }; acc.push(category); } category.items.push({ id: `${item.category.replace(/\s+/g, '-')}-${category.items.length}`, task: item.task, description: '', status: 'Pending' }); return acc; }, []);
       const newChecklistState: ChecklistState = { data: { reportTitle: rawData.title, checklist: groupedData }, timestamp: new Date().toISOString() };
       setChecklistState(newChecklistState);
     }
-  }, [serverState, toast, deductCredits]);
+  }, [serverState]);
 
   useEffect(() => { if (checklistKey && checklistState.data) localStorage.setItem(checklistKey, JSON.stringify(checklistState)); }, [checklistState, checklistKey]);
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!formRef.current) return;
+      if (!await deductCredits(2)) return;
+
+      const formData = new FormData(formRef.current);
+      startTransition(async () => {
+          const result = await AiActions.generateDiligenceChecklistAction(serverState, formData);
+          setServerState(result);
+      });
+  };
 
   const handleCheckChange = (categoryId: string, itemId: string, completed: boolean) => { setChecklistState(prevState => { if (!prevState.data) return prevState; const newData: GenerateDDChecklistOutput = { ...prevState.data, checklist: prevState.data.checklist.map(category => { if (category.category === categoryId) return { ...category, items: category.items.map(item => item.id === itemId ? { ...item, status: completed ? 'Completed' : 'Pending' } : item) }; return category; }) }; return { ...prevState, data: newData }; }); };
   
@@ -321,16 +329,16 @@ const DataroomAudit = () => {
       <Card>
           <CardHeader><CardTitle>{checklistState.data?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process.</CardDescription></CardHeader>
           <CardContent>
-              <form action={formAction} className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b">
+              <form ref={formRef} onSubmit={handleFormSubmit} className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b">
                 <input type="hidden" name="legalRegion" value={userProfile.legalRegion} />
                 <div className="space-y-1.5 w-full sm:w-auto sm:flex-1"><Label htmlFor="dealType">Deal / Audit Type</Label><Select name="dealType" defaultValue={availableDealTypes[0].value}><SelectTrigger id="dealType" className="min-w-[200px]"><SelectValue placeholder="Select type" /></SelectTrigger><SelectContent>{availableDealTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select></div>
-                <div className="w-full sm:w-auto self-end"><DataroomAuditSubmitButton isRegenerate={!!checklistState.data} /></div>
+                <div className="w-full sm:w-auto self-end"><DataroomAuditSubmitButton isPending={isPending} isRegenerate={!!checklistState.data} /></div>
                 <div className="flex items-center gap-2 self-end"><Button variant="outline" size="icon" disabled={!checklistState.data} className="interactive-lift" onClick={handleShare}><Share2 className="h-4 w-4"/></Button></div>
               </form>
           </CardContent>
       </Card>
-      {pending && !checklistState.data && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Generating your checklist...</p></div> )}
-      {checklistState.data && !pending ? (
+      {isPending && !checklistState.data && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Generating your checklist...</p></div> )}
+      {checklistState.data && !isPending ? (
         <div className="space-y-6 animate-in fade-in-50 duration-500">
             {checklistState.timestamp && <p className="text-xs text-muted-foreground text-center">📌 Last generated: {formatDistanceToNow(new Date(checklistState.timestamp), { addSuffix: true })}</p>}
             <div className="space-y-3"><div className="flex justify-between items-center text-sm font-medium"><Label>Dataroom Readiness ({completedCount}/{totalCount} Completed)</Label><span className="font-bold text-primary">{progress}%</span></div><Progress value={progress} /></div>
@@ -356,7 +364,7 @@ const DataroomAudit = () => {
                 ))}
             </Accordion>
         </div>
-      ) : !pending && (
+      ) : !isPending && (
           <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1"> <FolderCheck className="w-16 h-16 text-primary/20" /><p className="font-semibold text-lg">Build Your Dataroom</p><p className="text-sm max-w-sm">Select a deal or audit type and our AI will generate a comprehensive checklist to guide you through the process.</p></div>
       )}
     </div>
@@ -366,7 +374,7 @@ const DataroomAudit = () => {
 
 // --- Tab: Document Intelligence ---
 const DocumentIntelligenceTab = () => {
-  const { userProfile, deductCredits, addCredits } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
   const { toast } = useToast();
   const [analyzedDocs, setAnalyzedDocs] = useState<DocumentAnalysis[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -879,11 +887,10 @@ const watcherPortals = [
   { id: "GDPR", name: "GDPR", description: "EU Privacy", icon: <Globe className="w-6 h-6" /> },
 ];
 
-function WatcherSubmitButton() {
-    const { pending } = useFormStatus();
+function WatcherSubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto interactive-lift">
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />}
+        <Button type="submit" disabled={isPending} size="lg" className="w-full sm:w-auto interactive-lift">
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />}
             Get Latest Updates
         </Button>
     );
@@ -895,33 +902,36 @@ const TypewriterWatcher = ({ text }: { text: string }) => {
 };
 
 const RegulationWatcherTab = () => {
-    const [state, formAction] = useActionState(AiActions.getRegulatoryUpdatesAction, { data: null, error: null });
+    const [state, setState] = useState<{ data: WatcherOutput | null; error: string | null; }>({ data: null, error: null });
+    const [isPending, startTransition] = useTransition();
     const [submittedPortal, setSubmittedPortal] = useState("");
     const [submittedFrequency, setSubmittedFrequency] = useState("");
     const { deductCredits, userProfile } = useAuth();
     const { toast } = useToast();
-    const lastSuccessfulData = useRef<WatcherOutput | null>(null);
+    const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
         if (state.error) {
             toast({ variant: "destructive", title: "Update Failed", description: state.error });
-            lastSuccessfulData.current = null; // Reset on error
         }
-        
-        if (state.data && JSON.stringify(state.data) !== JSON.stringify(lastSuccessfulData.current)) {
-            deductCredits(1);
-            lastSuccessfulData.current = state.data;
-        }
-    }, [state, toast, deductCredits]);
+    }, [state, toast]);
     
-    const handleFormAction = (formData: FormData) => {
-        if (!userProfile) return;
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!userProfile || !formRef.current) return;
+        if (!await deductCredits(1)) return;
+        
+        const formData = new FormData(formRef.current);
         const portal = formData.get("portal") as string;
         const frequency = formData.get("frequency") as string;
         setSubmittedPortal(portal);
         setSubmittedFrequency(frequency);
+        
         formData.append('legalRegion', userProfile.legalRegion);
-        formAction(formData);
+        startTransition(async () => {
+            const result = await AiActions.getRegulatoryUpdatesAction(state, formData);
+            setState(result);
+        });
     }
     
     const handleCopyUpdates = (text: string) => {
@@ -936,7 +946,7 @@ const RegulationWatcherTab = () => {
 
     return (
         <div className="space-y-8">
-            <form action={handleFormAction}>
+            <form ref={formRef} onSubmit={handleFormSubmit}>
                 <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle>Configure Your Watcher</CardTitle>
@@ -977,7 +987,7 @@ const RegulationWatcherTab = () => {
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-center border-t pt-6 mt-6">
-                        <WatcherSubmitButton />
+                        <WatcherSubmitButton isPending={isPending} />
                     </CardFooter>
                 </Card>
                 
@@ -1114,7 +1124,7 @@ const ReconciliationTab = () => {
         <Card className="interactive-lift">
           <CardHeader><CardTitle>Upload Filings</CardTitle><CardDescription>Provide all three documents for a comprehensive reconciliation.</CardDescription></CardHeader>
           <CardContent><div className="grid grid-cols-1 md:grid-cols-3 gap-6"> <div {...getGstRootProps()}><input {...getGstInputProps()} /><DropzoneCard file={files.gst} type="GST" open={openGstDialog} disabled={isProcessing} /></div> <div {...getRocRootProps()}><input {...getRocInputProps()} /><DropzoneCard file={files.roc} type="ROC" open={openRocDialog} disabled={isProcessing} /></div> <div {...getItrRootProps()}><input {...getItrInputProps()} /><DropzoneCard file={files.itr} type="ITR" open={openItrDialog} disabled={isProcessing} /></div></div></CardContent>
-          <CardFooter className="border-t pt-6 flex-col items-center gap-4"><Button onClick={handleReconcile} disabled={isProcessing || !files.gst || !files.roc || !files.itr}>{isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>} Reconcile Documents</Button><p className="text-xs text-muted-foreground flex items-center gap-2"><Info className="w-4 h-4"/>This analysis uses 15 credits. AI results are for informational purposes.</p></CardFooter>
+          <CardFooter className="border-t pt-6 flex-col items-center gap-4"><Button onClick={handleReconcile} disabled={isProcessing || !files.gst || !files.roc || !files.itr}>{isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>} Reconcile Documents</Button><p className="text-xs text-muted-foreground flex items-center gap-2"><Info className="w-4 h-4"/>This analysis uses 15 credits.</p></CardFooter>
         </Card>
         {isProcessing && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Our AI is crunching the numbers...</p></div> )}
         {result && (

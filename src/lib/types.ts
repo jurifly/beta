@@ -97,7 +97,12 @@ export interface UserProfile {
   email: string;
   legalRegion: string;
   phone?: string;
-  credits?: number;
+
+  // Beta AI Credit System
+  signupIndex?: number;
+  dailyCreditLimit?: number;
+  dailyCreditsUsed?: number;
+  lastCreditReset?: string; // ISO string
 }
 
 export type ChecklistItemStatus = 'Pending' | 'Completed' | 'In Progress' | 'Not Applicable';

@@ -5,17 +5,16 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Rocket, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/auth';
 
-const BETA_BANNER_DISMISSED_KEY = 'betaBannerDismissed';
+const BETA_BANNER_DISMISSED_KEY = 'fomoBannerDismissed';
 
 export function BetaBanner() {
   const [isVisible, setIsVisible] = useState(false);
-
-  // App-level configuration flag. Set to `false` to hide the banner everywhere.
-  const betaActive = true; 
+  const { userProfile } = useAuth();
 
   useEffect(() => {
-    if (betaActive) {
+    if (userProfile?.signupIndex) {
       try {
         const dismissed = localStorage.getItem(BETA_BANNER_DISMISSED_KEY);
         if (dismissed !== 'true') {
@@ -23,11 +22,10 @@ export function BetaBanner() {
         }
       } catch (error) {
         console.error('Could not access localStorage:', error);
-        // If localStorage is not available, show the banner by default
         setIsVisible(true);
       }
     }
-  }, [betaActive]);
+  }, [userProfile]);
 
   const handleDismiss = () => {
     try {
@@ -38,9 +36,11 @@ export function BetaBanner() {
     setIsVisible(false);
   };
 
-  if (!isVisible) {
+  if (!isVisible || !userProfile?.signupIndex) {
     return null;
   }
+
+  const { signupIndex, dailyCreditLimit } = userProfile;
 
   return (
     <div
@@ -52,7 +52,7 @@ export function BetaBanner() {
       <div className="flex items-center gap-3">
         <Rocket className="h-5 w-5 text-primary shrink-0" />
         <p className="font-medium text-primary">
-          🚀 Enjoy all features free during beta! Pricing plans will roll out soon.
+          You're user #{signupIndex} — enjoy {dailyCreditLimit} free AI actions/day as an early supporter!
         </p>
       </div>
       <Button

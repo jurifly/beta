@@ -20,7 +20,6 @@ export interface AuthContextType {
   setDevMode: (enabled: boolean) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   deductCredits: (amount: number) => Promise<boolean>;
-  addCredits: (amount: number) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
   signUpWithEmailAndPassword: (email: string, pass: string, name: string, legalRegion: string, refId?: string) => Promise<void>;
@@ -68,6 +67,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const createNewUserProfile = useCallback(async (firebaseUser: User, legalRegion: string, refId?: string): Promise<UserProfile> => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
+    const userCounterRef = doc(db, "metadata", "userCounter");
+
+    let signupIndex = 1;
+    let dailyCreditLimit = 10;
+    
+    try {
+        signupIndex = await runTransaction(db, async (transaction) => {
+            const counterDoc = await transaction.get(userCounterRef);
+            if (!counterDoc.exists()) {
+                transaction.set(userCounterRef, { count: 1 });
+                return 1;
+            }
+            const newCount = (counterDoc.data().count || 0) + 1;
+            transaction.update(userCounterRef, { count: newCount });
+            return newCount;
+        });
+    } catch(e) {
+        console.error("Failed to get signup index, defaulting to 1.", e);
+    }
+
+    if (signupIndex <= 100) {
+        dailyCreditLimit = 10;
+    } else if (signupIndex <= 500) {
+        dailyCreditLimit = 5;
+    } else {
+        dailyCreditLimit = 3;
+    }
+
     const newExpiry = add(new Date(), { days: 30 });
     const newProfile: UserProfile = {
       uid: firebaseUser.uid,
@@ -79,33 +106,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       planExpiryDate: newExpiry.toISOString(),
       companies: [],
       activeCompanyId: '',
-      credits: 1000,
       legalRegion: legalRegion || 'India',
+      signupIndex: signupIndex,
+      dailyCreditLimit: dailyCreditLimit,
+      dailyCreditsUsed: 0,
+      lastCreditReset: new Date().toISOString(),
     };
     
-    // Handle referral
-    if (refId) {
-        const referrerDocRef = doc(db, "users", refId);
-        try {
-            await runTransaction(db, async (transaction) => {
-                const referrerDoc = await transaction.get(referrerDocRef);
-                if (referrerDoc.exists()) {
-                    transaction.update(referrerDocRef, { credits: increment(50) });
-                    newProfile.credits = (newProfile.credits || 0) + 25; // Bonus for referred user
-                }
-                transaction.set(userDocRef, newProfile);
-            });
-            toast({ title: "Referral Applied!", description: "You and your friend have received bonus credits!"});
-        } catch (e) {
-            console.error("Referral transaction failed: ", e);
-            await setDoc(userDocRef, newProfile); // Create profile even if referral fails
-        }
-    } else {
-        await setDoc(userDocRef, newProfile);
-    }
+    // Referral logic does not exist in this version.
+    await setDoc(userDocRef, newProfile);
     
     return newProfile;
-  }, [toast]);
+  }, []);
 
   const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
     if (!user) return;
@@ -127,67 +139,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setNotifications(prev => [{ ...notification, id: newDocRef.id }, ...prev]);
   }, [user]);
 
-  const processPendingPurchases = useCallback(async (uid: string) => {
-    const userDocRef = doc(db, 'users', uid);
-    const freshUserDoc = await getDoc(userDocRef);
-    if (!freshUserDoc.exists()) return;
+  const checkAndResetCredits = useCallback(async (profile: UserProfile, uid: string) => {
+    const today = new Date();
+    const lastReset = profile.lastCreditReset ? new Date(profile.lastCreditReset) : new Date(0);
     
-    const currentProfile = freshUserDoc.data() as UserProfile;
-    let updatedProfile = { ...currentProfile };
-    let changesMade = false;
+    const isNewUTCDay = today.getUTCFullYear() > lastReset.getUTCFullYear() ||
+                      today.getUTCMonth() > lastReset.getUTCMonth() ||
+                      today.getUTCDate() > lastReset.getUTCDate();
 
-    const transactionsRef = collection(db, 'transactions');
-    const q = query(transactionsRef,
-        where('userId', '==', uid),
-        where('status', '==', 'verified'),
-        where('isProcessed', '==', false)
-    );
-
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) return;
-
-    const batch = writeBatch(db);
-
-    querySnapshot.forEach(transactionDoc => {
-      changesMade = true;
-      const transaction = transactionDoc.data() as Transaction;
-
-      if (transaction.type === 'plan' && transaction.plan && transaction.cycle) {
-        const planDuration: Duration = transaction.cycle === 'monthly' ? { months: 1 } : { years: 1 };
-        const newExpiryDate = add(new Date(), planDuration);
-        
-        updatedProfile.plan = transaction.plan as UserPlan;
-        updatedProfile.planStartDate = new Date().toISOString();
-        updatedProfile.planExpiryDate = newExpiryDate.toISOString();
-        
-        const planCreditMap: Record<string, number> = { 'founder': 50, 'pro': 1000, 'enterprise': 10000 };
-        updatedProfile.credits = planCreditMap[transaction.plan.toLowerCase()] ?? updatedProfile.credits;
-
-      } else if (transaction.type === 'credits' && transaction.credits) {
-        updatedProfile.credits = (updatedProfile.credits || 0) + transaction.credits;
-      }
-
-      const transactionRef = doc(db, 'transactions', transactionDoc.id);
-      batch.update(transactionRef, { isProcessed: true });
-    });
-
-    if (changesMade) {
-      batch.update(userDocRef, {
-          plan: updatedProfile.plan,
-          planStartDate: updatedProfile.planStartDate,
-          planExpiryDate: updatedProfile.planExpiryDate,
-          credits: updatedProfile.credits,
-      });
-
-      await batch.commit();
-      setUserProfile(updatedProfile);
-      
-      toast({
-          title: "Account Updated!",
-          description: "Your recent purchases have been successfully applied.",
-      });
+    if (isNewUTCDay) {
+      const updatedProfileData = {
+        dailyCreditsUsed: 0,
+        lastCreditReset: today.toISOString()
+      };
+      await updateDoc(doc(db, 'users', uid), updatedProfileData);
+      setUserProfile(prev => prev ? { ...prev, ...updatedProfileData } : null);
     }
-  }, [toast]);
+  }, []);
 
   const fetchUserProfile = useCallback(async (firebaseUser: User) => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
@@ -195,18 +163,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (userDoc.exists()) {
       const profile = userDoc.data() as UserProfile;
-      // Data migration for users created before legalRegion was introduced
       if (!profile.legalRegion) {
-        profile.legalRegion = 'India'; // Default to India
-        // Silently update the profile in the background
+        profile.legalRegion = 'India';
         updateDoc(userDocRef, { legalRegion: 'India' }).catch(e => console.error("Failed to backfill legalRegion", e));
       }
       setUserProfile(profile);
+      await checkAndResetCredits(profile, firebaseUser.uid);
     } else {
       const newProfile = await createNewUserProfile(firebaseUser, 'India');
       setUserProfile(newProfile);
     }
-  }, [createNewUserProfile]);
+  }, [createNewUserProfile, checkAndResetCredits]);
 
   const fetchNotifications = useCallback(async (uid: string) => {
     if (!uid) return;
@@ -257,7 +224,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [fetchUserProfile, fetchNotifications, processPendingPurchases]);
+  }, [fetchUserProfile, fetchNotifications]);
   
   useEffect(() => {
     setIsPlanActive(true); // All features unlocked
@@ -309,18 +276,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await firebaseSignOut(auth);
   };
 
-  const deductCredits = useCallback(async (amount: number) => {
-    // No-op during beta, always returns true
-    return true;
-  }, []);
+  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
+    if (!userProfile || !user) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "Could not verify your identity. Please log in again." });
+      return false;
+    }
+    
+    // Re-check for credit reset before deducting
+    await checkAndResetCredits(userProfile, user.uid);
+    
+    // After reset, we need the latest profile state.
+    // The checkAndResetCredits function updates the state, but we'll re-read it here for safety.
+    const freshProfile = (await getDoc(doc(db, "users", user.uid))).data() as UserProfile;
+    setUserProfile(freshProfile); // Sync local state immediately
 
-  const addCredits = useCallback(async (amount: number) => {
-    if(!userProfile || !user) return;
-    const newCredits = (userProfile.credits ?? 0) + amount;
-    await updateUserProfile({ credits: newCredits });
-    toast({ title: "Credits Added!", description: `You have successfully added ${amount} credits. Your new balance is ${newCredits}.` });
-  }, [user, userProfile, toast, updateUserProfile]);
-  
+    const limit = freshProfile.dailyCreditLimit ?? 0;
+    const used = freshProfile.dailyCreditsUsed ?? 0;
+
+    if (used + amount > limit) {
+        toast({
+            variant: "destructive",
+            title: "Daily Limit Reached",
+            description: "You've reached your daily AI limit. Please come back tomorrow or upgrade once subscriptions launch.",
+        });
+        return false;
+    }
+
+    await updateDoc(doc(db, "users", user.uid), {
+        dailyCreditsUsed: increment(amount),
+    });
+    
+    setUserProfile(prev => prev ? { ...prev, dailyCreditsUsed: (prev.dailyCreditsUsed ?? 0) + amount } : null);
+
+    return true;
+  }, [user, userProfile, toast, checkAndResetCredits]);
+
   const saveChatHistory = async (chat: ChatMessage[]) => {
     if (!user) return;
     const historyCollectionRef = collection(db, `users/${user.uid}/chatHistory`);
@@ -338,7 +328,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return querySnapshot.docs.map(doc => doc.data().messages as ChatMessage[]);
   };
   
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, addCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

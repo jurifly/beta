@@ -78,11 +78,12 @@ interface AddCompanyModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   companyToEdit?: Company | null;
+  deductCredits: (amount: number) => Promise<boolean>;
 }
 
-export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddCompanyModalProps) {
+export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCredits }: AddCompanyModalProps) {
   const [step, setStep] = useState(1);
-  const { userProfile, updateUserProfile, deductCredits } = useAuth();
+  const { userProfile, updateUserProfile } = useAuth();
   const { toast } = useToast();
   const isEditMode = !!companyToEdit;
   const [isFetching, startFetchingTransition] = useTransition();

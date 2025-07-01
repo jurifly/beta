@@ -35,7 +35,7 @@ const mockMeetings: BoardMeeting[] = [
 ];
 
 export default function GovernancePage() {
-  const { userProfile } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
   const [isLoading, setIsLoading] = useState({ agenda: false, minutes: false });
   const [activeTab, setActiveTab] = useState('meetings');
   const [meetings, setMeetings] = useState<BoardMeeting[]>(mockMeetings);
@@ -139,8 +139,8 @@ export default function GovernancePage() {
               </Card>
             </TabsContent>
             <TabsContent value="generator" className="mt-6 grid md:grid-cols-2 gap-6 items-start">
-               <AgendaGenerator legalRegion={userProfile.legalRegion} />
-               <MinutesGenerator legalRegion={userProfile.legalRegion} />
+               <AgendaGenerator legalRegion={userProfile.legalRegion} deductCredits={deductCredits} />
+               <MinutesGenerator legalRegion={userProfile.legalRegion} deductCredits={deductCredits} />
             </TabsContent>
         </Tabs>
       </div>
@@ -149,7 +149,7 @@ export default function GovernancePage() {
 }
 
 
-function AgendaGenerator({ legalRegion }: { legalRegion: string }) {
+function AgendaGenerator({ legalRegion, deductCredits }: { legalRegion: string, deductCredits: (amount: number) => Promise<boolean> }) {
     const [topics, setTopics] = useState('');
     const [meetingType, setMeetingType] = useState('Quarterly Board Meeting');
     const [loading, setLoading] = useState(false);
@@ -161,6 +161,7 @@ function AgendaGenerator({ legalRegion }: { legalRegion: string }) {
             toast({ variant: 'destructive', title: 'Missing Topics', description: 'Please enter at least one topic for the agenda.' });
             return;
         }
+        if (!await deductCredits(1)) return;
         setLoading(true);
         setResult(null);
         try {
@@ -225,7 +226,7 @@ function AgendaGenerator({ legalRegion }: { legalRegion: string }) {
     );
 }
 
-function MinutesGenerator({ legalRegion }: { legalRegion: string }) {
+function MinutesGenerator({ legalRegion, deductCredits }: { legalRegion: string, deductCredits: (amount: number) => Promise<boolean> }) {
     const [notes, setNotes] = useState('');
     const [attendees, setAttendees] = useState('');
     const [agenda, setAgenda] = useState('');
@@ -238,6 +239,7 @@ function MinutesGenerator({ legalRegion }: { legalRegion: string }) {
             toast({ variant: 'destructive', title: 'Missing Information', description: 'Please provide agenda, attendees, and notes.' });
             return;
         }
+        if (!await deductCredits(2)) return;
         setLoading(true);
         setResult(null);
         try {

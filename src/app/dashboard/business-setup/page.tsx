@@ -197,7 +197,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.businessTypeResult);
-    const { userProfile } = useAuth();
+    const { userProfile, deductCredits } = useAuth();
 
     const { control, handleSubmit, formState: { errors } } = useForm<BusinessTypeFormData>({
         resolver: zodResolver(businessTypeFormSchema),
@@ -211,6 +211,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     });
 
     const onSubmit = async (data: BusinessTypeFormData) => {
+        if (!await deductCredits(1)) return;
         setIsLoading(true);
         setResult(undefined);
         updateState({ businessTypeForm: data });
@@ -380,7 +381,7 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<IncCodeFinderOutput | undefined>(initialState.incCodeResult);
-  const { userProfile } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
 
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<IncCodeFormData>({
     resolver: zodResolver(incCodeFormSchema),
@@ -391,6 +392,7 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
   });
 
   const onSubmit = async (data: IncCodeFormData) => {
+    if (!await deductCredits(1)) return;
     setIsLoading(true);
     setResult(undefined);
     updateState({ incCodeForm: data });
@@ -530,6 +532,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
     const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
     const { toast } = useToast();
+    const { deductCredits } = useAuth();
     
     const [editorContent, setEditorContent] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -555,6 +558,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     };
 
     const handleGenerate = async (templateName: string) => {
+        if (!await deductCredits(1)) return;
         setLoadingDoc(templateName);
         setGeneratedContent(null);
         setEditorContent('');
@@ -656,9 +660,10 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
     const [checklist, setChecklist] = useState<AssistantOutput['checklist'] | undefined>(navigatorState.finalChecklist?.checklist);
     const [checklistTitle, setChecklistTitle] = useState<string>(navigatorState.finalChecklist?.checklist?.title || "Final Checklist");
     const { toast } = useToast();
-    const { userProfile } = useAuth();
+    const { userProfile, deductCredits } = useAuth();
 
     const handleGenerateChecklist = async () => {
+        if (!await deductCredits(1)) return;
         setIsLoading(true);
         setChecklist(undefined);
         const businessDesc = navigatorState.businessTypeForm?.businessDescription || navigatorState.incCodeForm?.businessDescription;

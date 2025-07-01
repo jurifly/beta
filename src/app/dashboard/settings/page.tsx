@@ -62,7 +62,7 @@ const SecurityForm = () => (
 export default function SettingsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null);
-  const { userProfile } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -90,7 +90,8 @@ export default function SettingsPage() {
       <AddCompanyModal 
         isOpen={isModalOpen} 
         onOpenChange={onModalOpenChange}
-        companyToEdit={companyToEdit} 
+        companyToEdit={companyToEdit}
+        deductCredits={deductCredits}
       />
       <div className="space-y-6">
         <div className="flex items-center justify-between space-y-2">
