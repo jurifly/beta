@@ -1,7 +1,7 @@
 
 "use client"
 
-import { AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, Area } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Progress } from "@/components/ui/progress"
-import { Activity, AlertTriangle, ArrowRight, Award, Briefcase, CalendarClock, CheckSquare, FileText, LineChart as LineChartIcon, ListTodo, Loader2, MessageSquare, Scale, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react"
+import { Activity, AlertTriangle, ArrowRight, Award, Briefcase, CalendarClock, CheckSquare, FileText, LineChart as LineChartIcon, ListTodo, Loader2, MessageSquare, Scale, ShieldCheck, Sparkles, TrendingUp, Users, GanttChartSquare } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import type { UserProfile, GenerateDDChecklistOutput, Company } from "@/lib/types"
 import { Label } from "@/components/ui/label"
@@ -44,7 +44,10 @@ function FounderAnalytics() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!activeCompany) return;
+    if (!activeCompany) {
+        setIsLoading(false);
+        return;
+    };
     
     const checklistKey = `ddChecklistData-${activeCompany.id}`;
     try {
@@ -137,6 +140,16 @@ function FounderAnalytics() {
         profileCompleteness: Math.round(profileScore),
     };
   }, [deadlines, activeCompany]);
+  
+   if (!activeCompany) {
+    return (
+      <Card className="lg:col-span-3">
+        <CardContent className="p-8 text-center text-muted-foreground">
+          <p>Please add or select a company to view analytics.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -150,7 +163,6 @@ function FounderAnalytics() {
                     <>
                         <Skeleton className="h-[140px] w-full rounded-lg" />
                         <div className="lg:col-span-3 space-y-4 w-full">
-                            <Skeleton className="h-8 w-full rounded-lg" />
                             <Skeleton className="h-8 w-full rounded-lg" />
                             <Skeleton className="h-8 w-full rounded-lg" />
                         </div>
@@ -229,16 +241,27 @@ function FounderAnalytics() {
 
 // --- CA Analytics ---
 const complianceTrendData = [
-  { month: "Jan", compliance: 0 },
-  { month: "Feb", compliance: 0 },
-  { month: "Mar", compliance: 0 },
-  { month: "Apr", compliance: 0 },
-  { month: "May", compliance: 0 },
-  { month: "Jun", compliance: 0 },
-]
+  { month: "Jan", compliance: 0 }, { month: "Feb", compliance: 0 },
+  { month: "Mar", compliance: 0 }, { month: "Apr", compliance: 0 },
+  { month: "May", compliance: 0 }, { month: "Jun", compliance: 0 },
+];
 
 function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
    const clientCount = userProfile.companies.length;
+   
+    const avgProfileCompleteness = useMemo(() => {
+        if (clientCount === 0) return 0;
+        const totalCompleteness = userProfile.companies.reduce((acc, company) => {
+            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(company.type)) {
+                requiredFields.push('cin');
+            }
+            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+            return acc + (filledFields / requiredFields.length) * 100;
+        }, 0);
+        return Math.round(totalCompleteness / clientCount);
+    }, [userProfile.companies, clientCount]);
+
 
    return (
     <div className="space-y-6">
@@ -257,12 +280,12 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             </Card>
             <Card className="interactive-lift">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Portfolio Risk</CardTitle>
+                    <CardTitle className="text-sm font-medium">Avg. Profile Completeness</CardTitle>
                     <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-green-500">{clientCount > 0 ? "Low" : "N/A"}</div>
-                    <p className="text-xs text-muted-foreground">{clientCount > 0 ? "Risk analysis coming soon" : "Add clients to calculate"}</p>
+                    <div className="text-2xl font-bold text-green-500">{avgProfileCompleteness}%</div>
+                    <p className="text-xs text-muted-foreground">Average across all clients</p>
                 </CardContent>
             </Card>
             <Card className="interactive-lift">
@@ -272,7 +295,7 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">N/A</div>
-                    <p className="text-xs text-muted-foreground">Calculated from client filings</p>
+                    <p className="text-xs text-muted-foreground">Portfolio analysis coming soon</p>
                 </CardContent>
             </Card>
         </div>
@@ -280,8 +303,8 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
             <Card className="lg:col-span-3 interactive-lift">
                 <CardHeader>
-                    <CardTitle>Quarterly Compliance Trend</CardTitle>
-                    <CardDescription>Aggregate compliance score across all clients.</CardDescription>
+                    <CardTitle>Portfolio Compliance Trend</CardTitle>
+                    <CardDescription>Aggregate compliance score across all clients (Feature Coming Soon).</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={{}} className="h-64 w-full">
@@ -362,6 +385,48 @@ function LegalAdvisorAnalytics({ userProfile }: { userProfile: UserProfile }) {
   )
 }
 
+function EnterpriseAnalytics({ userProfile }: { userProfile: UserProfile }) {
+    const entityCount = userProfile.companies.length;
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                 <Card className="interactive-lift">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Managed Entities</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{entityCount}</div>
+                        <p className="text-xs text-muted-foreground">
+                            {entityCount} total entities managed
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card className="interactive-lift">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Overall Risk Score</CardTitle>
+                        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">N/A</div>
+                        <p className="text-xs text-muted-foreground">Connect data sources for analysis</p>
+                    </CardContent>
+                </Card>
+                <Card className="interactive-lift">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Dataroom Readiness</CardTitle>
+                        <GanttChartSquare className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">N/A</div>
+                        <p className="text-xs text-muted-foreground">For upcoming M&A or audits</p>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+}
+
 
 export default function AnalyticsPage() {
   const { userProfile } = useAuth();
@@ -382,6 +447,8 @@ export default function AnalyticsPage() {
         return <CAAnalytics userProfile={userProfile} />;
       case 'Legal Advisor':
         return <LegalAdvisorAnalytics userProfile={userProfile} />;
+      case 'Enterprise':
+          return <EnterpriseAnalytics userProfile={userProfile} />;
       default:
         return <p>No analytics available for this role.</p>;
     }
@@ -399,3 +466,5 @@ export default function AnalyticsPage() {
     </div>
   )
 }
+
+    
