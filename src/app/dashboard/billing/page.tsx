@@ -23,7 +23,7 @@ const allPlans = [
       "Conversation History & Reports",
       "Basic Integrations (Zapier, Gmail)",
     ],
-    roles: ['Founder', 'CA', 'Legal Advisor', 'Enterprise'],
+    roles: ['Founder'],
     isCurrent: () => false,
   },
   {
