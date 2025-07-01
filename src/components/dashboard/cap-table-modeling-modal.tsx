@@ -26,13 +26,15 @@ interface ScenarioResult {
 }
 
 const MetricDisplay = ({ title, value, icon }: { title: string, value: string | number, icon: React.ReactNode }) => (
-    <Card className="interactive-lift">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            {icon}
+    <Card className="interactive-lift text-center">
+        <CardHeader className="p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-center gap-2">
+                {icon}
+                {title}
+            </CardTitle>
         </CardHeader>
-        <CardContent>
-            <div className="text-2xl font-bold">{value}</div>
+        <CardContent className="p-3 pt-0">
+            <div className="text-2xl font-bold truncate" title={String(value)}>{value}</div>
         </CardContent>
     </Card>
 );
@@ -70,6 +72,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
     const postMoneyTable = [
       ...currentCapTable.map(entry => ({
         ...entry,
+        shares: Math.round(entry.shares),
         ownership: (entry.shares / totalPostMoneyShares * 100).toFixed(2) + '%'
       })),
       { id: 'new_investor', holder: 'New Investor', type: 'Investor', shares: Math.round(investorShares), ownership: (investorShares / totalPostMoneyShares * 100).toFixed(2) + '%' },
@@ -85,7 +88,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
   };
 
   const renderTable = (title: string, data: any[]) => (
-    <div>
+    <div className="flex-1">
       <h3 className="font-semibold text-lg mb-2">{title}</h3>
       <div className="border rounded-lg overflow-hidden bg-card">
         <Table>
@@ -99,9 +102,9 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
           <TableBody>
             {data.map(row => (
               <TableRow key={row.id} className={cn(row.id.startsWith('new_') && 'bg-primary/5')}>
-                <TableCell className="font-medium">{row.holder}</TableCell>
-                <TableCell>{Math.round(row.shares).toLocaleString()}</TableCell>
-                <TableCell className="text-right font-mono">{row.ownership}</TableCell>
+                <TableCell className="font-medium text-sm">{row.holder}</TableCell>
+                <TableCell className="font-mono text-sm">{row.shares.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-mono text-sm">{row.ownership}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -112,16 +115,16 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-headline text-2xl"><TrendingUp/> Cap Table Modeling</DialogTitle>
           <DialogDescription>
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid lg:grid-cols-3 gap-8 py-4 items-start">
-            <div className="lg:col-span-1">
-                <Card className="sticky top-4 interactive-lift">
+        <div className="flex-1 grid lg:grid-cols-5 gap-8 py-4 items-start overflow-y-auto">
+            <div className="lg:col-span-2">
+                <Card className="sticky top-0 interactive-lift">
                     <CardHeader>
                         <CardTitle>Scenario Inputs</CardTitle>
                     </CardHeader>
@@ -135,7 +138,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                             <Input id="investment" type="number" value={investment} onChange={e => setInvestment(Number(e.target.value))} />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="esop">New ESOP Pool (%)</Label>
+                            <Label htmlFor="esop">Post-round ESOP Pool Target (%)</Label>
                             <Input id="esop" type="number" value={newEsopPercent} onChange={e => setNewEsopPercent(Number(e.target.value))} />
                         </div>
                     </CardContent>
@@ -148,9 +151,9 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                 </Card>
             </div>
 
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-3 space-y-6">
                 {!result ? (
-                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40">
+                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
                         <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
                         <p className="font-semibold text-lg">Scenario Results</p>
                         <p className="text-sm text-muted-foreground max-w-xs">
@@ -158,18 +161,18 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-6 animate-in fade-in-50 duration-500">
+                    <div className="space-y-8 animate-in fade-in-50 duration-500">
                         <div>
                             <h3 className="font-semibold text-lg mb-2">Key Metrics</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <MetricDisplay title="Pre-Money Valuation" value={`₹${preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4 text-muted-foreground"/>} />
-                                <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4 text-muted-foreground"/>} />
-                                <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4 text-muted-foreground"/>} />
-                                <MetricDisplay title="New ESOP Pool" value={`${newEsopPercent}%`} icon={<Percent className="h-4 w-4 text-muted-foreground"/>} />
+                                <MetricDisplay title="Pre-Money Valuation" value={`₹${preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
+                                <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
+                                <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
+                                <MetricDisplay title="ESOP Pool Target" value={`${newEsopPercent}%`} icon={<Percent className="h-4 w-4"/>} />
                             </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-8">
+                        <div className="flex flex-col md:flex-row gap-8 items-start">
                             {renderTable("Pre-Financing", result.preMoney)}
                             {renderTable("Post-Financing", result.postMoney)}
                         </div>
@@ -177,7 +180,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                 )}
             </div>
         </div>
-        <DialogFooter className="pt-4 mt-4 border-t">
+        <DialogFooter className="pt-4 border-t">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
