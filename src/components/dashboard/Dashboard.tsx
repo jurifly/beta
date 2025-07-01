@@ -110,32 +110,32 @@ type DashboardChecklistItem = {
 
 const staticChartDataByYear = {
     '2024': [
-        { month: "Jan", activity: 5 },
-        { month: "Feb", activity: 8 },
-        { month: "Mar", activity: 12 },
-        { month: "Apr", activity: 10 },
-        { month: "May", activity: 15 },
-        { month: "Jun", activity: 18 },
-        { month: "Jul", activity: 14 },
-        { month: "Aug", activity: 20 },
-        { month: "Sep", activity: 22 },
-        { month: "Oct", activity: 25 },
-        { month: "Nov", activity: 19 },
-        { month: "Dec", activity: 28 },
+        { month: "Jan", activity: 0 },
+        { month: "Feb", activity: 0 },
+        { month: "Mar", activity: 0 },
+        { month: "Apr", activity: 0 },
+        { month: "May", activity: 0 },
+        { month: "Jun", activity: 0 },
+        { month: "Jul", activity: 0 },
+        { month: "Aug", activity: 0 },
+        { month: "Sep", activity: 0 },
+        { month: "Oct", activity: 0 },
+        { month: "Nov", activity: 0 },
+        { month: "Dec", activity: 0 },
     ],
     '2023': [
-        { month: "Jan", activity: 2 },
-        { month: "Feb", activity: 4 },
-        { month: "Mar", activity: 6 },
-        { month: "Apr", activity: 5 },
-        { month: "May", activity: 8 },
-        { month: "Jun", activity: 10 },
-        { month: "Jul", activity: 9 },
-        { month: "Aug", activity: 12 },
-        { month: "Sep", activity: 15 },
-        { month: "Oct", activity: 11 },
-        { month: "Nov", activity: 14 },
-        { month: "Dec", activity: 18 },
+        { month: "Jan", activity: 0 },
+        { month: "Feb", activity: 0 },
+        { month: "Mar", activity: 0 },
+        { month: "Apr", activity: 0 },
+        { month: "May", activity: 0 },
+        { month: "Jun", activity: 0 },
+        { month: "Jul", activity: 0 },
+        { month: "Aug", activity: 0 },
+        { month: "Sep", activity: 0 },
+        { month: "Oct", activity: 0 },
+        { month: "Nov", activity: 0 },
+        { month: "Dec", activity: 0 },
     ],
 };
 
@@ -304,7 +304,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         });
         
         const result: Record<string, { month: string; activity: number }[]> = {};
-        for (const year of Array.from(allYears)) {
+        for (const year of Array.from(allYears).sort()) {
             const yearData = activityByYear[year] || Array(12).fill(0);
             result[year] = monthNames.map((monthName, index) => ({
                 month: monthName,
