@@ -40,20 +40,6 @@ export function UserNav() {
     }
   };
 
-  const handleRoleChange = (role: string) => {
-    if (userProfile && role !== userProfile.role) {
-      updateUserProfile({ role: role as UserRole }).then(() => {
-        toast({
-            title: "Role Changed",
-            description: `You are now viewing as a ${role}. The page will reload to reflect changes.`,
-        });
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-      });
-    }
-  };
-
   const handleCompanyChange = (companyId: string) => {
     if (userProfile && companyId !== userProfile.activeCompanyId) {
       const activeCompany = userProfile.companies.find(c => c.id === companyId);
@@ -161,33 +147,6 @@ export function UserNav() {
                   </CommandGroup>
                 </CommandList>
               </Command>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Briefcase className="mr-2 h-4 w-4" />
-            <span>Switch Role</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup
-                value={userProfile.role}
-                onValueChange={handleRoleChange}
-              >
-                <DropdownMenuRadioItem value="Founder">
-                  Founder
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="CA">
-                  Chartered Accountant
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="Legal Advisor">
-                  Legal Advisor
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="Enterprise">
-                  Enterprise
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>

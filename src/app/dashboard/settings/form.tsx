@@ -150,16 +150,18 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
               control={control}
               render={({ field }) => (
                 <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
-                    <Label>Your Role</Label>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="md:col-span-2 flex flex-wrap gap-4 pt-2">
+                    <div>
+                        <Label>Your Role</Label>
+                        <p className="text-xs text-muted-foreground mt-1">Please contact support to change your account role.</p>
+                    </div>
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="md:col-span-2 flex flex-wrap gap-4 pt-2" disabled>
                         {roles.map((role) => (
                           <TooltipProvider key={role.id}>
                               <Tooltip>
                                   <TooltipTrigger asChild>
-                                      <Label htmlFor={`role-${role.id}`} className="flex items-center space-x-2 cursor-pointer">
+                                      <Label htmlFor={`role-${role.id}`} className="flex items-center space-x-2 cursor-pointer has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-70">
                                           <RadioGroupItem value={role.id} id={`role-${role.id}`} />
                                           <span>{role.label}</span>
-                                          <Info className="w-3 h-3 text-muted-foreground" />
                                       </Label>
                                   </TooltipTrigger>
                                   <TooltipContent>
