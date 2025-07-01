@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { generateAgenda, generateMinutes } from './actions';
@@ -180,6 +180,12 @@ function AgendaGenerator({ legalRegion }: { legalRegion: string }) {
             setLoading(false);
         }
     }
+    
+    const handleCopy = (text: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast({ title: "Copied to clipboard!" });
+    };
 
     return (
         <Card>
@@ -202,9 +208,16 @@ function AgendaGenerator({ legalRegion }: { legalRegion: string }) {
             </CardContent>
             {result && (
                 <CardFooter className="flex flex-col items-start gap-2 border-t pt-4">
-                    <h3 className="font-semibold">Generated Agenda:</h3>
-                    <div className="prose prose-sm dark:prose-invert max-w-none w-full h-64 overflow-y-auto p-4 border rounded-md bg-muted/50">
-                        <ReactMarkdown>{result}</ReactMarkdown>
+                    <div className="w-full">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-semibold">Generated Agenda:</h3>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(result)}>
+                                <Clipboard className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="prose prose-sm dark:prose-invert max-w-none w-full h-64 overflow-y-auto p-4 border rounded-md bg-muted/50">
+                            <ReactMarkdown>{result}</ReactMarkdown>
+                        </div>
                     </div>
                 </CardFooter>
             )}
@@ -237,6 +250,12 @@ function MinutesGenerator({ legalRegion }: { legalRegion: string }) {
             setLoading(false);
         }
     }
+    
+    const handleCopy = (text: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast({ title: "Copied to clipboard!" });
+    };
 
     return (
         <Card>
@@ -263,9 +282,16 @@ function MinutesGenerator({ legalRegion }: { legalRegion: string }) {
             </CardContent>
             {result && (
                 <CardFooter className="flex flex-col items-start gap-2 border-t pt-4">
-                    <h3 className="font-semibold">Generated Minutes:</h3>
-                    <div className="prose prose-sm dark:prose-invert max-w-none w-full h-64 overflow-y-auto p-4 border rounded-md bg-muted/50">
-                        <ReactMarkdown>{result}</ReactMarkdown>
+                     <div className="w-full">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-semibold">Generated Minutes:</h3>
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(result)}>
+                                <Clipboard className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="prose prose-sm dark:prose-invert max-w-none w-full h-64 overflow-y-auto p-4 border rounded-md bg-muted/50">
+                            <ReactMarkdown>{result}</ReactMarkdown>
+                        </div>
                     </div>
                 </CardFooter>
             )}

@@ -683,6 +683,12 @@ const DocumentGenerator = () => {
   };
 
   const handleDownload = () => { if (!generatedDoc) return; const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.setAttribute('download', `${generatedDoc.title.replace(/ /g, '_')}.txt`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
+  
+  const handleCopy = () => {
+    if (!editorContent) return;
+    navigator.clipboard.writeText(editorContent);
+    toast({ title: "Copied to clipboard!" });
+  };
 
   if (!userProfile) return null;
 
@@ -711,6 +717,7 @@ const DocumentGenerator = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div><h2 className="text-xl font-bold font-headline">Document Preview</h2></div>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={handleCopy} className="interactive-lift w-full sm:w-auto justify-center"><Copy className="mr-2 h-4 w-4" /> Copy</Button>
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
                 <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
@@ -768,6 +775,12 @@ const WikiGenerator = () => {
             toast({ variant: "destructive", title: "File Error", description: "Could not read the selected file."});
         }
     }
+    
+    const handleCopyWiki = () => {
+      if (!result?.wikiContent) return;
+      navigator.clipboard.writeText(result.wikiContent);
+      toast({ title: 'Wiki content copied!' });
+    };
 
     return (
       <div className="grid lg:grid-cols-2 gap-8 items-start">
@@ -799,7 +812,16 @@ const WikiGenerator = () => {
             )}
         </div>
         <Card className="lg:col-span-1 min-h-[400px]">
-            <CardHeader><CardTitle>Generated Wiki Content</CardTitle></CardHeader>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle>Generated Wiki Content</CardTitle>
+                    {result && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopyWiki}>
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            </CardHeader>
             <CardContent>
                 {loading && <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary"/></div>}
                 {result ? (
@@ -869,6 +891,12 @@ const RegulationWatcherTab = () => {
         formData.append('legalRegion', userProfile.legalRegion);
         formAction(formData);
     }
+    
+    const handleCopyUpdates = (text: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast({ title: 'Updates copied to clipboard!' });
+    };
 
     if (!userProfile) {
         return <Loader2 className="w-8 h-8 animate-spin text-primary" />;
@@ -926,11 +954,18 @@ const RegulationWatcherTab = () => {
                 {state.data ? (
                     <Card className="interactive-lift">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-3">
-                               {watcherPortals.find(p => p.id === submittedPortal)?.icon}
-                               {submittedPortal} {submittedFrequency.charAt(0).toUpperCase() + submittedFrequency.slice(1)} Digest
-                            </CardTitle>
-                            <CardDescription>Last updated: Just now</CardDescription>
+                             <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle className="flex items-center gap-3">
+                                    {watcherPortals.find(p => p.id === submittedPortal)?.icon}
+                                    {submittedPortal} {submittedFrequency.charAt(0).toUpperCase() + submittedFrequency.slice(1)} Digest
+                                    </CardTitle>
+                                    <CardDescription>Last updated: Just now</CardDescription>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyUpdates(state.data?.summary || '')}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="prose dark:prose-invert max-w-none text-sm p-6 bg-muted/50 rounded-lg border">
@@ -1033,6 +1068,12 @@ const ReconciliationTab = () => {
         toast({ title: "Reconciliation Complete!", description: "Your report is ready below." });
       } catch (error: any) { toast({ variant: "destructive", title: "Analysis Failed", description: error.message }); } finally { setIsProcessing(false); }
     };
+    
+    const handleCopyReconciliation = (text: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast({ title: 'Summary copied to clipboard!' });
+    };
   
     if (!userProfile) { return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>; }
     
@@ -1048,7 +1089,15 @@ const ReconciliationTab = () => {
           <Card className="interactive-lift animate-in fade-in-50 duration-500">
               <CardHeader><CardTitle>Reconciliation Report</CardTitle><CardDescription> Overall Status: <Badge variant={result.overallStatus === 'Matched' ? 'secondary' : 'destructive'} className={result.overallStatus === 'Matched' ? 'bg-green-100 text-green-800' : ''}>{result.overallStatus}</Badge></CardDescription></CardHeader>
               <CardContent className="space-y-6">
-                  <div><h3 className="font-semibold mb-2">AI Summary</h3><p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg border">{result.summary}</p></div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold">AI Summary</h3>
+                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyReconciliation(result.summary)}>
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg border">{result.summary}</p>
+                  </div>
                   <Accordion type="multiple" defaultValue={['discrepancies', 'matched']} className="w-full">
                       <AccordionItem value="discrepancies"><AccordionTrigger className="text-base font-medium">Discrepancies Found ({result.discrepancies.length})</AccordionTrigger><AccordionContent className="pt-2">{result.discrepancies.length > 0 ? ( <div className="space-y-4">{result.discrepancies.map((item, index) => ( <Card key={index} className="bg-destructive/10 border-destructive/20"><CardHeader><CardTitle className="text-base text-destructive flex items-center gap-2"><AlertTriangle/> {item.field}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid grid-cols-3 gap-4 text-center">{item.values.map(v => ( <div key={v.source} className="p-2 border rounded-md bg-background"><p className="text-xs font-semibold">{v.source}</p><p className="text-sm font-mono">{v.value}</p></div> )) }</div><div><p className="text-sm font-semibold">Probable Cause:</p><p className="text-sm text-destructive/80">{item.reason}</p></div></CardContent></Card> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No discrepancies found.</p> )}</AccordionContent></AccordionItem>
                       <AccordionItem value="matched"><AccordionTrigger className="text-base font-medium">Matched Items ({result.matchedItems.length})</AccordionTrigger><AccordionContent className="pt-2">{result.matchedItems.length > 0 ? ( <div className="space-y-3">{result.matchedItems.map((item, index) => ( <div key={index} className="p-3 border rounded-md flex items-center justify-between bg-muted/50"><p className="font-medium text-sm flex items-center gap-2"><CheckCircle className="text-green-500"/>{item.field}</p><p className="font-mono text-sm">{item.value}</p></div> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No fully matched items found.</p> )}</AccordionContent></AccordionItem>
