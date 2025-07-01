@@ -113,13 +113,9 @@ type DashboardChecklistItem = {
     dueDate: string;
 };
 
+const currentYearString = new Date().getFullYear().toString();
 const staticChartDataByYear = {
-    '2024': [
-        { month: "Jan", activity: 0 }, { month: "Feb", activity: 0 }, { month: "Mar", activity: 0 },
-        { month: "Apr", activity: 0 }, { month: "May", activity: 0 }, { month: "Jun", activity: 0 },
-        { month: "Jul", activity: 0 }, { month: "Aug", activity: 0 }, { month: "Sep", activity: 0 },
-        { month: "Oct", activity: 0 }, { month: "Nov", activity: 0 }, { month: "Dec", activity: 0 },
-    ],
+    [currentYearString]: Array(12).fill(null).map((_, i) => ({ month: format(new Date(Number(currentYearString), i, 1), 'MMM'), activity: 0 })),
 };
 
 function DocRequestItem({ request, onComplete }: { request: DocumentRequest, onComplete: (id: string) => void }) {
@@ -247,17 +243,40 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const sortedMonths = useMemo(() => Object.keys(groupedChecklist).sort((a,b) => new Date(a).getTime() - new Date(b).getTime()), [groupedChecklist]);
     
     const complianceChartDataByYear = useMemo(() => {
-        const data: Record<string, any[]> = { '2024': Array(12).fill(0).map((_, i) => ({ month: format(new Date(2024, i), 'MMM'), activity: 0 })) };
+        const data: Record<string, { month: string; activity: number }[]> = {};
+        if (!activeCompany) {
+            const currentYear = new Date().getFullYear().toString();
+             data[currentYear] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(Number(currentYear), i), 'MMM'), activity: 0 }));
+            return data;
+        };
+
+        const currentYear = new Date().getFullYear();
+        const incorporationYear = new Date(activeCompany.incorporationDate).getFullYear();
+
+        // Ensure all years from incorporation to current year are present
+        if (!isNaN(incorporationYear)) {
+            for (let year = incorporationYear; year <= currentYear; year++) {
+                data[year.toString()] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(year, i), 'MMM'), activity: 0 }));
+            }
+        }
+        
+        // If there are no years (e.g. invalid date), at least show the current year
+        if (Object.keys(data).length === 0) {
+            data[currentYear.toString()] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(currentYear, i), 'MMM'), activity: 0 }));
+        }
+
         checklist.forEach(item => {
             if (item.completed) {
-                const date = new Date(item.dueDate);
+                // adding T00:00:00 to avoid timezone issues where it might become the previous day
+                const date = new Date(item.dueDate + 'T00:00:00');
                 const year = date.getFullYear().toString();
-                if (!data[year]) data[year] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(year, i), 'MMM'), activity: 0 }));
-                data[year][date.getMonth()].activity++;
+                if (data[year]) { // only populate if year exists in our range
+                    data[year][date.getMonth()].activity++;
+                }
             }
         });
         return data;
-    }, [checklist]);
+    }, [checklist, activeCompany]);
 
     const { hygieneScore, loading: isLoading } = dynamicData;
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
