@@ -353,7 +353,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={scoreSubtext} icon={<ShieldCheck className="h-4 w-4" />} colorClass={scoreColor} isLoading={isLoading} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} isLoading={false} /></Link>
-            <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2">
               <ComplianceActivityChart dataByYear={complianceChartDataByYear} />
@@ -472,7 +472,7 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
                 <QuickLinkCard title="AI Document Intelligence" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
             </div>
             <Link href="/dashboard/clients" className="block"><StatCard title="Active Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users className="h-4 w-4" />} /></Link>
-            <Link href="/dashboard/ai-toolkit?tab=studio" className="block"><StatCard title="Documents Drafted" value="0" subtext="Generated this month" icon={<FileText className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/ai-toolkit?tab=studio" className="block"><StatCard title="Contracts in Review" value="0" subtext="Across all clients" icon={<ClipboardList className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Documents awaiting your review" icon={<FileClock className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning className="h-4 w-4" />} /></Link>
             <div className="md:col-span-2 lg:col-span-2">
