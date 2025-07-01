@@ -52,6 +52,7 @@ import { addDays, addMonths, format, startOfToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -144,6 +145,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const { updateUserProfile } = useAuth();
     const [dynamicData, setDynamicData] = useState({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
+    const [selectedChecklistYear, setSelectedChecklistYear] = useState<string>(new Date().getFullYear().toString());
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
 
     const docRequests = activeCompany?.docRequests?.filter(r => r.status === 'Pending') || [];
@@ -279,6 +281,20 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         });
     };
     
+    const checklistYears = useMemo(() => {
+        const years = new Set(checklist.map(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString()));
+        if (years.size === 0) {
+            years.add(new Date().getFullYear().toString());
+        }
+        return Array.from(years).sort((a, b) => Number(b) - Number(a));
+    }, [checklist]);
+    
+    useEffect(() => {
+        if (!checklistYears.includes(selectedChecklistYear)) {
+            setSelectedChecklistYear(checklistYears[0] || new Date().getFullYear().toString());
+        }
+    }, [checklistYears, selectedChecklistYear]);
+
     const groupedChecklist = useMemo(() => {
         const grouped = checklist.reduce((acc, item) => {
             const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
@@ -290,7 +306,11 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         return grouped;
     }, [checklist]);
 
-    const sortedMonths = useMemo(() => Object.keys(groupedChecklist).sort((a,b) => new Date(a).getTime() - new Date(b).getTime()), [groupedChecklist]);
+    const sortedMonths = useMemo(() => {
+        return Object.keys(groupedChecklist)
+            .filter(month => month.endsWith(selectedChecklistYear))
+            .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    }, [groupedChecklist, selectedChecklistYear]);
     
     const complianceChartDataByYear = useMemo(() => {
         const activityByYear: Record<string, number[]> = {};
@@ -350,7 +370,26 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
 
              <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
-                <CardHeader><CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle><CardDescription>Key compliance items for your company.</CardDescription></CardHeader>
+                <CardHeader>
+                    <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
+                        <div>
+                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
+                            <CardDescription>Key compliance items for your company.</CardDescription>
+                        </div>
+                        {checklistYears.length > 1 && (
+                             <Select value={selectedChecklistYear} onValueChange={setSelectedChecklistYear}>
+                                <SelectTrigger className="w-full sm:w-[120px]">
+                                    <SelectValue placeholder="Select year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {checklistYears.map(year => (
+                                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    </div>
+                </CardHeader>
                 <CardContent className="space-y-3">
                     {isLoading ? <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-5/6" /></div>
                     : sortedMonths.length > 0 ? (
@@ -364,7 +403,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                 </AccordionItem>
                             ))}
                         </Accordion>
-                    ) : <p className="text-center text-muted-foreground p-8">No items found.</p>}
+                    ) : <p className="text-center text-muted-foreground p-8">No items found for {selectedChecklistYear}.</p>}
                 </CardContent>
              </Card>
 
@@ -594,5 +633,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    
