@@ -197,9 +197,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 setChecklist(checklistItems);
                 
                 const today = startOfToday();
+                const thirtyDaysFromNow = addDays(today, 30);
                 const upcomingFilings = checklistItems.filter(item => {
                     const dueDate = new Date(item.dueDate + 'T00:00:00');
-                    return dueDate >= today && !item.completed;
+                    return dueDate >= today && dueDate <= thirtyDaysFromNow && !item.completed;
                 });
                 const overdueFilings = checklistItems.filter(item => {
                     const dueDate = new Date(item.dueDate + 'T00:00:00');
