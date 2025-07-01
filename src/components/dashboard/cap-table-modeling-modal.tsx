@@ -1,16 +1,16 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TrendingUp } from "lucide-react";
+import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
-import { Badge } from "../ui/badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface CapTableModelingModalProps {
   isOpen: boolean;
@@ -24,6 +24,18 @@ interface ScenarioResult {
   sharePrice: number;
   postMoneyValuation: number;
 }
+
+const MetricDisplay = ({ title, value, icon }: { title: string, value: string | number, icon: React.ReactNode }) => (
+    <Card className="interactive-lift">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            {icon}
+        </CardHeader>
+        <CardContent>
+            <div className="text-2xl font-bold">{value}</div>
+        </CardContent>
+    </Card>
+);
 
 export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }: CapTableModelingModalProps) {
   const [preMoneyValuation, setPreMoneyValuation] = useState(50000000); // e.g. 5 Cr
@@ -74,8 +86,8 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
 
   const renderTable = (title: string, data: any[]) => (
     <div>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <div className="border rounded-lg overflow-hidden">
+      <h3 className="font-semibold text-lg mb-2">{title}</h3>
+      <div className="border rounded-lg overflow-hidden bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -86,7 +98,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
           </TableHeader>
           <TableBody>
             {data.map(row => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} className={cn(row.id.startsWith('new_') && 'bg-primary/5')}>
                 <TableCell className="font-medium">{row.holder}</TableCell>
                 <TableCell>{Math.round(row.shares).toLocaleString()}</TableCell>
                 <TableCell className="text-right font-mono">{row.ownership}</TableCell>
@@ -100,47 +112,72 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><TrendingUp/> Cap Table Modeling</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 font-headline text-2xl"><TrendingUp/> Cap Table Modeling</DialogTitle>
           <DialogDescription>
-            Model a new financing round to understand its impact on your equity structure.
+            Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid md:grid-cols-3 gap-6 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="premoney">Pre-Money Valuation (₹)</Label>
-                <Input id="premoney" type="number" value={preMoneyValuation} onChange={e => setPreMoneyValuation(Number(e.target.value))} />
+        <div className="grid lg:grid-cols-3 gap-8 py-4 items-start">
+            <div className="lg:col-span-1">
+                <Card className="sticky top-4 interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Scenario Inputs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="premoney">Pre-Money Valuation (₹)</Label>
+                            <Input id="premoney" type="number" value={preMoneyValuation} onChange={e => setPreMoneyValuation(Number(e.target.value))} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="investment">New Investment (₹)</Label>
+                            <Input id="investment" type="number" value={investment} onChange={e => setInvestment(Number(e.target.value))} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="esop">New ESOP Pool (%)</Label>
+                            <Input id="esop" type="number" value={newEsopPercent} onChange={e => setNewEsopPercent(Number(e.target.value))} />
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={calculateScenario} className="w-full">
+                            <Sparkles className="mr-2 h-4 w-4"/>
+                            Calculate Scenario
+                        </Button>
+                    </CardFooter>
+                </Card>
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="investment">New Investment (₹)</Label>
-                <Input id="investment" type="number" value={investment} onChange={e => setInvestment(Number(e.target.value))} />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="esop">New ESOP Pool (%)</Label>
-                <Input id="esop" type="number" value={newEsopPercent} onChange={e => setNewEsopPercent(Number(e.target.value))} />
+
+            <div className="lg:col-span-2 space-y-6">
+                {!result ? (
+                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40">
+                        <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
+                        <p className="font-semibold text-lg">Scenario Results</p>
+                        <p className="text-sm text-muted-foreground max-w-xs">
+                            Enter your fundraising scenario on the left and click "Calculate" to see the impact.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-6 animate-in fade-in-50 duration-500">
+                        <div>
+                            <h3 className="font-semibold text-lg mb-2">Key Metrics</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <MetricDisplay title="Pre-Money Valuation" value={`₹${preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4 text-muted-foreground"/>} />
+                                <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4 text-muted-foreground"/>} />
+                                <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4 text-muted-foreground"/>} />
+                                <MetricDisplay title="New ESOP Pool" value={`${newEsopPercent}%`} icon={<Percent className="h-4 w-4 text-muted-foreground"/>} />
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {renderTable("Pre-Financing", result.preMoney)}
+                            {renderTable("Post-Financing", result.postMoney)}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
-        <div className="flex justify-center">
-          <Button onClick={calculateScenario}>Calculate Scenario</Button>
-        </div>
-        
-        {result && (
-          <div className="mt-6 border-t pt-6">
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-center">
-                <Card><CardHeader><CardTitle className="text-sm font-medium">Pre-Money Valuation</CardTitle><CardDescription>₹{preMoneyValuation.toLocaleString()}</CardDescription></CardHeader></Card>
-                <Card><CardHeader><CardTitle className="text-sm font-medium">Post-Money Valuation</CardTitle><CardDescription>₹{result.postMoneyValuation.toLocaleString()}</CardDescription></CardHeader></Card>
-                <Card><CardHeader><CardTitle className="text-sm font-medium">New Share Price</CardTitle><CardDescription>₹{result.sharePrice.toFixed(2)}</CardDescription></CardHeader></Card>
-                <Card><CardHeader><CardTitle className="text-sm font-medium">New ESOP Pool</CardTitle><CardDescription>{newEsopPercent}%</CardDescription></CardHeader></Card>
-             </div>
-             <div className="grid md:grid-cols-2 gap-8">
-              {renderTable("Pre-Financing", result.preMoney)}
-              {renderTable("Post-Financing", result.postMoney)}
-            </div>
-          </div>
-        )}
-        
-        <DialogFooter className="pt-4">
+        <DialogFooter className="pt-4 mt-4 border-t">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
