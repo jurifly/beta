@@ -281,14 +281,21 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const complianceChartDataByYear = useMemo(() => {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const activityByYear: Record<string, number[]> = {};
-        const allYears = new Set<string>([new Date().getFullYear().toString()]);
+        const allYears = new Set<string>();
+
+        allYears.add(new Date().getFullYear().toString());
+
+        if (activeCompany) {
+            allYears.add(new Date(activeCompany.incorporationDate).getFullYear().toString());
+        }
 
         checklist.forEach(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            const year = dueDate.getFullYear().toString();
+            allYears.add(year);
+
             if (item.completed) {
-                const dueDate = new Date(item.dueDate + 'T00:00:00');
-                const year = dueDate.getFullYear().toString();
                 const month = dueDate.getMonth(); // 0-11
-                allYears.add(year);
                 if (!activityByYear[year]) {
                     activityByYear[year] = Array(12).fill(0);
                 }
@@ -300,6 +307,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         if (checklist.length > 0 && totalCompleted < 5) {
             const currentYearStr = new Date().getFullYear().toString();
             if (!activityByYear[currentYearStr]) activityByYear[currentYearStr] = Array(12).fill(0);
+            allYears.add(currentYearStr);
             activityByYear[currentYearStr][0] = Math.max(activityByYear[currentYearStr][0], 2);
             activityByYear[currentYearStr][1] = Math.max(activityByYear[currentYearStr][1], 3);
             activityByYear[currentYearStr][2] = Math.max(activityByYear[currentYearStr][2], 1);
@@ -316,7 +324,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         }
         
         return result;
-    }, [checklist]);
+    }, [checklist, activeCompany]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
