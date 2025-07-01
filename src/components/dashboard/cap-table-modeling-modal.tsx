@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TrendingUp } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
 import { Badge } from "../ui/badge";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CapTableModelingModalProps {
   isOpen: boolean;
