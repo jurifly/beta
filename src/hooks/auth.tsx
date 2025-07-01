@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, VaultItem, ChatMessage, AppNotification, Transaction, UserRole } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -25,8 +25,6 @@ export interface AuthContextType {
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
   signUpWithEmailAndPassword: (email: string, pass: string, name: string, legalRegion: string, refId?: string) => Promise<void>;
   signOut: () => Promise<void>;
-  saveVaultItems: (items: VaultItem[]) => Promise<void>;
-  getVaultItems: () => Promise<VaultItem[]>;
   saveChatHistory: (chat: ChatMessage[]) => Promise<void>;
   getChatHistory: () => Promise<ChatMessage[][]>;
   addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => Promise<void>;
@@ -323,41 +321,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: "Credits Added!", description: `You have successfully added ${amount} credits. Your new balance is ${newCredits}.` });
   }, [user, userProfile, toast, updateUserProfile]);
   
-  const saveVaultItems = async (items: VaultItem[]) => {
-    if (!user) return;
-    const vaultCollectionRef = collection(db, `users/${user.uid}/vault`);
-    const batch = writeBatch(db);
-    
-    // Get existing doc IDs from Firestore
-    const snapshot = await getDocs(query(vaultCollectionRef));
-    const existingIds = new Set(snapshot.docs.map(d => d.id));
-    
-    const newIds = new Set(items.map(i => i.id));
-
-    // Determine which documents to delete
-    for (const id of existingIds) {
-      if (!newIds.has(id)) {
-        batch.delete(doc(vaultCollectionRef, id));
-      }
-    }
-
-    // Add or update current items
-    items.forEach(item => {
-      const docRef = doc(vaultCollectionRef, item.id);
-      batch.set(docRef, item);
-    });
-
-    await batch.commit();
-  };
-
-  const getVaultItems = async (): Promise<VaultItem[]> => {
-    if (!user) return [];
-    const vaultCollectionRef = collection(db, `users/${user.uid}/vault`);
-    const q = query(vaultCollectionRef, orderBy('lastModified', 'desc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data() as VaultItem);
-  };
-
   const saveChatHistory = async (chat: ChatMessage[]) => {
     if (!user) return;
     const historyCollectionRef = collection(db, `users/${user.uid}/chatHistory`);
@@ -375,7 +338,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return querySnapshot.docs.map(doc => doc.data().messages as ChatMessage[]);
   };
   
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, addCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveVaultItems, getVaultItems, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, addCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
