@@ -177,6 +177,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         };
     }, [activeCompany]);
 
+    // Effect to fetch initial data from AI
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!activeCompany) {
@@ -200,33 +201,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const checklistItems = response.filings.map((f) => ({
                     id: `${f.title}-${f.date}`, text: f.title, dueDate: f.date, completed: savedStatuses[`${f.title}-${f.date}`] ?? false
                 }));
+
+                // Set the initial checklist, which will trigger the calculation effect
                 setChecklist(checklistItems);
-                
-                const today = startOfToday();
-                const upcomingFilings = checklistItems.filter(item => {
-                    const dueDate = new Date(item.dueDate + 'T00:00:00');
-                    return !item.completed && dueDate >= today && dueDate <= addDays(today, 30);
-                });
-                const overdueFilings = checklistItems.filter(item => {
-                    const dueDate = new Date(item.dueDate + 'T00:00:00');
-                    return !item.completed && dueDate < today;
-                });
-
-                const totalFilings = checklistItems.length;
-                const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
-                
-                let profileCompleteness = 0;
-                const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-                if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
-                const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
-                profileCompleteness = (filledFields / requiredFields.length) * 100;
-                
-                const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
-
-                setDynamicData({
-                    filings: upcomingFilings.length, hygieneScore: score, alerts: overdueFilings.length, loading: false
-                });
-
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
                 setDynamicData({ filings: 0, hygieneScore: 0, alerts: 0, loading: false });
@@ -234,6 +211,42 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         }
         fetchDashboardData();
     }, [activeCompany]);
+
+    // Effect to recalculate stats whenever the checklist is updated
+    useEffect(() => {
+      if (!activeCompany) return;
+
+      const today = startOfToday();
+      const upcomingFilings = checklist.filter(item => {
+          const dueDate = new Date(item.dueDate + 'T00:00:00');
+          return !item.completed && dueDate >= today && dueDate <= addDays(today, 30);
+      });
+      const overdueFilings = checklist.filter(item => {
+          const dueDate = new Date(item.dueDate + 'T00:00:00');
+          return !item.completed && dueDate < today;
+      });
+
+      const totalFilings = checklist.length;
+      const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
+      
+      let profileCompleteness = 0;
+      const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+      if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
+      const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
+      profileCompleteness = (filledFields / requiredFields.length) * 100;
+      
+      const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+      setDynamicData(prev => ({
+          ...prev,
+          filings: upcomingFilings.length, 
+          hygieneScore: score, 
+          alerts: overdueFilings.length, 
+          loading: false 
+      }));
+
+    }, [checklist, activeCompany]);
+
 
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
@@ -485,21 +498,67 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile, updateUserProfile } = useAuth();
+  const { userProfile, addNotification } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
+  const fetchDashboardDataCalled = React.useRef(false);
+
+  useEffect(() => {
+    if (!userProfile) return;
+    const fetchDashboardData = async () => {
+        const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+        if (!activeCompany) return;
+
+        try {
+            const currentDate = format(new Date(), 'yyyy-MM-dd');
+            const response = await generateFilings({
+                companyType: activeCompany.type,
+                incorporationDate: activeCompany.incorporationDate,
+                currentDate: currentDate,
+                legalRegion: activeCompany.legalRegion,
+            });
+            const overdueFilings = response.filings.filter(f => f.status === 'overdue');
+            
+            const today = new Date();
+            const twoWeeksFromNow = new Date();
+            twoWeeksFromNow.setDate(today.getDate() + 14);
+
+            const upcomingSoon = response.filings.filter(filing => {
+                const dueDate = new Date(filing.date + 'T00:00:00');
+                return filing.status === 'upcoming' && dueDate > today && dueDate <= twoWeeksFromNow;
+            });
+
+        } catch (error) {
+            console.error("Failed to fetch initial dashboard notifications:", error);
+        }
+    }
+    fetchDashboardData();
+  }, [userProfile, addNotification]);
 
   const renderDesktopDashboardByRole = () => {
     if (!userProfile) return <div className="space-y-6">
         <Skeleton className="h-24 w-full" />
-        <div className="grid grid-cols-4 gap-6"><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /></div>
-        <div className="grid grid-cols-2 gap-6"><Skeleton className="h-96 w-full" /><Skeleton className="h-96 w-full" /></div>
+        <div className="grid grid-cols-4 gap-6">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+        </div>
+         <div className="grid grid-cols-2 gap-6">
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-96 w-full" />
+        </div>
     </div>;
     switch (userProfile.role) {
-      case 'Founder': return <FounderDashboard userProfile={userProfile} />;
-      case 'CA': return <CADashboard userProfile={userProfile} />;
-      case 'Legal Advisor': return <LegalAdvisorDashboard userProfile={userProfile} />;
-      case 'Enterprise': return <EnterpriseDashboard userProfile={userProfile} />;
-      default: return <FounderDashboard userProfile={userProfile} />;
+      case 'Founder':
+        return <FounderDashboard userProfile={userProfile} />;
+      case 'CA':
+        return <CADashboard userProfile={userProfile} />;
+      case 'Legal Advisor':
+        return <LegalAdvisorDashboard userProfile={userProfile} />;
+      case 'Enterprise':
+        return <EnterpriseDashboard userProfile={userProfile} />;
+      default:
+        return <FounderDashboard userProfile={userProfile} />;
     }
   };
   
@@ -520,7 +579,8 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-4">
             <Button onClick={() => setAddCompanyModalOpen(true)} className="w-full sm:w-auto interactive-lift">
-                <Plus className="mr-2 h-4 w-4" /> Add Company
+                <Plus className="mr-2 h-4 w-4" />
+                Add Company
             </Button>
           </div>
         </div>
@@ -533,3 +593,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    
