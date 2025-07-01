@@ -18,7 +18,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Activity, AlertTriangle, ArrowRight, Award, Briefcase, CalendarClock, CheckSquare, FileText, LineChart as LineChartIcon, ListTodo, Loader2, MessageSquare, Scale, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import type { UserProfile, GenerateDDChecklistOutput } from "@/lib/types"
+import type { UserProfile, GenerateDDChecklistOutput, Company } from "@/lib/types"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/auth"
 import Link from "next/link"
@@ -96,7 +96,7 @@ function FounderAnalytics() {
 
   }, [activeCompany, toast]);
 
-  const { completedCount, totalCount, progress, pendingItems } = useMemo(() => {
+  const { completedCount, totalCount, progress: dataroomProgress, pendingItems } = useMemo(() => {
     if (!checklistState?.data) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
     
     const allItems = checklistState.data.checklist.flatMap(c => c.items);
@@ -114,22 +114,29 @@ function FounderAnalytics() {
     };
   }, [checklistState]);
 
-  const { hygieneScore, filingPerformance, documentHealth } = useMemo(() => {
-    const checklistProgress = progress; // from Dataroom checklist state
+  const { hygieneScore, filingPerformance, profileCompleteness } = useMemo(() => {
     const totalFilings = deadlines.length;
     const overdueFilings = deadlines.filter(d => d.overdue).length;
     const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
+
+    let profileScore = 0;
+    if (activeCompany) {
+        const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+        if (activeCompany.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(activeCompany.type)) {
+            requiredFields.push('cin');
+        }
+        const filledFields = requiredFields.filter(field => activeCompany[field] && (activeCompany[field] as string).trim() !== '').length;
+        profileScore = (filledFields / requiredFields.length) * 100;
+    }
     
-    const docHealth = checklistProgress;
-    
-    const score = Math.round((docHealth * 0.6) + (filingPerf * 0.4));
+    const score = Math.round((filingPerf * 0.7) + (profileScore * 0.3));
 
     return {
         hygieneScore: score || 0,
         filingPerformance: Math.round(filingPerf),
-        documentHealth: Math.round(docHealth),
+        profileCompleteness: Math.round(profileScore),
     };
-  }, [deadlines, progress]);
+  }, [deadlines, activeCompany]);
 
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -156,14 +163,14 @@ function FounderAnalytics() {
                         </div>
                         <div className="lg:col-span-3 space-y-4">
                             <div>
-                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance (40% weight)</span><span>{filingPerformance}%</span></div>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance (70% weight)</span><span>{filingPerformance}%</span></div>
                                 <Progress value={filingPerformance} />
                                 <p className="text-xs text-muted-foreground mt-1">Based on timely completion of compliance calendar tasks.</p>
                             </div>
                             <div>
-                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Document Health (60% weight)</span><span>{documentHealth}%</span></div>
-                                <Progress value={documentHealth} />
-                                <p className="text-xs text-muted-foreground mt-1">Based on Dataroom Audit checklist completion in the AI Toolkit.</p>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Profile Completeness (30% weight)</span><span>{profileCompleteness}%</span></div>
+                                <Progress value={profileCompleteness} />
+                                <p className="text-xs text-muted-foreground mt-1">Based on completeness of your company's records in Settings.</p>
                             </div>
                         </div>
                     </>
@@ -182,9 +189,9 @@ function FounderAnalytics() {
                         <div className="space-y-2">
                            <div className="flex justify-between items-center text-sm font-medium">
                                 <Label>{checklistState.data.reportTitle} ({completedCount}/{totalCount})</Label>
-                                <span className="font-bold text-primary">{progress}%</span>
+                                <span className="font-bold text-primary">{dataroomProgress}%</span>
                            </div>
-                           <Progress value={progress} />
+                           <Progress value={dataroomProgress} />
                         </div>
                         <div>
                             <h4 className="font-medium text-sm mb-2">Pending Items:</h4>

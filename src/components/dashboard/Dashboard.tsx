@@ -39,7 +39,7 @@ import {
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
-import type { UserProfile, GenerateDDChecklistOutput } from "@/lib/types";
+import type { UserProfile, Company } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
@@ -151,32 +151,8 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     }>({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
     
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
-    const [dataroomProgress, setDataroomProgress] = useState(0);
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
-
-    useEffect(() => {
-        if (!activeCompany) return;
-
-        const checklistKey = `ddChecklistData-${activeCompany.id}`;
-        try {
-            const savedStateRaw = localStorage.getItem(checklistKey);
-            if (savedStateRaw) {
-                const savedState: { data: GenerateDDChecklistOutput } = JSON.parse(savedStateRaw);
-                if (savedState.data) {
-                    const allItems = savedState.data.checklist.flatMap((c: any) => c.items);
-                    const completedItems = allItems.filter((i: any) => i.status === 'Completed');
-                    const totalItems = allItems.length;
-                    const progress = totalItems > 0 ? Math.round((completedItems.length / totalItems) * 100) : 0;
-                    setDataroomProgress(progress);
-                } else {
-                    setDataroomProgress(0);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to parse Dataroom checklist data from localStorage", error);
-        }
-    }, [activeCompany]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -234,11 +210,18 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const totalFilings = checklistItems.length;
                 const overdueFilingsCount = overdueFilings.length;
                 const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilingsCount) / totalFilings) * 100 : 100;
-                const docHealth = dataroomProgress;
 
-                // 60% weight on Document Health (Dataroom checklist)
-                // 40% weight on Filing Performance (Compliance calendar checklist)
-                const score = Math.round((docHealth * 0.6) + (filingPerf * 0.4));
+                let profileCompleteness = 0;
+                if (activeCompany) {
+                    const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+                    if (activeCompany.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(activeCompany.type)) {
+                        requiredFields.push('cin');
+                    }
+                    const filledFields = requiredFields.filter(field => activeCompany[field] && (activeCompany[field] as string).trim() !== '').length;
+                    profileCompleteness = (filledFields / requiredFields.length) * 100;
+                }
+                
+                const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
 
                 setDynamicData({
                     filings: upcomingFilings.length,
@@ -254,7 +237,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         }
 
         fetchDashboardData();
-    }, [activeCompany, dataroomProgress]);
+    }, [activeCompany]);
 
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
