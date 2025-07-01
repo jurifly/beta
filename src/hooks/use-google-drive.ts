@@ -49,11 +49,11 @@ export function useGoogleDrive() {
                 localStorage.removeItem('google-token');
             }
         }
-    }).catch(error => {
+        setIsLoading(false);
+    }, (error) => {
       console.error("Error initializing GAPI client:", error);
       toast({ variant: 'destructive', title: 'Connection Error', description: 'Could not initialize Google Drive connection.' });
-    }).finally(() => {
-        setIsLoading(false);
+      setIsLoading(false);
     });
   }, [toast]);
 
