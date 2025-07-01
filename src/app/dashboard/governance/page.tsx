@@ -145,14 +145,14 @@ export default function GovernancePage() {
               <div className="space-y-1">
                   <Label>Subject</Label>
                   <div className="flex items-center gap-2">
-                      <Input readOnly value={emailPreview?.subject} className="bg-muted"/>
+                      <Input readOnly value={emailPreview?.subject || ''} className="bg-muted"/>
                       <Button variant="outline" size="icon" onClick={() => copyToClipboard(emailPreview?.subject || '', 'Subject copied to clipboard!')}><Clipboard className="h-4 w-4"/></Button>
                   </div>
               </div>
               <div className="space-y-1">
                   <Label>Body</Label>
                   <div className="relative">
-                      <Textarea readOnly value={emailPreview?.body} className="h-48 resize-none bg-muted" />
+                      <Textarea readOnly value={emailPreview?.body || ''} className="h-48 resize-none bg-muted" />
                       <Button variant="outline" size="icon" className="absolute top-2 right-2" onClick={() => copyToClipboard(emailPreview?.body || '', 'Email body copied to clipboard!')}><Clipboard className="h-4 w-4"/></Button>
                   </div>
               </div>
