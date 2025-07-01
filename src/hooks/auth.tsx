@@ -69,34 +69,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const createNewUserProfile = useCallback(async (firebaseUser: User, legalRegion: string, refId?: string): Promise<UserProfile> => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
-    const userCounterRef = doc(db, "metadata", "userCounter");
-
-    let signupIndex = 1;
-    let dailyCreditLimit = 10;
-    
-    try {
-        signupIndex = await runTransaction(db, async (transaction) => {
-            const counterDoc = await transaction.get(userCounterRef);
-            if (!counterDoc.exists()) {
-                transaction.set(userCounterRef, { count: 1 });
-                return 1;
-            }
-            const newCount = (counterDoc.data().count || 0) + 1;
-            transaction.update(userCounterRef, { count: newCount });
-            return newCount;
-        });
-    } catch(e) {
-        console.error("Failed to get signup index, defaulting to 1.", e);
-    }
-
-    if (signupIndex <= 100) {
-        dailyCreditLimit = 10;
-    } else if (signupIndex <= 500) {
-        dailyCreditLimit = 5;
-    } else {
-        dailyCreditLimit = 3;
-    }
-
     const newExpiry = add(new Date(), { days: 30 });
     const newProfile: UserProfile = {
       uid: firebaseUser.uid,
@@ -109,13 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       companies: [],
       activeCompanyId: '',
       legalRegion: legalRegion || 'India',
-      signupIndex: signupIndex,
-      dailyCreditLimit: dailyCreditLimit,
+      creditBalance: 10,
+      dailyCreditLimit: 5,
       dailyCreditsUsed: 0,
       lastCreditReset: new Date().toISOString(),
     };
     
-    // Referral logic does not exist in this version.
     await setDoc(userDocRef, newProfile);
     
     return newProfile;
@@ -125,11 +96,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const notificationsRef = collection(db, `users/${user.uid}/notifications`);
 
-    // Check for existing similar unread notification in Firestore to prevent duplicates
     const q = query(notificationsRef, where('title', '==', notificationData.title), where('read', '==', false));
     const existing = await getDocs(q);
     if (!existing.empty) {
-      return; // Don't add duplicate
+      return;
     }
 
     const notification: Omit<AppNotification, 'id'> = {
@@ -141,41 +111,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setNotifications(prev => [{ ...notification, id: newDocRef.id }, ...prev]);
   }, [user]);
 
-  const checkAndResetCredits = useCallback(async (profile: UserProfile, uid: string) => {
-    const today = new Date();
-    const lastReset = profile.lastCreditReset ? new Date(profile.lastCreditReset) : new Date(0);
-    
-    const isNewUTCDay = today.getUTCFullYear() > lastReset.getUTCFullYear() ||
-                      today.getUTCMonth() > lastReset.getUTCMonth() ||
-                      today.getUTCDate() > lastReset.getUTCDate();
-
-    if (isNewUTCDay) {
-      const updatedProfileData = {
-        dailyCreditsUsed: 0,
-        lastCreditReset: today.toISOString()
-      };
-      await updateDoc(doc(db, 'users', uid), updatedProfileData);
-      setUserProfile(prev => prev ? { ...prev, ...updatedProfileData } : null);
-    }
-  }, []);
-
   const fetchUserProfile = useCallback(async (firebaseUser: User) => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const userDoc = await getDoc(userDocRef);
 
     if (userDoc.exists()) {
-      const profile = userDoc.data() as UserProfile;
+      let profile = userDoc.data() as UserProfile;
       if (!profile.legalRegion) {
         profile.legalRegion = 'India';
         updateDoc(userDocRef, { legalRegion: 'India' }).catch(e => console.error("Failed to backfill legalRegion", e));
       }
+      
+      const today = new Date();
+      const lastReset = profile.lastCreditReset ? new Date(profile.lastCreditReset) : new Date(0);
+      const isNewUTCDay = today.getUTCFullYear() > lastReset.getUTCFullYear() ||
+                        today.getUTCMonth() > lastReset.getUTCMonth() ||
+                        today.getUTCDate() > lastReset.getUTCDate();
+
+      if (isNewUTCDay) {
+        profile.dailyCreditsUsed = 0;
+        profile.lastCreditReset = today.toISOString();
+        await updateDoc(userDocRef, {
+          dailyCreditsUsed: 0,
+          lastCreditReset: today.toISOString()
+        });
+      }
       setUserProfile(profile);
-      await checkAndResetCredits(profile, firebaseUser.uid);
     } else {
       const newProfile = await createNewUserProfile(firebaseUser, 'India');
       setUserProfile(newProfile);
     }
-  }, [createNewUserProfile, checkAndResetCredits]);
+  }, [createNewUserProfile]);
 
   const fetchNotifications = useCallback(async (uid: string) => {
     if (!uid) return;
@@ -280,42 +246,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
-
-    if (!userProfile || !user) {
-      toast({ variant: "destructive", title: "Authentication Error", description: "Could not verify your identity. Please log in again." });
+    if (!user || !userProfile) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "Please log in again." });
       return false;
     }
-    
-    // Re-check for credit reset before deducting
-    await checkAndResetCredits(userProfile, user.uid);
-    
-    // After reset, we need the latest profile state.
-    // The checkAndResetCredits function updates the state, but we'll re-read it here for safety.
-    const freshProfile = (await getDoc(doc(db, "users", user.uid))).data() as UserProfile;
-    setUserProfile(freshProfile); // Sync local state immediately
 
-    const limit = freshProfile.dailyCreditLimit ?? 0;
-    const used = freshProfile.dailyCreditsUsed ?? 0;
+    const userDocRef = doc(db, 'users', user.uid);
+    const freshProfileDoc = await getDoc(userDocRef);
+    if (!freshProfileDoc.exists()) {
+      toast({ variant: "destructive", title: "Error", description: "User profile not found." });
+      return false;
+    }
 
-    if (used + amount > limit) {
+    let currentProfile = freshProfileDoc.data() as UserProfile;
+
+    const today = new Date();
+    const lastReset = currentProfile.lastCreditReset ? new Date(currentProfile.lastCreditReset) : new Date(0);
+    const isNewUTCDay = today.getUTCFullYear() > lastReset.getUTCFullYear() ||
+                      today.getUTCMonth() > lastReset.getUTCMonth() ||
+                      today.getUTCDate() > lastReset.getUTCDate();
+    
+    if (isNewUTCDay) {
+        currentProfile.dailyCreditsUsed = 0;
+        currentProfile.lastCreditReset = today.toISOString();
+    }
+
+    const bonusCredits = currentProfile.creditBalance ?? 0;
+    const dailyLimit = currentProfile.dailyCreditLimit ?? 0;
+    const dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
+    const dailyRemaining = dailyLimit - dailyUsed;
+    
+    const finalUpdates: Partial<UserProfile> = {};
+    if (isNewUTCDay) {
+        finalUpdates.dailyCreditsUsed = 0;
+        finalUpdates.lastCreditReset = today.toISOString();
+    }
+
+    if (bonusCredits >= amount) {
+        finalUpdates.creditBalance = bonusCredits - amount;
+    } else if (bonusCredits + dailyRemaining >= amount) {
+        const neededFromDaily = amount - bonusCredits;
+        finalUpdates.creditBalance = 0;
+        finalUpdates.dailyCreditsUsed = dailyUsed + neededFromDaily;
+    } else {
         toast({
             variant: "destructive",
-            title: "Daily Limit Reached",
-            description: "Upgrade to a paid plan for more credits and premium features.",
-            duration: 5000,
+            title: "Credits Exhausted",
+            description: "You've used up your bonus and daily credits. Upgrade for more.",
             action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
         });
+        if (isNewUTCDay) {
+          await updateDoc(userDocRef, { dailyCreditsUsed: 0, lastCreditReset: today.toISOString() });
+          setUserProfile(prev => prev ? {...prev, dailyCreditsUsed: 0, lastCreditReset: today.toISOString()} : null);
+        }
         return false;
     }
 
-    await updateDoc(doc(db, "users", user.uid), {
-        dailyCreditsUsed: increment(amount),
-    });
+    await updateDoc(userDocRef, finalUpdates);
+    setUserProfile(prev => prev ? { ...prev, ...finalUpdates } : null);
     
-    setUserProfile(prev => prev ? { ...prev, dailyCreditsUsed: (prev.dailyCreditsUsed ?? 0) + amount } : null);
-
     return true;
-  }, [user, userProfile, toast, checkAndResetCredits, isDevMode]);
+  }, [user, userProfile, isDevMode, toast]);
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
     if (!user) return;

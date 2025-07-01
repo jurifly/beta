@@ -100,6 +100,7 @@ export interface UserProfile {
 
   // Beta AI Credit System
   signupIndex?: number;
+  creditBalance?: number; // One-time bonus credits
   dailyCreditLimit?: number;
   dailyCreditsUsed?: number;
   lastCreditReset?: string; // ISO string
