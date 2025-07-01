@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import ReactMarkdown from 'react-markdown';
 import type { GovernanceActionItem, BoardMeeting } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 
 const mockMeetings: BoardMeeting[] = [
