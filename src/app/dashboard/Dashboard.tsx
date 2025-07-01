@@ -140,7 +140,8 @@ function DocRequestItem({ request, onComplete }: { request: DocumentRequest, onC
 }
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
-    const { toast, updateUserProfile } = useToast();
+    const { toast } = useToast();
+    const { updateUserProfile } = useAuth();
     const [dynamicData, setDynamicData] = useState({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
