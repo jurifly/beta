@@ -30,6 +30,9 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -58,6 +61,7 @@ const legalRegions = [
 export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: { onAddCompanyClick: () => void; onEditCompanyClick: (company: Company) => void }) {
   const { user, userProfile, updateUserProfile } = useAuth();
   const { toast } = useToast();
+  const [roleSwitchingEnabled, setRoleSwitchingEnabled] = useState(false);
 
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -145,6 +149,22 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
               )}
           />
           <Separator />
+
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Developer Mode</AlertTitle>
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                  <p>Enable role switching for testing purposes.</p>
+                  <Switch
+                      checked={roleSwitchingEnabled}
+                      onCheckedChange={setRoleSwitchingEnabled}
+                      aria-label="Toggle role switching"
+                  />
+              </div>
+            </AlertDescription>
+          </Alert>
+
           <Controller
               name="role"
               control={control}
@@ -152,15 +172,20 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
                 <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
                     <div>
                         <Label>Your Role</Label>
-                        <p className="text-xs text-muted-foreground mt-1">Select the role that best describes you. This is enabled for testing.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Select the role that best describes you.</p>
                     </div>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="md:col-span-2 flex flex-wrap gap-4 pt-2">
+                    <RadioGroup 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value} 
+                        className="md:col-span-2 flex flex-wrap gap-4 pt-2"
+                        disabled={!roleSwitchingEnabled}
+                    >
                         {roles.map((role) => (
                           <TooltipProvider key={role.id}>
                               <Tooltip>
                                   <TooltipTrigger asChild>
                                       <Label htmlFor={`role-${role.id}`} className="flex items-center space-x-2 cursor-pointer has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-70">
-                                          <RadioGroupItem value={role.id} id={`role-${role.id}`} />
+                                          <RadioGroupItem value={role.id} id={`role-${role.id}`} disabled={!roleSwitchingEnabled} />
                                           <span>{role.label}</span>
                                       </Label>
                                   </TooltipTrigger>
