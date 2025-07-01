@@ -277,6 +277,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
+    if (isDevMode) return true;
+
     if (!userProfile || !user) {
       toast({ variant: "destructive", title: "Authentication Error", description: "Could not verify your identity. Please log in again." });
       return false;
@@ -309,7 +311,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserProfile(prev => prev ? { ...prev, dailyCreditsUsed: (prev.dailyCreditsUsed ?? 0) + amount } : null);
 
     return true;
-  }, [user, userProfile, toast, checkAndResetCredits]);
+  }, [user, userProfile, toast, checkAndResetCredits, isDevMode]);
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
     if (!user) return;
