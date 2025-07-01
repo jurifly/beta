@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, PlusCircle, Search, Activity, Loader2, Shield, Eye, Edit, Trash2, Mail, Send } from "lucide-react";
+import { Users, PlusCircle, Search, Activity, Loader2, Shield, Eye, Edit, Trash2, Mail, Send, Workflow } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -1062,13 +1062,15 @@ export default function AiToolkitPage() {
                       <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
                   </TabsList>
                 </div>
-                <TabsContent value="assistant" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><ChatAssistant /></TabsContent>
-                <TabsContent value="studio" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><DocumentStudioTab /></TabsContent>
-                <TabsContent value="audit" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><DataroomAudit /></TabsContent>
-                <TabsContent value="analyzer" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><DocumentIntelligenceTab /></TabsContent>
-                <TabsContent value="reconciliation" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><ReconciliationTab /></TabsContent>
-                <TabsContent value="watcher" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><RegulationWatcherTab /></TabsContent>
-                <TabsContent value="workflows" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><WorkflowTab /></TabsContent>
+                <div className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto">
+                    <TabsContent value="assistant"><ChatAssistant /></TabsContent>
+                    <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
+                    <TabsContent value="audit"><DataroomAudit /></TabsContent>
+                    <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
+                    <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>
+                    <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
+                    <TabsContent value="workflows"><WorkflowTab /></TabsContent>
+                </div>
             </Tabs>
         </div>
     );

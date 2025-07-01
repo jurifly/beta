@@ -34,6 +34,7 @@ import {
   LifeBuoy,
   PenSquare,
   PieChart,
+  Workflow,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -45,6 +46,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -69,7 +76,7 @@ const navItemConfig = {
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
-  reconciliation: { href: "/dashboard/reconciliation", label: "Reconciliation", icon: Scale },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -97,7 +104,6 @@ const caNavItems: NavItem[] = [
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.calendar,
-  navItemConfig.reconciliation,
   navItemConfig.analytics,
   navItemConfig.team,
   navItemConfig.clauseLibrary,
@@ -115,13 +121,13 @@ const legalAdvisorNavItems: NavItem[] = [
 
 const enterpriseNavItems: NavItem[] = [
   navItemConfig.dashboard,
-  navItemConfig.aiToolkit,
-  navItemConfig.analytics,
-  navItemConfig.documents,
-  navItemConfig.calendar,
-  navItemConfig.reconciliation,
   navItemConfig.team,
   navItemConfig.clients,
+  navItemConfig.documents,
+  navItemConfig.calendar,
+  navItemConfig.analytics,
+  navItemConfig.aiToolkit,
+  navItemConfig.workflows,
   navItemConfig.clauseLibrary,
 ];
 
@@ -327,6 +333,9 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
           <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
+                const isActive = item.href === '/dashboard' 
+                  ? pathname === item.href 
+                  : pathname.startsWith(item.href);
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
                     <Tooltip>
@@ -335,8 +344,7 @@ const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
                           href={item.href}
                           className={cn(
                               "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                              pathname.startsWith(item.href) && item.href !== '/dashboard' && "bg-muted text-primary font-semibold",
-                              pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary font-semibold"
+                              isActive && "bg-muted text-primary font-semibold"
                           )}
                         >
                           <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -413,13 +421,15 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
           <ScrollArea className="flex-1">
             <nav className="grid gap-2 text-lg font-medium p-4">
               {navItems.map(item => {
+                const isActive = item.href === '/dashboard' 
+                  ? pathname === item.href 
+                  : pathname.startsWith(item.href);
                 return (
                     <Link
                         key={item.href}
                         href={item.href}
                         className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
-                            pathname.startsWith(item.href) && item.href !== '/dashboard' && "bg-muted text-primary",
-                            pathname === '/dashboard' && item.href === '/dashboard' && "bg-muted text-primary"
+                            isActive && "bg-muted text-primary"
                         )}
                         onClick={handleLinkClick}
                     >
