@@ -113,7 +113,7 @@ export function UserNav() {
         <DropdownMenuGroup>
            <DropdownMenuItem disabled>
             <Bolt className="mr-2 h-4 w-4" />
-            <span>Daily AI Actions: {isDevMode ? 'Unlimited' : `${creditsRemaining}/${creditLimit}`}</span>
+            <span>Daily AI Credits: {isDevMode ? 'Unlimited' : `${creditsRemaining}/${creditLimit}`}</span>
           </DropdownMenuItem>
            <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             <Sparkles className="mr-2 h-4 w-4" />

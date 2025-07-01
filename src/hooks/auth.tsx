@@ -299,7 +299,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({
             variant: "destructive",
             title: "Daily Limit Reached",
-            description: "You've reached your daily AI limit. Please come back tomorrow or upgrade once subscriptions launch.",
+            description: "You’ve reached your daily AI limit. Credits recharge at midnight UTC.",
         });
         return false;
     }
