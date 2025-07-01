@@ -182,6 +182,8 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   
   const navItems = getNavItems(userProfile.role);
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+  const creditsRemaining = Math.max(0, (userProfile.dailyCreditLimit ?? 0) - (userProfile.dailyCreditsUsed ?? 0));
+  const creditLimit = userProfile.dailyCreditLimit ?? 0;
 
   return (
       <>
@@ -221,7 +223,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-2 md:gap-4">
                 <div className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg">
                     <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{userProfile.credits ?? 0} Credits</span>
+                    <span className="text-muted-foreground">{creditsRemaining}/{creditLimit} Credits</span>
                 </div>
                 <ThemeToggle />
                 <DropdownMenu>
