@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowDown, Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface CapTableModelingModalProps {
   isOpen: boolean;
@@ -26,17 +27,13 @@ interface ScenarioResult {
 }
 
 const MetricDisplay = ({ title, value, icon }: { title: string, value: string | number, icon: React.ReactNode }) => (
-    <Card className="interactive-lift text-center">
-        <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-center gap-2">
-                {icon}
-                {title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 pt-0">
-            <div className="text-2xl font-bold truncate" title={String(value)}>{value}</div>
-        </CardContent>
-    </Card>
+    <div className="p-3 border rounded-lg bg-muted/50">
+        <div className="flex items-center gap-2 mb-1">
+            {icon}
+            <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
+        </div>
+        <p className="text-xl font-bold truncate" title={String(value)}>{value}</p>
+    </div>
 );
 
 export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }: CapTableModelingModalProps) {
@@ -60,27 +57,35 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
     const totalPostMoneySharesPreEsop = existingShares + investorShares;
     const requiredEsopShares = (totalPostMoneySharesPreEsop / (1 - (newEsopPercent/100))) * (newEsopPercent/100);
     
-    const newEsopShares = requiredEsopShares - existingEsop;
+    const newEsopShares = Math.max(0, requiredEsopShares - existingEsop);
     
     const totalPostMoneyShares = existingShares + investorShares + newEsopShares;
 
     const preMoneyTable = currentCapTable.map(entry => ({
       ...entry,
+      shares: Math.round(entry.shares),
       ownership: (entry.shares / existingShares * 100).toFixed(2) + '%'
     }));
     
+    const postMoneyHolders = [...currentCapTable];
+    const esopIndex = postMoneyHolders.findIndex(e => e.type === 'ESOP');
+    if (esopIndex !== -1) {
+        postMoneyHolders[esopIndex] = { ...postMoneyHolders[esopIndex], shares: postMoneyHolders[esopIndex].shares + newEsopShares };
+    } else if (newEsopShares > 0) {
+        postMoneyHolders.push({ id: 'new_esop_pool', holder: 'ESOP Pool', type: 'ESOP', shares: newEsopShares, grantDate: new Date().toISOString().split('T')[0], vesting: 'Unissued' });
+    }
+    
     const postMoneyTable = [
-      ...currentCapTable.map(entry => ({
+      ...postMoneyHolders.map(entry => ({
         ...entry,
         shares: Math.round(entry.shares),
         ownership: (entry.shares / totalPostMoneyShares * 100).toFixed(2) + '%'
       })),
       { id: 'new_investor', holder: 'New Investor', type: 'Investor', shares: Math.round(investorShares), ownership: (investorShares / totalPostMoneyShares * 100).toFixed(2) + '%' },
-      { id: 'new_esop', holder: 'New ESOP increase', type: 'ESOP', shares: Math.round(newEsopShares), ownership: (newEsopShares / totalPostMoneyShares * 100).toFixed(2) + '%' },
-    ];
+    ].sort((a,b) => b.shares - a.shares);
     
     setResult({
-      preMoney: preMoneyTable,
+      preMoney: preMoneyTable.sort((a,b) => b.shares - a.shares),
       postMoney: postMoneyTable,
       sharePrice,
       postMoneyValuation
@@ -88,7 +93,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
   };
 
   const renderTable = (title: string, data: any[]) => (
-    <div className="flex-1">
+    <div>
       <h3 className="font-semibold text-lg mb-2">{title}</h3>
       <div className="border rounded-lg overflow-hidden bg-card">
         <Table>
@@ -101,7 +106,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
           </TableHeader>
           <TableBody>
             {data.map(row => (
-              <TableRow key={row.id} className={cn(row.id.startsWith('new_') && 'bg-primary/5')}>
+              <TableRow key={row.id} className={cn(row.id.startsWith('new_') && 'bg-primary/5 text-primary')}>
                 <TableCell className="font-medium text-sm">{row.holder}</TableCell>
                 <TableCell className="font-mono text-sm">{row.shares.toLocaleString()}</TableCell>
                 <TableCell className="text-right font-mono text-sm">{row.ownership}</TableCell>
@@ -122,8 +127,8 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 grid lg:grid-cols-5 gap-8 py-4 items-start overflow-y-auto">
-            <div className="lg:col-span-2">
+        <div className="grid lg:grid-cols-12 gap-8 py-4 flex-1 min-h-0">
+            <div className="lg:col-span-4">
                 <Card className="sticky top-0 interactive-lift">
                     <CardHeader>
                         <CardTitle>Scenario Inputs</CardTitle>
@@ -151,36 +156,41 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                 </Card>
             </div>
 
-            <div className="lg:col-span-3 space-y-6">
-                {!result ? (
-                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
-                        <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
-                        <p className="font-semibold text-lg">Scenario Results</p>
-                        <p className="text-sm text-muted-foreground max-w-xs">
-                            Enter your fundraising scenario on the left and click "Calculate" to see the impact.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="space-y-8 animate-in fade-in-50 duration-500">
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2">Key Metrics</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <MetricDisplay title="Pre-Money Valuation" value={`₹${preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
-                                <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
-                                <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
-                                <MetricDisplay title="ESOP Pool Target" value={`${newEsopPercent}%`} icon={<Percent className="h-4 w-4"/>} />
+            <ScrollArea className="lg:col-span-8">
+                <div className="space-y-6 pr-6">
+                    {!result ? (
+                        <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
+                            <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
+                            <p className="font-semibold text-lg">Scenario Results</p>
+                            <p className="text-sm text-muted-foreground max-w-xs">
+                                Enter your fundraising scenario on the left and click "Calculate" to see the impact.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-8 animate-in fade-in-50 duration-500">
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">Key Metrics</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <MetricDisplay title="Pre-Money Valuation" value={`₹${preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
+                                    <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
+                                    <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
+                                    <MetricDisplay title="ESOP Pool Target" value={`${newEsopPercent}%`} icon={<Percent className="h-4 w-4"/>} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {renderTable("Pre-Financing", result.preMoney)}
+                                <div className="flex justify-center">
+                                    <ArrowDown className="w-6 h-6 text-muted-foreground"/>
+                                </div>
+                                {renderTable("Post-Financing", result.postMoney)}
                             </div>
                         </div>
-
-                        <div className="flex flex-col md:flex-row gap-8 items-start">
-                            {renderTable("Pre-Financing", result.preMoney)}
-                            {renderTable("Post-Financing", result.postMoney)}
-                        </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            </ScrollArea>
         </div>
-        <DialogFooter className="pt-4 border-t">
+        <DialogFooter className="pt-4 border-t mt-auto">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
