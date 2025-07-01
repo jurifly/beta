@@ -115,7 +115,7 @@ function FounderAnalytics() {
   }, [checklistState]);
 
   const { hygieneScore, filingPerformance, documentHealth } = useMemo(() => {
-    const checklistProgress = progress; // from checklist state
+    const checklistProgress = progress; // from Dataroom checklist state
     const totalFilings = deadlines.length;
     const overdueFilings = deadlines.filter(d => d.overdue).length;
     const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
@@ -156,16 +156,14 @@ function FounderAnalytics() {
                         </div>
                         <div className="lg:col-span-3 space-y-4">
                             <div>
-                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance</span><span>{filingPerformance}%</span></div>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance (40% weight)</span><span>{filingPerformance}%</span></div>
                                 <Progress value={filingPerformance} />
+                                <p className="text-xs text-muted-foreground mt-1">Based on timely completion of compliance calendar tasks.</p>
                             </div>
                             <div>
-                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Document Health</span><span>{documentHealth}%</span></div>
+                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Document Health (60% weight)</span><span>{documentHealth}%</span></div>
                                 <Progress value={documentHealth} />
-                            </div>
-                            <div>
-                                <div className="flex justify-between text-sm mb-1 font-medium"><span>Regulatory Adherence</span><span>100%</span></div>
-                                <Progress value={100} />
+                                <p className="text-xs text-muted-foreground mt-1">Based on Dataroom Audit checklist completion in the AI Toolkit.</p>
                             </div>
                         </div>
                     </>

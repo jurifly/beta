@@ -39,7 +39,7 @@ import {
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
-import type { UserProfile } from "@/lib/types";
+import type { UserProfile, GenerateDDChecklistOutput } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
@@ -145,19 +145,44 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
     const [dynamicData, setDynamicData] = useState<{
         filings: number;
-        riskScore: number;
+        hygieneScore: number;
         alerts: number;
         loading: boolean;
-    }>({ filings: 0, riskScore: 0, alerts: 0, loading: true });
+    }>({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
     
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
+    const [dataroomProgress, setDataroomProgress] = useState(0);
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
 
     useEffect(() => {
+        if (!activeCompany) return;
+
+        const checklistKey = `ddChecklistData-${activeCompany.id}`;
+        try {
+            const savedStateRaw = localStorage.getItem(checklistKey);
+            if (savedStateRaw) {
+                const savedState: { data: GenerateDDChecklistOutput } = JSON.parse(savedStateRaw);
+                if (savedState.data) {
+                    const allItems = savedState.data.checklist.flatMap((c: any) => c.items);
+                    const completedItems = allItems.filter((i: any) => i.status === 'Completed');
+                    const totalItems = allItems.length;
+                    const progress = totalItems > 0 ? Math.round((completedItems.length / totalItems) * 100) : 0;
+                    setDataroomProgress(progress);
+                } else {
+                    setDataroomProgress(0);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to parse Dataroom checklist data from localStorage", error);
+        }
+    }, [activeCompany]);
+
+    useEffect(() => {
         const fetchDashboardData = async () => {
             if (!activeCompany) {
-                setDynamicData(prev => ({ ...prev, loading: false }));
+                setDynamicData(prev => ({ ...prev, loading: false, filings: 0, hygieneScore: 0, alerts: 0 }));
+                setChecklist([]);
                 return;
             }
             setDynamicData(prev => ({ ...prev, loading: true }));
@@ -204,23 +229,32 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     const dueDate = new Date(item.dueDate + 'T00:00:00');
                     return dueDate < today && !item.completed;
                 });
-                const riskScore = Math.max(0, 100 - (overdueFilings.length * 20));
+
+                // HYGIENE SCORE CALCULATION
+                const totalFilings = checklistItems.length;
+                const overdueFilingsCount = overdueFilings.length;
+                const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilingsCount) / totalFilings) * 100 : 100;
+                const docHealth = dataroomProgress;
+
+                // 60% weight on Document Health (Dataroom checklist)
+                // 40% weight on Filing Performance (Compliance calendar checklist)
+                const score = Math.round((docHealth * 0.6) + (filingPerf * 0.4));
 
                 setDynamicData({
                     filings: upcomingFilings.length,
-                    riskScore: riskScore,
+                    hygieneScore: score,
                     alerts: overdueFilings.length,
                     loading: false
                 });
 
             } catch (error) {
                 console.error("Failed to fetch AI-generated dashboard data:", error);
-                setDynamicData({ filings: 0, riskScore: 0, alerts: 0, loading: false });
+                setDynamicData({ filings: 0, hygieneScore: 0, alerts: 0, loading: false });
             }
         }
 
         fetchDashboardData();
-    }, [activeCompany]);
+    }, [activeCompany, dataroomProgress]);
 
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
@@ -315,6 +349,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         return result;
     }, [checklist, activeCompany]);
 
+    const { hygieneScore, loading: isLoading } = dynamicData;
+    const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
+    const scoreSubtext = hygieneScore > 80 ? 'Excellent' : hygieneScore > 60 ? 'Good' : 'Needs attention';
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-4">
@@ -328,7 +366,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     </Button>
                 </Card>
             </div>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Risk Score" value={isPro ? `${dynamicData.riskScore}` : "N/A"} subtext="Low Risk" icon={<ShieldCheck className="h-4 w-4" />} colorClass={isPro ? "text-green-600" : ""} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={scoreSubtext} icon={<ShieldCheck className="h-4 w-4" />} colorClass={scoreColor} isLoading={isLoading} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Docs Generated" value="0" subtext="All time" icon={<FileText className="h-4 w-4" />} isLoading={false} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
