@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, useActionState, Fragment } from 'react';
 import { useFormStatus } from "react-dom"
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
 import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
 import type { WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
+import type { ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,7 +36,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, type FileRejection } from 'react-dropzone';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -974,6 +975,68 @@ const WorkflowTab = () => {
     );
 };
 
+// --- Tab: Reconciliation ---
+type FileState = { gst: File | null; roc: File | null; itr: File | null; };
+const DropzoneCard = ({ file, type, open }: { file: File | null; type: string; open: () => void }) => ( <div onClick={open} className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer bg-muted/40 h-full"><UploadCloud className="w-10 h-10 text-muted-foreground mb-2" /><p className="font-semibold">Upload {type} Filing</p>{file ? ( <p className="text-sm text-green-600 mt-2 flex items-center gap-2"><FileText className="w-4 h-4"/>{file.name}</p> ) : ( <p className="text-xs text-muted-foreground">Drag & drop or click to upload</p> )}</div> );
+
+const ReconciliationTab = () => {
+    const { userProfile, deductCredits } = useAuth();
+    const [files, setFiles] = useState<FileState>({ gst: null, roc: null, itr: null });
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [result, setResult] = useState<ReconciliationOutput | null>(null);
+    const { toast } = useToast();
+  
+    const createDropHandler = (type: keyof FileState) => useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
+        if (fileRejections.length > 0) { toast({ variant: "destructive", title: "File Upload Error", description: fileRejections[0].errors[0].message }); return; }
+        if (acceptedFiles[0]) { setFiles(prev => ({ ...prev, [type]: acceptedFiles[0] })); }
+    }, [toast]);
+    
+    const dropzoneOptions = { maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 };
+  
+    const { getRootProps: getGstRootProps, getInputProps: getGstInputProps, open: openGstDialog } = useDropzone({ onDrop: createDropHandler('gst'), ...dropzoneOptions });
+    const { getRootProps: getRocRootProps, getInputProps: getRocInputProps, open: openRocDialog } = useDropzone({ onDrop: createDropHandler('roc'), ...dropzoneOptions });
+    const { getRootProps: getItrRootProps, getInputProps: getItrInputProps, open: openItrDialog } = useDropzone({ onDrop: createDropHandler('itr'), ...dropzoneOptions });
+  
+    const getFileAsDataURI = (file: File): Promise<string> => { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result as string); reader.onerror = error => reject(error); }); };
+  
+    const handleReconcile = async () => {
+      if (!files.gst || !files.roc || !files.itr) { toast({ variant: "destructive", title: "Missing Files", description: "Please upload all three documents to proceed." }); return; }
+      if (!userProfile || !await deductCredits(15)) return;
+      setIsProcessing(true); setResult(null);
+      try {
+        const [gstDataUri, rocDataUri, itrDataUri] = await Promise.all([ getFileAsDataURI(files.gst), getFileAsDataURI(files.roc), getFileAsDataURI(files.itr), ]);
+        const response = await AiActions.reconcileDocumentsAction({ doc1Name: "GST Filing", doc1DataUri: gstDataUri, doc2Name: "ROC Filing", doc2DataUri: rocDataUri, doc3Name: "ITR Filing", doc3DataUri: itrDataUri, legalRegion: userProfile.legalRegion, });
+        setResult(response);
+        toast({ title: "Reconciliation Complete!", description: "Your report is ready below." });
+      } catch (error: any) { toast({ variant: "destructive", title: "Analysis Failed", description: error.message }); } finally { setIsProcessing(false); }
+    };
+  
+    if (!userProfile) { return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>; }
+    
+    return (
+      <div className="space-y-6">
+        <Card className="interactive-lift">
+          <CardHeader><CardTitle>Upload Filings</CardTitle><CardDescription>Provide all three documents for a comprehensive reconciliation.</CardDescription></CardHeader>
+          <CardContent><div className="grid grid-cols-1 md:grid-cols-3 gap-6"> <div {...getGstRootProps()}><input {...getGstInputProps()} /><DropzoneCard file={files.gst} type="GST" open={openGstDialog} /></div> <div {...getRocRootProps()}><input {...getRocInputProps()} /><DropzoneCard file={files.roc} type="ROC" open={openRocDialog} /></div> <div {...getItrRootProps()}><input {...getItrInputProps()} /><DropzoneCard file={files.itr} type="ITR" open={openItrDialog} /></div></div></CardContent>
+          <CardFooter className="border-t pt-6 flex-col items-center gap-4"><Button onClick={handleReconcile} disabled={isProcessing || !files.gst || !files.roc || !files.itr}>{isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>} Reconcile Documents</Button><p className="text-xs text-muted-foreground flex items-center gap-2"><Info className="w-4 h-4"/>This analysis uses 15 credits. AI results are for informational purposes.</p></CardFooter>
+        </Card>
+        {isProcessing && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Our AI is crunching the numbers...</p></div> )}
+        {result && (
+          <Card className="interactive-lift animate-in fade-in-50 duration-500">
+              <CardHeader><CardTitle>Reconciliation Report</CardTitle><CardDescription> Overall Status: <Badge variant={result.overallStatus === 'Matched' ? 'secondary' : 'destructive'} className={result.overallStatus === 'Matched' ? 'bg-green-100 text-green-800' : ''}>{result.overallStatus}</Badge></CardDescription></CardHeader>
+              <CardContent className="space-y-6">
+                  <div><h3 className="font-semibold mb-2">AI Summary</h3><p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg border">{result.summary}</p></div>
+                  <Accordion type="multiple" defaultValue={['discrepancies', 'matched']} className="w-full">
+                      <AccordionItem value="discrepancies"><AccordionTrigger className="text-base font-medium">Discrepancies Found ({result.discrepancies.length})</AccordionTrigger><AccordionContent className="pt-2">{result.discrepancies.length > 0 ? ( <div className="space-y-4">{result.discrepancies.map((item, index) => ( <Card key={index} className="bg-destructive/10 border-destructive/20"><CardHeader><CardTitle className="text-base text-destructive flex items-center gap-2"><AlertTriangle/> {item.field}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid grid-cols-3 gap-4 text-center">{item.values.map(v => ( <div key={v.source} className="p-2 border rounded-md bg-background"><p className="text-xs font-semibold">{v.source}</p><p className="text-sm font-mono">{v.value}</p></div> )) }</div><div><p className="text-sm font-semibold">Probable Cause:</p><p className="text-sm text-destructive/80">{item.reason}</p></div></CardContent></Card> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No discrepancies found.</p> )}</AccordionContent></AccordionItem>
+                      <AccordionItem value="matched"><AccordionTrigger className="text-base font-medium">Matched Items ({result.matchedItems.length})</AccordionTrigger><AccordionContent className="pt-2">{result.matchedItems.length > 0 ? ( <div className="space-y-3">{result.matchedItems.map((item, index) => ( <div key={index} className="p-3 border rounded-md flex items-center justify-between bg-muted/50"><p className="font-medium text-sm flex items-center gap-2"><CheckCircle className="text-green-500"/>{item.field}</p><p className="font-mono text-sm">{item.value}</p></div> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No fully matched items found.</p> )}</AccordionContent></AccordionItem>
+                  </Accordion>
+              </CardContent>
+          </Card>
+        )}
+      </div>
+    )
+  }
+
 
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
@@ -989,21 +1052,23 @@ export default function AiToolkitPage() {
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
                 <div className="w-full overflow-x-auto pb-2">
-                  <TabsList className="grid w-max grid-cols-6">
+                  <TabsList className="grid w-max grid-cols-7">
                       <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
                       <TabsTrigger value="studio" className="interactive-lift"><FilePenLine className="mr-2"/>Doc Studio</TabsTrigger>
                       <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
                       <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
+                      <TabsTrigger value="reconciliation" className="interactive-lift"><Scale className="mr-2"/>Reconciliation</TabsTrigger>
                       <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
                       <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
                   </TabsList>
                 </div>
-                <TabsContent value="assistant" className="mt-6 md:flex-1 md:min-h-0"><ChatAssistant /></TabsContent>
-                <TabsContent value="studio" className="mt-6"><DocumentStudioTab /></TabsContent>
-                <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
-                <TabsContent value="analyzer" className="mt-6"><DocumentIntelligenceTab /></TabsContent>
-                <TabsContent value="watcher" className="mt-6"><RegulationWatcherTab /></TabsContent>
-                <TabsContent value="workflows" className="mt-6"><WorkflowTab /></TabsContent>
+                <TabsContent value="assistant" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><ChatAssistant /></TabsContent>
+                <TabsContent value="studio" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><DocumentStudioTab /></TabsContent>
+                <TabsContent value="audit" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><DataroomAudit /></TabsContent>
+                <TabsContent value="analyzer" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><DocumentIntelligenceTab /></TabsContent>
+                <TabsContent value="reconciliation" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><ReconciliationTab /></TabsContent>
+                <TabsContent value="watcher" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><RegulationWatcherTab /></TabsContent>
+                <TabsContent value="workflows" className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto"><WorkflowTab /></TabsContent>
             </Tabs>
         </div>
     );

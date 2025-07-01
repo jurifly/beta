@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, PlusCircle, Search, Activity, Loader2, Shield, Eye, Edit, Trash2 } from "lucide-react";
+import { Users, PlusCircle, Search, Activity, Loader2, Shield, Eye, Edit, Trash2, Mail, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -12,13 +12,19 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InviteMemberModal } from "@/components/dashboard/invite-member-modal";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 const mockMembers = [
     { id: '1', name: 'Alia Bhatt', email: 'alia@example.com', role: 'Admin', avatar: 'AB' },
     { id: '2', name: 'Ranbir Kapoor', email: 'ranbir@example.com', role: 'Member', avatar: 'RK' },
     { id: '3', name: 'Deepika Padukone', email: 'deepika@example.com', role: 'Member', avatar: 'DP' },
-    { id: '4', name: 'Ranveer Singh', email: 'ranveer@example.com', role: 'Billing', avatar: 'RS' },
 ];
+
+const mockInvites = [
+    { id: '1', email: 'ranveer@example.com', role: 'Billing', invitedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+    { id: '2', email: 'siddhant@example.com', role: 'Member', invitedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
+];
+
 
 const mockRoles = [
     { name: 'Admin', description: 'Full access to all features, including billing and team management.', permissions: 12, icon: Shield },
@@ -35,6 +41,7 @@ const mockActivity = [
 export default function TeamPage() {
     const { userProfile } = useAuth();
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
+    const { toast } = useToast();
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -52,8 +59,9 @@ export default function TeamPage() {
                 </div>
                 <Tabs defaultValue="members">
                     <div className="flex justify-between items-center flex-wrap gap-4">
-                       <TabsList>
+                       <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
                         <TabsTrigger value="members" className="interactive-lift"><Users className="mr-2 h-4 w-4"/>Members</TabsTrigger>
+                        <TabsTrigger value="invitations" className="interactive-lift"><Mail className="mr-2 h-4 w-4"/>Invitations</TabsTrigger>
                         <TabsTrigger value="roles" className="interactive-lift"><Shield className="mr-2 h-4 w-4"/>Roles</TabsTrigger>
                         <TabsTrigger value="activity" className="interactive-lift"><Activity className="mr-2 h-4 w-4"/>Activity</TabsTrigger>
                        </TabsList>
@@ -73,6 +81,29 @@ export default function TeamPage() {
                                                <TableCell className="flex items-center gap-3"><Avatar><AvatarFallback>{member.avatar}</AvatarFallback></Avatar><div><p className="font-medium">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></div></TableCell>
                                                <TableCell><Badge variant="outline">{member.role}</Badge></TableCell>
                                                <TableCell className="text-right"><Button variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-destructive"/></Button></TableCell>
+                                           </TableRow>
+                                       ))}
+                                   </TableBody>
+                               </Table>
+                           </CardContent>
+                       </Card>
+                   </TabsContent>
+                   <TabsContent value="invitations" className="mt-6">
+                       <Card>
+                           <CardHeader><CardTitle>Pending Invitations ({mockInvites.length})</CardTitle><CardDescription>These people have been invited but have not yet joined.</CardDescription></CardHeader>
+                           <CardContent>
+                               <Table>
+                                   <TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead>Invited</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                                   <TableBody>
+                                       {mockInvites.map(invite => (
+                                           <TableRow key={invite.id}>
+                                               <TableCell className="font-medium">{invite.email}</TableCell>
+                                               <TableCell><Badge variant="secondary">{invite.role}</Badge></TableCell>
+                                               <TableCell>{formatDistanceToNow(invite.invitedAt, { addSuffix: true })}</TableCell>
+                                               <TableCell className="text-right space-x-2">
+                                                   <Button variant="ghost" size="sm" onClick={() => toast({ title: "Invite Resent", description: `An invitation has been resent to ${invite.email}`})}><Send className="mr-2"/> Resend</Button>
+                                                   <Button variant="ghost" size="sm" className="text-destructive"><Trash2 className="mr-2"/>Revoke</Button>
+                                               </TableCell>
                                            </TableRow>
                                        ))}
                                    </TableBody>

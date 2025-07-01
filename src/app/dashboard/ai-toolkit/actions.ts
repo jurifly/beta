@@ -8,6 +8,7 @@ import { analyzeDocument, type DocumentIntelligenceInput, type DocumentIntellige
 import { generateDocument, type DocumentGeneratorInput, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 import { generateWiki, type WikiGeneratorInput, type WikiGeneratorOutput } from '@/ai/flows/wiki-generator-flow';
 import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
+import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
 
 
 // --- AI Assistant Actions ---
@@ -95,4 +96,14 @@ export async function getRegulatoryUpdatesAction(previousState: WatcherFormState
     console.error('AI Flow Error:', e);
     return { data: null, error: e.message || 'An unexpected error occurred.' };
   }
+}
+
+// --- Reconciliation Action ---
+export async function reconcileDocumentsAction(input: ReconciliationInput): Promise<ReconciliationOutput> {
+    try {
+        return await reconcileDocuments(input);
+    } catch (e: any) {
+        console.error('AI Flow Error:', e);
+        throw new Error(e.message || 'Could not reconcile the documents.');
+    }
 }

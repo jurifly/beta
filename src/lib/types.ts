@@ -15,6 +15,8 @@ export interface CapTableEntry {
   holder: string;
   type: 'Founder' | 'Investor' | 'ESOP';
   shares: number;
+  grantDate: string;
+  vesting: string;
 }
 
 export interface ClientMatter {
@@ -22,6 +24,13 @@ export interface ClientMatter {
   title: string;
   status: 'Active' | 'Closed' | 'On Hold';
   lastActivity: string;
+}
+
+export interface DocumentRequest {
+  id: string;
+  title: string;
+  dueDate: string;
+  status: 'Pending' | 'Received' | 'Overdue';
 }
 
 export interface Company {
@@ -37,6 +46,7 @@ export interface Company {
     location: string;
     capTable?: CapTableEntry[];
     matters?: ClientMatter[];
+    docRequests?: DocumentRequest[];
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';

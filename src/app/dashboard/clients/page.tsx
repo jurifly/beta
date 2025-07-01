@@ -11,13 +11,15 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
+import { AddDocRequestModal } from "@/components/dashboard/add-doc-request-modal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Company, ClientMatter } from "@/lib/types";
+import type { Company, ClientMatter, DocumentRequest } from "@/lib/types";
+import { format } from 'date-fns';
 
-const ClientDetailsModal = ({ isOpen, onOpenChange, company }: { isOpen: boolean, onOpenChange: (open: boolean) => void, company: Company | null }) => {
+const ClientDetailsModal = ({ isOpen, onOpenChange, company, onAddRequest }: { isOpen: boolean, onOpenChange: (open: boolean) => void, company: Company | null, onAddRequest: () => void }) => {
   if (!company) return null;
   
   const matters: ClientMatter[] = company.matters || [
@@ -25,10 +27,7 @@ const ClientDetailsModal = ({ isOpen, onOpenChange, company }: { isOpen: boolean
     { id: '2', title: 'Vendor Contract Dispute', status: 'On Hold', lastActivity: '1 month ago' },
   ];
   
-  const docRequests = [
-    { id: '1', title: 'Signed Term Sheet', status: 'Pending' },
-    { id: '2', 'title': 'Board Resolution for Allotment', status: 'Received' },
-  ];
+  const docRequests: DocumentRequest[] = company.docRequests || [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -40,16 +39,16 @@ const ClientDetailsModal = ({ isOpen, onOpenChange, company }: { isOpen: boolean
         <Tabs defaultValue="matters" className="w-full pt-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="matters">Matters</TabsTrigger>
-            <TabsTrigger value="requests">Document Requests</TabsTrigger>
+            <TabsTrigger value="requests">Document Requests ({docRequests.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="matters" className="mt-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">Active Matters</CardTitle>
-                <Button variant="outline" size="sm"><PlusCircle className="mr-2"/>New Matter</Button>
+                <Button variant="outline" size="sm" disabled><PlusCircle className="mr-2"/>New Matter</Button>
               </CardHeader>
               <CardContent>
-                  {matters.map(matter => (
+                  {matters.length > 0 ? matters.map(matter => (
                     <div key={matter.id} className="p-2 border-b flex justify-between items-center">
                         <div>
                           <p className="font-medium text-sm">{matter.title}</p>
@@ -57,7 +56,7 @@ const ClientDetailsModal = ({ isOpen, onOpenChange, company }: { isOpen: boolean
                         </div>
                         <Badge variant={matter.status === 'Active' ? 'default' : 'secondary'} className={matter.status === 'Active' ? 'bg-green-100 text-green-800' : ''}>{matter.status}</Badge>
                     </div>
-                  ))}
+                  )) : <p className="text-sm text-muted-foreground text-center p-4">No matters for this client.</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -65,15 +64,18 @@ const ClientDetailsModal = ({ isOpen, onOpenChange, company }: { isOpen: boolean
               <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">Document Requests</CardTitle>
-                <Button variant="outline" size="sm"><PlusCircle className="mr-2"/>New Request</Button>
+                <Button variant="outline" size="sm" onClick={onAddRequest}><PlusCircle className="mr-2"/>New Request</Button>
               </CardHeader>
               <CardContent>
-                  {docRequests.map(req => (
-                    <div key={req.id} className="p-2 border-b flex justify-between items-center">
-                        <p className="font-medium text-sm">{req.title}</p>
+                  {docRequests.length > 0 ? docRequests.map(req => (
+                    <div key={req.id} className="p-3 border-b flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{req.title}</p>
+                          <p className="text-xs text-muted-foreground">Due: {format(new Date(req.dueDate), 'do MMM, yyyy')}</p>
+                        </div>
                         <Badge variant={req.status === 'Pending' ? 'outline' : 'secondary'} className={req.status === 'Pending' ? 'border-yellow-500/50 text-yellow-600' : 'bg-green-100 text-green-800'}>{req.status}</Badge>
                     </div>
-                  ))}
+                  )) : <p className="text-sm text-muted-foreground text-center p-4">No document requests sent.</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -85,11 +87,12 @@ const ClientDetailsModal = ({ isOpen, onOpenChange, company }: { isOpen: boolean
 
 
 export default function ClientsPage() {
-  const { userProfile } = useAuth();
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const { userProfile, updateUserProfile } = useAuth();
+  const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [isDocRequestModalOpen, setDocRequestModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const { toast } = useToast();
 
   if (!userProfile) {
@@ -119,6 +122,38 @@ export default function ClientsPage() {
     setDetailsModalOpen(true);
   };
   
+  const handleOpenDocRequestModal = () => {
+    setDetailsModalOpen(false); // Close details to open request
+    setDocRequestModalOpen(true);
+  }
+  
+  const handleAddDocRequest = (request: Omit<DocumentRequest, 'id' | 'status'>) => {
+    if (!selectedCompany) return;
+    
+    const newRequest: DocumentRequest = {
+        id: Date.now().toString(),
+        status: 'Pending',
+        ...request,
+    };
+    
+    const updatedCompany = {
+        ...selectedCompany,
+        docRequests: [...(selectedCompany.docRequests || []), newRequest],
+    };
+    
+    const updatedCompanies = userProfile.companies.map(c => c.id === selectedCompany.id ? updatedCompany : c);
+    updateUserProfile({ companies: updatedCompanies });
+    setSelectedCompany(updatedCompany); // Update local state for immediate view
+    
+    setDocRequestModalOpen(false);
+    setDetailsModalOpen(true); // Re-open details
+    
+    toast({
+        title: "Request Sent!",
+        description: `Document request for "${request.title}" has been sent to ${selectedCompany.name}.`,
+    });
+  }
+
   const handleBulkSendReminder = () => {
     toast({
       title: "Reminders Sent!",
@@ -128,8 +163,14 @@ export default function ClientsPage() {
 
   return (
     <>
-      <AddCompanyModal isOpen={isModalOpen} onOpenChange={setModalOpen} />
-      <ClientDetailsModal isOpen={isDetailsModalOpen} onOpenChange={setDetailsModalOpen} company={selectedCompany} />
+      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} />
+      <AddDocRequestModal isOpen={isDocRequestModalOpen} onOpenChange={setDocRequestModalOpen} onAddRequest={handleAddDocRequest}/>
+      <ClientDetailsModal 
+        isOpen={isDetailsModalOpen} 
+        onOpenChange={setDetailsModalOpen} 
+        company={selectedCompany} 
+        onAddRequest={handleOpenDocRequestModal}
+      />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -138,7 +179,7 @@ export default function ClientsPage() {
               Manage all your client companies from a single dashboard.
             </p>
           </div>
-          <Button className="w-full sm:w-auto interactive-lift" onClick={() => setModalOpen(true)}>
+          <Button className="w-full sm:w-auto interactive-lift" onClick={() => setAddCompanyModalOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add New Client
           </Button>
@@ -166,7 +207,7 @@ export default function ClientsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[50px]"><Checkbox onCheckedChange={handleSelectAll} checked={selectedClients.length === clientCount && clientCount > 0} /></TableHead>
+                      <TableHead className="w-[50px]"><Checkbox onCheckedChange={(checked) => handleSelectAll(!!checked)} checked={selectedClients.length === clientCount && clientCount > 0} /></TableHead>
                       <TableHead>Company Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Risk</TableHead>
@@ -186,7 +227,7 @@ export default function ClientsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuItem onSelect={() => handleViewDetails(company)}><Briefcase className="mr-2"/>View Details</DropdownMenuItem>
-                              <DropdownMenuItem><FileText className="mr-2"/>Manage Filings</DropdownMenuItem>
+                              <DropdownMenuItem disabled><FileText className="mr-2"/>Manage Filings</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
