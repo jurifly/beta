@@ -30,6 +30,8 @@ import {
   Briefcase,
   Building,
   Zap,
+  Gavel,
+  FileSignature,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +45,7 @@ import {
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
-import type { UserProfile, Company } from "@/lib/types";
+import type { UserProfile, Company, DocumentRequest } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
@@ -121,12 +123,34 @@ const staticChartDataByYear = {
     ],
 };
 
+function DocRequestItem({ request, onComplete }: { request: DocumentRequest, onComplete: (id: string) => void }) {
+  const isOverdue = new Date(request.dueDate) < startOfToday() && request.status === 'Pending';
+  return (
+    <div className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isOverdue && "bg-destructive/10 border-destructive/20")}>
+      <div className="flex-1 grid gap-0.5">
+        <p className={cn("font-medium", isOverdue && "text-destructive")}>{request.title}</p>
+        <p className={cn("text-xs", isOverdue ? "text-destructive/80" : "text-muted-foreground")}>
+          Due: {format(new Date(request.dueDate), 'do MMM, yyyy')}
+        </p>
+      </div>
+      {request.status === 'Pending' ? (
+        <Button size="sm" variant="outline" onClick={() => onComplete(request.id)}>
+          <Upload className="mr-2 h-4 w-4" /> Upload
+        </Button>
+      ) : (
+        <Badge variant="secondary" className="bg-green-100 text-green-800 self-center">Received</Badge>
+      )}
+    </div>
+  )
+}
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
-    const { toast } = useToast();
+    const { toast, updateUserProfile } = useToast();
     const [dynamicData, setDynamicData] = useState({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+
+    const docRequests = activeCompany?.docRequests?.filter(r => r.status === 'Pending') || [];
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -187,6 +211,27 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
         const newStatuses = newChecklist.reduce((acc, item) => ({ ...acc, [item.id]: item.completed }), {});
         localStorage.setItem(`dashboard-checklist-${activeCompany.id}`, JSON.stringify(newStatuses));
+    };
+
+    const handleCompleteRequest = async (requestId: string) => {
+        if (!userProfile || !activeCompany) return;
+    
+        const updatedDocRequests = (activeCompany.docRequests || []).map(req => 
+          req.id === requestId ? { ...req, status: 'Received' as const } : req
+        );
+      
+        const updatedCompany: Company = { ...activeCompany, docRequests: updatedDocRequests };
+        
+        const updatedCompanies = userProfile.companies.map(c => 
+          c.id === activeCompany.id ? updatedCompany : c
+        );
+        
+        await updateUserProfile({ companies: updatedCompanies });
+
+        toast({
+          title: "Document Marked as Uploaded",
+          description: "Your advisor has been notified.",
+        });
     };
     
     const groupedChecklist = useMemo(() => {
@@ -254,6 +299,18 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     ) : <p className="text-center text-muted-foreground p-8">No items found.</p>}
                 </CardContent>
              </Card>
+
+             {docRequests.length > 0 && (
+              <Card className="md:col-span-2 lg:col-span-4 interactive-lift">
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><FileSignature/> Document Requests</CardTitle>
+                      <CardDescription>Your advisor has requested the following documents.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                      {docRequests.map(req => <DocRequestItem key={req.id} request={req} onComplete={handleCompleteRequest} />)}
+                  </CardContent>
+              </Card>
+             )}
         </div>
     );
 }
@@ -374,7 +431,7 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile, addNotification } = useAuth();
+  const { userProfile, updateUserProfile } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
   const renderDesktopDashboardByRole = () => {

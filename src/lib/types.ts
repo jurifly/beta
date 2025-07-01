@@ -20,7 +20,7 @@ export interface CapTableEntry {
 }
 
 export interface ClientMatter {
-  id: string;
+  id:string;
   title: string;
   status: 'Active' | 'Closed' | 'On Hold';
   lastActivity: string;
@@ -31,6 +31,23 @@ export interface DocumentRequest {
   title: string;
   dueDate: string;
   status: 'Pending' | 'Received' | 'Overdue';
+}
+
+export interface GovernanceActionItem {
+    id: string;
+    task: string;
+    assignee: string;
+    dueDate: string;
+    completed: boolean;
+}
+
+export interface BoardMeeting {
+    id: string;
+    title: string;
+    date: string;
+    agenda: string;
+    minutes?: string;
+    actionItems: GovernanceActionItem[];
 }
 
 export interface Company {
@@ -47,6 +64,7 @@ export interface Company {
     capTable?: CapTableEntry[];
     matters?: ClientMatter[];
     docRequests?: DocumentRequest[];
+    boardMeetings?: BoardMeeting[];
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';

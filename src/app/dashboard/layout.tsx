@@ -35,6 +35,7 @@ import {
   PenSquare,
   PieChart,
   Workflow,
+  Gavel,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -68,6 +69,7 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
+  governance: { href: "/dashboard/governance", label: "Governance", icon: Gavel },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
@@ -90,6 +92,7 @@ type NavItem = typeof navItemConfig[NavItemKey];
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.businessSetup,
+  navItemConfig.governance,
   navItemConfig.capTable,
   navItemConfig.aiToolkit,
   navItemConfig.documents,

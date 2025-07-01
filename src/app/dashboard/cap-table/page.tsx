@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
+import { CapTableModal } from '@/components/dashboard/cap-table-modal';
+import { useToast } from '@/hooks/use-toast';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -23,9 +25,46 @@ const initialCapTable: CapTableEntry[] = [
 
 export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
+    const { toast } = useToast();
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
     const [capTable, setCapTable] = useState<CapTableEntry[]>(activeCompany?.capTable || initialCapTable);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
+
+    const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
+        if (!userProfile || !activeCompany) return;
+        setCapTable(newCapTable);
+        const updatedCompany = { ...activeCompany, capTable: newCapTable };
+        const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
+        await updateUserProfile({ companies: updatedCompanies });
+    };
+
+    const handleAddOrEdit = (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {
+        let newCapTable;
+        if (entry.id) { // Editing existing entry
+            newCapTable = capTable.map(e => e.id === entry.id ? { ...e, ...entry } : e);
+            toast({ title: "Entry Updated", description: `Details for ${entry.holder} have been updated.` });
+        } else { // Adding new entry
+            const newEntry = { ...entry, id: Date.now().toString() };
+            newCapTable = [...capTable, newEntry];
+            toast({ title: "Issuance Added", description: `Shares issued to ${entry.holder} have been recorded.` });
+        }
+        handleSaveCapTable(newCapTable);
+    };
+    
+    const handleDelete = (id: string) => {
+        if (window.confirm("Are you sure you want to delete this cap table entry?")) {
+            const newCapTable = capTable.filter(e => e.id !== id);
+            handleSaveCapTable(newCapTable);
+            toast({ title: "Entry Deleted", description: "The cap table entry has been removed." });
+        }
+    };
+
+    const handleOpenModal = (entry?: CapTableEntry) => {
+        setEntryToEdit(entry || null);
+        setIsModalOpen(true);
+    };
 
     const { totalShares, fullyDilutedShares, esopPool, founderShares, investorShares } = useMemo(() => {
         const total = capTable.reduce((acc, entry) => acc + entry.shares, 0);
@@ -83,76 +122,89 @@ export default function CapTablePage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight">Capitalization Table</h2>
-                <p className="text-muted-foreground">An overview of {activeCompany.name}'s equity ownership.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                 <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Shares</CardTitle><Scale className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares.toLocaleString()}</div><p className="text-xs text-muted-foreground">Issued and outstanding</p></CardContent></Card>
-                 <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Founder Ownership</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((founderShares / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{founderShares.toLocaleString()} shares</p></CardContent></Card>
-                 <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Investor Ownership</CardTitle><PieChartIcon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((investorShares / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{investorShares.toLocaleString()} shares</p></CardContent></Card>
-                 <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">ESOP Pool</CardTitle><ChevronsRight className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((esopPool / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{esopPool.toLocaleString()} shares remaining</p></CardContent></Card>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 interactive-lift">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Shareholder Ledger</CardTitle>
-                            <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
-                        </div>
-                        <Button disabled><PlusCircle className="mr-2"/>Add Issuance</Button>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Shareholder</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Grant Date</TableHead>
-                                    <TableHead>Shares</TableHead>
-                                    <TableHead className="text-right">Ownership</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {capTable.map(entry => (
-                                    <TableRow key={entry.id}>
-                                        <TableCell className="font-medium">{entry.holder}</TableCell>
-                                        <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
-                                        <TableCell>{entry.grantDate}</TableCell>
-                                        <TableCell>{entry.shares.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">
-                                            {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
-                                        </TableCell>
+        <>
+            <CapTableModal 
+                isOpen={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                onSave={handleAddOrEdit}
+                entryToEdit={entryToEdit}
+            />
+            <div className="space-y-6">
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight">Capitalization Table</h2>
+                    <p className="text-muted-foreground">An overview of {activeCompany.name}'s equity ownership.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Shares</CardTitle><Scale className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares.toLocaleString()}</div><p className="text-xs text-muted-foreground">Issued and outstanding</p></CardContent></Card>
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Founder Ownership</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((founderShares / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{founderShares.toLocaleString()} shares</p></CardContent></Card>
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Investor Ownership</CardTitle><PieChartIcon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((investorShares / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{investorShares.toLocaleString()} shares</p></CardContent></Card>
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">ESOP Pool</CardTitle><ChevronsRight className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((esopPool / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{esopPool.toLocaleString()} shares remaining</p></CardContent></Card>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2 interactive-lift">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Shareholder Ledger</CardTitle>
+                                <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
+                            </div>
+                            <Button onClick={() => handleOpenModal()}><PlusCircle className="mr-2"/>Add Issuance</Button>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Shareholder</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Grant Date</TableHead>
+                                        <TableHead>Shares</TableHead>
+                                        <TableHead className="text-right">Ownership</TableHead>
+                                        <TableHead className="text-right w-[100px]">Actions</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-
-                <Card className="lg:col-span-1 interactive-lift">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><PieChartIcon/> Ownership Structure</CardTitle>
-                        <CardDescription>Visual breakdown by holder type.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                       <ResponsiveContainer width="100%" height={250}>
-                            <RechartsPieChart>
-                                <Tooltip content={<CustomTooltip />} />
-                                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} labelLine={false}>
-                                    {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                </TableHeader>
+                                <TableBody>
+                                    {capTable.map(entry => (
+                                        <TableRow key={entry.id}>
+                                            <TableCell className="font-medium">{entry.holder}</TableCell>
+                                            <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
+                                            <TableCell>{entry.grantDate}</TableCell>
+                                            <TableCell>{entry.shares.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right font-mono">
+                                                {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </Pie>
-                                <Legend iconSize={10} />
-                            </RechartsPieChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="lg:col-span-1 interactive-lift">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><PieChartIcon/> Ownership Structure</CardTitle>
+                            <CardDescription>Visual breakdown by holder type.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <ResponsiveContainer width="100%" height={250}>
+                                <RechartsPieChart>
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} labelLine={false}>
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Legend iconSize={10} />
+                                </RechartsPieChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+        </>
     );
 }
