@@ -155,20 +155,20 @@ const filingGeneratorFlow = ai.defineFlow(
     outputSchema: FilingGeneratorOutputSchema,
   },
   async input => {
+    // This is a much more comprehensive fallback that includes the items you mentioned.
     const generateFallback = () => {
         const incDate = new Date(input.incorporationDate + 'T00:00:00');
         const currDate = new Date(input.currentDate + 'T00:00:00');
 
-        // A more realistic set of fallback filings
         const fallbackFilings = [
-            // Overdue tasks for a company older than 6 months
+            { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Open bank account', type: 'Other Task' as const },
             { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'First Board Meeting Held', type: 'Corporate Filing' as const },
+            { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Auditor appointment (ADT-1)', type: 'Corporate Filing' as const },
             { date: format(addDays(incDate, 60), 'yyyy-MM-dd'), title: 'Issue Share Certificates', type: 'Corporate Filing' as const },
             { date: format(addDays(incDate, 180), 'yyyy-MM-dd'), title: 'File for Commencement of Business (INC-20A)', type: 'Corporate Filing' as const },
-            // Upcoming tasks
-            { date: format(addMonths(currDate, 1), 'yyyy-MM-dd'), title: 'Monthly TDS Payment', type: 'Tax Filing' as const },
-            { date: format(addMonths(currDate, 2), 'yyyy-MM-dd'), title: 'Quarterly Board Meeting', type: 'Corporate Filing' as const },
             { date: format(addMonths(currDate, 3), 'yyyy-MM-dd'), title: 'Quarterly TDS Return Filing', type: 'Tax Filing' as const },
+            { date: format(new Date(currDate.getFullYear(), 8, 30), 'yyyy-MM-dd'), title: 'Director KYC (DIR-3 KYC)', type: 'Corporate Filing' as const },
+            { date: format(new Date(currDate.getFullYear(), 9, 31), 'yyyy-MM-dd'), title: 'Income tax return (ITR-6)', type: 'Tax Filing' as const },
         ];
 
         return {
@@ -182,7 +182,6 @@ const filingGeneratorFlow = ai.defineFlow(
     try {
       const {output} = await prompt(input);
 
-      // The AI call succeeded, but returned no data or no filings.
       if (!output || output.filings.length === 0) {
         console.log("AI returned no filings, using fallback.");
         return generateFallback();
