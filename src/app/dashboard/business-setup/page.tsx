@@ -571,6 +571,19 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
         }
     };
     
+    const handleDownload = () => {
+        if (!generatedContent) return;
+        const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${generatedContent.title.replace(/ /g, '_')}.txt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="grid lg:grid-cols-2 gap-8">
             <div>
@@ -604,7 +617,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
             <div className="bg-muted/50 rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">{generatedContent?.title || "Document Preview"}</h3>
-                    <Button variant="outline" size="sm" disabled={!generatedContent}>
+                    <Button variant="outline" size="sm" onClick={handleDownload} disabled={!generatedContent || loadingDoc}>
                         <Download className="mr-2 h-4 w-4" /> Download
                     </Button>
                 </div>

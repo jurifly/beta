@@ -159,6 +159,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
   
   const handleFetch = async () => {
     const cin = getValues("cin");
+    const legalRegion = getValues("legalRegion");
     if (!cin || cin.length !== 21) {
       toast({
         variant: "destructive",
@@ -173,7 +174,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit }: AddComp
     startFetchingTransition(async () => {
       try {
         toast({ title: "Fetching Company Details...", description: "Our AI is on the job." });
-        const details = await fetchCompanyDetailsFromCIN(cin);
+        const details = await fetchCompanyDetailsFromCIN(cin, legalRegion);
         setValue("name", details.name, { shouldValidate: true });
         setValue("pan", details.pan, { shouldValidate: true });
         setValue("incorporationDate", details.incorporationDate, { shouldValidate: true });

@@ -110,11 +110,11 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem disabled>
             <Bolt className="mr-2 h-4 w-4" />
-            <span>Credits: {userProfile.plan === 'Enterprise' ? 'Unlimited' : userProfile.credits}</span>
+            <span>Credits: {userProfile.credits ?? 0}</span>
           </DropdownMenuItem>
            <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             <Sparkles className="mr-2 h-4 w-4" />
-            <span>Upgrade Plan</span>
+            <span>Upgrade to Pro</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

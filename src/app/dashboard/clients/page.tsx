@@ -47,7 +47,7 @@ export default function ClientsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{clientCount}</div>
-              <p className="text-xs text-muted-foreground">{clientCount} clients managed</p>
+              <p className="text-xs text-muted-foreground">{clientCount} {clientCount === 1 ? 'client' : 'clients'} managed</p>
             </CardContent>
           </Card>
           <Card className="interactive-lift">
@@ -56,7 +56,7 @@ export default function ClientsPage() {
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">N/A</div>
               <p className="text-xs text-muted-foreground">Risk analysis coming soon</p>
             </CardContent>
           </Card>

@@ -142,31 +142,38 @@ export default function DocumentsPage() {
 
     if (window.confirm(`Are you sure you want to delete "${itemToDelete?.name}"? This will also delete all its contents.`)) {
       
-      const itemsToDeleteSet = new Set<string>([id]);
+      const itemsToDeleteSet = new Set<string>();
       const filesInStorageToDelete: VaultItem[] = [];
       
-      function findChildrenRecursive(folderId: string) {
+      const findChildrenRecursive = (folderId: string) => {
           const children = vaultItems.filter(item => item.parentId === folderId);
           for (const child of children) {
               itemsToDeleteSet.add(child.id);
               if (child.type === 'folder') {
                   findChildrenRecursive(child.id);
-              } else if (child.type === 'file') {
+              } else if (child.type === 'file' && child.downloadURL) {
                   filesInStorageToDelete.push(child);
               }
           }
       }
 
+      itemsToDeleteSet.add(itemToDelete.id);
       if (itemToDelete.type === 'folder') {
           findChildrenRecursive(itemToDelete.id);
-      } else if (itemToDelete.type === 'file') {
+      } else if (itemToDelete.type === 'file' && itemToDelete.downloadURL) {
           filesInStorageToDelete.push(itemToDelete);
       }
 
       const deletePromises = filesInStorageToDelete.map(file => {
-          if (file.id) {
-              const fileRef = ref(storage, file.id);
-              return deleteObject(fileRef);
+          if (file.downloadURL) {
+              try {
+                // The file ID is the full path in storage
+                const fileRef = ref(storage, file.id);
+                return deleteObject(fileRef);
+              } catch (error) {
+                console.error(`Failed to create ref for deletion: ${file.name}`, error);
+                return Promise.resolve(); // Don't block other deletions
+              }
           }
           return Promise.resolve();
       });
@@ -185,7 +192,7 @@ export default function DocumentsPage() {
           toast({
             variant: 'destructive',
             title: 'Deletion Failed',
-            description: 'Could not delete files from storage. Please try again.',
+            description: 'Could not delete one or more files from storage.',
           });
         });
     }
@@ -203,13 +210,14 @@ export default function DocumentsPage() {
       const uploadPromises = acceptedFiles.map(async (file) => {
         const uniqueFileName = `${Date.now()}-${file.name}`;
         // Use a path that includes the parent folder ID to structure storage
-        const storageRef = ref(storage, `vault/${user.uid}/${currentFolderId || 'root'}/${uniqueFileName}`);
+        const storagePath = `vault/${user.uid}/${currentFolderId || 'root'}/${uniqueFileName}`;
+        const storageRef = ref(storage, storagePath);
         
         await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(storageRef);
 
         const newFile: VaultItem = {
-          id: storageRef.fullPath, // Use full path as a unique ID
+          id: storagePath, // Use full path as a unique ID
           type: 'file',
           name: file.name,
           lastModified: new Date(file.lastModified).toISOString(),

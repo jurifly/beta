@@ -251,7 +251,7 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                 <CardContent>
                     <div className="text-2xl font-bold">{clientCount}</div>
                     <p className="text-xs text-muted-foreground">
-                        {clientCount > 0 ? `${clientCount} clients managed` : "No clients added yet"}
+                        {clientCount > 0 ? `${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed` : "No clients added yet"}
                     </p>
                 </CardContent>
             </Card>
@@ -262,7 +262,7 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold text-green-500">{clientCount > 0 ? "Low" : "N/A"}</div>
-                    <p className="text-xs text-muted-foreground">{clientCount > 0 ? "No overdue filings" : "Add clients to calculate"}</p>
+                    <p className="text-xs text-muted-foreground">{clientCount > 0 ? "Risk analysis coming soon" : "Add clients to calculate"}</p>
                 </CardContent>
             </Card>
             <Card className="interactive-lift">
@@ -271,8 +271,8 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{clientCount > 0 ? "100%" : "N/A"}</div>
-                    <p className="text-xs text-muted-foreground">{clientCount > 0 ? "Across all clients" : "No data available"}</p>
+                    <div className="text-2xl font-bold">N/A</div>
+                    <p className="text-xs text-muted-foreground">Calculated from client filings</p>
                 </CardContent>
             </Card>
         </div>
@@ -330,12 +330,12 @@ function LegalAdvisorAnalytics({ userProfile }: { userProfile: UserProfile }) {
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <Card className="lg:col-span-1 interactive-lift">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5 text-primary"/> Case Load</CardTitle>
-                <CardDescription>Distribution of active matters.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5 text-primary"/> Active Clients</CardTitle>
+                <CardDescription>Your currently managed client matters.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="text-3xl font-bold">{clientCount}</div>
-                <p className="text-xs text-muted-foreground">{clientCount > 0 ? "Total active clients" : "No clients added yet."}</p>
+                <p className="text-xs text-muted-foreground">{clientCount > 0 ? `Total active ${clientCount === 1 ? 'client' : 'clients'}` : "No clients added yet."}</p>
             </CardContent>
         </Card>
 
@@ -345,7 +345,7 @@ function LegalAdvisorAnalytics({ userProfile }: { userProfile: UserProfile }) {
                 <CardDescription>Your active and upcoming legal tasks.</CardDescription>
             </CardHeader>
             <CardContent className="text-center text-muted-foreground p-8">
-                <p>No tasks found.</p>
+                <p>Task management feature coming soon.</p>
             </CardContent>
         </Card>
         
