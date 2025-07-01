@@ -89,7 +89,7 @@ export default function ReconciliationPage() {
   };
 
   const DropzoneCard = ({ dz, file, type }: { dz: any, file: File | null, type: string }) => (
-    <div {...dz.getRootProps()} className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer bg-muted/40 h-full">
+    <div {...dz.getRootProps()} onClick={dz.open} className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer bg-muted/40 h-full">
       <input {...dz.getInputProps()} />
       <UploadCloud className="w-10 h-10 text-muted-foreground mb-2" />
       <p className="font-semibold">Upload {type} Filing</p>
