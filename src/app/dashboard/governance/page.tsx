@@ -18,6 +18,13 @@ import ReactMarkdown from 'react-markdown';
 import type { GovernanceActionItem, BoardMeeting } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ScheduleMeetingModal } from '@/components/dashboard/schedule-meeting-modal';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 
 const mockMeetings: BoardMeeting[] = [
@@ -25,7 +32,7 @@ const mockMeetings: BoardMeeting[] = [
       id: 'meeting1',
       title: 'Q2 2024 Board Meeting',
       date: '2024-07-25',
-      agenda: 'Q2 Financial Review, Product Roadmap Update, Q3 Hiring Plan',
+      agenda: 'Q2 Financial Review\nProduct Roadmap Update\nQ3 Hiring Plan',
       minutes: 'Minutes for Q2 meeting...',
       actionItems: [
         { id: 'item1', task: 'Finalize Q3 budget', assignee: 'CFO', dueDate: '2024-08-10', completed: false },
@@ -36,10 +43,10 @@ const mockMeetings: BoardMeeting[] = [
 
 export default function GovernancePage() {
   const { userProfile, deductCredits } = useAuth();
-  const [isLoading, setIsLoading] = useState({ agenda: false, minutes: false });
   const [activeTab, setActiveTab] = useState('meetings');
   const [meetings, setMeetings] = useState<BoardMeeting[]>(mockMeetings);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [viewingContent, setViewingContent] = useState<{ title: string; content: string; } | null>(null);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -70,6 +77,21 @@ export default function GovernancePage() {
       })
     );
   };
+  
+  const handleViewMinutes = (meeting: BoardMeeting) => {
+    setViewingContent({
+      title: `${meeting.title} - Minutes`,
+      content: meeting.minutes || "No minutes have been recorded for this meeting yet."
+    });
+  };
+  
+  const handleViewAgenda = (meeting: BoardMeeting) => {
+    setViewingContent({
+      title: `${meeting.title} - Agenda`,
+      content: meeting.agenda
+    });
+  };
+
 
   return (
     <>
@@ -78,6 +100,19 @@ export default function GovernancePage() {
         onOpenChange={setModalOpen}
         onScheduleMeeting={handleScheduleMeeting}
       />
+      <Dialog open={!!viewingContent} onOpenChange={() => setViewingContent(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{viewingContent?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="prose dark:prose-invert max-w-none py-4 text-sm h-96 overflow-y-auto">
+            <ReactMarkdown>{viewingContent?.content?.replace(/\n/g, '  \n')}</ReactMarkdown>
+          </div>
+          <DialogFooter>
+              <Button variant="secondary" onClick={() => setViewingContent(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Governance Hub</h2>
@@ -104,15 +139,15 @@ export default function GovernancePage() {
                                         <CardDescription>Date: {format(new Date(meeting.date), 'PPP')}</CardDescription>
                                       </div>
                                       <div className="flex gap-2">
-                                          <Button variant="outline" size="sm" disabled>View Minutes</Button>
-                                          <Button variant="outline" size="sm" disabled>View Agenda</Button>
+                                          <Button variant="outline" size="sm" onClick={() => handleViewMinutes(meeting)}>View Minutes</Button>
+                                          <Button variant="outline" size="sm" onClick={() => handleViewAgenda(meeting)}>View Agenda</Button>
                                       </div>
                                   </div>
                               </CardHeader>
                               <CardContent>
                                   <h4 className="font-semibold text-sm mb-2">Action Items</h4>
                                   <div className="space-y-2">
-                                      {meeting.actionItems.map(item => (
+                                      {meeting.actionItems.length > 0 ? meeting.actionItems.map(item => (
                                           <div key={item.id} className="flex items-center gap-3 p-2 border rounded-md bg-muted/50">
                                               <Checkbox 
                                                 checked={item.completed} 
@@ -124,7 +159,7 @@ export default function GovernancePage() {
                                               </div>
                                               <Badge variant={item.completed ? "secondary" : "outline"}>{item.completed ? "Done" : "Pending"}</Badge>
                                           </div>
-                                      ))}
+                                      )) : <p className="text-xs text-muted-foreground">No action items for this meeting.</p>}
                                   </div>
                               </CardContent>
                           </Card>
