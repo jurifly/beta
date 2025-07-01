@@ -20,7 +20,7 @@ import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow
 import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
 import type { WatcherOutput } from "@/ai/flows/regulation-watcher-flow";
 import type { ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
-import type { LegalResearchOutput } from "@/ai/flows/legal-research-flow';
+import type { LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
