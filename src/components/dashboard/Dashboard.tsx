@@ -108,14 +108,36 @@ type DashboardChecklistItem = {
     dueDate: string;
 };
 
-const staticChartData = [
-  { month: "Jan", activity: 5 },
-  { month: "Feb", activity: 8 },
-  { month: "Mar", activity: 12 },
-  { month: "Apr", activity: 10 },
-  { month: "May", activity: 15 },
-  { month: "Jun", activity: 18 },
-];
+const staticChartDataByYear = {
+    '2024': [
+        { month: "Jan", activity: 5 },
+        { month: "Feb", activity: 8 },
+        { month: "Mar", activity: 12 },
+        { month: "Apr", activity: 10 },
+        { month: "May", activity: 15 },
+        { month: "Jun", activity: 18 },
+        { month: "Jul", activity: 14 },
+        { month: "Aug", activity: 20 },
+        { month: "Sep", activity: 22 },
+        { month: "Oct", activity: 25 },
+        { month: "Nov", activity: 19 },
+        { month: "Dec", activity: 28 },
+    ],
+    '2023': [
+        { month: "Jan", activity: 2 },
+        { month: "Feb", activity: 4 },
+        { month: "Mar", activity: 6 },
+        { month: "Apr", activity: 5 },
+        { month: "May", activity: 8 },
+        { month: "Jun", activity: 10 },
+        { month: "Jul", activity: 9 },
+        { month: "Aug", activity: 12 },
+        { month: "Sep", activity: 15 },
+        { month: "Oct", activity: 11 },
+        { month: "Nov", activity: 14 },
+        { month: "Dec", activity: 18 },
+    ],
+};
 
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
@@ -256,41 +278,44 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         });
     }, [groupedChecklist]);
     
-    const complianceChartData = useMemo(() => {
+    const complianceChartDataByYear = useMemo(() => {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const today = new Date();
-    
-        const activityByMonth: Record<string, number> = {};
-    
+        const activityByYear: Record<string, number[]> = {};
+        const allYears = new Set<string>([new Date().getFullYear().toString()]);
+
         checklist.forEach(item => {
             if (item.completed) {
                 const dueDate = new Date(item.dueDate + 'T00:00:00');
-                const monthKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}`;
-                activityByMonth[monthKey] = (activityByMonth[monthKey] || 0) + 1;
+                const year = dueDate.getFullYear().toString();
+                const month = dueDate.getMonth(); // 0-11
+                allYears.add(year);
+                if (!activityByYear[year]) {
+                    activityByYear[year] = Array(12).fill(0);
+                }
+                activityByYear[year][month]++;
             }
         });
-    
-        const data: { month: string; activity: number }[] = [];
-        for (let i = 5; i >= 0; i--) {
-            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-            const monthName = monthNames[date.getMonth()];
-            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-            
-            data.push({ 
-                month: monthName, 
-                activity: activityByMonth[monthKey] || 0
-            });
-        }
-    
-        const totalActivity = data.reduce((acc, curr) => acc + curr.activity, 0);
-        if (totalActivity < 5) {
-          data[0].activity += 2;
-          data[1].activity += 3;
-          data[2].activity += 1;
-          data[3].activity += 4;
+
+        const totalCompleted = checklist.filter(i => i.completed).length;
+        if (checklist.length > 0 && totalCompleted < 5) {
+            const currentYearStr = new Date().getFullYear().toString();
+            if (!activityByYear[currentYearStr]) activityByYear[currentYearStr] = Array(12).fill(0);
+            activityByYear[currentYearStr][0] = Math.max(activityByYear[currentYearStr][0], 2);
+            activityByYear[currentYearStr][1] = Math.max(activityByYear[currentYearStr][1], 3);
+            activityByYear[currentYearStr][2] = Math.max(activityByYear[currentYearStr][2], 1);
+            activityByYear[currentYearStr][3] = Math.max(activityByYear[currentYearStr][3], 4);
         }
         
-        return data;
+        const result: Record<string, { month: string; activity: number }[]> = {};
+        for (const year of Array.from(allYears)) {
+            const yearData = activityByYear[year] || Array(12).fill(0);
+            result[year] = monthNames.map((monthName, index) => ({
+                month: monthName,
+                activity: yearData[index]
+            }));
+        }
+        
+        return result;
     }, [checklist]);
 
     return (
@@ -312,7 +337,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2">
-              <ComplianceActivityChart data={complianceChartData} />
+              <ComplianceActivityChart dataByYear={complianceChartDataByYear} />
             </div>
 
              <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
@@ -399,7 +424,7 @@ function CADashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="0" subtext="Across all clients" icon={<FileClock className="h-4 w-4" />} /></Link>
 
             <div className="lg:col-span-3">
-                 <ComplianceActivityChart data={staticChartData} />
+                 <ComplianceActivityChart dataByYear={staticChartDataByYear} />
             </div>
             
             <QuickLinkCard title="AI Assistant" description="Generate board resolutions or draft replies to notices using AI tailored for CAs." href="/dashboard/ai-toolkit" icon={<Sparkles className="text-primary"/>} />
@@ -430,7 +455,7 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Documents awaiting your review" icon={<FileClock className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning className="h-4 w-4" />} /></Link>
             <div className="md:col-span-2 lg:col-span-2">
-              <ComplianceActivityChart data={staticChartData} />
+              <ComplianceActivityChart dataByYear={staticChartDataByYear} />
             </div>
              <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
                 <CardHeader>
@@ -457,7 +482,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
              <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Data Room Readiness" value="0%" subtext="For upcoming M&A" icon={<GanttChartSquare className="h-4 w-4" />} /></Link>
              <Link href="/dashboard/team" className="block"><StatCard title="Team Tasks" value="0/0" subtext="Completed this week" icon={<Users className="h-4 w-4" />} /></Link>
              <div className="lg:col-span-3">
-                <ComplianceActivityChart data={staticChartData} />
+                <ComplianceActivityChart dataByYear={staticChartDataByYear} />
              </div>
              <Card className="lg:col-span-3 interactive-lift">
                 <CardHeader>

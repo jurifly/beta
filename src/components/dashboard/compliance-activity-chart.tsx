@@ -1,6 +1,7 @@
 
 "use client"
 
+import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
@@ -14,6 +15,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { BookCheck } from "lucide-react"
 
 const chartConfig = {
@@ -24,24 +32,45 @@ const chartConfig = {
 }
 
 interface ComplianceActivityChartProps {
-  data: { month: string; activity: number }[];
+  dataByYear: Record<string, { month: string; activity: number }[]>;
 }
 
-export function ComplianceActivityChart({ data }: ComplianceActivityChartProps) {
+export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartProps) {
+  const years = React.useMemo(() => Object.keys(dataByYear).sort((a,b) => Number(b) - Number(a)), [dataByYear]);
+  const [selectedYear, setSelectedYear] = React.useState(years[0] || new Date().getFullYear().toString());
+  
+  const chartData = dataByYear[selectedYear] || [];
+
   return (
     <Card className="interactive-lift h-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <BookCheck />
-            Monthly Compliance Activity
-        </CardTitle>
-        <CardDescription>Your legal and compliance actions over the last 6 months.</CardDescription>
+        <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
+            <div>
+                <CardTitle className="flex items-center gap-2">
+                    <BookCheck />
+                    Monthly Compliance Activity
+                </CardTitle>
+                <CardDescription>Your legal and compliance actions for {selectedYear}.</CardDescription>
+            </div>
+            {years.length > 0 && (
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-full sm:w-[120px]">
+                      <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {years.map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            )}
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">
           <AreaChart
             accessibilityLayer
-            data={data}
+            data={chartData}
             margin={{
               left: 12,
               right: 12,
