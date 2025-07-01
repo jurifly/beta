@@ -66,6 +66,7 @@ export interface Company {
     docRequests?: DocumentRequest[];
     boardMeetings?: BoardMeeting[];
     financials?: {
+        cashBalance: number;
         monthlyRevenue: number;
         monthlyExpenses: number;
     };

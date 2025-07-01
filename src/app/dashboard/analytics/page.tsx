@@ -49,6 +49,7 @@ function FounderAnalytics() {
   
   const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
   const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
+  const [cashBalance, setCashBalance] = useState(activeCompany?.financials?.cashBalance || 0);
   const [isSavingFinancials, setIsSavingFinancials] = useState(false);
 
   useEffect(() => {
@@ -151,15 +152,20 @@ function FounderAnalytics() {
   
   const { burnRate, runway } = useMemo(() => {
     const burn = expenses - revenue;
-    const run = burn > 0 && activeCompany?.financials ? 'N/A' : (burn > 0 ? 'N/A' : 'Positive');
-    // Simplified runway. In a real app, we'd need cash balance.
-    return { burnRate: burn, runway: run };
-  }, [revenue, expenses, activeCompany]);
+    if (burn <= 0) {
+      return { burnRate: burn, runway: "Positive" };
+    }
+    if (cashBalance <= 0) {
+      return { burnRate: burn, runway: "0 months" };
+    }
+    const runwayMonths = Math.floor(cashBalance / burn);
+    return { burnRate: burn, runway: `${runwayMonths} months` };
+  }, [revenue, expenses, cashBalance]);
 
   const handleSaveFinancials = async () => {
     if (!activeCompany || !userProfile) return;
     setIsSavingFinancials(true);
-    const updatedCompany = { ...activeCompany, financials: { monthlyRevenue: revenue, monthlyExpenses: expenses }};
+    const updatedCompany = { ...activeCompany, financials: { cashBalance: cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses }};
     const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
     try {
         await updateUserProfile({ companies: updatedCompanies });
@@ -281,6 +287,10 @@ function FounderAnalytics() {
                     <CardContent className="grid md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <div className="space-y-2">
+                                <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
+                                <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
                                 <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
                             </div>
@@ -300,8 +310,7 @@ function FounderAnalytics() {
                             </div>
                              <div className="p-4 rounded-lg bg-muted border text-center">
                                 <p className="text-sm text-muted-foreground">Estimated Runway</p>
-                                <p className="text-2xl font-bold">N/A</p>
-                                <p className="text-xs text-muted-foreground">(Connect bank account for runway calculation)</p>
+                                <p className="text-2xl font-bold">{runway}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -564,7 +573,7 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Insights &amp; Analytics</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
         <p className="text-muted-foreground">
           Measure and track your legal and compliance performance.
         </p>
