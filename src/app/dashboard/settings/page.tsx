@@ -3,17 +3,16 @@
 
 import { useState } from "react";
 import SettingsForm from './form';
-import BillingForm from './billing-form';
-import NotificationsForm from './notifications-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, CreditCard, Bell, Lock, Loader2 } from 'lucide-react';
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { useAuth } from "@/hooks/auth";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { planHierarchy, type Company } from "@/lib/types";
+import BillingForm from "./billing-form";
+import NotificationsForm from "./notifications-form";
 
 export default function SettingsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -23,20 +22,10 @@ export default function SettingsPage() {
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-  
-  const userPlanLevel = planHierarchy[userProfile.plan];
-  const companyLimit = userPlanLevel < 1 ? 1 : userPlanLevel === 1 ? 5 : Infinity;
-  const canAddCompany = userProfile.companies.length < companyLimit;
-
 
   const handleAddCompanyClick = () => {
-    if (canAddCompany) {
       setCompanyToEdit(null);
       setModalOpen(true);
-    } else {
-        const upgradePlan = userProfile.plan === 'Starter' || userProfile.plan === 'Free' ? 'Founder' : 'Pro';
-         // TODO: Add toast or modal to upsell
-    }
   };
 
   const handleEditCompanyClick = (company: Company) => {
@@ -67,18 +56,6 @@ export default function SettingsPage() {
                 </p>
             </div>
         </div>
-        {!canAddCompany && (
-          <Alert variant="default" className="border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-300">
-              <Lock className="h-4 w-4 text-amber-500" />
-              <AlertTitle>Company Limit Reached</AlertTitle>
-              <AlertDescription>
-                Your current plan's company limit has been reached. Please upgrade to add more.
-                <Button asChild variant="link" className="p-0 h-auto ml-1 text-amber-900 dark:text-amber-300">
-                    <Link href="/dashboard/billing">Upgrade Plan</Link>
-                </Button>
-              </AlertDescription>
-          </Alert>
-        )}
         <Tabs defaultValue="profile" className="space-y-6">
           <div className="overflow-x-auto w-full">
               <TabsList className="flex-nowrap w-max sm:w-full">

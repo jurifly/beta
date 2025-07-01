@@ -8,11 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Loader2, Sparkles, UploadCloud, FileText, CheckCircle, AlertTriangle, Scale, Table, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { planHierarchy } from "@/lib/types";
 
 type FileState = {
   gst: File | null;
@@ -107,21 +105,12 @@ export default function ReconciliationPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   
-  const userPlanLevel = planHierarchy[userProfile.plan];
-  if (userPlanLevel < 2) {
-    return <UpgradePrompt 
-      title="Unlock AI Reconciliation Assistant"
-      description="Automatically compare GST, ROC, and ITR filings to find discrepancies and ensure accuracy. This is a Pro feature."
-      icon={<Scale className="w-12 h-12 text-primary/20"/>}
-    />;
-  }
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">AI Reconciliation Assistant</h2>
         <p className="text-muted-foreground">
-          Upload GST, ROC, and ITR filings to automatically find discrepancies. Costs 15 credits per analysis.
+          Upload GST, ROC, and ITR filings to automatically find discrepancies.
         </p>
       </div>
 

@@ -1,7 +1,6 @@
 
 "use client"
 import { useState, useEffect, useMemo } from "react";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,18 +59,6 @@ export default function ClauseLibraryPage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    const userPlanLevel = planHierarchy[userProfile.plan];
-
-    if (userPlanLevel < 1) {
-        return <UpgradePrompt
-            title="Unlock the Clause Library"
-            description="Access a library of pre-approved legal clauses, add your own, and build contracts faster. This is a Founder plan feature."
-            icon={<Library className="w-12 h-12 text-primary/20" />}
-        />;
-    }
-    
-    const isReadOnly = userPlanLevel < 2;
-
     const filteredClauses = useMemo(() => {
         return clauses.filter(clause => 
             clause.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,7 +82,7 @@ export default function ClauseLibraryPage() {
                         <div>
                             <CardTitle>Your Clause Collection</CardTitle>
                             <CardDescription>
-                                {isReadOnly ? "View available clauses. Upgrade to Pro to add your own." : "All your saved clauses in one place."}
+                               All your saved clauses in one place.
                             </CardDescription>
                         </div>
                         <div className="flex w-full sm:w-auto gap-2">
@@ -108,7 +95,7 @@ export default function ClauseLibraryPage() {
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
-                            <Button className="w-full sm:w-auto interactive-lift" onClick={() => setModalOpen(true)} disabled={isReadOnly}>
+                            <Button className="w-full sm:w-auto interactive-lift" onClick={() => setModalOpen(true)}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Clause
                             </Button>
                         </div>
@@ -120,7 +107,7 @@ export default function ClauseLibraryPage() {
                                 <p className="font-semibold text-lg">{clauses.length === 0 ? "Your Library is Empty" : "No Clauses Found"}</p>
                                 <p className="text-sm max-w-sm">
                                     {clauses.length === 0 
-                                      ? (isReadOnly ? "Upgrade to Pro to add and manage custom clauses." : "Add a new clause to get started.")
+                                      ? "Add a new clause to get started."
                                       : "No clauses match your search term."}
                                 </p>
                             </div>
@@ -136,11 +123,9 @@ export default function ClauseLibraryPage() {
                                             <p className="text-sm text-muted-foreground line-clamp-3">{clause.content}</p>
                                         </CardContent>
                                         <CardFooter>
-                                            {!isReadOnly && (
-                                                <Button variant="ghost" size="icon" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteClause(clause.id)}>
-                                                    <Trash2 className="h-4 w-4 text-destructive"/>
-                                                </Button>
-                                            )}
+                                            <Button variant="ghost" size="icon" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteClause(clause.id)}>
+                                                <Trash2 className="h-4 w-4 text-destructive"/>
+                                            </Button>
                                         </CardFooter>
                                     </Card>
                                 ))}

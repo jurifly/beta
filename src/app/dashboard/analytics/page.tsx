@@ -358,16 +358,6 @@ export default function AnalyticsPage() {
     );
   }
   
-  const userPlanLevel = planHierarchy[userProfile.plan];
-
-  if (userPlanLevel < 1) {
-    return <UpgradePrompt 
-      title="Unlock Insights &amp; Analytics"
-      description="Get a 360-degree view of your legal health with AI-powered analytics. Upgrade to the Founder plan to track your performance."
-      icon={<LineChartIcon className="w-12 h-12 text-primary/20"/>}
-    />;
-  }
-
   const renderAnalyticsByRole = () => {
     switch (userProfile.role) {
       case 'Founder':

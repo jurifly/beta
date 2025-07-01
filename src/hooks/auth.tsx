@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       planExpiryDate: newExpiry.toISOString(),
       companies: [],
       activeCompanyId: '',
-      credits: 90,
+      credits: 1000,
       legalRegion: legalRegion || 'India',
     };
     
@@ -224,7 +224,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
         setUser(userData);
         await fetchUserProfile(userData);
-        await processPendingPurchases(userData.uid);
         await fetchNotifications(userData.uid);
       } else {
         setUser(null);
@@ -237,21 +236,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUserProfile, fetchNotifications, processPendingPurchases]);
   
   useEffect(() => {
-    if (userProfile?.planExpiryDate) {
-        const expiryDate = new Date(userProfile.planExpiryDate);
-        const isActive = expiryDate > new Date();
-        setIsPlanActive(isActive);
-        if (!isActive && userProfile.plan !== 'Starter' && userProfile.plan !== 'Free') {
-             addNotification({
-                title: "Subscription Expired",
-                description: "Your plan has expired. Some features may be locked.",
-                icon: "AlertTriangle",
-             })
-        }
-    } else {
-        setIsPlanActive(true);
-    }
-  }, [userProfile, addNotification]);
+    setIsPlanActive(true); // All features unlocked
+  }, [userProfile]);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!user) return;
@@ -300,25 +286,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deductCredits = useCallback(async (amount: number) => {
-    if (!userProfile || !user) return false;
-    if (userProfile.plan === 'Enterprise') return true;
-    if ((userProfile.credits ?? 0) < amount) {
-      toast({ variant: "destructive", title: "Insufficient Credits", description: `You need ${amount} credit(s) for this action. Please upgrade your plan or buy more credits.` });
-      return false;
-    }
-    
-    const userDocRef = doc(db, "users", user.uid);
-    try {
-      const newCredits = (userProfile.credits ?? 0) - amount;
-      await updateDoc(userDocRef, { credits: newCredits });
-      setUserProfile(prev => prev ? {...prev, credits: newCredits} : null);
-      toast({ title: "Credits Deducted", description: `You have ${newCredits} credits remaining.` });
-      return true;
-    } catch (e: any) {
-        toast({ variant: "destructive", title: "Credit Deduction Failed", description: e.message });
-        return false;
-    }
-  }, [user, userProfile, toast]);
+    // No-op during beta, always returns true
+    return true;
+  }, []);
 
   const addCredits = useCallback(async (amount: number) => {
     if(!userProfile || !user) return;

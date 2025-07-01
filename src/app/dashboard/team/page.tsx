@@ -1,7 +1,6 @@
 
 "use client"
 import { useState } from "react";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,18 +21,6 @@ export default function TeamPage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    const userPlanLevel = planHierarchy[userProfile.plan];
-
-    if (userPlanLevel < 2) {
-        return <UpgradePrompt
-            title="Unlock Team Management"
-            description="Collaborate with your team, assign roles, and manage compliance together. This is a Pro feature."
-            icon={<Users className="w-12 h-12 text-primary/20" />}
-        />;
-    }
-
-    const isEnterprise = userPlanLevel >= 3;
-
     return (
         <>
             <InviteMemberModal isOpen={isInviteModalOpen} onOpenChange={setInviteModalOpen} />
@@ -50,7 +37,7 @@ export default function TeamPage() {
                             <div>
                                 <CardTitle>Team Members</CardTitle>
                                 <CardDescription>
-                                    {isEnterprise ? "Manage your entire organization." : "Manage roles and permissions for your team."}
+                                    Manage roles and permissions for your team.
                                 </CardDescription>
                             </div>
                             <div className="flex w-full sm:w-auto gap-2">

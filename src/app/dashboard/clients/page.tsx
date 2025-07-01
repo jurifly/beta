@@ -10,7 +10,6 @@ import { MoreHorizontal, PlusCircle, Search, Users, AlertTriangle, CheckCircle, 
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/auth";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { planHierarchy } from "@/lib/types";
 
@@ -20,23 +19,6 @@ export default function ClientsPage() {
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
-
-  if (!['CA', 'Legal Advisor', 'Enterprise'].includes(userProfile.role)) {
-    return <UpgradePrompt 
-      title="Client Workspace for Professionals"
-      description="This feature is designed for CAs, Legal Advisors, and Enterprise users. You can change your role in the settings."
-      icon={<Users className="w-12 h-12 text-primary/20"/>}
-    />;
-  }
-  
-  const userPlanLevel = planHierarchy[userProfile.plan];
-  if (userPlanLevel < 2) {
-    return <UpgradePrompt 
-      title="Unlock Client Workspace"
-      description="Manage your entire client portfolio, track compliance, and automate communication with a Pro plan or higher."
-      icon={<Users className="w-12 h-12 text-primary/20"/>}
-    />;
   }
   
   return (

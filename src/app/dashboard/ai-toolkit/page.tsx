@@ -283,7 +283,6 @@ const DataroomAudit = () => {
   const { pending } = useFormStatus();
   const processedDataRef = useRef<RawChecklistOutput | null>(null);
   
-  const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
 
   if (!userProfile) return <Loader2 className="animate-spin" />;
 
@@ -317,16 +316,13 @@ const DataroomAudit = () => {
 
   const filteredChecklist = useMemo(() => { if (!checklistState.data) return []; if (activeFilter === 'all') return checklistState.data.checklist; return checklistState.data.checklist.map(category => ({ ...category, items: category.items.filter(item => { if (activeFilter === 'completed') return item.status === 'Completed'; if (activeFilter === 'pending') return ['Pending', 'In Progress', 'Not Applicable'].includes(item.status); return true; }), })).filter(category => category.items.length > 0); }, [checklistState.data, activeFilter]);
 
-  if (userPlanLevel < 1) {
-      return <UpgradePrompt title="Unlock the Dataroom Audit" description="Generate comprehensive due diligence checklists and prepare for audits with our AI-powered tools. This feature is available on the Founder plan and above." icon={<FolderCheck className="w-12 h-12 text-primary/20"/>} />;
-  }
 
   const availableDealTypes = dealTypesByRole[userProfile.role] || dealTypesByRole.Founder;
 
   return (
     <div className="space-y-6">
       <Card>
-          <CardHeader><CardTitle>{checklistState.data?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process. Costs 2 credits.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{checklistState.data?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process.</CardDescription></CardHeader>
           <CardContent>
               <form action={formAction} className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b">
                 <input type="hidden" name="legalRegion" value={userProfile.legalRegion} />
@@ -382,7 +378,6 @@ const DocumentIntelligenceTab = () => {
   const [activeDoc, setActiveDoc] = useState<string | null>(null);
 
   const STORAGE_KEY = 'documentIntelligenceHistory';
-  const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
 
   useEffect(() => {
     try {
@@ -456,10 +451,6 @@ const DocumentIntelligenceTab = () => {
      toast({ title: "Deleted", description: "Analysis has been removed from history." });
   }
 
-  if (userPlanLevel < 1) {
-    return <UpgradePrompt title="Unlock Document Intelligence" description="Let our AI analyze your legal documents for risks, summarize them, and even draft replies. This feature requires a Founder plan or higher." icon={<FileScan className="w-12 h-12 text-primary/20"/>} />;
-  }
-
   return (
     <div className="grid lg:grid-cols-3 gap-6 items-start">
       <div className="lg:col-span-1 space-y-4">
@@ -467,7 +458,7 @@ const DocumentIntelligenceTab = () => {
           <input {...getInputProps()} />
           <CardHeader>
             <CardTitle>Document Intelligence</CardTitle>
-            <CardDescription>Upload a document for AI analysis. Costs 10 credits.</CardDescription>
+            <CardDescription>Upload a document for AI analysis.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className={cn("text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed h-full w-full transition-colors cursor-pointer", isDragActive ? "border-primary bg-primary/10" : "")}>
@@ -648,7 +639,6 @@ const DocumentGenerator = () => {
   const [isTyping, setIsTyping] = useState(false);
   const hasUserEdited = useRef(false);
   const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 1);
-  const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
 
   useEffect(() => { if (isTyping && !hasUserEdited.current) setEditorContent(typewriterText); if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedDoc?.content || '').length) setIsTyping(false); }, [typewriterText, isTyping, generatedDoc]);
   const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { if (isTyping) { hasUserEdited.current = true; setIsTyping(false); } setEditorContent(e.target.value); };
@@ -667,16 +657,6 @@ const DocumentGenerator = () => {
     if (!selectedTemplate) { toast({ title: 'No Template Selected', description: 'Please select a template from the library first.', variant: 'destructive' }); return; }
     if (!userProfile) { toast({ title: 'Error', description: 'User profile not found.', variant: 'destructive' }); return; }
 
-    const templateDetails = availableCategories.flatMap(c => c.templates).find(t => t.name === selectedTemplate);
-    if (templateDetails?.isPremium && userPlanLevel < 1) { 
-        toast({ 
-            title: 'Upgrade Required', 
-            description: 'Premium templates require a Founder plan or higher.', 
-            variant: 'destructive', 
-            action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction> 
-        }); 
-        return; 
-    }
     if (!await deductCredits(1)) return;
     setLoading(true); setGeneratedDoc(null); setEditorContent(''); hasUserEdited.current = false;
     try { const result = await AiActions.generateDocumentAction({ templateName: selectedTemplate, legalRegion: userProfile.legalRegion }); setGeneratedDoc(result); setIsTyping(true); } catch (error: any) { toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); } finally { setLoading(false); }
@@ -698,7 +678,7 @@ const DocumentGenerator = () => {
                     {availableCategories.map((category) => (
                         <AccordionItem value={category.name} key={category.name}>
                             <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
-                            <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium && userPlanLevel < 1; return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted", isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer")}><RadioGroupItem value={template.name} id={template.name} disabled={isLocked} /><span className="font-normal text-sm">{template.name}</span>{isLocked && <Lock className="h-3 w-3 ml-auto text-amber-500" />}</Label> ) })}</div></AccordionContent>
+                            <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium; return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}><RadioGroupItem value={template.name} id={template.name} /><span className="font-normal text-sm">{template.name}</span></Label> ) })}</div></AccordionContent>
                         </AccordionItem>
                     ))}
                 </Accordion>
@@ -792,7 +772,7 @@ const WikiGenerator = () => {
                         </div>
                         <Button onClick={handleGenerate} disabled={loading} className="w-full">
                             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>}
-                            Generate Internal Wiki (5 Credits)
+                            Generate Internal Wiki
                         </Button>
                     </CardContent>
                 </Card>
@@ -845,7 +825,6 @@ const RegulationWatcherTab = () => {
     const [submittedFrequency, setSubmittedFrequency] = useState("");
     const { deductCredits, userProfile } = useAuth();
     const { toast } = useToast();
-    const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
     const lastSuccessfulData = useRef<WatcherOutput | null>(null);
 
     useEffect(() => {
@@ -870,8 +849,8 @@ const RegulationWatcherTab = () => {
         formAction(formData);
     }
 
-    if (!userProfile || userPlanLevel < 2) {
-        return <UpgradePrompt title="Unlock Regulation Watcher" description="Stay ahead of regulatory changes with AI-powered summaries from government portals. This feature requires a Pro plan or higher." icon={<RadioTower className="w-12 h-12 text-primary/20" />} />;
+    if (!userProfile) {
+        return <Loader2 className="w-8 h-8 animate-spin text-primary" />;
     }
 
     return (
@@ -880,7 +859,7 @@ const RegulationWatcherTab = () => {
                 <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle>Configure Your Watcher</CardTitle>
-                        <CardDescription>Select the regulatory bodies you want to monitor and the frequency of updates. Costs 1 credit.</CardDescription>
+                        <CardDescription>Select the regulatory bodies you want to monitor and the frequency of updates.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-3">
@@ -962,11 +941,7 @@ const WorkflowTab = () => {
     const [newWorkflow, setNewWorkflow] = useState({ trigger: '', action: '', notification: '' });
     const [activityLog, setActivityLog] = useState<ActivityLogItem[]>([]);
     const { toast } = useToast();
-    const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
 
-    if (!userProfile || userPlanLevel < 3) {
-        return <UpgradePrompt title="Unlock the Workflow & Automation Studio" description="Connect Clausey to your favorite tools and build powerful, automated workflows. This is an Enterprise feature." icon={<Zap className="w-12 h-12 text-primary/20"/>} />;
-    }
     const getLabel = (value: string, list: {value: string, label: string}[]) => list.find(item => item.value === value)?.label || 'N/A';
     const handleCreateWorkflow = () => { if (!newWorkflow.trigger || !newWorkflow.action || !newWorkflow.notification) { toast({ variant: "destructive", title: "Incomplete Workflow", description: "Please select a trigger, action, and notification." }); return; } const workflow: WorkflowType = { id: `wf_${Date.now()}`, ...newWorkflow }; setWorkflows(prev => [...prev, workflow]); const newActivity: ActivityLogItem = { id: `act_${Date.now()}`, timestamp: new Date(), icon: Workflow, title: `Workflow Created: "${getLabel(workflow.action, workflowActions)}"`, description: `Triggered by: "${getLabel(workflow.trigger, workflowTriggers)}"`, }; setActivityLog(prev => [newActivity, ...prev]); setNewWorkflow({ trigger: '', action: '', notification: '' }); toast({ title: "Workflow Created!", description: "Your new automation is now active." }); }
     const handleDeleteWorkflow = (id: string) => { const workflowToDelete = workflows.find(w => w.id === id); if (workflowToDelete) { const newActivity: ActivityLogItem = { id: `act_${Date.now()}`, timestamp: new Date(), icon: Trash2, title: `Workflow Deleted: "${getLabel(workflowToDelete.action, workflowActions)}"`, description: "The automation rule has been removed.", }; setActivityLog(prev => [newActivity, ...prev]); } setWorkflows(wfs => wfs.filter(w => w.id !== id)); toast({ title: "Workflow Deleted", description: "The automation has been removed." }); }

@@ -198,8 +198,6 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<BusinessRecommenderOutput | undefined>(initialState.businessTypeResult);
     const { userProfile } = useAuth();
-    const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
-    const isLocked = userPlanLevel < 1;
 
     const { control, handleSubmit, formState: { errors } } = useForm<BusinessTypeFormData>({
         resolver: zodResolver(businessTypeFormSchema),
@@ -230,16 +228,6 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     return (
         <div className="grid md:grid-cols-2 gap-8">
             <div className="relative">
-                {isLocked && (
-                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-8 rounded-lg">
-                        <Lock className="w-12 h-12 text-primary/20 mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Unlock AI Recommendations</h3>
-                        <p className="text-muted-foreground mb-6">Upgrade to the Founder plan to get personalized business structure recommendations from our AI.</p>
-                        <Button asChild>
-                            <Link href="/dashboard/billing">Upgrade Plan</Link>
-                        </Button>
-                    </div>
-                )}
                 <h2 className="text-xl font-bold">Find Your Ideal Business Structure</h2>
                 <p className="text-muted-foreground mt-1">Answer a few questions and our AI will recommend the best legal structure for your new venture.</p>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
@@ -247,7 +235,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                         <div className="space-y-2">
                             <Label>Number of Founders</Label>
                             <Controller name="founderCount" control={control} render={({ field }) => (
-                                <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value || 1)} disabled={isLocked}>
+                                <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value || 1)}>
                                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="1">1 Founder</SelectItem>
@@ -263,7 +251,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                         <div className="space-y-2">
                              <Label>Investment Plan</Label>
                              <Controller name="investmentPlan" control={control} render={({ field }) => (
-                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLocked}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Bootstrapped">Bootstrapped</SelectItem>
@@ -278,7 +266,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                      <div className="space-y-2">
                          <Label>Projected Annual Revenue</Label>
                          <Controller name="revenueGoal" control={control} render={({ field }) => (
-                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLocked}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="< 10 Lakhs">Under ₹10 Lakhs</SelectItem>
@@ -292,11 +280,11 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                     <div className="space-y-2">
                         <Label htmlFor="businessDescription">Business Description</Label>
                         <Controller name="businessDescription" control={control} render={({ field }) => (
-                            <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances..." {...field} className="min-h-[100px]" disabled={isLocked} />
+                            <Textarea id="businessDescription" placeholder="e.g., We are building a SaaS platform for small businesses to manage their finances..." {...field} className="min-h-[100px]" />
                         )}/>
                         {errors.businessDescription && <p className="text-sm text-destructive">{errors.businessDescription.message}</p>}
                     </div>
-                    <Button type="submit" disabled={isLoading || isLocked} className="w-full">
+                    <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
                         Get Recommendation
                     </Button>
@@ -542,7 +530,6 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
     const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
     const { toast } = useToast();
-    const userPlanLevel = planHierarchy[userProfile.plan];
     
     const [editorContent, setEditorContent] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -567,17 +554,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
         setEditorContent(e.target.value);
     };
 
-    const handleGenerate = async (templateName: string, isPremium: boolean) => {
-        if (isPremium && userPlanLevel < 1) {
-            toast({
-                title: 'Upgrade Required',
-                description: 'This is a premium document. Please upgrade to the Founder plan or higher to generate.',
-                variant: 'destructive',
-                action: <ToastAction altText="Upgrade"><Link href="/dashboard/billing">Upgrade</Link></ToastAction>,
-            });
-            return;
-        }
-
+    const handleGenerate = async (templateName: string) => {
         setLoadingDoc(templateName);
         setGeneratedContent(null);
         setEditorContent('');
@@ -605,7 +582,6 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
                             <CardHeader>
                                 <CardTitle className="text-base flex items-center justify-between">
                                   {template.name}
-                                  {template.premium && <Badge variant="secondary" className="text-amber-600 bg-amber-100">Premium</Badge>}
                                 </CardTitle>
                                 <CardDescription className="text-sm">{template.desc}</CardDescription>
                             </CardHeader>
@@ -613,7 +589,7 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
                                 <Button
                                     variant="secondary"
                                     className="w-full"
-                                    onClick={() => handleGenerate(template.name, template.premium)}
+                                    onClick={() => handleGenerate(template.name)}
                                     disabled={!!loadingDoc}
                                 >
                                     {loadingDoc === template.name ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
@@ -679,7 +655,7 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         try {
             const response = await getFinalChecklistAction({ topic, legalRegion: userProfile?.legalRegion || 'India' });
             if (response.checklist) {
-                setChecklist(response.checklist.items);
+                setChecklist(response.checklist);
                 setChecklistTitle(response.checklist.title);
             } else {
                 toast({ variant: 'destructive', title: 'Checklist Generation Failed', description: 'The AI could not generate a checklist for this topic.' });
@@ -696,7 +672,7 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
 
         let content = `${checklistTitle}\n\n`;
         
-        const categories = checklist.reduce((acc, item) => {
+        const categories = checklist.items.reduce((acc, item) => {
             (acc[item.category] = acc[item.category] || []).push(item.task);
             return acc;
         }, {} as Record<string, string[]>);
@@ -750,7 +726,7 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
                         </Button>
                     </div>
                     <ul className="space-y-3 p-4">
-                    {checklist.map((item, itemIndex) => (
+                    {checklist.items.map((item, itemIndex) => (
                         <li key={itemIndex} className="flex items-start gap-3 p-3 bg-card rounded-md border">
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 mt-0.5">
                               <Check className="h-3 w-3" />

@@ -32,9 +32,6 @@ export default function NotificationsForm() {
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
-  const userPlanLevel = userProfile ? planHierarchy[userProfile.plan] : 0;
-  const isLocked = userPlanLevel < 2; // Pro feature
-
   useEffect(() => {
     if (state.success) {
         toast({ title: "Success!", description: state.success });
@@ -49,16 +46,6 @@ export default function NotificationsForm() {
                 <CardDescription>Choose how and where you receive alerts and reports.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {isLocked && (
-                    <Alert>
-                        <Lock className="h-4 w-4" />
-                        <AlertTitle>This is a Pro Feature</AlertTitle>
-                        <AlertDescription>
-                            Automations and advanced notifications are available on our Pro plans and higher. 
-                            <Button asChild variant="link" className="p-0 h-auto ml-1"><Link href="/dashboard/billing">Upgrade to unlock.</Link></Button>
-                        </AlertDescription>
-                    </Alert>
-                )}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
                         <Bell className="w-5 h-5 text-primary mt-1 shrink-0"/>
@@ -67,7 +54,7 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">For deadlines and regulation updates.</p>
                         </div>
                     </div>
-                    <Switch id="email_notifications" name="email_notifications" defaultChecked disabled={isLocked} />
+                    <Switch id="email_notifications" name="email_notifications" defaultChecked />
                 </div>
                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
@@ -77,7 +64,7 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">AI-generated PDF summary of compliance.</p>
                         </div>
                     </div>
-                    <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked disabled={isLocked} />
+                    <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked />
                 </div>
                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
@@ -87,11 +74,11 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">Interact with your AI assistant on WhatsApp.</p>
                         </div>
                     </div>
-                    <Switch id="whatsapp_bot" name="whatsapp_bot" disabled={isLocked} />
+                    <Switch id="whatsapp_bot" name="whatsapp_bot" />
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-                <SubmitButton disabled={isLocked} />
+                <SubmitButton disabled={false} />
             </CardFooter>
         </Card>
     </form>
