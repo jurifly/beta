@@ -117,7 +117,7 @@ Your goal is to create a complete and accurate compliance calendar.
 *   **Task**: VAT registration (if >£85,000 turnover) | **Due By**: ASAP upon crossing threshold
 *   **Task**: Confirmation Statement (annual return) | **Due By**: Every year within 14 days of anniversary of incorporation date
 *   **Task**: Annual accounts filing | **Due By**: 9 months after financial year-end
-*   **Task**: Corporation tax return | **Due By**: 12 months after financial year-end
+*   **Task**: Corporation tax return | **Due By**: 12 months after fiscal year-end
 
 ---
 
