@@ -18,6 +18,20 @@ type FileState = {
   itr: File | null;
 };
 
+// A simplified, purely presentational component for the dropzone UI.
+const DropzoneDisplay = ({ file, type, open }: { file: File | null; type: string; open: () => void }) => (
+    <div onClick={open} className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer bg-muted/40 h-full">
+      <UploadCloud className="w-10 h-10 text-muted-foreground mb-2" />
+      <p className="font-semibold">Upload {type} Filing</p>
+      {file ? (
+        <p className="text-sm text-green-600 mt-2 flex items-center gap-2"><FileText className="w-4 h-4"/>{file.name}</p>
+      ) : (
+        <p className="text-xs text-muted-foreground">Drag & drop or click to upload</p>
+      )}
+    </div>
+);
+
+
 export default function ReconciliationPage() {
   const { userProfile, deductCredits } = useAuth();
   const [files, setFiles] = useState<FileState>({ gst: null, roc: null, itr: null });
@@ -25,7 +39,7 @@ export default function ReconciliationPage() {
   const [result, setResult] = useState<ReconciliationOutput | null>(null);
   const { toast } = useToast();
 
-  const handleDrop = (type: keyof FileState) => useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
+  const createDropHandler = (type: keyof FileState) => useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
       if (fileRejections.length > 0) {
         toast({ variant: "destructive", title: "File Upload Error", description: fileRejections[0].errors[0].message });
         return;
@@ -35,9 +49,17 @@ export default function ReconciliationPage() {
       }
   }, [toast]);
 
-  const GSTDropzone = useDropzone({ onDrop: handleDrop('gst'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 });
-  const ROCDropzone = useDropzone({ onDrop: handleDrop('roc'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 });
-  const ITRDropzone = useDropzone({ onDrop: handleDrop('itr'), maxFiles: 1, accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, maxSize: 5 * 1024 * 1024 });
+  // Each dropzone gets its own dedicated hook
+  const dropzoneOptions = {
+      maxFiles: 1, 
+      accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, 
+      maxSize: 5 * 1024 * 1024
+  };
+
+  const { getRootProps: getGstRootProps, getInputProps: getGstInputProps, open: openGstDialog } = useDropzone({ onDrop: createDropHandler('gst'), ...dropzoneOptions });
+  const { getRootProps: getRocRootProps, getInputProps: getRocInputProps, open: openRocDialog } = useDropzone({ onDrop: createDropHandler('roc'), ...dropzoneOptions });
+  const { getRootProps: getItrRootProps, getInputProps: getItrInputProps, open: openItrDialog } = useDropzone({ onDrop: createDropHandler('itr'), ...dropzoneOptions });
+
 
   const getFileAsDataURI = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -54,13 +76,11 @@ export default function ReconciliationPage() {
       return;
     }
     
-    if (!await deductCredits(15)) return;
+    if (!userProfile || !await deductCredits(15)) return;
     
     setIsProcessing(true);
     setResult(null);
     try {
-      if (!userProfile) throw new Error("User profile not available.");
-
       const [gstDataUri, rocDataUri, itrDataUri] = await Promise.all([
         getFileAsDataURI(files.gst),
         getFileAsDataURI(files.roc),
@@ -81,26 +101,13 @@ export default function ReconciliationPage() {
       setResult(response);
       toast({ title: "Reconciliation Complete!", description: "Your report is ready below." });
 
-    } catch (error: any) {
+    } catch (error: any) => {
       toast({ variant: "destructive", title: "Analysis Failed", description: error.message });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const DropzoneCard = ({ dz, file, type }: { dz: any, file: File | null, type: string }) => (
-    <div {...dz.getRootProps()} onClick={dz.open} className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer bg-muted/40 h-full">
-      <input {...dz.getInputProps()} />
-      <UploadCloud className="w-10 h-10 text-muted-foreground mb-2" />
-      <p className="font-semibold">Upload {type} Filing</p>
-      {file ? (
-        <p className="text-sm text-green-600 mt-2 flex items-center gap-2"><FileText className="w-4 h-4"/>{file.name}</p>
-      ) : (
-        <p className="text-xs text-muted-foreground">Drag 'n' drop a file here, or click</p>
-      )}
-    </div>
-  );
-  
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -121,9 +128,18 @@ export default function ReconciliationPage() {
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <DropzoneCard dz={GSTDropzone} file={files.gst} type="GST" />
-                <DropzoneCard dz={ROCDropzone} file={files.roc} type="ROC" />
-                <DropzoneCard dz={ITRDropzone} file={files.itr} type="ITR" />
+                <div {...getGstRootProps()}>
+                    <input {...getGstInputProps()} />
+                    <DropzoneDisplay file={files.gst} type="GST" open={openGstDialog} />
+                </div>
+                 <div {...getRocRootProps()}>
+                    <input {...getRocInputProps()} />
+                    <DropzoneDisplay file={files.roc} type="ROC" open={openRocDialog} />
+                </div>
+                 <div {...getItrRootProps()}>
+                    <input {...getItrInputProps()} />
+                    <DropzoneDisplay file={files.itr} type="ITR" open={openItrDialog} />
+                </div>
             </div>
         </CardContent>
         <CardFooter className="border-t pt-6 flex-col items-center gap-4">
