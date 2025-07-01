@@ -152,9 +152,9 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
                 <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
                     <div>
                         <Label>Your Role</Label>
-                        <p className="text-xs text-muted-foreground mt-1">Please contact support to change your account role.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Select the role that best describes you. This is enabled for testing.</p>
                     </div>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="md:col-span-2 flex flex-wrap gap-4 pt-2" disabled>
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="md:col-span-2 flex flex-wrap gap-4 pt-2">
                         {roles.map((role) => (
                           <TooltipProvider key={role.id}>
                               <Tooltip>
