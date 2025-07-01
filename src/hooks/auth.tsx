@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, VaultItem, ChatMessage, AppNotification, Transaction } from '@/lib/types';
+import type { User, UserProfile, UserPlan, VaultItem, ChatMessage, AppNotification, Transaction, UserRole } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -16,6 +16,8 @@ export interface AuthContextType {
   loading: boolean;
   isPlanActive: boolean;
   notifications: AppNotification[];
+  isDevMode: boolean;
+  setDevMode: (enabled: boolean) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   deductCredits: (amount: number) => Promise<boolean>;
   addCredits: (amount: number) => void;
@@ -41,6 +43,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isPlanActive, setIsPlanActive] = useState(true);
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      const devMode = localStorage.getItem('devMode') === 'true';
+      setIsDevMode(devMode);
+    } catch (error) {
+      console.error("Could not access localStorage for devMode", error);
+    }
+  }, []);
+
+  const setDevMode = (enabled: boolean) => {
+    try {
+      localStorage.setItem('devMode', String(enabled));
+      setIsDevMode(enabled);
+      toast({
+        title: `Developer Mode ${enabled ? 'Enabled' : 'Disabled'}`,
+        description: `Role switching is now ${enabled ? 'unlocked' : 'locked'}.`,
+      });
+    } catch (error) {
+      console.error("Could not access localStorage for devMode", error);
+    }
+  };
+
 
   const createNewUserProfile = useCallback(async (firebaseUser: User, legalRegion: string, refId?: string): Promise<UserProfile> => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
@@ -349,7 +375,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return querySnapshot.docs.map(doc => doc.data().messages as ChatMessage[]);
   };
   
-  const value = { user, userProfile, loading, isPlanActive, notifications, updateUserProfile, deductCredits, addCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveVaultItems, getVaultItems, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, addCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveVaultItems, getVaultItems, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

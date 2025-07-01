@@ -26,11 +26,13 @@ import type { UserProfile, UserRole } from "@/lib/types";
 import { Badge } from "../ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, userProfile, updateUserProfile, signOut } = useAuth();
+  const { user, userProfile, updateUserProfile, signOut, isDevMode, setDevMode } = useAuth();
   const [openCompanySwitcher, setOpenCompanySwitcher] = useState(false);
 
   const handleLogout = async () => {
@@ -47,6 +49,18 @@ export function UserNav() {
         toast({
             title: "Company Switched",
             description: `Dashboard updated to ${activeCompany?.name}.`,
+        });
+        window.location.reload();
+      });
+    }
+  };
+
+  const handleRoleChange = (role: UserRole) => {
+    if (userProfile && role !== userProfile.role) {
+      updateUserProfile({ role }).then(() => {
+        toast({
+            title: "Role Switched",
+            description: `You are now viewing the app as a ${role}.`,
         });
         window.location.reload();
       });
@@ -150,6 +164,36 @@ export function UserNav() {
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Developer Tools</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center justify-between">
+            <Label htmlFor="dev-mode-switch" className="font-normal cursor-pointer">
+                Enable Role Switch
+            </Label>
+            <Switch
+                id="dev-mode-switch"
+                checked={isDevMode}
+                onCheckedChange={setDevMode}
+            />
+          </DropdownMenuItem>
+           <DropdownMenuSub>
+            <DropdownMenuSubTrigger disabled={!isDevMode}>
+              <Briefcase className="mr-2 h-4 w-4" />
+              <span>Switch Role</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                 <DropdownMenuRadioGroup value={userProfile.role} onValueChange={handleRoleChange as (value: string) => void}>
+                    <DropdownMenuRadioItem value="Founder">Founder</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="CA">Chartered Accountant</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Legal Advisor">Legal Advisor</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Enterprise">Enterprise</DropdownMenuRadioItem>
+                 </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
