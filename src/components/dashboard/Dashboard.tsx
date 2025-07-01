@@ -302,17 +302,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 activityByYear[year][month]++;
             }
         });
-
-        const totalCompleted = checklist.filter(i => i.completed).length;
-        if (checklist.length > 0 && totalCompleted < 5) {
-            const currentYearStr = new Date().getFullYear().toString();
-            if (!activityByYear[currentYearStr]) activityByYear[currentYearStr] = Array(12).fill(0);
-            allYears.add(currentYearStr);
-            activityByYear[currentYearStr][0] = Math.max(activityByYear[currentYearStr][0], 2);
-            activityByYear[currentYearStr][1] = Math.max(activityByYear[currentYearStr][1], 3);
-            activityByYear[currentYearStr][2] = Math.max(activityByYear[currentYearStr][2], 1);
-            activityByYear[currentYearStr][3] = Math.max(activityByYear[currentYearStr][3], 4);
-        }
         
         const result: Record<string, { month: string; activity: number }[]> = {};
         for (const year of Array.from(allYears)) {
