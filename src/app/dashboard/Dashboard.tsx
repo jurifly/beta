@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   ShieldCheck,
   ListChecks,
-  CheckCircle,
   FileScan,
   Folders,
   RadioTower,
@@ -30,7 +29,6 @@ import {
   Briefcase,
   Building2,
   Zap,
-  Gavel,
   FileSignature,
   Scale,
 } from "lucide-react";

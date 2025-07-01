@@ -12,19 +12,19 @@ body {
 
 @layer base {
   :root {
-    --background: 220 20% 98%;
+    --background: 0 0% 96%; /* Light gray #F5F5F5 */
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221 83% 53%; /* A nice, modern blue */
+    --primary: 220.4 89.6% 58%; /* Vivid blue #4285F4 */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 220 20% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 291 64% 42%;
+    --accent: 16.2 100% 63.3%; /* Energetic orange #FF7043 */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -51,7 +51,7 @@ body {
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 291 64% 52%;
+    --accent: 16.2 100% 63.3%; /* Energetic orange #FF7043 */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;

@@ -273,9 +273,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                         </ScrollArea>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="hidden md:block">
-                    <UserNav />
-                </div>
+                <UserNav />
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
