@@ -33,6 +33,7 @@ import {
   Globe,
   LifeBuoy,
   PenSquare,
+  PieChart,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -60,6 +61,7 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
+  capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
@@ -81,6 +83,7 @@ type NavItem = typeof navItemConfig[NavItemKey];
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.businessSetup,
+  navItemConfig.capTable,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.calendar,

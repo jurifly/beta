@@ -10,6 +10,20 @@ export interface User {
   displayName: string | null;
 }
 
+export interface CapTableEntry {
+  id: string;
+  holder: string;
+  type: 'Founder' | 'Investor' | 'ESOP';
+  shares: number;
+}
+
+export interface ClientMatter {
+  id: string;
+  title: string;
+  status: 'Active' | 'Closed' | 'On Hold';
+  lastActivity: string;
+}
+
 export interface Company {
     id: string;
     name: string;
@@ -21,6 +35,8 @@ export interface Company {
     incorporationDate: string;
     sector: string;
     location: string;
+    capTable?: CapTableEntry[];
+    matters?: ClientMatter[];
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
@@ -165,4 +181,5 @@ export interface DocumentAnalysis {
   riskFlags: RiskFlag[];
   replySuggestion: ReplySuggestion | null;
   reminder: ReminderSuggestion | null;
+  redlineContent?: string;
 }
