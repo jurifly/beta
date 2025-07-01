@@ -9,6 +9,8 @@ import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as fir
 import { auth, db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, increment, where } from 'firebase/firestore';
 import { add, type Duration } from 'date-fns';
+import { ToastAction } from '@/components/ui/toast';
+import Link from 'next/link';
 
 export interface AuthContextType {
   user: User | null;
@@ -299,7 +301,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({
             variant: "destructive",
             title: "Daily Limit Reached",
-            description: "You’ve reached your daily AI limit. Credits recharge at midnight UTC.",
+            description: "Upgrade to a paid plan for more credits and premium features.",
+            duration: 5000,
+            action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
         });
         return false;
     }

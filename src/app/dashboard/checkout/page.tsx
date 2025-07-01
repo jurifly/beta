@@ -28,15 +28,11 @@ export default function CheckoutPage() {
     const purchaseDetails = useMemo(() => {
         const plan = searchParams.get('plan');
         const cycle = searchParams.get('cycle');
-        const credits = searchParams.get('credits');
         const amount = searchParams.get('amount');
         const name = searchParams.get('name');
 
-        if (plan && amount) {
-            return { type: 'plan' as const, name: `${plan} Plan`, amount: Number(amount), plan, cycle };
-        }
-        if (credits && amount && name) {
-            return { type: 'credits' as const, name: name, amount: Number(amount), credits: Number(credits) };
+        if (plan && amount && name) {
+            return { type: 'plan' as const, name, amount: Number(amount), plan, cycle };
         }
         return null;
     }, [searchParams]);
@@ -53,7 +49,6 @@ export default function CheckoutPage() {
                     amount: purchaseDetails.amount,
                     plan: purchaseDetails.plan,
                     cycle: purchaseDetails.cycle as any,
-                    credits: purchaseDetails.credits,
                 });
                 setTransaction(newTransaction);
             } catch (error: any) {

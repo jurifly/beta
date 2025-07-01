@@ -161,7 +161,7 @@ export type ActivityLogItem = {
 export interface Transaction {
   id?: string;
   userId: string;
-  type: 'plan' | 'credits';
+  type: 'plan';
   name: string;
   amount: number;
   status: 'initiated' | 'pending_verification' | 'verified' | 'failed';
@@ -169,7 +169,6 @@ export interface Transaction {
   upiTransactionId?: string;
   plan?: string;
   cycle?: 'monthly' | 'yearly';
-  credits?: number;
   isProcessed: boolean;
 }
 

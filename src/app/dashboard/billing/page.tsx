@@ -50,7 +50,7 @@ export default function BillingPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Plans & Pricing</h1>
         <p className="mt-2 text-muted-foreground">
-          Choose the plan that's right for your team. All users are on the free Beta Plan until our official launch.
+          Choose the plan that's right for your team. All users are on the free Beta Plan with daily credits.
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export default function BillingPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
-               <p className="text-sm font-medium">Full feature access, including:</p>
+               <p className="text-sm font-medium">Your current plan includes:</p>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Daily AI Credits (Tiered)</span></li>
                 <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Conversational AI</span></li>
@@ -100,9 +100,9 @@ export default function BillingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-               <Button asChild className="w-full" disabled>
-                    <Link href={`#`}>
-                        Coming Soon
+               <Button asChild className="w-full">
+                    <Link href={`/dashboard/checkout?plan=${plan.name}&name=${plan.name}%20Plan&amount=${plan.price}&cycle=monthly`}>
+                        Choose {plan.name}
                     </Link>
                 </Button>
             </CardFooter>

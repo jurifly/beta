@@ -56,12 +56,14 @@ export async function verifyPayment(transactionId: string, upiId: string): Promi
       updates.planStartDate = new Date().toISOString();
       const newExpiry = add(new Date(), { [transaction.cycle === 'yearly' ? 'years' : 'months']: transaction.cycle === 'yearly' ? 1 : 1 });
       updates.planExpiryDate = newExpiry.toISOString();
-      // Reset daily credits when a new plan is purchased
-      updates.dailyCreditLimit = transaction.plan === 'Pro' ? 500 : transaction.plan === 'Founder' ? 100 : userProfile.dailyCreditLimit;
+      
+      // Reset daily credits and set new limit based on plan
+      let newCreditLimit = userProfile.dailyCreditLimit || 10;
+      if (transaction.plan === 'Founder') newCreditLimit = 20; // ~600/month
+      if (transaction.plan === 'Pro') newCreditLimit = 50; // ~1500/month
+      
+      updates.dailyCreditLimit = newCreditLimit;
       updates.dailyCreditsUsed = 0;
-    } else if (transaction.type === 'credits' && transaction.credits) {
-      // For this app, credit packs will just add to the daily limit for simplicity, though a separate credit pool would be better
-      updates.dailyCreditLimit = (userProfile.dailyCreditLimit || 0) + transaction.credits;
     }
 
     await updateDoc(userRef, updates);
