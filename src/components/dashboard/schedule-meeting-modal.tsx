@@ -25,6 +25,7 @@ const meetingSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters."),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Please select a valid date." }),
   agenda: z.string().min(10, "Please provide a brief agenda."),
+  meetingLink: z.string().url("Please enter a valid URL.").optional().or(z.literal('')),
 });
 
 type FormData = z.infer<typeof meetingSchema>;
@@ -40,7 +41,7 @@ export function ScheduleMeetingModal({ isOpen, onOpenChange, onScheduleMeeting }
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
     resolver: zodResolver(meetingSchema),
-    defaultValues: { title: "", date: "", agenda: "" },
+    defaultValues: { title: "", date: "", agenda: "", meetingLink: "" },
   });
 
   const onSubmit = async (data: FormData) => {
@@ -85,6 +86,15 @@ export function ScheduleMeetingModal({ isOpen, onOpenChange, onScheduleMeeting }
               {...register("date")}
             />
             {errors.date && <p className="text-sm text-destructive">{errors.date.message}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="meetingLink">Meeting Link (Optional)</Label>
+            <Input
+              id="meetingLink"
+              placeholder="e.g., https://meet.google.com/..."
+              {...register("meetingLink")}
+            />
+            {errors.meetingLink && <p className="text-sm text-destructive">{errors.meetingLink.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="agenda">Key Agenda Items (one per line)</Label>

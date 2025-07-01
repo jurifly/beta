@@ -48,6 +48,7 @@ export interface BoardMeeting {
     agenda: string;
     minutes?: string;
     actionItems: GovernanceActionItem[];
+    meetingLink?: string;
 }
 
 export interface Company {

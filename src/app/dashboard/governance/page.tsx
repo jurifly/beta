@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard } from 'lucide-react';
+import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard, Mail, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { generateAgenda, generateMinutes } from './actions';
@@ -37,7 +37,8 @@ const mockMeetings: BoardMeeting[] = [
       actionItems: [
         { id: 'item1', task: 'Finalize Q3 budget', assignee: 'CFO', dueDate: '2024-08-10', completed: false },
         { id: 'item2', task: 'Send updated product mockups to board', assignee: 'CPO', dueDate: '2024-08-05', completed: true },
-      ]
+      ],
+      meetingLink: 'https://meet.google.com/lookup/fake-meeting-code',
     }
 ];
 
@@ -92,6 +93,12 @@ export default function GovernancePage() {
     });
   };
 
+  const handleEmailAgenda = (meeting: BoardMeeting) => {
+    const subject = encodeURIComponent(`Agenda: ${meeting.title}`);
+    const body = encodeURIComponent(`Hi team,\n\nPlease find the agenda for our upcoming meeting on ${format(new Date(meeting.date), 'PPP')}:\n\n${meeting.agenda}\n\nMeeting Link: ${meeting.meetingLink || 'To be shared.'}\n\nBest regards`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
 
   return (
     <>
@@ -133,12 +140,20 @@ export default function GovernancePage() {
                       {meetings.length > 0 ? meetings.map(meeting => (
                           <Card key={meeting.id} className="mb-4">
                               <CardHeader>
-                                  <div className="flex justify-between items-start">
+                                  <div className="flex justify-between items-start flex-wrap gap-4">
                                       <div>
                                         <CardTitle className="text-lg">{meeting.title}</CardTitle>
                                         <CardDescription>Date: {format(new Date(meeting.date), 'PPP')}</CardDescription>
                                       </div>
-                                      <div className="flex gap-2">
+                                      <div className="flex gap-2 flex-wrap">
+                                          {meeting.meetingLink && (
+                                            <Button asChild variant="default" size="sm">
+                                              <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer">
+                                                <Video className="mr-2" /> Join Meeting
+                                              </a>
+                                            </Button>
+                                          )}
+                                          <Button variant="outline" size="sm" onClick={() => handleEmailAgenda(meeting)}><Mail className="mr-2"/> Email Agenda</Button>
                                           <Button variant="outline" size="sm" onClick={() => handleViewMinutes(meeting)}>View Minutes</Button>
                                           <Button variant="outline" size="sm" onClick={() => handleViewAgenda(meeting)}>View Agenda</Button>
                                       </div>
