@@ -18,8 +18,7 @@ type FileState = {
   itr: File | null;
 };
 
-// A simplified, purely presentational component for the dropzone UI.
-const DropzoneDisplay = ({ file, type, open }: { file: File | null; type: string; open: () => void }) => (
+const DropzoneCard = ({ file, type, open }: { file: File | null; type: string; open: () => void }) => (
     <div onClick={open} className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-primary transition-colors cursor-pointer bg-muted/40 h-full">
       <UploadCloud className="w-10 h-10 text-muted-foreground mb-2" />
       <p className="font-semibold">Upload {type} Filing</p>
@@ -48,8 +47,7 @@ export default function ReconciliationPage() {
         setFiles(prev => ({ ...prev, [type]: acceptedFiles[0] }));
       }
   }, [toast]);
-
-  // Each dropzone gets its own dedicated hook
+  
   const dropzoneOptions = {
       maxFiles: 1, 
       accept: { 'application/pdf': ['.pdf'], 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] }, 
@@ -101,7 +99,7 @@ export default function ReconciliationPage() {
       setResult(response);
       toast({ title: "Reconciliation Complete!", description: "Your report is ready below." });
 
-    } catch (error: any) => {
+    } catch (error: any) {
       toast({ variant: "destructive", title: "Analysis Failed", description: error.message });
     } finally {
       setIsProcessing(false);
@@ -128,17 +126,17 @@ export default function ReconciliationPage() {
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div {...getGstRootProps()}>
+                 <div {...getGstRootProps()}>
                     <input {...getGstInputProps()} />
-                    <DropzoneDisplay file={files.gst} type="GST" open={openGstDialog} />
+                    <DropzoneCard file={files.gst} type="GST" open={openGstDialog} />
                 </div>
                  <div {...getRocRootProps()}>
                     <input {...getRocInputProps()} />
-                    <DropzoneDisplay file={files.roc} type="ROC" open={openRocDialog} />
+                    <DropzoneCard file={files.roc} type="ROC" open={openRocDialog} />
                 </div>
                  <div {...getItrRootProps()}>
                     <input {...getItrInputProps()} />
-                    <DropzoneDisplay file={files.itr} type="ITR" open={openItrDialog} />
+                    <DropzoneCard file={files.itr} type="ITR" open={openItrDialog} />
                 </div>
             </div>
         </CardContent>
