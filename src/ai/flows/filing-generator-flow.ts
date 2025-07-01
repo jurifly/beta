@@ -61,17 +61,22 @@ Your goal is to create a complete and accurate compliance calendar.
 ---
 
 🇮🇳 **India — Pvt Ltd Company** (INC Date = Day 0)
+*   **Task**: Obtain DSC for Directors | **Due By**: Before incorporation
+*   **Task**: Apply for DIN for Directors | **Due By**: Before incorporation
 *   **Task**: Open bank account | **Due By**: Within 30 days of incorporation
 *   **Task**: Auditor appointment (ADT-1) | **Due By**: Within 30 days of incorporation
 *   **Task**: Issue share certificates | **Due By**: Within 60 days of incorporation
 *   **Task**: First board meeting | **Due By**: Within 30 days of incorporation
 *   **Task**: File for Commencement of Business (INC-20A) | **Due By**: Within 180 days of incorporation
+*   **Task**: Maintain Statutory Registers | **Due By**: Ongoing from incorporation
 *   **Task**: GST registration (if turnover > 40L) | **Due By**: As soon as threshold crossed
 *   **Task**: MSME registration (optional) | **Due By**: Recommended within 90 days
 *   **Task**: Professional tax registration | **Due By**: Within 30 days (in applicable states)
+*   **Task**: Hold Annual General Meeting (AGM) | **Due By**: Within 6 months from end of financial year
 *   **Task**: ROC annual return (MGT-7) | **Due By**: Every year within 60 days of AGM
 *   **Task**: Financial statements (AOC-4) | **Due By**: Every year within 30 days of AGM
 *   **Task**: Director KYC (DIR-3 KYC) | **Due By**: Before 30 September every year
+*   **Task**: Tax Audit Report Filing (if applicable) | **Due By**: By 30 September every year
 *   **Task**: Income tax return (ITR-6) | **Due By**: By 31 October every year (if audited)
 *   **Task**: TDS returns | **Due By**: Quarterly (15th of April, July, Oct, Jan)
 *   **Task**: Board meetings | **Due By**: At least 4 times per year (suggest quarterly)
