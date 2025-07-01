@@ -155,18 +155,33 @@ const filingGeneratorFlow = ai.defineFlow(
     outputSchema: FilingGeneratorOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    if (!output) {
-        throw new Error("The AI failed to generate a list of filings.");
+    try {
+      const {output} = await prompt(input);
+
+      // The AI call succeeded, but returned no data or no filings.
+      if (!output || output.filings.length === 0) {
+        console.log("AI returned no filings, using fallback.");
+        return {
+          filings: [
+            { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Open Company Bank Account', type: 'Other Task', status: 'upcoming' },
+            { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Apply for GST Registration', type: 'Tax Filing', status: 'upcoming' },
+            { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Finalize Founders Agreement', type: 'Corporate Filing', status: 'upcoming' },
+          ]
+        };
+      }
+      
+      return output;
+
+    } catch (e) {
+      console.error("AI call to generate filings failed due to an exception, using fallback.", e);
+      // The AI call itself failed (e.g., 503 error, network issue).
+      return {
+        filings: [
+          { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Open Company Bank Account', type: 'Other Task', status: 'upcoming' },
+          { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Apply for GST Registration', type: 'Tax Filing', status: 'upcoming' },
+          { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Finalize Founders Agreement', type: 'Corporate Filing', status: 'upcoming' },
+        ]
+      };
     }
-    // If the AI fails to generate filings, return some generic ones.
-    if (output.filings.length === 0) {
-      output.filings.push(
-        { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Open Company Bank Account', type: 'Other Task', status: 'upcoming' },
-        { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Apply for GST Registration', type: 'Tax Filing', status: 'upcoming' },
-        { date: format(new Date(input.currentDate), 'yyyy-MM-dd'), title: 'Finalize Founders Agreement', type: 'Corporate Filing', status: 'upcoming' },
-      )
-    }
-    return output;
   }
 );
