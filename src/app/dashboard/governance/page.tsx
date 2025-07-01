@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard, Mail, Video } from 'lucide-react';
+import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { generateAgenda, generateMinutes } from './actions';
@@ -24,7 +24,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 
 
@@ -49,7 +48,6 @@ export default function GovernancePage() {
   const [meetings, setMeetings] = useState<BoardMeeting[]>(mockMeetings);
   const [isModalOpen, setModalOpen] = useState(false);
   const [viewingContent, setViewingContent] = useState<{ title: string; content: string; } | null>(null);
-  const [emailPreview, setEmailPreview] = useState<{ title: string; subject: string; body: string; } | null>(null);
   const { toast } = useToast();
 
   if (!userProfile) {
@@ -103,18 +101,6 @@ export default function GovernancePage() {
     });
   };
 
-  const handleEmailAgenda = (meeting: BoardMeeting) => {
-    const subject = `Agenda: ${meeting.title}`;
-    const body = `Hi team,\n\nPlease find the agenda for our upcoming meeting on ${format(new Date(meeting.date), 'PPP')}:\n\n${meeting.agenda}\n\nMeeting Link: ${meeting.meetingLink || 'To be shared.'}\n\nBest regards,`;
-    
-    setEmailPreview({
-        title: meeting.title,
-        subject: subject,
-        body: body,
-    });
-  };
-
-
   return (
     <>
       <ScheduleMeetingModal 
@@ -132,33 +118,6 @@ export default function GovernancePage() {
           </div>
           <DialogFooter>
               <Button variant="secondary" onClick={() => setViewingContent(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={!!emailPreview} onOpenChange={() => setEmailPreview(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Email Preview: {emailPreview?.title}</DialogTitle>
-            <DialogDescription>Copy the content below to send the agenda to your attendees.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-              <div className="space-y-1">
-                  <Label>Subject</Label>
-                  <div className="flex items-center gap-2">
-                      <Input readOnly value={emailPreview?.subject || ''} className="bg-muted"/>
-                      <Button variant="outline" size="sm" onClick={() => copyToClipboard(emailPreview?.subject || '', 'Subject copied to clipboard!')}><Clipboard className="mr-2 h-4 w-4"/>Copy</Button>
-                  </div>
-              </div>
-              <div className="space-y-1">
-                  <div className="flex justify-between items-center mb-1">
-                    <Label>Body</Label>
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(emailPreview?.body || '', 'Email body copied to clipboard!')}><Clipboard className="mr-2 h-4 w-4"/>Copy</Button>
-                  </div>
-                  <Textarea readOnly value={emailPreview?.body || ''} className="h-48 resize-none bg-muted" />
-              </div>
-          </div>
-          <DialogFooter>
-              <Button variant="secondary" onClick={() => setEmailPreview(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -195,7 +154,6 @@ export default function GovernancePage() {
                                               </a>
                                             </Button>
                                           )}
-                                          <Button variant="outline" size="sm" onClick={() => handleEmailAgenda(meeting)}><Mail className="mr-2"/> Email Agenda</Button>
                                           <Button variant="outline" size="sm" onClick={() => handleViewMinutes(meeting)}>View Minutes</Button>
                                           <Button variant="outline" size="sm" onClick={() => handleViewAgenda(meeting)}>View Agenda</Button>
                                       </div>
