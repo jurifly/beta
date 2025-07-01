@@ -28,6 +28,8 @@ import {
   Loader2,
   PieChart,
   Briefcase,
+  Building,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
