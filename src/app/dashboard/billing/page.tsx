@@ -15,7 +15,7 @@ const plans = [
     price: 299,
     features: [
       "Unlimited Document Generation",
-      "Conversational AI: 100 prompts/month",
+      "Conversational AI: 600 prompts/month",
       "Checklist Generator: unlimited",
       "Analyzer: 20 docs/month",
       "Clause Library (full)",
