@@ -39,6 +39,14 @@ export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartP
   const years = React.useMemo(() => Object.keys(dataByYear).sort((a,b) => Number(b) - Number(a)), [dataByYear]);
   const [selectedYear, setSelectedYear] = React.useState(years[0] || new Date().getFullYear().toString());
   
+  React.useEffect(() => {
+    // If the selected year is no longer in the list of available years,
+    // update it to the first available year or the current year as a fallback.
+    if (!years.includes(selectedYear)) {
+      setSelectedYear(years[0] || new Date().getFullYear().toString());
+    }
+  }, [years, selectedYear]);
+
   const chartData = dataByYear[selectedYear] || [];
 
   return (

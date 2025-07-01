@@ -243,40 +243,40 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const sortedMonths = useMemo(() => Object.keys(groupedChecklist).sort((a,b) => new Date(a).getTime() - new Date(b).getTime()), [groupedChecklist]);
     
     const complianceChartDataByYear = useMemo(() => {
-        const data: Record<string, { month: string; activity: number }[]> = {};
-        if (!activeCompany) {
-            const currentYear = new Date().getFullYear().toString();
-             data[currentYear] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(Number(currentYear), i), 'MMM'), activity: 0 }));
-            return data;
-        };
-
-        const currentYear = new Date().getFullYear();
-        const incorporationYear = new Date(activeCompany.incorporationDate).getFullYear();
-
-        // Ensure all years from incorporation to current year are present
-        if (!isNaN(incorporationYear)) {
-            for (let year = incorporationYear; year <= currentYear; year++) {
-                data[year.toString()] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(year, i), 'MMM'), activity: 0 }));
-            }
-        }
-        
-        // If there are no years (e.g. invalid date), at least show the current year
-        if (Object.keys(data).length === 0) {
-            data[currentYear.toString()] = Array(12).fill(0).map((_, i) => ({ month: format(new Date(currentYear, i), 'MMM'), activity: 0 }));
-        }
+        const activityByYear: Record<string, number[]> = {};
 
         checklist.forEach(item => {
             if (item.completed) {
                 // adding T00:00:00 to avoid timezone issues where it might become the previous day
                 const date = new Date(item.dueDate + 'T00:00:00');
                 const year = date.getFullYear().toString();
-                if (data[year]) { // only populate if year exists in our range
-                    data[year][date.getMonth()].activity++;
+                if (!activityByYear[year]) {
+                    activityByYear[year] = Array(12).fill(0);
                 }
+                activityByYear[year][date.getMonth()]++;
             }
         });
-        return data;
-    }, [checklist, activeCompany]);
+        
+        const yearsWithActivity = Object.keys(activityByYear);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const result: Record<string, { month: string; activity: number }[]> = {};
+
+        if (yearsWithActivity.length === 0) {
+            const currentYear = new Date().getFullYear().toString();
+            result[currentYear] = monthNames.map(month => ({ month, activity: 0 }));
+            return result;
+        }
+
+        for (const year of yearsWithActivity) {
+            const yearData = activityByYear[year];
+            result[year] = monthNames.map((month, index) => ({
+                month,
+                activity: yearData[index],
+            }));
+        }
+
+        return result;
+    }, [checklist]);
 
     const { hygieneScore, loading: isLoading } = dynamicData;
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
