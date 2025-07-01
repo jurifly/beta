@@ -150,16 +150,16 @@ function FounderAnalytics() {
     };
   }, [deadlines, activeCompany]);
   
-  const { burnRate, runway } = useMemo(() => {
+  const { burnRate, runway, runwayLabel } = useMemo(() => {
     const burn = expenses - revenue;
     if (burn <= 0) {
-      return { burnRate: burn, runway: "Positive" };
+      return { burnRate: burn, runway: "Profitable", runwayLabel: "Financial Status" };
     }
     if (cashBalance <= 0) {
-      return { burnRate: burn, runway: "0 months" };
+      return { burnRate: burn, runway: "0 months", runwayLabel: "Estimated Runway" };
     }
     const runwayMonths = Math.floor(cashBalance / burn);
-    return { burnRate: burn, runway: `${runwayMonths} months` };
+    return { burnRate: burn, runway: `${runwayMonths} months`, runwayLabel: "Estimated Runway" };
   }, [revenue, expenses, cashBalance]);
 
   const handleSaveFinancials = async () => {
@@ -309,7 +309,7 @@ function FounderAnalytics() {
                                 <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
                             </div>
                              <div className="p-4 rounded-lg bg-muted border text-center">
-                                <p className="text-sm text-muted-foreground">Estimated Runway</p>
+                                <p className="text-sm text-muted-foreground">{runwayLabel}</p>
                                 <p className="text-2xl font-bold">{runway}</p>
                             </div>
                         </div>
@@ -582,3 +582,5 @@ export default function AnalyticsPage() {
     </div>
   )
 }
+
+    
