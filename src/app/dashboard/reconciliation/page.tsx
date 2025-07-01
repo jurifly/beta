@@ -147,7 +147,7 @@ export default function ReconciliationPage() {
             </Button>
             <p className="text-xs text-muted-foreground flex items-center gap-2">
                 <Info className="w-4 h-4"/>
-                This is a mock analysis using AI. Always verify with original documents.
+                This analysis uses 15 credits. AI results are for informational purposes.
             </p>
         </CardFooter>
       </Card>
