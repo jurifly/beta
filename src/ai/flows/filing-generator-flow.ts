@@ -46,11 +46,15 @@ const prompt = ai.definePrompt({
 Use the following dataset as your **only source of truth**. First, find the section that matches the company's Legal Region and Type. Then, generate a list of all relevant compliance tasks.
 
 **Instructions**:
-1.  **Calculate Due Dates**: All due dates must be calculated based on the \`incorporationDate\`. For example, "Within 30 days of incorporation" means \`incorporationDate\` + 30 days. For annual tasks (e.g., "By 30 September every year"), calculate the *next* upcoming due date based on the \`currentDate\`.
-2.  **Calculate for Full Year**: Generate all relevant compliance tasks for a full 12-month period starting from the \`currentDate\`. Include any recently overdue tasks from the last 2 months.
-3.  **Determine Status**: The 'status' for each filing MUST be correctly set to 'overdue' or 'upcoming' by comparing its calculated due date to the \`currentDate\`.
-4.  **Lifecycle Awareness**: For a newly incorporated company, prioritize initial filings. For an older company, prioritize recurring annual/quarterly filings.
-5.  **Data-Driven**: Do not invent filings. Stick to the tasks listed in the provided dataset for the relevant jurisdiction and company type. Assign a 'type' (Corporate Filing, Tax Filing, Other Task) based on the task description.
+Your goal is to create a complete and accurate compliance calendar.
+
+1.  **Include All One-Time Filings**: You MUST include all one-time initial filings (e.g., "Open bank account", "Commencement of Business") for every company, regardless of its age. Their due dates are calculated from the \`incorporationDate\`. For a company incorporated in the past, these will likely be 'overdue'.
+
+2.  **Include Recurring Filings**: For recurring tasks (annual, quarterly), generate the NEXT upcoming instance. Calculate the due date based on the \`currentDate\`. For example, if the \`currentDate\` is in 2024 and a task is due "By 30 September every year", the due date should be in 2024.
+
+3.  **Determine Accurate Status**: Compare the calculated due date of EACH task with the \`currentDate\` to set its status to "overdue" or "upcoming". Do not use a "completed" status. A task is overdue if its due date is before the \`currentDate\`.
+
+4.  **Stick to the Data**: Only generate tasks found in the dataset for the specified Legal Region and Company Type. Do not invent filings. Assign the 'type' (Corporate Filing, Tax Filing, Other Task) based on the task description.
 
 **Compliance Datasets**:
 
