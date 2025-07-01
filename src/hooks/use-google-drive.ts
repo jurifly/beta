@@ -11,8 +11,38 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY!;
 const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 const SCOPES = "https://www.googleapis.com/auth/drive";
 
-// State to track GAPI initialization status
-let gapiInitialized = false;
+// Module-level state to prevent re-initialization and race conditions
+let gapiLoadPromise: Promise<void> | null = null;
+let gapiClientInitialized = false;
+
+function loadGapiClient() {
+    if (gapiLoadPromise) {
+        return gapiLoadPromise;
+    }
+
+    gapiLoadPromise = new Promise<void>((resolve, reject) => {
+        gapi.load('client', () => {
+            if (gapiClientInitialized) {
+                resolve();
+                return;
+            }
+            gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: DISCOVERY_DOCS,
+            }).then(() => {
+                gapiClientInitialized = true;
+                resolve();
+            }, (error: any) => {
+                console.error("GAPI Client Init Error:", error);
+                // Reset promise to allow retries on subsequent actions if the first one fails
+                gapiLoadPromise = null;
+                reject(error);
+            });
+        });
+    });
+
+    return gapiLoadPromise;
+}
 
 export function useGoogleDrive() {
   const { toast } = useToast();
@@ -20,60 +50,42 @@ export function useGoogleDrive() {
   const [files, setFiles] = useState<VaultItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const initClient = useCallback(() => {
-    if (gapiInitialized) {
-        setIsLoading(false);
-        // If already initialized, just check token status again
-        const token = localStorage.getItem('google-token');
-        if(token) {
-            const parsedToken = JSON.parse(token);
-            if (new Date().getTime() < parsedToken.expires_at) {
-                setIsLoggedIn(true);
-            }
-        }
-        return;
-    }
-    gapi.client.init({
-      apiKey: API_KEY,
-      discoveryDocs: DISCOVERY_DOCS,
-    }).then(() => {
-        gapiInitialized = true;
-        // Check for token after successful initialization
-        const token = localStorage.getItem('google-token');
-        if (token) {
-            const parsedToken = JSON.parse(token);
-            if (new Date().getTime() < parsedToken.expires_at) {
-                gapi.client.setToken({ access_token: parsedToken.access_token });
+  // Effect to initialize and check auth status on component mount
+  useEffect(() => {
+    setIsLoading(true);
+    loadGapiClient().then(() => {
+        const tokenItem = localStorage.getItem('google-token');
+        if (tokenItem) {
+            const token = JSON.parse(tokenItem);
+            if (new Date().getTime() < token.expires_at) {
+                gapi.client.setToken({ access_token: token.access_token });
                 setIsLoggedIn(true);
             } else {
                 localStorage.removeItem('google-token');
+                setIsLoggedIn(false);
             }
+        } else {
+            setIsLoggedIn(false);
         }
+    }).catch((error) => {
+        toast({ variant: 'destructive', title: 'Connection Error', description: 'Could not initialize Google Drive connection. Please check your API key.' });
+    }).finally(() => {
         setIsLoading(false);
-    }, (error) => {
-      console.error("Error initializing GAPI client:", error);
-      toast({ variant: 'destructive', title: 'Connection Error', description: 'Could not initialize Google Drive connection.' });
-      setIsLoading(false);
     });
   }, [toast]);
-
-  // Main effect to load the GAPI script
-  useEffect(() => {
-    gapi.load('client', initClient);
-  }, [initClient]);
-
+  
   const handleAuthResponse = useCallback((tokenResponse: Omit<TokenResponse, "error" | "error_description" | "error_uri">) => {
-    if (!gapi.client) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Google client not initialized.' });
-        return;
-    }
-    gapi.client.setToken({ access_token: tokenResponse.access_token });
-    setIsLoggedIn(true);
-    localStorage.setItem('google-token', JSON.stringify({
-        ...tokenResponse,
-        expires_at: new Date().getTime() + (tokenResponse.expires_in * 1000)
-    }));
-    toast({ title: 'Connected!', description: 'Successfully connected to Google Drive.' });
+    loadGapiClient().then(() => {
+      gapi.client.setToken({ access_token: tokenResponse.access_token });
+      setIsLoggedIn(true);
+      localStorage.setItem('google-token', JSON.stringify({
+          ...tokenResponse,
+          expires_at: new Date().getTime() + (tokenResponse.expires_in * 1000)
+      }));
+      toast({ title: 'Connected!', description: 'Successfully connected to Google Drive.' });
+    }).catch(err => {
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not set up Google Drive after login.' });
+    });
   }, [toast]);
 
   const logIn = useGoogleLogin({
@@ -93,43 +105,43 @@ export function useGoogleDrive() {
     localStorage.removeItem('google-token');
     toast({ title: 'Disconnected', description: 'Disconnected from Google Drive.' });
   };
-
+  
   const listFiles = useCallback(async (folderId: string | null = 'root') => {
-    if (!gapi.client?.drive) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Google Drive client is not ready.'});
-        return;
-    }
-    setIsLoading(true);
-    try {
-      const response = await gapi.client.drive.files.list({
-        q: `'${folderId}' in parents and trashed = false`,
-        fields: 'files(id, name, mimeType, modifiedTime, iconLink, webViewLink, size)',
-        orderBy: 'folder,name',
-      });
-
-      const driveFiles = response.result.files || [];
-      const vaultItems: VaultItem[] = driveFiles.map(file => ({
-        id: file.id!,
-        name: file.name!,
-        type: file.mimeType === 'application/vnd.google-apps.folder' ? 'folder' : 'file',
-        lastModified: file.modifiedTime!,
-        parentId: folderId,
-        iconLink: file.iconLink,
-        webViewLink: file.webViewLink,
-        size: file.size ? parseInt(file.size, 10) : undefined,
-        mimeType: file.mimeType,
-      }));
-      setFiles(vaultItems);
-    } catch (error) {
-      console.error("Error listing files", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch files from Google Drive.' });
-    } finally {
-      setIsLoading(false);
-    }
+      setIsLoading(true);
+      try {
+          await loadGapiClient();
+          if (!gapi.client?.drive) {
+              throw new Error('Google Drive client is not ready.');
+          }
+          const response = await gapi.client.drive.files.list({
+              q: `'${folderId}' in parents and trashed = false`,
+              fields: 'files(id, name, mimeType, modifiedTime, iconLink, webViewLink, size)',
+              orderBy: 'folder,name',
+          });
+          const driveFiles = response.result.files || [];
+          const vaultItems: VaultItem[] = driveFiles.map(file => ({
+              id: file.id!,
+              name: file.name!,
+              type: file.mimeType === 'application/vnd.google-apps.folder' ? 'folder' : 'file',
+              lastModified: file.modifiedTime!,
+              parentId: folderId,
+              iconLink: file.iconLink,
+              webViewLink: file.webViewLink,
+              size: file.size ? parseInt(file.size, 10) : undefined,
+              mimeType: file.mimeType,
+          }));
+          setFiles(vaultItems);
+      } catch (error) {
+          console.error("Error listing files", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch files from Google Drive.' });
+      } finally {
+          setIsLoading(false);
+      }
   }, [toast]);
   
   const createFolder = async (name: string, parentId: string | null = 'root') => {
       try {
+          await loadGapiClient();
           const response = await gapi.client.drive.files.create({
               resource: {
                   name,
@@ -148,6 +160,7 @@ export function useGoogleDrive() {
   
   const deleteFile = async (fileId: string) => {
       try {
+          await loadGapiClient();
           await gapi.client.drive.files.delete({ fileId });
           setFiles(prev => prev.filter(f => f.id !== fileId));
           toast({ title: 'Item Deleted', description: 'The file or folder has been moved to trash in Google Drive.' });
@@ -159,6 +172,7 @@ export function useGoogleDrive() {
   
   const uploadFile = async (file: File, parentId: string | null = 'root') => {
     try {
+        await loadGapiClient();
         const metadata = {
             name: file.name,
             parents: parentId ? [parentId] : []
@@ -188,7 +202,6 @@ export function useGoogleDrive() {
         toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
     }
   };
-
 
   return { isLoggedIn, files, isLoading, logIn, logOut, listFiles, createFolder, deleteFile, uploadFile };
 }
