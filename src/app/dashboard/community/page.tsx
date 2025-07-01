@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { generateForumThreads, type ForumGeneratorOutput } from "@/ai/flows/forum-generator-flow";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/auth";
 
 type ForumThread = ForumGeneratorOutput["threads"][0];
 
@@ -19,10 +20,16 @@ export default function CommunityPage() {
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { deductCredits } = useAuth();
 
   useEffect(() => {
     const fetchThreads = async () => {
       setIsLoading(true);
+      if (!await deductCredits(1)) {
+        setIsLoading(false);
+        setThreads([]);
+        return;
+      }
       try {
         const response = await generateForumThreads();
         setThreads(response.threads);
@@ -39,7 +46,7 @@ export default function CommunityPage() {
     };
 
     fetchThreads();
-  }, [toast]);
+  }, [toast, deductCredits]);
 
   return (
     <div className="space-y-6">

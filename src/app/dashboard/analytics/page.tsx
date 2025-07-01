@@ -40,7 +40,7 @@ type Deadline = {
 
 // --- Founder Analytics ---
 function FounderAnalytics() {
-  const { userProfile, updateUserProfile } = useAuth();
+  const { userProfile, updateUserProfile, deductCredits } = useAuth();
   const [checklistState, setChecklistState] = useState<{ data: GenerateDDChecklistOutput, timestamp: string } | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +75,10 @@ function FounderAnalytics() {
           return;
         }
         setIsLoading(true);
+        if(!await deductCredits(1)) { // Charge for analytics generation
+            setIsLoading(false);
+            return;
+        }
         try {
           const currentDate = format(new Date(), 'yyyy-MM-dd');
           const response = await generateFilings({
@@ -106,7 +110,7 @@ function FounderAnalytics() {
     };
     fetchFilings();
 
-  }, [activeCompany, toast]);
+  }, [activeCompany, toast, deductCredits]);
 
   const { completedCount, totalCount, progress: dataroomProgress, pendingItems } = useMemo(() => {
     if (!checklistState?.data) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
