@@ -3,26 +3,27 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Check, Sparkles, ArrowRight } from "lucide-react"
+import { Check, Sparkles, ArrowRight, Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
-const plans = [
+const allPlans = [
   {
     name: "Founder",
     price: 299,
     description: "For individual startups and founders.",
     features: [
       "Unlimited Document Generation",
-      "Conversational AI: 500 prompts/month",
+      "Conversational AI: 600 prompts/month",
       "Checklist Generator: unlimited",
       "Analyzer: 20 docs/month",
       "Clause Library (full)",
       "Conversation History & Reports",
       "Basic Integrations (Zapier, Gmail)",
     ],
+    roles: ['Founder', 'CA', 'Legal Advisor', 'Enterprise'],
     isCurrent: () => false,
   },
   {
@@ -39,6 +40,7 @@ const plans = [
       "Watcher AI (3 portals)",
       "AI Flows: up to 20/month",
     ],
+    roles: ['CA', 'Legal Advisor', 'Enterprise'],
     isCurrent: () => false,
     isPopular: true,
   },
@@ -47,6 +49,16 @@ const plans = [
 export default function BillingPage() {
   const { userProfile } = useAuth();
   
+  if (!userProfile) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+  }
+
+  const visiblePlans = allPlans.filter(plan => plan.roles.includes(userProfile.role));
+
   return (
     <div className="space-y-8">
       <div>
@@ -82,7 +94,7 @@ export default function BillingPage() {
                 </Button>
             </CardFooter>
         </Card>
-        {plans.map((plan) => (
+        {visiblePlans.map((plan) => (
           <Card key={plan.name} className={cn("flex flex-col interactive-lift", plan.isCurrent() && "border-primary ring-2 ring-primary", plan.isPopular && "shadow-lg")}>
              {plan.isPopular && <Badge className="absolute -top-3 self-center">Most Popular</Badge>}
             <CardHeader>
