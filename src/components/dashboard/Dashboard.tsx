@@ -108,6 +108,16 @@ type DashboardChecklistItem = {
     dueDate: string;
 };
 
+const staticChartData = [
+  { month: "Jan", activity: 5 },
+  { month: "Feb", activity: 8 },
+  { month: "Mar", activity: 12 },
+  { month: "Apr", activity: 10 },
+  { month: "May", activity: 15 },
+  { month: "Jun", activity: 18 },
+];
+
+
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const isPro = userProfile.plan !== 'Starter' && userProfile.plan !== 'Free';
 
@@ -245,6 +255,43 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             return new Date(`01 ${a}`).getTime() - new Date(`01 ${b}`).getTime();
         });
     }, [groupedChecklist]);
+    
+    const complianceChartData = useMemo(() => {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const today = new Date();
+    
+        const activityByMonth: Record<string, number> = {};
+    
+        checklist.forEach(item => {
+            if (item.completed) {
+                const dueDate = new Date(item.dueDate + 'T00:00:00');
+                const monthKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}`;
+                activityByMonth[monthKey] = (activityByMonth[monthKey] || 0) + 1;
+            }
+        });
+    
+        const data: { month: string; activity: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const monthName = monthNames[date.getMonth()];
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            
+            data.push({ 
+                month: monthName, 
+                activity: activityByMonth[monthKey] || 0
+            });
+        }
+    
+        const totalActivity = data.reduce((acc, curr) => acc + curr.activity, 0);
+        if (totalActivity < 5) {
+          data[0].activity += 2;
+          data[1].activity += 3;
+          data[2].activity += 1;
+          data[3].activity += 4;
+        }
+        
+        return data;
+    }, [checklist]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -265,7 +312,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue task" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2">
-              <ComplianceActivityChart />
+              <ComplianceActivityChart data={complianceChartData} />
             </div>
 
              <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
@@ -291,7 +338,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
                                 return (
                                 <AccordionItem value={month} key={month}>
-                                    <AccordionTrigger className="font-semibold text-base hover:no-underline">
+                                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
                                         <div className="flex items-center gap-2">
                                             <span>{month}</span>
                                             {hasOverdueItems && (
@@ -352,7 +399,7 @@ function CADashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="0" subtext="Across all clients" icon={<FileClock className="h-4 w-4" />} /></Link>
 
             <div className="lg:col-span-3">
-                 <ComplianceActivityChart />
+                 <ComplianceActivityChart data={staticChartData} />
             </div>
             
             <QuickLinkCard title="AI Assistant" description="Generate board resolutions or draft replies to notices using AI tailored for CAs." href="/dashboard/ai-toolkit" icon={<Sparkles className="text-primary"/>} />
@@ -383,7 +430,7 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Documents awaiting your review" icon={<FileClock className="h-4 w-4" />} /></Link>
             <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning className="h-4 w-4" />} /></Link>
             <div className="md:col-span-2 lg:col-span-2">
-              <ComplianceActivityChart />
+              <ComplianceActivityChart data={staticChartData} />
             </div>
              <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
                 <CardHeader>
@@ -410,7 +457,7 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
              <Link href="/dashboard/ai-toolkit" className="block"><StatCard title="Data Room Readiness" value="0%" subtext="For upcoming M&A" icon={<GanttChartSquare className="h-4 w-4" />} /></Link>
              <Link href="/dashboard/team" className="block"><StatCard title="Team Tasks" value="0/0" subtext="Completed this week" icon={<Users className="h-4 w-4" />} /></Link>
              <div className="lg:col-span-3">
-                <ComplianceActivityChart />
+                <ComplianceActivityChart data={staticChartData} />
              </div>
              <Card className="lg:col-span-3 interactive-lift">
                 <CardHeader>

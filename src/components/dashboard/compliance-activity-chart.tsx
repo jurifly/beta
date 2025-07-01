@@ -16,15 +16,6 @@ import {
 } from "@/components/ui/chart"
 import { BookCheck } from "lucide-react"
 
-const chartData = [
-  { month: "January", activity: 18 },
-  { month: "February", activity: 25 },
-  { month: "March", activity: 22 },
-  { month: "April", activity: 31 },
-  { month: "May", activity: 28 },
-  { month: "June", activity: 35 },
-]
-
 const chartConfig = {
   activity: {
     label: "Activities",
@@ -32,7 +23,11 @@ const chartConfig = {
   },
 }
 
-export function ComplianceActivityChart() {
+interface ComplianceActivityChartProps {
+  data: { month: string; activity: number }[];
+}
+
+export function ComplianceActivityChart({ data }: ComplianceActivityChartProps) {
   return (
     <Card className="interactive-lift h-full">
       <CardHeader>
@@ -46,7 +41,7 @@ export function ComplianceActivityChart() {
         <ChartContainer config={chartConfig} className="h-64 w-full">
           <AreaChart
             accessibilityLayer
-            data={chartData}
+            data={data}
             margin={{
               left: 12,
               right: 12,
