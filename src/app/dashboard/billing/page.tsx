@@ -13,6 +13,7 @@ const plans = [
   {
     name: "Founder",
     price: 299,
+    description: "For individual startups and founders.",
     features: [
       "Unlimited Document Generation",
       "Conversational AI: 500 prompts/month",
@@ -25,8 +26,9 @@ const plans = [
     isCurrent: () => false,
   },
   {
-    name: "Pro",
+    name: "Professional",
     price: 899,
+    description: "Ideal for CAs, Lawyers, and small firms managing clients.",
     features: [
       "Everything in Founder, plus:",
       "Client Management",
@@ -54,19 +56,20 @@ export default function BillingPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
         <Card className="flex flex-col interactive-lift border-primary ring-2 ring-primary">
             <CardHeader>
               <CardTitle>Beta Plan</CardTitle>
-              <CardDescription>
+              <CardDescription>Your current free-tier plan during our beta period.</CardDescription>
+              <div className="pt-2">
                   <span className="text-3xl font-bold">Free</span>
-                  <span className="text-muted-foreground">/ during beta</span>
-              </CardDescription>
+                  <span className="text-muted-foreground"> / during beta</span>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
                <p className="text-sm font-medium">Your current plan includes:</p>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Daily AI Credits (Tiered)</span></li>
+                <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Bonus & Daily AI Credits</span></li>
                 <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Conversational AI</span></li>
                 <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Document Generation & Analysis</span></li>
                 <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Regulation Watcher</span></li>
@@ -84,10 +87,11 @@ export default function BillingPage() {
              {plan.isPopular && <Badge className="absolute -top-3 self-center">Most Popular</Badge>}
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>
-              <CardDescription>
+              <CardDescription>{plan.description}</CardDescription>
+               <div className="pt-2">
                 <span className="text-3xl font-bold">₹{plan.price}</span>
                 <span className="text-muted-foreground">/month</span>
-              </CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <ul className="space-y-3 text-sm text-muted-foreground">
