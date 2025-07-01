@@ -19,10 +19,8 @@ import { Progress } from "@/components/ui/progress"
 import { Activity, AlertTriangle, ArrowRight, Award, Briefcase, CalendarClock, CheckSquare, FileText, LineChart as LineChartIcon, ListTodo, Loader2, MessageSquare, Scale, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import type { UserProfile, GenerateDDChecklistOutput } from "@/lib/types"
-import { planHierarchy } from "@/lib/types"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/auth"
-import { UpgradePrompt } from "@/components/upgrade-prompt"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { generateFilings } from "@/ai/flows/filing-generator-flow"
@@ -234,7 +232,9 @@ const complianceTrendData = [
   { month: "Jun", compliance: 0 },
 ]
 
-function CAAnalytics() {
+function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
+   const clientCount = userProfile.companies.length;
+
    return (
     <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -244,8 +244,10 @@ function CAAnalytics() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">0</div>
-                    <p className="text-xs text-muted-foreground">No clients added yet</p>
+                    <div className="text-2xl font-bold">{clientCount}</div>
+                    <p className="text-xs text-muted-foreground">
+                        {clientCount > 0 ? `${clientCount} clients managed` : "No clients added yet"}
+                    </p>
                 </CardContent>
             </Card>
             <Card className="interactive-lift">
@@ -254,8 +256,8 @@ function CAAnalytics() {
                     <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-green-500">Low</div>
-                    <p className="text-xs text-muted-foreground">No overdue filings</p>
+                    <div className="text-2xl font-bold text-green-500">{clientCount > 0 ? "Low" : "N/A"}</div>
+                    <p className="text-xs text-muted-foreground">{clientCount > 0 ? "No overdue filings" : "Add clients to calculate"}</p>
                 </CardContent>
             </Card>
             <Card className="interactive-lift">
@@ -264,8 +266,8 @@ function CAAnalytics() {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">0%</div>
-                    <p className="text-xs text-muted-foreground">No data available</p>
+                    <div className="text-2xl font-bold">{clientCount > 0 ? "100%" : "N/A"}</div>
+                    <p className="text-xs text-muted-foreground">{clientCount > 0 ? "Across all clients" : "No data available"}</p>
                 </CardContent>
             </Card>
         </div>
@@ -299,9 +301,15 @@ function CAAnalytics() {
                     <CardDescription>Filing performance this quarter.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-center text-muted-foreground p-8">
-                        <p>No clients to display.</p>
-                    </div>
+                    {clientCount === 0 ? (
+                        <div className="text-center text-muted-foreground p-8">
+                            <p>No clients to display.</p>
+                        </div>
+                    ) : (
+                         <div className="text-center text-muted-foreground p-8">
+                            <p>Leaderboard data coming soon.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
@@ -310,7 +318,9 @@ function CAAnalytics() {
 }
 
 // --- Legal Advisor Analytics ---
-function LegalAdvisorAnalytics() {
+function LegalAdvisorAnalytics({ userProfile }: { userProfile: UserProfile }) {
+  const clientCount = userProfile.companies.length;
+  
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <Card className="lg:col-span-1 interactive-lift">
@@ -318,8 +328,9 @@ function LegalAdvisorAnalytics() {
                 <CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5 text-primary"/> Case Load</CardTitle>
                 <CardDescription>Distribution of active matters.</CardDescription>
             </CardHeader>
-            <CardContent className="text-center text-muted-foreground p-8">
-                <p>No active cases.</p>
+            <CardContent>
+                <div className="text-3xl font-bold">{clientCount}</div>
+                <p className="text-xs text-muted-foreground">{clientCount > 0 ? "Total active clients" : "No clients added yet."}</p>
             </CardContent>
         </Card>
 
@@ -363,9 +374,9 @@ export default function AnalyticsPage() {
       case 'Founder':
         return <FounderAnalytics />;
       case 'CA':
-        return <CAAnalytics />;
+        return <CAAnalytics userProfile={userProfile} />;
       case 'Legal Advisor':
-        return <LegalAdvisorAnalytics />;
+        return <LegalAdvisorAnalytics userProfile={userProfile} />;
       default:
         return <p>No analytics available for this role.</p>;
     }

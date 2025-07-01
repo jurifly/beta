@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
-import { planHierarchy } from "@/lib/types";
 
 export default function ClientsPage() {
   const { userProfile } = useAuth();
@@ -21,6 +20,8 @@ export default function ClientsPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   
+  const clientCount = userProfile.companies.length;
+
   return (
     <>
       <AddCompanyModal isOpen={isModalOpen} onOpenChange={setModalOpen} />
@@ -45,8 +46,8 @@ export default function ClientsPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userProfile.companies.length}</div>
-              <p className="text-xs text-muted-foreground">{userProfile.companies.length} clients managed</p>
+              <div className="text-2xl font-bold">{clientCount}</div>
+              <p className="text-xs text-muted-foreground">{clientCount} clients managed</p>
             </CardContent>
           </Card>
           <Card className="interactive-lift">
@@ -56,7 +57,7 @@ export default function ClientsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">No clients with overdue filings</p>
+              <p className="text-xs text-muted-foreground">Risk analysis coming soon</p>
             </CardContent>
           </Card>
           <Card className="interactive-lift">
@@ -65,8 +66,8 @@ export default function ClientsPage() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0%</div>
-              <p className="text-xs text-muted-foreground">Across all client filings</p>
+              <div className="text-2xl font-bold">N/A</div>
+              <p className="text-xs text-muted-foreground">Calculated from client filings</p>
             </CardContent>
           </Card>
         </div>
@@ -83,7 +84,7 @@ export default function ClientsPage() {
               </div>
           </CardHeader>
           <CardContent>
-              {userProfile.companies.length > 0 ? (
+              {clientCount > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>

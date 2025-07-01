@@ -7,7 +7,6 @@ import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from "@/components/ui/toast";
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import { useSearchParams } from 'next/navigation';
@@ -16,7 +15,6 @@ import { useSearchParams } from 'next/navigation';
 import * as AiActions from './actions';
 import type { AssistantOutput } from '@/ai/flows/assistant-flow';
 import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag } from "@/lib/types"
-import { planHierarchy } from '@/lib/types';
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
@@ -37,13 +35,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
-import { useDropzone, type FileRejection } from 'react-dropzone';
-import { UpgradePrompt } from '@/components/upgrade-prompt';
+import { useDropzone } from 'react-dropzone';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // --- Tab: AI Legal Assistant ---
@@ -796,6 +791,7 @@ const WikiGenerator = () => {
 };
 
 
+// --- Tab: Regulation Watcher ---
 const watcherPortals = [
   { id: "MCA", name: "MCA", description: "Corporate Affairs", icon: <Building2 className="w-6 h-6" /> },
   { id: "RBI", name: "RBI", description: "Banking Regulations", icon: <Banknote className="w-6 h-6" /> },
@@ -931,6 +927,8 @@ const RegulationWatcherTab = () => {
     );
 };
 
+
+// --- Tab: Workflows ---
 const workflowTriggers = [ { value: "doc_uploaded", label: "Document Uploaded", desc: "When a new contract or notice is uploaded." }, { value: "client_added", label: "New Client Added", desc: "When a new client is added to your workspace." }, { value: "reg_update", label: "Regulatory Update Found", desc: "When the watcher finds a new circular." }, ];
 const workflowActions = [ { value: "analyze_risk", label: "Analyze for Risks", desc: "Run the document through the Contract Analyzer." }, { value: "gen_checklist", label: "Generate Onboarding Checklist", desc: "Create a standard setup checklist for the client." }, { value: "summarize", label: "Summarize Update", desc: "Use AI to summarize the regulatory changes." }, ];
 const workflowNotifications = [ { value: "slack_legal", label: "Notify #legal on Slack", desc: "Post a summary message to your legal channel." }, { value: "email_client", label: "Email Client", desc: "Send an automated email to the client's primary contact." }, { value: "log_only", label: "Log to Activity Feed", desc: "No notification, just log the event." }, ];
@@ -990,14 +988,16 @@ export default function AiToolkitPage() {
                 <p className="text-muted-foreground">Your unified AI workspace for legal and compliance tasks.</p>
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                    <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
-                    <TabsTrigger value="studio" className="interactive-lift"><FilePenLine className="mr-2"/>Doc Studio</TabsTrigger>
-                    <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
-                    <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
-                    <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
-                    <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
-                </TabsList>
+                <div className="w-full overflow-x-auto pb-2">
+                  <TabsList className="grid w-max grid-cols-6">
+                      <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
+                      <TabsTrigger value="studio" className="interactive-lift"><FilePenLine className="mr-2"/>Doc Studio</TabsTrigger>
+                      <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
+                      <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
+                      <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
+                      <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
+                  </TabsList>
+                </div>
                 <TabsContent value="assistant" className="mt-6 md:flex-1 md:min-h-0"><ChatAssistant /></TabsContent>
                 <TabsContent value="studio" className="mt-6"><DocumentStudioTab /></TabsContent>
                 <TabsContent value="audit" className="mt-6"><DataroomAudit /></TabsContent>
@@ -1008,6 +1008,3 @@ export default function AiToolkitPage() {
         </div>
     );
 }
-
-
-    
