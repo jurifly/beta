@@ -305,8 +305,8 @@ function FounderAnalytics() {
                         </div>
                         <div className="space-y-4">
                              <div className="p-4 rounded-lg bg-muted border text-center">
-                                <p className="text-sm text-muted-foreground">Net Monthly Burn</p>
-                                <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{burnRate.toLocaleString()}</p>
+                                <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
                             </div>
                              <div className="p-4 rounded-lg bg-muted border text-center">
                                 <p className="text-sm text-muted-foreground">Estimated Runway</p>
