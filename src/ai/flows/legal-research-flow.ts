@@ -7,7 +7,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-export const LegalResearchInputSchema = z.object({
+const LegalResearchInputSchema = z.object({
   query: z.string().describe("The legal question or topic to research."),
   legalRegion: z.string().describe('The country/legal region for the research, e.g., "India", "USA".'),
 });
@@ -18,7 +18,7 @@ const PrecedentSchema = z.object({
     summary: z.string().describe("A brief summary of the precedent's relevance to the query."),
 });
 
-export const LegalResearchOutputSchema = z.object({
+const LegalResearchOutputSchema = z.object({
     summary: z.string().describe("A concise summary of the answer to the legal query."),
     analysis: z.string().describe("A detailed analysis of the legal topic, explaining key principles and nuances relevant to the specified legal region."),
     precedents: z.array(PrecedentSchema).describe("A list of relevant (but potentially fictitious for this demo) case law or legal precedents."),
