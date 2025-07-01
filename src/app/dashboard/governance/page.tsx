@@ -54,6 +54,23 @@ export default function GovernancePage() {
     setMeetings(prev => [newMeeting, ...prev]);
   };
 
+  const handleToggleActionItem = (meetingId: string, actionItemId: string) => {
+    setMeetings(prevMeetings => 
+      prevMeetings.map(meeting => {
+        if (meeting.id === meetingId) {
+          const updatedActionItems = meeting.actionItems.map(item => {
+            if (item.id === actionItemId) {
+              return { ...item, completed: !item.completed };
+            }
+            return item;
+          });
+          return { ...meeting, actionItems: updatedActionItems };
+        }
+        return meeting;
+      })
+    );
+  };
+
   return (
     <>
       <ScheduleMeetingModal 
@@ -97,7 +114,10 @@ export default function GovernancePage() {
                                   <div className="space-y-2">
                                       {meeting.actionItems.map(item => (
                                           <div key={item.id} className="flex items-center gap-3 p-2 border rounded-md bg-muted/50">
-                                              <Checkbox checked={item.completed} disabled />
+                                              <Checkbox 
+                                                checked={item.completed} 
+                                                onCheckedChange={() => handleToggleActionItem(meeting.id, item.id)}
+                                              />
                                               <div className="flex-1">
                                                   <p className="text-sm font-medium">{item.task}</p>
                                                   <p className="text-xs text-muted-foreground">Assignee: {item.assignee} | Due: {format(new Date(item.dueDate), 'PPP')}</p>
