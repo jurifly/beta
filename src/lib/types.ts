@@ -171,7 +171,6 @@ export interface Transaction {
   cycle?: 'monthly' | 'yearly';
   // Credit pack specific
   credits?: number;
-  isProcessed: boolean;
 }
 
 export type ChatMessage = {

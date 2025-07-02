@@ -478,7 +478,7 @@ function CADashboard({ userProfile }: { userProfile: UserProfile }) {
             <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users />} /></Link>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck />} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
-            <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.credits ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
+            <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.creditBalance ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
 
             <div className="md:col-span-4 lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
             
@@ -587,7 +587,7 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile, addNotification } = useAuth();
+  const { userProfile, addNotification, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const fetchDashboardDataCalled = React.useRef(false);
 
@@ -655,7 +655,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} />
+      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
       <div className="flex-col gap-6 hidden md:flex">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

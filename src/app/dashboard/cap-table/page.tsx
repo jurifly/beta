@@ -29,17 +29,23 @@ export default function CapTablePage() {
     const { toast } = useToast();
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
-    const [capTable, setCapTable] = useState<CapTableEntry[]>(activeCompany?.capTable || initialCapTable);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
+    const capTable = useMemo(() => activeCompany?.capTable || initialCapTable, [activeCompany]);
+
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
         if (!userProfile || !activeCompany) return;
-        setCapTable(newCapTable);
-        const updatedCompany = { ...activeCompany, capTable: newCapTable };
+        
+        const updatedCompany: Company = { ...activeCompany, capTable: newCapTable };
         const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
-        await updateUserProfile({ companies: updatedCompanies });
+        
+        try {
+            await updateUserProfile({ companies: updatedCompanies });
+        } catch (e) {
+            toast({ variant: 'destructive', title: "Save Failed", description: "Could not save cap table changes." });
+        }
     };
 
     const handleAddOrEdit = (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {

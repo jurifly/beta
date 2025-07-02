@@ -107,13 +107,17 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-           <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
-            <Sparkles className="mr-2 h-4 w-4" />
-            <span>Upgrade to Pro</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        {userProfile.plan === 'Starter' && (
+            <>
+                <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
+                    <Sparkles className="mr-2 h-4 w-4 text-primary" />
+                    <span>Upgrade to Pro</span>
+                </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+            </>
+        )}
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
             <UserIcon className="mr-2 h-4 w-4" />

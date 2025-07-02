@@ -235,7 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUserProfile, fetchNotifications]);
   
   useEffect(() => {
-    setIsPlanActive(true); // All features unlocked
+    setIsPlanActive(userProfile?.plan !== 'Starter');
   }, [userProfile]);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {

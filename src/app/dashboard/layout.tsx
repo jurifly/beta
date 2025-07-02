@@ -182,7 +182,12 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   
   const navItems = getNavItems(userProfile.role);
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-  const creditsRemaining = (userProfile.creditBalance ?? 0) + (userProfile.dailyCreditLimit ?? 0) - (userProfile.dailyCreditsUsed ?? 0);
+
+  const bonusCredits = userProfile.creditBalance ?? 0;
+  const creditsUsed = userProfile.dailyCreditsUsed ?? 0;
+  const creditLimit = userProfile.dailyCreditLimit ?? 0;
+  const dailyRemaining = Math.max(0, creditLimit - creditsUsed);
+  const totalCreditsRemaining = bonusCredits + dailyRemaining;
 
   return (
       <>
@@ -222,7 +227,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-2 md:gap-4">
                 <Link href="/dashboard/billing" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{isDevMode ? 'Unlimited Credits' : `${creditsRemaining} Credits Left`}</span>
+                    <span className="text-muted-foreground">{isDevMode ? 'Unlimited Credits' : `${totalCreditsRemaining} Credits Left`}</span>
                 </Link>
                 <ThemeToggle />
                 <DropdownMenu>
