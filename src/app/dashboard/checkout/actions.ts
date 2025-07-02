@@ -7,24 +7,32 @@ import type { Transaction, UserProfile, UserPlan } from '@/lib/types';
 import { add } from 'date-fns';
 
 export async function initiateTransaction(data: Omit<Transaction, 'id' | 'status' | 'createdAt' | 'isProcessed'>): Promise<Transaction> {
+  const { userId, type, name, amount, plan, cycle, credits } = data;
+
   const saveData: { [key: string]: any } = {
-    userId: data.userId,
-    type: data.type,
-    name: data.name,
-    amount: data.amount,
+    userId,
+    type,
+    name,
+    amount,
     status: 'initiated',
     createdAt: new Date().toISOString(),
     isProcessed: false,
   };
 
-  // Conditionally add optional properties to avoid 'undefined' values,
-  // which are not allowed by Firestore.
-  if (data.type === 'plan') {
-    if (data.plan) saveData.plan = data.plan;
-    if (data.cycle) saveData.cycle = data.cycle;
-  } else if (data.type === 'credit_pack') {
-    if (data.credits) saveData.credits = data.credits;
+  if (type === 'plan') {
+    saveData.plan = plan;
+    saveData.cycle = cycle;
+  } else if (type === 'credit_pack') {
+    saveData.credits = credits;
   }
+
+  // This is the key: remove any properties that are explicitly undefined before saving.
+  // This guarantees that no invalid data is sent to Firestore.
+  Object.keys(saveData).forEach(key => {
+    if (saveData[key] === undefined) {
+      delete saveData[key];
+    }
+  });
 
   const docRef = await addDoc(collection(db, 'transactions'), saveData);
 
