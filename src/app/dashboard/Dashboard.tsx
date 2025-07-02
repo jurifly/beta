@@ -422,16 +422,18 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                             {groupedChecklist[month].map(item => {
                                                 const dueDate = new Date(item.dueDate + 'T00:00:00');
                                                 const isItemOverdue = dueDate < startOfToday() && !item.completed;
+                                                const isFuture = dueDate > startOfToday();
                                                 return (
                                                     <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                                         <Checkbox
                                                             id={item.id}
                                                             checked={item.completed}
                                                             onCheckedChange={() => handleToggleComplete(item.id)}
+                                                            disabled={isFuture}
                                                             className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
-                                                            <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
+                                                            <label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture ? "cursor-not-allowed" : "cursor-pointer")}>
                                                                 {item.text}
                                                             </label>
                                                             <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
