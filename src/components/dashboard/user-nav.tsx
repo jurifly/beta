@@ -114,10 +114,6 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-           <DropdownMenuItem disabled>
-            <Bolt className="mr-2 h-4 w-4" />
-            <span>{dailyRemaining}/{creditLimit} daily (+{bonusCredits} bonus)</span>
-          </DropdownMenuItem>
            <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             <Sparkles className="mr-2 h-4 w-4" />
             <span>Upgrade to Pro</span>
