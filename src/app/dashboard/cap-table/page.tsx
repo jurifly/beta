@@ -9,7 +9,6 @@ import { useAuth } from "@/hooks/auth";
 import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
-import { ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { CapTableModal } from '@/components/dashboard/cap-table-modal';
 import { useToast } from '@/hooks/use-toast';
@@ -21,16 +20,17 @@ export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
     const { toast } = useToast();
     
+    // IMPORTANT: Get the active company and its cap table directly from the auth context.
+    // This ensures we are always working with the real, persisted data.
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
-    
-    // Directly use the capTable from the active company. No mock data.
     const capTable = activeCompany?.capTable || [];
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    // Core logic for saving changes. It updates the entire userProfile.
+    // This function saves the entire cap table to the user's profile.
+    // It's the single source of truth for updates.
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
         if (!userProfile || !activeCompany) return;
         
@@ -41,18 +41,20 @@ export default function CapTablePage() {
         );
         
         try {
+            // This call updates the central user profile.
             await updateUserProfile({ companies: updatedCompanies });
         } catch (e) {
             toast({ variant: 'destructive', title: "Save Failed", description: "Could not save cap table changes." });
         }
     };
 
+    // This function handles both adding a new entry and editing an existing one.
     const handleAddOrEdit = (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {
         let newCapTable;
-        if (entry.id) { // Editing existing entry
+        if (entry.id) { // Editing an existing entry
             newCapTable = capTable.map(e => e.id === entry.id ? { ...e, ...entry } as CapTableEntry : e);
             toast({ title: "Entry Updated", description: `Details for ${entry.holder} have been updated.` });
-        } else { // Adding new entry
+        } else { // Adding a new entry
             const newEntry: CapTableEntry = { ...entry, id: Date.now().toString() };
             newCapTable = [...capTable, newEntry];
             toast({ title: "Issuance Added", description: `Shares issued to ${entry.holder} have been recorded.` });
@@ -60,6 +62,7 @@ export default function CapTablePage() {
         handleSaveCapTable(newCapTable);
     };
     
+    // This function handles deleting an entry.
     const handleDelete = (idToDelete: string) => {
         if (window.confirm("Are you sure you want to delete this cap table entry? This action cannot be undone.")) {
             const newCapTable = capTable.filter(e => e.id !== idToDelete);
@@ -73,6 +76,7 @@ export default function CapTablePage() {
         setIsModalOpen(true);
     };
 
+    // Calculate metrics based on the real cap table data.
     const { totalShares, esopPool, founderShares, investorShares } = useMemo(() => {
         const total = capTable.reduce((acc, entry) => acc + entry.shares, 0);
         const esop = capTable.find(e => e.type === 'ESOP')?.shares || 0;
@@ -87,6 +91,7 @@ export default function CapTablePage() {
         };
     }, [capTable]);
     
+    // Data for the ownership chart.
     const chartData = useMemo(() => {
         return [
             { name: 'Founders', value: founderShares },
@@ -115,7 +120,7 @@ export default function CapTablePage() {
           const percentage = totalShares > 0 ? ((data.value / totalShares) * 100).toFixed(2) : 0;
           return (
             <div className="rounded-lg border bg-background p-2 shadow-sm">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <div className="flex flex-col space-y-1">
                   <span className="text-[0.70rem] uppercase text-muted-foreground">{data.name}</span>
                   <span className="font-bold text-muted-foreground">{percentage}%</span>
