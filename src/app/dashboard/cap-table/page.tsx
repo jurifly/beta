@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useMemo } from 'react';
@@ -8,23 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/hooks/auth";
 import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2, TrendingUp, Lock } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
-import { planHierarchy } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { CapTableModal } from '@/components/dashboard/cap-table-modal';
 import { useToast } from '@/hooks/use-toast';
 import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling-modal';
-import { UpgradePrompt } from '@/components/upgrade-prompt';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
-
-const initialCapTable: CapTableEntry[] = [
-    { id: '1', holder: 'Aarav Sharma', type: 'Founder', shares: 4500, grantDate: '2023-01-15', vesting: '4-year, 1-year cliff' },
-    { id: '2', holder: 'Diya Patel', type: 'Founder', shares: 3500, grantDate: '2023-01-15', vesting: '4-year, 1-year cliff' },
-    { id: '3', holder: 'Sequoia Capital India', type: 'Investor', shares: 1500, grantDate: '2024-03-10', vesting: 'N/A' },
-    { id: '4', holder: 'ESOP Pool', type: 'ESOP', shares: 500, grantDate: '2024-01-01', vesting: 'Unissued' },
-];
 
 export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
@@ -35,7 +25,8 @@ export default function CapTablePage() {
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    const capTable = useMemo(() => activeCompany?.capTable || initialCapTable, [activeCompany]);
+    // This now correctly sources from the user profile or an empty array. No more mock data.
+    const capTable = useMemo(() => activeCompany?.capTable || [], [activeCompany]);
 
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
         if (!userProfile || !activeCompany) return;
@@ -76,7 +67,7 @@ export default function CapTablePage() {
         setIsModalOpen(true);
     };
 
-    const { totalShares, fullyDilutedShares, esopPool, founderShares, investorShares } = useMemo(() => {
+    const { totalShares, esopPool, founderShares, investorShares } = useMemo(() => {
         const total = capTable.reduce((acc, entry) => acc + entry.shares, 0);
         const esop = capTable.find(e => e.type === 'ESOP')?.shares || 0;
         const founders = capTable.filter(e => e.type === 'Founder').reduce((acc, e) => acc + e.shares, 0);
@@ -84,7 +75,6 @@ export default function CapTablePage() {
 
         return {
             totalShares: total,
-            fullyDilutedShares: total, // simplified for now
             esopPool: esop,
             founderShares: founders,
             investorShares: investors,
@@ -185,21 +175,29 @@ export default function CapTablePage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {capTable.map(entry => (
-                                        <TableRow key={entry.id}>
-                                            <TableCell className="font-medium">{entry.holder}</TableCell>
-                                            <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
-                                            <TableCell>{entry.grantDate}</TableCell>
-                                            <TableCell>{entry.shares.toLocaleString()}</TableCell>
-                                            <TableCell className="text-right font-mono">
-                                                {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                    {capTable.length > 0 ? (
+                                        capTable.map(entry => (
+                                            <TableRow key={entry.id}>
+                                                <TableCell className="font-medium">{entry.holder}</TableCell>
+                                                <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
+                                                <TableCell>{entry.grantDate}</TableCell>
+                                                <TableCell>{entry.shares.toLocaleString()}</TableCell>
+                                                <TableCell className="text-right font-mono">
+                                                    {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                                Your shareholder ledger is empty. Click "Add Issuance" to begin.
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    )}
                                 </TableBody>
                             </Table>
                         </CardContent>
