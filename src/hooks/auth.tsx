@@ -132,6 +132,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (userDoc.exists()) {
       let profile = userDoc.data() as UserProfile;
+
+      // --- Credit Reset Logic on Load ---
+      const today = new Date();
+      const lastResetDate = profile.lastCreditReset ? new Date(profile.lastCreditReset) : new Date(0);
+      
+      const lastResetDay = Date.UTC(lastResetDate.getUTCFullYear(), lastResetDate.getUTCMonth(), lastResetDate.getUTCDate());
+      const todayDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+
+      if (todayDay > lastResetDay) {
+        profile.dailyCreditsUsed = 0;
+        profile.lastCreditReset = today.toISOString();
+        // Update Firestore in the background, don't wait for it to update UI
+        updateDoc(userDocRef, {
+          dailyCreditsUsed: 0,
+          lastCreditReset: today.toISOString(),
+        }).catch(e => console.error("Failed to reset daily credits in Firestore:", e));
+      }
+      // --- End of Reset Logic ---
+
+
       if (!profile.legalRegion) {
         profile.legalRegion = 'India';
         updateDoc(userDocRef, { legalRegion: 'India' }).catch(e => console.error("Failed to backfill legalRegion", e));
@@ -244,51 +264,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await firebaseSignOut(auth);
   };
 
-  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
+ const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
-    if (!user) {
-      toast({ variant: "destructive", title: "Authentication Error", description: "Please log in again." });
-      return false;
-    }
-
-    const userDocRef = doc(db, 'users', user.uid);
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        const freshProfileDoc = await transaction.get(userDocRef);
-        if (!freshProfileDoc.exists()) {
-          throw new Error("User profile not found.");
+    
+    // Use a function for the latest state to avoid stale closures
+    let success = false;
+    await setUserProfile(currentProfile => {
+        if (!user || !currentProfile) {
+            toast({ variant: "destructive", title: "Authentication Error", description: "Please log in again." });
+            return currentProfile;
         }
 
-        let currentProfile = freshProfileDoc.data() as UserProfile;
-        
-        // --- Credit Reset Logic ---
-        const today = new Date();
-        const lastResetString = currentProfile.lastCreditReset ? new Date(currentProfile.lastCreditReset).toISOString().split('T')[0] : '';
-        const todayString = today.toISOString().split('T')[0];
-        const isNewDay = todayString !== lastResetString;
-
-        if (isNewDay) {
-          currentProfile.dailyCreditsUsed = 0;
-          currentProfile.lastCreditReset = today.toISOString();
-        }
-        // --- End Reset Logic ---
-
-        let bonusCredits = currentProfile.creditBalance ?? 0;
-        let dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
+        const bonusCredits = currentProfile.creditBalance ?? 0;
+        const dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
         const dailyLimit = currentProfile.dailyCreditLimit ?? 0;
         const dailyRemaining = dailyLimit - dailyUsed;
         const totalAvailable = bonusCredits + dailyRemaining;
 
         if (totalAvailable < amount) {
-          // Even if the check fails, we persist the reset.
-          if (isNewDay) {
-            transaction.update(userDocRef, { 
-              dailyCreditsUsed: currentProfile.dailyCreditsUsed,
-              lastCreditReset: currentProfile.lastCreditReset,
+            toast({
+                variant: "destructive",
+                title: "Credits Exhausted",
+                description: "You've used up your bonus and daily credits. Upgrade for more.",
+                action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
             });
-          }
-          throw new Error("Credits Exhausted");
+            success = false;
+            return currentProfile;
         }
 
         let newBonusCredits = bonusCredits;
@@ -301,41 +302,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             newBonusCredits = 0;
             newDailyUsed += neededFromDaily;
         }
-        
+
         const finalUpdates: Partial<UserProfile> = {
             creditBalance: newBonusCredits,
             dailyCreditsUsed: newDailyUsed,
         };
 
-        if (isNewDay) {
-            finalUpdates.lastCreditReset = currentProfile.lastCreditReset;
-        }
-
-        transaction.update(userDocRef, finalUpdates);
-        
-        // Optimistically update local state
-        setUserProfile(prev => {
-            if (!prev) return null;
-            return { ...prev, ...finalUpdates };
+        const userDocRef = doc(db, 'users', user.uid);
+        updateDoc(userDocRef, finalUpdates).catch(e => {
+            console.error("Failed to update credits in Firestore:", e);
+            // Optionally, revert local state or show an error
         });
-      });
-      return true;
-    } catch (e: any) {
-        if (e.message === "Credits Exhausted") {
-             toast({
-                variant: "destructive",
-                title: "Credits Exhausted",
-                description: "You've used up your bonus and daily credits. Upgrade for more.",
-                action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
-            });
-            // Refetch profile to get the updated reset state
-            if (user) await fetchUserProfile(user);
-        } else {
-             toast({ variant: "destructive", title: "Error", description: e.message || "An error occurred." });
-        }
-        return false;
-    }
-  }, [user, isDevMode, toast, fetchUserProfile]);
+        
+        success = true;
+        return { ...currentProfile, ...finalUpdates };
+    });
+    
+    return success;
+  }, [user, isDevMode, toast]);
 
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
