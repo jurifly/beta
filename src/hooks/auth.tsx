@@ -70,6 +70,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const createNewUserProfile = useCallback(async (firebaseUser: User, legalRegion: string, refId?: string): Promise<UserProfile> => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const newExpiry = add(new Date(), { days: 30 });
+    
+    // Logic to determine signupIndex
+    const counterRef = doc(db, 'counters', 'userCounter');
+    const newIndex = await runTransaction(db, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        if (!counterDoc.exists()) {
+            transaction.set(counterRef, { count: 1 });
+            return 1;
+        }
+        const newCount = (counterDoc.data().count || 0) + 1;
+        transaction.update(counterRef, { count: newCount });
+        return newCount;
+    });
+
     const newProfile: UserProfile = {
       uid: firebaseUser.uid,
       email: firebaseUser.email || '',
@@ -85,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       dailyCreditLimit: 5,
       dailyCreditsUsed: 0,
       lastCreditReset: new Date().toISOString(),
+      signupIndex: newIndex,
     };
     
     await setDoc(userDocRef, newProfile);
@@ -123,12 +138,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const today = new Date();
-      const lastReset = profile.lastCreditReset ? new Date(profile.lastCreditReset) : new Date(0);
-      const isNewUTCDay = today.getUTCFullYear() > lastReset.getUTCFullYear() ||
-                        today.getUTCMonth() > lastReset.getUTCMonth() ||
-                        today.getUTCDate() > lastReset.getUTCDate();
+      const lastResetString = profile.lastCreditReset ? new Date(profile.lastCreditReset).toISOString().split('T')[0] : '';
+      const todayString = today.toISOString().split('T')[0];
 
-      if (isNewUTCDay) {
+      if (todayString !== lastResetString) {
         profile.dailyCreditsUsed = 0;
         profile.lastCreditReset = today.toISOString();
         await updateDoc(userDocRef, {
@@ -246,67 +259,97 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
-    if (!user || !userProfile) {
+    if (!user) {
       toast({ variant: "destructive", title: "Authentication Error", description: "Please log in again." });
       return false;
     }
 
     const userDocRef = doc(db, 'users', user.uid);
-    const freshProfileDoc = await getDoc(userDocRef);
-    if (!freshProfileDoc.exists()) {
-      toast({ variant: "destructive", title: "Error", description: "User profile not found." });
-      return false;
-    }
 
-    let currentProfile = freshProfileDoc.data() as UserProfile;
+    try {
+      await runTransaction(db, async (transaction) => {
+        const freshProfileDoc = await transaction.get(userDocRef);
+        if (!freshProfileDoc.exists()) {
+          throw new Error("User profile not found.");
+        }
 
-    const today = new Date();
-    const lastReset = currentProfile.lastCreditReset ? new Date(currentProfile.lastCreditReset) : new Date(0);
-    const isNewUTCDay = today.getUTCFullYear() > lastReset.getUTCFullYear() ||
-                      today.getUTCMonth() > lastReset.getUTCMonth() ||
-                      today.getUTCDate() > lastReset.getUTCDate();
-    
-    if (isNewUTCDay) {
-        currentProfile.dailyCreditsUsed = 0;
-        currentProfile.lastCreditReset = today.toISOString();
-    }
+        let currentProfile = freshProfileDoc.data() as UserProfile;
+        
+        // --- Credit Reset Logic ---
+        const today = new Date();
+        const lastResetString = currentProfile.lastCreditReset ? new Date(currentProfile.lastCreditReset).toISOString().split('T')[0] : '';
+        const todayString = today.toISOString().split('T')[0];
+        const isNewDay = todayString !== lastResetString;
 
-    const bonusCredits = currentProfile.creditBalance ?? 0;
-    const dailyLimit = currentProfile.dailyCreditLimit ?? 0;
-    const dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
-    const dailyRemaining = dailyLimit - dailyUsed;
-    
-    const finalUpdates: Partial<UserProfile> = {};
-    if (isNewUTCDay) {
-        finalUpdates.dailyCreditsUsed = 0;
-        finalUpdates.lastCreditReset = today.toISOString();
-    }
+        if (isNewDay) {
+          currentProfile.dailyCreditsUsed = 0;
+          currentProfile.lastCreditReset = today.toISOString();
+        }
+        // --- End Reset Logic ---
 
-    if (bonusCredits >= amount) {
-        finalUpdates.creditBalance = bonusCredits - amount;
-    } else if (bonusCredits + dailyRemaining >= amount) {
-        const neededFromDaily = amount - bonusCredits;
-        finalUpdates.creditBalance = 0;
-        finalUpdates.dailyCreditsUsed = dailyUsed + neededFromDaily;
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Credits Exhausted",
-            description: "You've used up your bonus and daily credits. Upgrade for more.",
-            action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
+        let bonusCredits = currentProfile.creditBalance ?? 0;
+        let dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
+        const dailyLimit = currentProfile.dailyCreditLimit ?? 0;
+        const dailyRemaining = dailyLimit - dailyUsed;
+        const totalAvailable = bonusCredits + dailyRemaining;
+
+        if (totalAvailable < amount) {
+          // Still update the profile with the reset if it's a new day.
+          if (isNewDay) {
+            transaction.update(userDocRef, { 
+              dailyCreditsUsed: currentProfile.dailyCreditsUsed,
+              lastCreditReset: currentProfile.lastCreditReset,
+            });
+          }
+          throw new Error("Credits Exhausted");
+        }
+
+        let newBonusCredits = bonusCredits;
+        let newDailyUsed = dailyUsed;
+
+        if (bonusCredits >= amount) {
+            newBonusCredits -= amount;
+        } else {
+            const neededFromDaily = amount - bonusCredits;
+            newBonusCredits = 0;
+            newDailyUsed += neededFromDaily;
+        }
+        
+        const finalUpdates: Partial<UserProfile> = {
+            creditBalance: newBonusCredits,
+            dailyCreditsUsed: newDailyUsed,
+        };
+
+        if (isNewDay) {
+            finalUpdates.lastCreditReset = currentProfile.lastCreditReset;
+        }
+
+        transaction.update(userDocRef, finalUpdates);
+        
+        // Optimistically update local state
+        setUserProfile(prev => {
+            if (!prev) return null;
+            return { ...prev, ...finalUpdates };
         });
-        if (isNewUTCDay) {
-          await updateDoc(userDocRef, { dailyCreditsUsed: 0, lastCreditReset: today.toISOString() });
-          setUserProfile(prev => prev ? {...prev, dailyCreditsUsed: 0, lastCreditReset: today.toISOString()} : null);
+      });
+      return true;
+    } catch (e: any) {
+        if (e.message === "Credits Exhausted") {
+             toast({
+                variant: "destructive",
+                title: "Credits Exhausted",
+                description: "You've used up your bonus and daily credits. Upgrade for more.",
+                action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
+            });
+            // Refetch profile to get the updated reset state
+            if (user) await fetchUserProfile(user);
+        } else {
+             toast({ variant: "destructive", title: "Error", description: e.message || "An error occurred." });
         }
         return false;
     }
+  }, [user, isDevMode, toast, fetchUserProfile]);
 
-    await updateDoc(userDocRef, finalUpdates);
-    setUserProfile(prev => prev ? { ...prev, ...finalUpdates } : null);
-    
-    return true;
-  }, [user, userProfile, isDevMode, toast]);
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
     if (!user) return;
