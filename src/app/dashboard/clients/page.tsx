@@ -87,7 +87,7 @@ const ClientDetailsModal = ({ isOpen, onOpenChange, company, onAddRequest }: { i
 
 
 export default function ClientsPage() {
-  const { userProfile, updateUserProfile } = useAuth();
+  const { userProfile, updateUserProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
   const [isDocRequestModalOpen, setDocRequestModalOpen] = useState(false);
@@ -163,7 +163,7 @@ export default function ClientsPage() {
 
   return (
     <>
-      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} />
+      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
       <AddDocRequestModal isOpen={isDocRequestModalOpen} onOpenChange={setDocRequestModalOpen} onAddRequest={handleAddDocRequest}/>
       <ClientDetailsModal 
         isOpen={isDetailsModalOpen} 

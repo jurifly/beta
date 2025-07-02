@@ -129,6 +129,7 @@ export default function TeamPage() {
                         <Card>
                             <CardHeader><CardTitle>Activity Log</CardTitle><CardDescription>An audit trail of all actions taken in your workspace.</CardDescription></CardHeader>
                             <CardContent>
+                                {mockActivity.length > 0 ? (
                                 <div className="space-y-4">
                                 {mockActivity.map(log => (
                                     <div key={log.id} className="flex items-center gap-4">
@@ -140,6 +141,13 @@ export default function TeamPage() {
                                     </div>
                                 ))}
                                 </div>
+                                ) : (
+                                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40">
+                                        <Activity className="mx-auto w-12 h-12 text-primary/20 mb-4"/>
+                                        <p className="font-semibold">No activity yet</p>
+                                        <p className="text-sm">Team actions will be logged here.</p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                    </TabsContent>
