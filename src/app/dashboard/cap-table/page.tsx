@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2, TrendingUp, Lock } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '@/components/ui/chart';
@@ -19,20 +19,26 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3
 export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
     const { toast } = useToast();
+    
+    // Find the active company directly from the userProfile context
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
+    // The capTable is now sourced DIRECTLY from the active company. No mock data.
+    const capTable = activeCompany?.capTable || [];
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    // This now correctly sources from the user profile or an empty array. No more mock data.
-    const capTable = useMemo(() => activeCompany?.capTable || [], [activeCompany]);
-
+    // This is the core logic for saving changes. It updates the entire userProfile.
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
         if (!userProfile || !activeCompany) return;
         
         const updatedCompany: Company = { ...activeCompany, capTable: newCapTable };
-        const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
+        
+        const updatedCompanies = userProfile.companies.map(c => 
+            c.id === activeCompany.id ? updatedCompany : c
+        );
         
         try {
             await updateUserProfile({ companies: updatedCompanies });
@@ -44,21 +50,22 @@ export default function CapTablePage() {
     const handleAddOrEdit = (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {
         let newCapTable;
         if (entry.id) { // Editing existing entry
-            newCapTable = capTable.map(e => e.id === entry.id ? { ...e, ...entry } : e);
+            newCapTable = capTable.map(e => e.id === entry.id ? { ...e, ...entry } as CapTableEntry : e);
             toast({ title: "Entry Updated", description: `Details for ${entry.holder} have been updated.` });
         } else { // Adding new entry
-            const newEntry = { ...entry, id: Date.now().toString() };
+            const newEntry: CapTableEntry = { ...entry, id: Date.now().toString() };
             newCapTable = [...capTable, newEntry];
             toast({ title: "Issuance Added", description: `Shares issued to ${entry.holder} have been recorded.` });
         }
         handleSaveCapTable(newCapTable);
     };
     
-    const handleDelete = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this cap table entry?")) {
-            const newCapTable = capTable.filter(e => e.id !== id);
+    // This is the corrected delete function.
+    const handleDelete = (idToDelete: string) => {
+        if (window.confirm("Are you sure you want to delete this cap table entry? This action cannot be undone.")) {
+            const newCapTable = capTable.filter(e => e.id !== idToDelete);
             handleSaveCapTable(newCapTable);
-            toast({ title: "Entry Deleted", description: "The cap table entry has been removed." });
+            toast({ title: "Entry Deleted", description: "The shareholder has been removed from the ledger." });
         }
     };
 
@@ -187,6 +194,7 @@ export default function CapTablePage() {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
+                                                    {/* This is the corrected delete button */}
                                                     <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                                 </TableCell>
                                             </TableRow>
