@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/hooks/auth";
 import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2, TrendingUp, Lock } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
+import { planHierarchy } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ export default function CapTablePage() {
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    const isPaidUser = userProfile?.plan !== 'Starter';
+    const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
     const capTable = useMemo(() => activeCompany?.capTable || initialCapTable, [activeCompany]);
 
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
@@ -115,7 +116,7 @@ export default function CapTablePage() {
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
           const data = payload[0].payload;
-          const percentage = ((data.value / totalShares) * 100).toFixed(2);
+          const percentage = totalShares > 0 ? ((data.value / totalShares) * 100).toFixed(2) : 0;
           return (
             <div className="rounded-lg border bg-background p-2 shadow-sm">
               <div className="grid grid-cols-2 gap-2">
@@ -151,9 +152,9 @@ export default function CapTablePage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                      <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Shares</CardTitle><Scale className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares.toLocaleString()}</div><p className="text-xs text-muted-foreground">Issued and outstanding</p></CardContent></Card>
-                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Founder Ownership</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((founderShares / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{founderShares.toLocaleString()} shares</p></CardContent></Card>
-                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Investor Ownership</CardTitle><PieChartIcon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((investorShares / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{investorShares.toLocaleString()} shares</p></CardContent></Card>
-                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">ESOP Pool</CardTitle><ChevronsRight className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{((esopPool / totalShares) * 100).toFixed(1)}%</div><p className="text-xs text-muted-foreground">{esopPool.toLocaleString()} shares remaining</p></CardContent></Card>
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Founder Ownership</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares > 0 ? ((founderShares / totalShares) * 100).toFixed(1) : 0}%</div><p className="text-xs text-muted-foreground">{founderShares.toLocaleString()} shares</p></CardContent></Card>
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Investor Ownership</CardTitle><PieChartIcon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares > 0 ? ((investorShares / totalShares) * 100).toFixed(1) : 0}%</div><p className="text-xs text-muted-foreground">{investorShares.toLocaleString()} shares</p></CardContent></Card>
+                     <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">ESOP Pool</CardTitle><ChevronsRight className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares > 0 ? ((esopPool / totalShares) * 100).toFixed(1) : 0}%</div><p className="text-xs text-muted-foreground">{esopPool.toLocaleString()} shares remaining</p></CardContent></Card>
                 </div>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

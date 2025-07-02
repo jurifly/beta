@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { planHierarchy } from "@/lib/types";
 
 const allPlans = [
     {
@@ -72,6 +73,7 @@ export default function BillingPage() {
 
   const visiblePlans = allPlans.filter(plan => plan.roles.includes(userProfile.role) && plan.name !== userProfile.plan);
   const currentPlan = allPlans.find(plan => plan.name === userProfile.plan);
+  const isPaidUser = planHierarchy[userProfile.plan] > 0;
 
   return (
     <div className="space-y-8">

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowDown, Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight, Lock } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
+import { planHierarchy } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
@@ -123,7 +124,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
     });
   };
   
-  const isPaidUser = userProfile?.plan !== 'Starter';
+  const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
