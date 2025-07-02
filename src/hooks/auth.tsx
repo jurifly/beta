@@ -136,19 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile.legalRegion = 'India';
         updateDoc(userDocRef, { legalRegion: 'India' }).catch(e => console.error("Failed to backfill legalRegion", e));
       }
-      
-      const today = new Date();
-      const lastResetString = profile.lastCreditReset ? new Date(profile.lastCreditReset).toISOString().split('T')[0] : '';
-      const todayString = today.toISOString().split('T')[0];
-
-      if (todayString !== lastResetString) {
-        profile.dailyCreditsUsed = 0;
-        profile.lastCreditReset = today.toISOString();
-        await updateDoc(userDocRef, {
-          dailyCreditsUsed: 0,
-          lastCreditReset: today.toISOString()
-        });
-      }
       setUserProfile(profile);
     } else {
       const newProfile = await createNewUserProfile(firebaseUser, 'India');
@@ -294,7 +281,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const totalAvailable = bonusCredits + dailyRemaining;
 
         if (totalAvailable < amount) {
-          // Still update the profile with the reset if it's a new day.
+          // Even if the check fails, we persist the reset.
           if (isNewDay) {
             transaction.update(userDocRef, { 
               dailyCreditsUsed: currentProfile.dailyCreditsUsed,
