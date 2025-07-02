@@ -7,16 +7,28 @@ import type { Transaction, UserProfile, UserPlan } from '@/lib/types';
 import { add } from 'date-fns';
 
 export async function initiateTransaction(data: Omit<Transaction, 'id' | 'status' | 'createdAt' | 'isProcessed'>): Promise<Transaction> {
-  const transactionData: Omit<Transaction, 'id'> = {
-    ...data,
+  const saveData: { [key: string]: any } = {
+    userId: data.userId,
+    type: data.type,
+    name: data.name,
+    amount: data.amount,
     status: 'initiated',
     createdAt: new Date().toISOString(),
     isProcessed: false,
   };
 
-  const docRef = await addDoc(collection(db, 'transactions'), transactionData);
+  // Conditionally add optional properties to avoid 'undefined' values,
+  // which are not allowed by Firestore.
+  if (data.type === 'plan') {
+    if (data.plan) saveData.plan = data.plan;
+    if (data.cycle) saveData.cycle = data.cycle;
+  } else if (data.type === 'credit_pack') {
+    if (data.credits) saveData.credits = data.credits;
+  }
 
-  return { ...transactionData, id: docRef.id };
+  const docRef = await addDoc(collection(db, 'transactions'), saveData);
+
+  return { ...saveData, id: docRef.id } as Transaction;
 }
 
 export async function verifyPayment(transactionId: string, upiId: string): Promise<{success: boolean, message: string}> {
