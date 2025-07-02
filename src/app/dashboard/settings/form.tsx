@@ -46,8 +46,6 @@ type FormData = z.infer<typeof formSchema>;
 const roles: { id: UserRole, label: string, description: string }[] = [
     { id: "Founder", label: "Founder", description: "Startup/SMB owner handling their company’s compliance and legal obligations" },
     { id: "CA", label: "Chartered Accountant", description: "Financial or legal advisor helping multiple clients with filings" },
-    { id: "Legal Advisor", label: "Legal Advisor", description: "Lawyers or firm associates managing contracts and legal reviews" },
-    { id: "Enterprise", label: "Enterprise / Finance Head", description: "Legal/compliance heads in medium/large organizations handling internal audits and multi-entity filings" },
 ];
 
 const legalRegions = [

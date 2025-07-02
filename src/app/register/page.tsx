@@ -15,12 +15,16 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { type UserRole } from "@/lib/types";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   legalRegion: z.string({ required_error: "Please select a region." }).min(1, "Please select a region."),
+  role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"], { required_error: "Please select a role." }),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -33,6 +37,11 @@ const legalRegions = [
     { value: 'Other', label: 'Other' },
 ]
 
+const betaRoles: { id: UserRole, label: string }[] = [
+    { id: "Founder", label: "Founder" },
+    { id: "CA", label: "Chartered Accountant" },
+];
+
 export default function RegisterPage() {
   const { user, signUpWithEmailAndPassword, loading } = useAuth();
   const router = useRouter();
@@ -41,6 +50,7 @@ export default function RegisterPage() {
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, control } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { role: 'Founder' }
   });
 
   useEffect(() => {
@@ -59,7 +69,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const refId = localStorage.getItem('referralId');
-      await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, refId || undefined);
+      await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, data.role, refId || undefined);
       localStorage.removeItem('referralId'); // Clear after use
       router.push('/dashboard');
     } catch (error: any) {
@@ -89,6 +99,24 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <Label>I am a...</Label>
+                <Controller
+                    name="role"
+                    control={control}
+                    render={({ field }) => (
+                        <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-2 gap-2">
+                           {betaRoles.map(role => (
+                                <Label key={role.id} htmlFor={role.id} className={cn("flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 text-sm font-semibold hover:bg-accent hover:text-accent-foreground cursor-pointer", field.value === role.id && "border-primary")}>
+                                    <RadioGroupItem value={role.id} id={role.id} className="sr-only" />
+                                    {role.label}
+                                </Label>
+                           ))}
+                        </RadioGroup>
+                    )}
+                />
+                 {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
+            </div>
             <div className="space-y-1">
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" {...register("name")} />
