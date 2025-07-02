@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard, Video } from 'lucide-react';
+import { Loader2, Plus, Sparkles, FileText, List, Download, Send, Trash2, Edit, CheckSquare, Calendar as CalendarIcon, Clipboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { generateAgenda, generateMinutes } from './actions';
@@ -18,13 +18,6 @@ import ReactMarkdown from 'react-markdown';
 import type { GovernanceActionItem, BoardMeeting } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ScheduleMeetingModal } from '@/components/dashboard/schedule-meeting-modal';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 
 const mockMeetings: BoardMeeting[] = [
@@ -47,7 +40,6 @@ export default function GovernancePage() {
   const [activeTab, setActiveTab] = useState('meetings');
   const [meetings, setMeetings] = useState<BoardMeeting[]>(mockMeetings);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [viewingContent, setViewingContent] = useState<{ title: string; content: string; } | null>(null);
   const { toast } = useToast();
 
   if (!userProfile) {
@@ -80,27 +72,6 @@ export default function GovernancePage() {
     );
   };
   
-  const handleViewMinutes = (meeting: BoardMeeting) => {
-    setViewingContent({
-      title: `${meeting.title} - Minutes`,
-      content: meeting.minutes || "No minutes have been recorded for this meeting yet."
-    });
-  };
-  
-  const handleViewAgenda = (meeting: BoardMeeting) => {
-    setViewingContent({
-      title: `${meeting.title} - Agenda`,
-      content: meeting.agenda
-    });
-  };
-  
-  const copyToClipboard = (text: string, message: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-        title: message,
-    });
-  };
-
   return (
     <>
       <ScheduleMeetingModal 
@@ -108,19 +79,6 @@ export default function GovernancePage() {
         onOpenChange={setModalOpen}
         onScheduleMeeting={handleScheduleMeeting}
       />
-      <Dialog open={!!viewingContent} onOpenChange={() => setViewingContent(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{viewingContent?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="prose dark:prose-invert max-w-none py-4 text-sm h-96 overflow-y-auto">
-            <ReactMarkdown>{viewingContent?.content?.replace(/\n/g, '  \n')}</ReactMarkdown>
-          </div>
-          <DialogFooter>
-              <Button variant="secondary" onClick={() => setViewingContent(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Governance Hub</h2>
@@ -145,17 +103,6 @@ export default function GovernancePage() {
                                       <div>
                                         <CardTitle className="text-lg">{meeting.title}</CardTitle>
                                         <CardDescription>Date: {format(new Date(meeting.date), 'PPP')}</CardDescription>
-                                      </div>
-                                      <div className="flex gap-2 flex-wrap">
-                                          {meeting.meetingLink && (
-                                            <Button asChild variant="default" size="sm">
-                                              <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer">
-                                                <Video className="mr-2" /> Join Meeting
-                                              </a>
-                                            </Button>
-                                          )}
-                                          <Button variant="outline" size="sm" onClick={() => handleViewMinutes(meeting)}>View Minutes</Button>
-                                          <Button variant="outline" size="sm" onClick={() => handleViewAgenda(meeting)}>View Agenda</Button>
                                       </div>
                                   </div>
                               </CardHeader>
