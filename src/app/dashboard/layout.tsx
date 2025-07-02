@@ -71,7 +71,7 @@ const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
   governance: { href: "/dashboard/governance", label: "Governance", icon: Gavel },
-  capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart, premium: true },
+  capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
@@ -88,7 +88,7 @@ const navItemConfig = {
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
-type NavItem = (typeof navItemConfig)[NavItemKey] & { premium?: boolean };
+type NavItem = (typeof navItemConfig)[NavItemKey];
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
@@ -183,7 +183,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   
   const navItems = getNavItems(userProfile.role);
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-  const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
 
   const bonusCredits = userProfile.creditBalance ?? 0;
   const creditsUsed = userProfile.dailyCreditsUsed ?? 0;
@@ -199,10 +198,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             notification={selectedNotification}
         />
         <div className="grid h-screen w-full md:grid-cols-[280px_1fr]">
-            <DesktopSidebar navItems={navItems} isPaidUser={isPaidUser} />
+            <DesktopSidebar navItems={navItems} />
             <div className="flex flex-col overflow-hidden">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <MobileSheetNav navItems={navItems} isPaidUser={isPaidUser} />
+                <MobileSheetNav navItems={navItems} />
                 <div className="flex-1">
                 <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Link href="/dashboard" className="flex items-center gap-2">
@@ -322,7 +321,7 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
-const DesktopSidebar = ({ navItems, isPaidUser }: { navItems: NavItem[], isPaidUser: boolean }) => {
+const DesktopSidebar = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
 
     const bottomNavItems = [navItemConfig.billing, navItemConfig.settings, navItemConfig.help, navItemConfig.feedback];
@@ -358,7 +357,6 @@ const DesktopSidebar = ({ navItems, isPaidUser }: { navItems: NavItem[], isPaidU
                         >
                           <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                           {item.label}
-                          {item.premium && !isPaidUser && <Lock className="ml-auto h-3 w-3" />}
                         </Link>
                       </TooltipTrigger>
                     </Tooltip>
@@ -395,7 +393,7 @@ const DesktopSidebar = ({ navItems, isPaidUser }: { navItems: NavItem[], isPaidU
     )
 }
 
-const MobileSheetNav = ({ navItems, isPaidUser }: { navItems: NavItem[], isPaidUser: boolean }) => {
+const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     
@@ -445,7 +443,6 @@ const MobileSheetNav = ({ navItems, isPaidUser }: { navItems: NavItem[], isPaidU
                     >
                         <item.icon className="h-5 w-5 transition-transform" />
                         <span className="flex-1">{item.label}</span>
-                        {item.premium && !isPaidUser && <Lock className="h-4 w-4 text-muted-foreground" />}
                     </Link>
                 )
               })}

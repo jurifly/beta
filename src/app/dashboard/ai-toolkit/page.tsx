@@ -1236,7 +1236,6 @@ export default function AiToolkitPage() {
     
     const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
-    const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1261,17 +1260,7 @@ export default function AiToolkitPage() {
                     <TabsContent value="assistant" className="h-full"><ChatAssistant /></TabsContent>
                     <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
                     <TabsContent value="audit"><DataroomAudit /></TabsContent>
-                    <TabsContent value="analyzer">
-                        {isPaidUser ? (
-                           <DocumentIntelligenceTab />
-                        ) : (
-                           <UpgradePrompt
-                                title="Unlock AI Document Intelligence"
-                                description="Instantly analyze contracts and legal documents for risks, key clauses, and obligations. Upgrade to Pro to access this powerful tool."
-                                icon={<FileScan className="h-12 w-12 text-primary" />}
-                            />
-                        )}
-                    </TabsContent>
+                    <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
                     {showReconciliation && <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>}
                     <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
                     <TabsContent value="workflows"><WorkflowTab /></TabsContent>

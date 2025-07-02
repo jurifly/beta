@@ -35,7 +35,6 @@ export default function CapTablePage() {
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
     const capTable = useMemo(() => activeCompany?.capTable || initialCapTable, [activeCompany]);
 
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
@@ -102,16 +101,6 @@ export default function CapTablePage() {
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-    }
-
-    if (!isPaidUser) {
-        return (
-            <UpgradePrompt
-                title="Unlock Cap Table Management"
-                description="Track shareholders, model financing rounds, and manage your company's equity like a pro. Upgrade your plan to access this powerful feature."
-                icon={<PieChartIcon className="h-12 w-12 text-primary" />}
-            />
-        );
     }
 
     if (!activeCompany) {
