@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2, TrendingUp } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, ChevronsRight, MoreHorizontal, Edit, Trash2, TrendingUp, Lock } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '@/components/ui/chart';
@@ -33,6 +33,7 @@ export default function CapTablePage() {
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
+    const isPaidUser = userProfile?.plan !== 'Starter';
     const capTable = useMemo(() => activeCompany?.capTable || initialCapTable, [activeCompany]);
 
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
@@ -163,7 +164,11 @@ export default function CapTablePage() {
                                 <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
                             </div>
                              <div className="flex gap-2">
-                                <Button variant="outline" onClick={() => setIsModelingModalOpen(true)}><TrendingUp className="mr-2"/>Model Round</Button>
+                                <Button variant="outline" onClick={() => setIsModelingModalOpen(true)}>
+                                    {!isPaidUser && <Lock className="mr-2 h-4 w-4" />}
+                                    <TrendingUp className="mr-2"/>
+                                    Model Round
+                                </Button>
                                 <Button onClick={() => handleOpenModal()}><PlusCircle className="mr-2"/>Add Issuance</Button>
                             </div>
                         </CardHeader>
