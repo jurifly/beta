@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { CapTableModal } from '@/components/dashboard/cap-table-modal';
 import { useToast } from '@/hooks/use-toast';
 import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling-modal';
+import { UpgradePrompt } from '@/components/upgrade-prompt';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -103,6 +104,16 @@ export default function CapTablePage() {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
+    if (!isPaidUser) {
+        return (
+            <UpgradePrompt
+                title="Unlock Cap Table Management"
+                description="Track shareholders, model financing rounds, and manage your company's equity like a pro. Upgrade your plan to access this powerful feature."
+                icon={<PieChartIcon className="h-12 w-12 text-primary" />}
+            />
+        );
+    }
+
     if (!activeCompany) {
         return (
           <Card>
@@ -166,7 +177,6 @@ export default function CapTablePage() {
                             </div>
                              <div className="flex gap-2">
                                 <Button variant="outline" onClick={() => setIsModelingModalOpen(true)}>
-                                    {!isPaidUser && <Lock className="mr-2 h-4 w-4" />}
                                     <TrendingUp className="mr-2"/>
                                     Model Round
                                 </Button>

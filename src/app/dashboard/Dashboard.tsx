@@ -31,6 +31,7 @@ import {
   Zap,
   FileSignature,
   Scale,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,7 @@ import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
 import type { UserProfile, Company, DocumentRequest } from "@/lib/types";
+import { planHierarchy } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
@@ -147,6 +149,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const [selectedChecklistYear, setSelectedChecklistYear] = useState<string>(new Date().getFullYear().toString());
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+    const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
 
     const docRequests = activeCompany?.docRequests?.filter(r => r.status === 'Pending') || [];
 
@@ -371,7 +374,11 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             </div>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
             <Link href="/dashboard/calendar" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar />} isLoading={dynamicData.loading} /></Link>
-            <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
+            {isPaidUser ? (
+              <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
+            ) : (
+              <Link href="/dashboard/billing" className="block"><StatCard title="Cap Table" value="Locked" subtext="Upgrade to Pro" icon={<Lock />} isLoading={false} /></Link>
+            )}
             <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext="Overdue tasks" icon={<AlertTriangle />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
