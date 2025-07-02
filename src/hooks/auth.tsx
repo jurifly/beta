@@ -132,30 +132,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (userDoc.exists()) {
       let profile = userDoc.data() as UserProfile;
+      const updatesToApply: Partial<UserProfile> = {};
+
+      // --- Backfill missing credit fields for older user profiles ---
+      if (profile.dailyCreditLimit === undefined) {
+        updatesToApply.dailyCreditLimit = 5; // Default daily credits
+        profile.dailyCreditLimit = 5;
+      }
+      if (profile.dailyCreditsUsed === undefined) {
+        updatesToApply.dailyCreditsUsed = 0;
+        profile.dailyCreditsUsed = 0;
+      }
+      if (!profile.lastCreditReset) {
+        // Set to epoch to force a reset on the next check
+        const epoch = new Date(0).toISOString();
+        updatesToApply.lastCreditReset = epoch;
+        profile.lastCreditReset = epoch;
+      }
 
       // --- Credit Reset Logic on Load ---
       const today = new Date();
-      const lastResetDate = profile.lastCreditReset ? new Date(profile.lastCreditReset) : new Date(0);
+      const lastResetDate = new Date(profile.lastCreditReset!);
       
       const lastResetDay = Date.UTC(lastResetDate.getUTCFullYear(), lastResetDate.getUTCMonth(), lastResetDate.getUTCDate());
       const todayDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
 
       if (todayDay > lastResetDay) {
+        updatesToApply.dailyCreditsUsed = 0;
+        updatesToApply.lastCreditReset = today.toISOString();
         profile.dailyCreditsUsed = 0;
         profile.lastCreditReset = today.toISOString();
-        // Update Firestore in the background, don't wait for it to update UI
-        updateDoc(userDocRef, {
-          dailyCreditsUsed: 0,
-          lastCreditReset: today.toISOString(),
-        }).catch(e => console.error("Failed to reset daily credits in Firestore:", e));
       }
       // --- End of Reset Logic ---
 
 
       if (!profile.legalRegion) {
+        updatesToApply.legalRegion = 'India';
         profile.legalRegion = 'India';
-        updateDoc(userDocRef, { legalRegion: 'India' }).catch(e => console.error("Failed to backfill legalRegion", e));
       }
+
+      // If there are any updates, write them to Firestore
+      if (Object.keys(updatesToApply).length > 0) {
+        updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to update user profile with new fields:", e));
+      }
+
       setUserProfile(profile);
     } else {
       const newProfile = await createNewUserProfile(firebaseUser, 'India');
@@ -267,64 +287,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
     
-    if (!user || !userProfile) {
-        toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Cannot deduct credits. Please log in again.",
-        });
-        return false;
-    }
+    // Use a functional update for setUserProfile to get the most recent state
+    let success = false;
+    await new Promise<void>(resolve => {
+      setUserProfile(currentProfile => {
+        if (!user || !currentProfile) {
+          toast({ variant: "destructive", title: "Authentication Error", description: "Cannot deduct credits. Please log in again." });
+          success = false;
+          resolve();
+          return currentProfile;
+        }
 
-    const bonusCredits = userProfile.creditBalance ?? 0;
-    const dailyUsed = userProfile.dailyCreditsUsed ?? 0;
-    const dailyLimit = userProfile.dailyCreditLimit ?? 0;
-    const dailyRemaining = dailyLimit - dailyUsed;
-    const totalAvailable = bonusCredits + dailyRemaining;
+        const bonusCredits = currentProfile.creditBalance ?? 0;
+        const dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
+        const dailyLimit = currentProfile.dailyCreditLimit ?? 0;
+        const dailyRemaining = dailyLimit - dailyUsed;
+        const totalAvailable = bonusCredits + dailyRemaining;
 
-    if (totalAvailable < amount) {
-        toast({
-            variant: "destructive",
-            title: "Credits Exhausted",
-            description: "You've used up your bonus and daily credits. Upgrade for more.",
-            action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
-        });
-        return false;
-    }
+        if (totalAvailable < amount) {
+          toast({ variant: "destructive", title: "Credits Exhausted", description: "You've used up your bonus and daily credits. Upgrade for more.", action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction> });
+          success = false;
+          resolve();
+          return currentProfile;
+        }
 
-    let newBonusCredits = bonusCredits;
-    let newDailyUsed = dailyUsed;
+        let newBonusCredits = bonusCredits;
+        let newDailyUsed = dailyUsed;
+        let amountToDeduct = amount;
 
-    if (bonusCredits >= amount) {
-        newBonusCredits -= amount;
-    } else {
-        const neededFromDaily = amount - bonusCredits;
-        newBonusCredits = 0;
-        newDailyUsed += neededFromDaily;
-    }
+        const fromBonus = Math.min(amountToDeduct, newBonusCredits);
+        newBonusCredits -= fromBonus;
+        amountToDeduct -= fromBonus;
 
-    const finalUpdates: Partial<UserProfile> = {
-        creditBalance: newBonusCredits,
-        dailyCreditsUsed: newDailyUsed,
-    };
+        const fromDaily = Math.min(amountToDeduct, dailyRemaining);
+        newDailyUsed += fromDaily;
 
-    setUserProfile(prev => prev ? { ...prev, ...finalUpdates } : null);
+        const finalUpdates: Partial<UserProfile> = {
+          creditBalance: newBonusCredits,
+          dailyCreditsUsed: newDailyUsed,
+        };
 
-    try {
+        const newProfile = { ...currentProfile, ...finalUpdates };
+
         const userDocRef = doc(db, 'users', user.uid);
-        await updateDoc(userDocRef, finalUpdates);
-        return true;
-    } catch (e) {
-        console.error("Failed to update credits in Firestore:", e);
-        setUserProfile(prev => prev ? { ...prev, creditBalance: bonusCredits, dailyCreditsUsed: dailyUsed } : null);
-        toast({
-            variant: "destructive",
-            title: "Network Error",
-            description: "Could not save credit usage. Please try again.",
-        });
-        return false;
-    }
-  }, [user, userProfile, isDevMode, toast]);
+        updateDoc(userDocRef, finalUpdates)
+          .then(() => {
+            success = true;
+            resolve();
+          })
+          .catch(e => {
+            console.error("Failed to update credits in Firestore:", e);
+            toast({ variant: "destructive", title: "Network Error", description: "Could not save credit usage. Please try again." });
+            success = false;
+            resolve();
+          });
+          
+        return newProfile;
+      });
+    });
+    return success;
+  }, [user, isDevMode, toast]);
 
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
