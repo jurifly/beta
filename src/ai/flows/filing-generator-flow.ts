@@ -156,21 +156,43 @@ const filingGeneratorFlow = ai.defineFlow(
   },
   async input => {
     // This is a much more comprehensive fallback that includes the items you mentioned.
-    const generateFallback = () => {
+    const generateFallback = (input: FilingGeneratorInput): FilingGeneratorOutput => {
         const incDate = new Date(input.incorporationDate + 'T00:00:00');
         const currDate = new Date(input.currentDate + 'T00:00:00');
+        let fallbackFilings: { date: string, title: string, type: "Corporate Filing" | "Tax Filing" | "Other Task" }[] = [];
 
-        const fallbackFilings = [
-            { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Open bank account', type: 'Other Task' as const },
-            { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'First Board Meeting Held', type: 'Corporate Filing' as const },
-            { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Auditor appointment (ADT-1)', type: 'Corporate Filing' as const },
-            { date: format(addDays(incDate, 60), 'yyyy-MM-dd'), title: 'Issue Share Certificates', type: 'Corporate Filing' as const },
-            { date: format(addDays(incDate, 180), 'yyyy-MM-dd'), title: 'File for Commencement of Business (INC-20A)', type: 'Corporate Filing' as const },
-            { date: format(addMonths(currDate, 3), 'yyyy-MM-dd'), title: 'Quarterly TDS Return Filing', type: 'Tax Filing' as const },
-            { date: format(new Date(currDate.getFullYear(), 8, 30), 'yyyy-MM-dd'), title: 'Director KYC (DIR-3 KYC)', type: 'Corporate Filing' as const },
-            { date: format(new Date(currDate.getFullYear(), 9, 31), 'yyyy-MM-dd'), title: 'Income tax return (ITR-6)', type: 'Tax Filing' as const },
-        ];
+        if (input.legalRegion === 'India' && input.companyType === 'Private Limited Company') {
+            const agmDate = addMonths(new Date(currDate.getFullYear(), 2, 31), 6); // Assume AGM at end of 6 months from FY end
 
+            fallbackFilings = [
+                // One-time post-incorporation tasks
+                { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Open bank account', type: 'Other Task' },
+                { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'First board meeting', type: 'Corporate Filing' },
+                { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Auditor appointment (ADT-1)', type: 'Corporate Filing' },
+                { date: format(addDays(incDate, 60), 'yyyy-MM-dd'), title: 'Issue share certificates', type: 'Corporate Filing' },
+                { date: format(addDays(incDate, 180), 'yyyy-MM-dd'), title: 'File for Commencement of Business (INC-20A)', type: 'Corporate Filing' },
+                { date: format(addDays(incDate, 90), 'yyyy-MM-dd'), title: 'MSME registration (optional)', type: 'Other Task' },
+                { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Professional tax registration', type: 'Other Task' },
+                // Annual recurring tasks
+                { date: format(agmDate, 'yyyy-MM-dd'), title: 'Hold Annual General Meeting (AGM)', type: 'Corporate Filing' },
+                { date: format(addDays(agmDate, 60), 'yyyy-MM-dd'), title: 'ROC annual return (MGT-7)', type: 'Corporate Filing' },
+                { date: format(addDays(agmDate, 30), 'yyyy-MM-dd'), title: 'Financial statements (AOC-4)', type: 'Corporate Filing' },
+                { date: format(new Date(currDate.getFullYear(), 8, 30), 'yyyy-MM-dd'), title: 'Director KYC (DIR-3 KYC)', type: 'Corporate Filing' },
+                { date: format(new Date(currDate.getFullYear(), 8, 30), 'yyyy-MM-dd'), title: 'Tax Audit Report Filing (if applicable)', type: 'Tax Filing' },
+                { date: format(new Date(currDate.getFullYear(), 9, 31), 'yyyy-MM-dd'), title: 'Income tax return (ITR-6)', type: 'Tax Filing' },
+                 // Quarterly
+                { date: format(new Date(currDate.getFullYear(), 3, 15), 'yyyy-MM-dd'), title: 'TDS returns (Jan-Mar)', type: 'Tax Filing' },
+                { date: format(new Date(currDate.getFullYear(), 6, 15), 'yyyy-MM-dd'), title: 'TDS returns (Apr-Jun)', type: 'Tax Filing' },
+                { date: format(new Date(currDate.getFullYear(), 9, 15), 'yyyy-MM-dd'), title: 'TDS returns (Jul-Sep)', type: 'Tax Filing' },
+            ];
+        } else {
+             // A generic fallback for other cases
+            fallbackFilings = [
+                { date: format(addDays(incDate, 30), 'yyyy-MM-dd'), title: 'Open bank account', type: 'Other Task' },
+                { date: format(new Date(currDate.getFullYear(), 9, 31), 'yyyy-MM-dd'), title: 'Annual tax return', type: 'Tax Filing' },
+            ];
+        }
+        
         return {
           filings: fallbackFilings.map(f => ({
             ...f,
@@ -183,15 +205,15 @@ const filingGeneratorFlow = ai.defineFlow(
       const {output} = await prompt(input);
 
       if (!output || output.filings.length === 0) {
-        console.log("AI returned no filings, using fallback.");
-        return generateFallback();
+        console.log("AI returned no filings, using code-based fallback.");
+        return generateFallback(input);
       }
       
       return output;
 
     } catch (e) {
-      console.error("AI call to generate filings failed due to an exception, using fallback.", e);
-      return generateFallback();
+      console.error("AI call to generate filings failed due to an exception, using code-based fallback.", e);
+      return generateFallback(input);
     }
   }
 );
