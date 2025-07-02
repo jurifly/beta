@@ -122,7 +122,8 @@ export default function CheckoutPage() {
         )
     }
 
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=successteam@icici&pn=Clausey&am=${purchaseDetails.amount}&cu=INR&tn=Clausey%20Purchase`;
+    const amountString = purchaseDetails.amount.toFixed(2);
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=alex.varghese@superyes&pn=Clausey&am=${amountString}&cu=INR&tn=Clausey%20Purchase`;
     
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -137,7 +138,7 @@ export default function CheckoutPage() {
                     <CardHeader><CardTitle>1. Make Payment</CardTitle><CardDescription>Scan the QR code with any UPI app.</CardDescription></CardHeader>
                     <CardContent className="flex flex-col items-center justify-center">
                         <Image src={qrCodeUrl} alt="UPI QR Code" width={250} height={250} data-ai-hint="qr code"/>
-                        <p className="text-sm mt-4 text-muted-foreground">Or pay to UPI ID: <strong>successteam@icici</strong></p>
+                        <p className="text-sm mt-4 text-muted-foreground">Or pay to UPI ID: <strong>alex.varghese@superyes</strong></p>
                     </CardContent>
                 </Card>
                  <Card className="interactive-lift">

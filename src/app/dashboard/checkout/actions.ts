@@ -22,26 +22,32 @@ export async function saveUpiTransaction(data: TransactionData): Promise<{succes
     return { success: false, message: 'UPI Transaction ID is required.' };
   }
 
-  const transactionData: any = {
-      ...data,
-      status: 'pending_verification', // For manual check
+  // Build the core object with guaranteed properties
+  const transactionRecord: any = {
+      userId: data.userId,
+      userEmail: data.userEmail,
+      upiTransactionId: data.upiTransactionId,
+      type: data.type,
+      name: data.name,
+      amount: data.amount,
+      status: 'pending_verification',
       createdAt: new Date().toISOString(),
   };
   
-  if (data.type === 'plan' && data.cycle) {
-    transactionData.planStartDate = new Date().toISOString();
+  // Conditionally add properties based on type
+  if (data.type === 'plan' && data.plan && data.cycle) {
+    transactionRecord.plan = data.plan;
+    transactionRecord.cycle = data.cycle;
+    transactionRecord.planStartDate = new Date().toISOString();
     const newExpiry = add(new Date(), { [data.cycle === 'yearly' ? 'years' : 'months']: data.cycle === 'yearly' ? 1 : 1 });
-    transactionData.planEndDate = newExpiry.toISOString();
+    transactionRecord.planEndDate = newExpiry.toISOString();
+  } else if (data.type === 'credit_pack' && data.credits) {
+    transactionRecord.credits = data.credits;
   }
 
-  Object.keys(transactionData).forEach(key => {
-    if (transactionData[key] === undefined) {
-      delete transactionData[key];
-    }
-  });
-
   try {
-    await addDoc(collection(db, 'transactions'), transactionData);
+    // The transactionRecord object is now clean, with no undefined properties.
+    await addDoc(collection(db, 'transactions'), transactionRecord);
     return { success: true, message: 'Transaction submitted for verification. Your plan will be activated shortly.' };
   } catch (error: any) {
     console.error("Error saving transaction:", error);
