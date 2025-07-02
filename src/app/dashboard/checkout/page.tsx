@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -9,23 +9,21 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
-import { initiateTransaction, verifyPayment } from './actions';
-import type { Transaction, UserPlan } from '@/lib/types';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { saveUpiTransaction } from './actions';
+import type { UserPlan } from '@/lib/types';
 
 export default function CheckoutPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, userProfile } = useAuth();
     const { toast } = useToast();
     
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
     const [upiId, setUpiId] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    
+    const [isSubmitted, setIsSubmitted] = useState(false);
+
     const purchaseDetails = useMemo(() => {
         const type = searchParams.get('type');
         const plan = searchParams.get('plan');
@@ -38,62 +36,45 @@ export default function CheckoutPage() {
             return { type: 'credit_pack' as const, name, amount: Number(amount), credits: Number(credits) };
         }
 
-        if (type === 'plan' && plan && amount && name) {
+        if (type === 'plan' && plan && amount && name && cycle) {
             return { type: 'plan' as const, name, amount: Number(amount), plan: plan as UserPlan, cycle: cycle as 'monthly' | 'yearly' };
         }
 
         return null;
     }, [searchParams]);
 
-    useEffect(() => {
-        if (!purchaseDetails || !user) {
-            setIsLoading(false);
+    const handleVerify = async () => {
+        if (!purchaseDetails || !user || !userProfile) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not process payment. User not found.' });
             return;
         }
-
-        const startTransaction = async () => {
-            setIsLoading(true);
-            try {
-                const transactionData: any = {
-                    userId: user.uid,
-                    type: purchaseDetails.type,
-                    name: purchaseDetails.name,
-                    amount: purchaseDetails.amount,
-                };
-
-                if (purchaseDetails.type === 'plan') {
-                    transactionData.plan = purchaseDetails.plan;
-                    transactionData.cycle = purchaseDetails.cycle;
-                } else if (purchaseDetails.type === 'credit_pack') {
-                    transactionData.credits = purchaseDetails.credits;
-                }
-
-                const newTransaction = await initiateTransaction(transactionData);
-                setTransaction(newTransaction);
-            } catch (error: any) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not initiate transaction. Please try again.' });
-                router.push('/dashboard/billing');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        startTransaction();
-    }, [purchaseDetails, user, toast, router]);
-    
-    const handleVerify = async () => {
-        if (!transaction || !upiId) {
-            toast({ variant: 'destructive', title: 'Missing Info', description: 'Please enter a transaction ID.' });
+        if (!upiId) {
+            toast({ variant: 'destructive', title: 'Missing Info', description: 'Please enter your UPI transaction ID.' });
             return;
         }
         setIsVerifying(true);
         try {
-            const result = await verifyPayment(transaction.id!, upiId);
-            if(result.success) {
-                toast({ title: "Payment Successful!", description: result.message });
-                router.push('/dashboard');
+            const transactionData: any = {
+                userId: user.uid,
+                userEmail: userProfile.email,
+                upiTransactionId: upiId,
+                type: purchaseDetails.type,
+                name: purchaseDetails.name,
+                amount: purchaseDetails.amount,
+            };
+            if (purchaseDetails.type === 'plan') {
+                transactionData.plan = purchaseDetails.plan;
+                transactionData.cycle = purchaseDetails.cycle;
             } else {
-                toast({ variant: 'destructive', title: 'Verification Failed', description: result.message });
+                transactionData.credits = purchaseDetails.credits;
+            }
+            
+            const result = await saveUpiTransaction(transactionData);
+            if(result.success) {
+                toast({ title: "Submission Received!", description: result.message });
+                setIsSubmitted(true);
+            } else {
+                toast({ variant: 'destructive', title: 'Submission Failed', description: result.message });
             }
         } catch(e: any) {
             toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -101,8 +82,27 @@ export default function CheckoutPage() {
             setIsVerifying(false);
         }
     };
+    
+    if (isSubmitted) {
+        return (
+             <div className="flex h-full w-full items-center justify-center p-4">
+                <Card className="w-full max-w-md text-center">
+                    <CardHeader>
+                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4"/>
+                        <CardTitle>Verification Submitted</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">Thank you! Our team will verify your payment and activate your purchase within 24 hours. You can now return to your dashboard.</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={() => router.push('/dashboard')} className="w-full">Go to Dashboard</Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        )
+    }
 
-    if (isLoading) {
+    if (!userProfile) {
         return (
            <div className="flex h-full w-full items-center justify-center p-4">
                <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -122,26 +122,14 @@ export default function CheckoutPage() {
         )
     }
 
-    if (!transaction) {
-         return (
-            <div className="flex h-full w-full items-center justify-center p-4">
-                 <Card className="w-full max-w-md text-center">
-                    <CardHeader><CardTitle>Transaction Error</CardTitle></CardHeader>
-                    <CardContent><p className="text-muted-foreground">Could not create a transaction. Please try again.</p></CardContent>
-                    <CardFooter><Button onClick={() => router.push('/dashboard/billing')} className="w-full">Go to Billing</Button></CardFooter>
-                </Card>
-            </div>
-        )
-    }
-
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=successteam@icici&pn=Clausey&am=${transaction.amount}&cu=INR&tn=Clausey%20Purchase%20${transaction.id}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=successteam@icici&pn=Clausey&am=${purchaseDetails.amount}&cu=INR&tn=Clausey%20Purchase`;
     
     return (
         <div className="max-w-4xl mx-auto space-y-6">
              <div>
                 <Button variant="ghost" onClick={() => router.back()} className="mb-4"><ArrowLeft className="mr-2"/>Back to Billing</Button>
                 <h1 className="text-3xl font-bold font-headline">Complete Your Purchase</h1>
-                <p className="text-muted-foreground">You are purchasing: <strong>{transaction.name}</strong> for <strong>₹{transaction.amount}</strong></p>
+                <p className="text-muted-foreground">You are purchasing: <strong>{purchaseDetails.name}</strong> for <strong>₹{purchaseDetails.amount}</strong></p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -153,24 +141,17 @@ export default function CheckoutPage() {
                     </CardContent>
                 </Card>
                  <Card className="interactive-lift">
-                    <CardHeader><CardTitle>2. Verify Payment</CardTitle><CardDescription>Enter the UPI Transaction ID from your payment app to confirm.</CardDescription></CardHeader>
+                    <CardHeader><CardTitle>2. Submit for Verification</CardTitle><CardDescription>Enter the UPI Transaction ID from your payment app to confirm.</CardDescription></CardHeader>
                     <CardContent className="space-y-4">
                          <div className="space-y-2">
                             <Label htmlFor="upiId">UPI Transaction ID</Label>
                             <Input id="upiId" value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="e.g. 4182... or T2024..."/>
                         </div>
-                        <Alert>
-                            <ShieldCheck className="h-4 w-4" />
-                            <AlertTitle>This is a simulated payment</AlertTitle>
-                            <AlertDescription>
-                                Enter any 12-digit number (e.g., `123456789012`) to simulate a successful payment.
-                            </AlertDescription>
-                        </Alert>
                     </CardContent>
                     <CardFooter>
                         <Button onClick={handleVerify} disabled={isVerifying || !upiId} className="w-full">
                             {isVerifying && <Loader2 className="mr-2 animate-spin"/>}
-                            Verify & Complete Purchase
+                            Submit for Verification
                         </Button>
                     </CardFooter>
                 </Card>
