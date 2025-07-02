@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import { initiateTransaction, verifyPayment } from './actions';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, UserPlan } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function CheckoutPage() {
@@ -24,6 +24,7 @@ export default function CheckoutPage() {
     const [transaction, setTransaction] = useState<Transaction | null>(null);
     const [upiId, setUpiId] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     
     const purchaseDetails = useMemo(() => {
         const type = searchParams.get('type');
@@ -37,20 +38,23 @@ export default function CheckoutPage() {
             return { type: 'credit_pack' as const, name, amount: Number(amount), credits: Number(credits) };
         }
 
-        // Default to plan for backward compatibility or if type isn't specified
-        if (plan && amount && name) {
-            return { type: 'plan' as const, name, amount: Number(amount), plan, cycle: cycle as 'monthly' | 'yearly' };
+        if (type === 'plan' && plan && amount && name) {
+            return { type: 'plan' as const, name, amount: Number(amount), plan: plan as UserPlan, cycle: cycle as 'monthly' | 'yearly' };
         }
 
         return null;
     }, [searchParams]);
 
     useEffect(() => {
-        if (!purchaseDetails || !user) return;
+        if (!purchaseDetails || !user) {
+            setIsLoading(false);
+            return;
+        }
 
         const startTransaction = async () => {
+            setIsLoading(true);
             try {
-                const transactionData: any = { // Use any to build it up
+                const transactionData: any = {
                     userId: user.uid,
                     type: purchaseDetails.type,
                     name: purchaseDetails.name,
@@ -69,6 +73,8 @@ export default function CheckoutPage() {
             } catch (error: any) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not initiate transaction. Please try again.' });
                 router.push('/dashboard/billing');
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -96,6 +102,14 @@ export default function CheckoutPage() {
         }
     };
 
+    if (isLoading) {
+        return (
+           <div className="flex h-full w-full items-center justify-center p-4">
+               <Loader2 className="w-8 h-8 animate-spin text-primary" />
+           </div>
+       )
+    }
+
     if (!purchaseDetails) {
         return (
             <div className="flex h-full w-full items-center justify-center p-4">
@@ -107,11 +121,15 @@ export default function CheckoutPage() {
             </div>
         )
     }
-    
+
     if (!transaction) {
          return (
             <div className="flex h-full w-full items-center justify-center p-4">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                 <Card className="w-full max-w-md text-center">
+                    <CardHeader><CardTitle>Transaction Error</CardTitle></CardHeader>
+                    <CardContent><p className="text-muted-foreground">Could not create a transaction. Please try again.</p></CardContent>
+                    <CardFooter><Button onClick={() => router.push('/dashboard/billing')} className="w-full">Go to Billing</Button></CardFooter>
+                </Card>
             </div>
         )
     }
