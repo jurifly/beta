@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo } from 'react';
@@ -23,14 +24,14 @@ export default function CapTablePage() {
     // Find the active company directly from the userProfile context
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
-    // The capTable is now sourced DIRECTLY from the active company. No mock data.
+    // Source the capTable DIRECTLY from the active company. No mock data.
     const capTable = activeCompany?.capTable || [];
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    // This is the core logic for saving changes. It updates the entire userProfile.
+    // Core logic for saving changes. It updates the entire userProfile.
     const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
         if (!userProfile || !activeCompany) return;
         
@@ -60,7 +61,6 @@ export default function CapTablePage() {
         handleSaveCapTable(newCapTable);
     };
     
-    // This is the corrected delete function.
     const handleDelete = (idToDelete: string) => {
         if (window.confirm("Are you sure you want to delete this cap table entry? This action cannot be undone.")) {
             const newCapTable = capTable.filter(e => e.id !== idToDelete);
@@ -194,7 +194,6 @@ export default function CapTablePage() {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
-                                                    {/* This is the corrected delete button */}
                                                     <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                                 </TableCell>
                                             </TableRow>
@@ -235,3 +234,5 @@ export default function CapTablePage() {
         </>
     );
 }
+
+    
