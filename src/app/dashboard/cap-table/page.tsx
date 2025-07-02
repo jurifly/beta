@@ -21,10 +21,9 @@ export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
     const { toast } = useToast();
     
-    // Find the active company directly from the userProfile context
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
-    // Source the capTable DIRECTLY from the active company. No mock data.
+    // Directly use the capTable from the active company. No mock data.
     const capTable = activeCompany?.capTable || [];
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -234,5 +233,3 @@ export default function CapTablePage() {
         </>
     );
 }
-
-    
