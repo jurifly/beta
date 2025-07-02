@@ -74,16 +74,13 @@ export interface Company {
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
-export type UserPlan = 'Starter' | 'Founder' | 'Pro' | 'Enterprise' | 'Free' | 'CA Pro' | 'Enterprise Pro';
+export type UserPlan = 'Starter' | 'Founder' | 'Professional' | 'Enterprise';
 
 export const planHierarchy: Record<UserPlan, number> = {
   'Starter': 0,
   'Founder': 1,
-  'Pro': 2,
+  'Professional': 2,
   'Enterprise': 3,
-  'Free': 0, 
-  'CA Pro': 2,
-  'Enterprise Pro': 3,
 };
 
 export interface UserProfile {
