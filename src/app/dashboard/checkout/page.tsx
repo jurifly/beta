@@ -28,18 +28,20 @@ export default function CheckoutPage() {
         const type = searchParams.get('type');
         const plan = searchParams.get('plan');
         const cycle = searchParams.get('cycle');
-        const amount = searchParams.get('amount');
+        const amountStr = searchParams.get('amount');
         const name = searchParams.get('name');
-        const credits = searchParams.get('credits');
-
-        if (type === 'credit_pack' && amount && name && credits) {
-            return { type: 'credit_pack' as const, name, amount: Number(amount), credits: Number(credits) };
+        const creditsStr = searchParams.get('credits');
+    
+        if (amountStr && !isNaN(parseFloat(amountStr))) {
+            const amount = parseFloat(amountStr);
+            if (type === 'credit_pack' && name && creditsStr && !isNaN(parseInt(creditsStr))) {
+                const credits = parseInt(creditsStr, 10);
+                return { type: 'credit_pack' as const, name, amount, credits };
+            }
+            if (type === 'plan' && plan && name && cycle) {
+                return { type: 'plan' as const, name, amount, plan: plan as UserPlan, cycle: cycle as 'monthly' | 'yearly' };
+            }
         }
-
-        if (type === 'plan' && plan && amount && name && cycle) {
-            return { type: 'plan' as const, name, amount: Number(amount), plan: plan as UserPlan, cycle: cycle as 'monthly' | 'yearly' };
-        }
-
         return null;
     }, [searchParams]);
 
