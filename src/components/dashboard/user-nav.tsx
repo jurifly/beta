@@ -183,6 +183,8 @@ export function UserNav() {
                  <DropdownMenuRadioGroup value={userProfile.role} onValueChange={handleRoleChange as (value: string) => void}>
                     <DropdownMenuRadioItem value="Founder">Founder</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="CA">Chartered Accountant</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Legal Advisor">Legal Advisor</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Enterprise">Enterprise</DropdownMenuRadioItem>
                  </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
