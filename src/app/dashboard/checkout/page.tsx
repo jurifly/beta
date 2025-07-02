@@ -26,14 +26,22 @@ export default function CheckoutPage() {
     const [isVerifying, setIsVerifying] = useState(false);
     
     const purchaseDetails = useMemo(() => {
+        const type = searchParams.get('type');
         const plan = searchParams.get('plan');
         const cycle = searchParams.get('cycle');
         const amount = searchParams.get('amount');
         const name = searchParams.get('name');
+        const credits = searchParams.get('credits');
 
-        if (plan && amount && name) {
-            return { type: 'plan' as const, name, amount: Number(amount), plan, cycle };
+        if (type === 'credit_pack' && amount && name && credits) {
+            return { type: 'credit_pack' as const, name, amount: Number(amount), credits: Number(credits) };
         }
+
+        // Default to plan for backward compatibility or if type isn't specified
+        if (plan && amount && name) {
+            return { type: 'plan' as const, name, amount: Number(amount), plan, cycle: cycle as 'monthly' | 'yearly' };
+        }
+
         return null;
     }, [searchParams]);
 
@@ -42,14 +50,21 @@ export default function CheckoutPage() {
 
         const startTransaction = async () => {
             try {
-                const newTransaction = await initiateTransaction({
+                const transactionData: any = { // Use any to build it up
                     userId: user.uid,
                     type: purchaseDetails.type,
                     name: purchaseDetails.name,
                     amount: purchaseDetails.amount,
-                    plan: purchaseDetails.plan,
-                    cycle: purchaseDetails.cycle as any,
-                });
+                };
+
+                if (purchaseDetails.type === 'plan') {
+                    transactionData.plan = purchaseDetails.plan;
+                    transactionData.cycle = purchaseDetails.cycle;
+                } else if (purchaseDetails.type === 'credit_pack') {
+                    transactionData.credits = purchaseDetails.credits;
+                }
+
+                const newTransaction = await initiateTransaction(transactionData);
                 setTransaction(newTransaction);
             } catch (error: any) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not initiate transaction. Please try again.' });

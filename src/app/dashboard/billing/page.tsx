@@ -46,6 +46,12 @@ const allPlans = [
   },
 ]
 
+const creditPacks = [
+  { name: '25 Credits', price: 50, credits: 25, description: "Perfect for a few quick tasks." },
+  { name: '50 Credits', price: 100, credits: 50, description: "A solid pack for regular use." },
+  { name: '100 Credits', price: 200, credits: 100, description: "Best value for heavy users." },
+];
+
 export default function BillingPage() {
   const { userProfile } = useAuth();
   
@@ -64,7 +70,7 @@ export default function BillingPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Plans & Pricing</h1>
         <p className="mt-2 text-muted-foreground">
-          Choose the plan that's right for your team. All users are on the free Beta Plan with daily credits.
+          Choose the plan that's right for your team.
         </p>
       </div>
 
@@ -117,8 +123,44 @@ export default function BillingPage() {
             </CardContent>
             <CardFooter>
                <Button asChild className="w-full">
-                    <Link href={`/dashboard/checkout?plan=${plan.name}&name=${plan.name}%20Plan&amount=${plan.price}&cycle=monthly`}>
+                    <Link href={`/dashboard/checkout?type=plan&plan=${plan.name}&name=${plan.name}%20Plan&amount=${plan.price}&cycle=monthly`}>
                         Choose {plan.name}
+                    </Link>
+                </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+       <div className="mt-12 text-center">
+        <h2 className="text-2xl font-bold tracking-tight font-headline">Buy More Credits</h2>
+        <p className="mt-2 text-muted-foreground">
+            Top up your account with one-time credit packs. Credits never expire.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        {creditPacks.map((pack) => (
+          <Card key={pack.name} className="flex flex-col interactive-lift">
+            <CardHeader>
+              <CardTitle>{pack.name}</CardTitle>
+              <CardDescription>{pack.description}</CardDescription>
+               <div className="pt-2">
+                <span className="text-3xl font-bold">₹{pack.price}</span>
+                <span className="text-muted-foreground">/ one-time</span>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2"><Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{pack.credits} bonus AI credits</span></li>
+                  <li className="flex items-start gap-2"><Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Use for any AI feature</span></li>
+                  <li className="flex items-start gap-2"><Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>Credits never expire</span></li>
+              </ul>
+            </CardContent>
+            <CardFooter>
+               <Button asChild className="w-full">
+                    <Link href={`/dashboard/checkout?type=credit_pack&name=${pack.name.replace(' ', '%20')}&amount=${pack.price}&credits=${pack.credits}`}>
+                        Buy Now
                     </Link>
                 </Button>
             </CardFooter>

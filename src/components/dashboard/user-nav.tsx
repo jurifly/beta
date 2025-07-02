@@ -79,12 +79,6 @@ export function UserNav() {
 
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
   
-  const bonusCredits = userProfile.creditBalance ?? 0;
-  const creditsUsed = userProfile.dailyCreditsUsed ?? 0;
-  const creditLimit = userProfile.dailyCreditLimit ?? 0;
-  const dailyRemaining = Math.max(0, creditLimit - creditsUsed);
-  const totalCreditsRemaining = bonusCredits + dailyRemaining;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

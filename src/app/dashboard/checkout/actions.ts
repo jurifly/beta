@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, updateDoc, addDoc, collection } from "firebase/firestore";
+import { doc, getDoc, updateDoc, addDoc, collection, increment } from "firebase/firestore";
 import type { Transaction, UserProfile, UserPlan } from '@/lib/types';
 import { add } from 'date-fns';
 
@@ -49,9 +49,8 @@ export async function verifyPayment(transactionId: string, upiId: string): Promi
     }
     const userProfile = userSnap.data() as UserProfile;
     
-    const updates: Partial<UserProfile> = {};
-
     if (transaction.type === 'plan' && transaction.plan) {
+      const updates: Partial<UserProfile> = {};
       updates.plan = transaction.plan as UserPlan;
       updates.planStartDate = new Date().toISOString();
       const newExpiry = add(new Date(), { [transaction.cycle === 'yearly' ? 'years' : 'months']: transaction.cycle === 'yearly' ? 1 : 1 });
@@ -64,9 +63,13 @@ export async function verifyPayment(transactionId: string, upiId: string): Promi
       
       updates.dailyCreditLimit = newCreditLimit;
       updates.dailyCreditsUsed = 0;
+      await updateDoc(userRef, updates);
+    } else if (transaction.type === 'credit_pack' && transaction.credits) {
+        await updateDoc(userRef, {
+            creditBalance: increment(transaction.credits)
+        });
     }
 
-    await updateDoc(userRef, updates);
     await updateDoc(transactionRef, { status: 'verified', upiTransactionId: upiId, isProcessed: true });
 
     return { success: true, message: 'Payment verified! Your purchase has been applied.' };
