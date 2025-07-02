@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation';
 import * as AiActions from './actions';
 import type { AssistantOutput } from '@/ai/flows/assistant-flow';
 import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails } from "@/lib/types"
+import { planHierarchy } from "@/lib/types";
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
@@ -41,6 +42,7 @@ import { useTypewriter } from '@/hooks/use-typewriter';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UpgradePrompt } from '@/components/upgrade-prompt';
 
 // --- Tab: AI Legal Assistant ---
 
@@ -1234,7 +1236,7 @@ export default function AiToolkitPage() {
     
     const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
-
+    const isPaidUser = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1259,7 +1261,17 @@ export default function AiToolkitPage() {
                     <TabsContent value="assistant" className="h-full"><ChatAssistant /></TabsContent>
                     <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
                     <TabsContent value="audit"><DataroomAudit /></TabsContent>
-                    <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
+                    <TabsContent value="analyzer">
+                        {isPaidUser ? (
+                           <DocumentIntelligenceTab />
+                        ) : (
+                           <UpgradePrompt
+                                title="Unlock AI Document Intelligence"
+                                description="Instantly analyze contracts and legal documents for risks, key clauses, and obligations. Upgrade to Pro to access this powerful tool."
+                                icon={<FileScan className="h-12 w-12 text-primary" />}
+                            />
+                        )}
+                    </TabsContent>
                     {showReconciliation && <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>}
                     <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
                     <TabsContent value="workflows"><WorkflowTab /></TabsContent>
