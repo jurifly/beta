@@ -267,59 +267,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
     
-    // Use a function for the latest state to avoid stale closures
-    let success = false;
-    await setUserProfile(currentProfile => {
-        if (!user || !currentProfile) {
-            toast({ variant: "destructive", title: "Authentication Error", description: "Please log in again." });
-            return currentProfile;
-        }
-
-        const bonusCredits = currentProfile.creditBalance ?? 0;
-        const dailyUsed = currentProfile.dailyCreditsUsed ?? 0;
-        const dailyLimit = currentProfile.dailyCreditLimit ?? 0;
-        const dailyRemaining = dailyLimit - dailyUsed;
-        const totalAvailable = bonusCredits + dailyRemaining;
-
-        if (totalAvailable < amount) {
-            toast({
-                variant: "destructive",
-                title: "Credits Exhausted",
-                description: "You've used up your bonus and daily credits. Upgrade for more.",
-                action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
-            });
-            success = false;
-            return currentProfile;
-        }
-
-        let newBonusCredits = bonusCredits;
-        let newDailyUsed = dailyUsed;
-
-        if (bonusCredits >= amount) {
-            newBonusCredits -= amount;
-        } else {
-            const neededFromDaily = amount - bonusCredits;
-            newBonusCredits = 0;
-            newDailyUsed += neededFromDaily;
-        }
-
-        const finalUpdates: Partial<UserProfile> = {
-            creditBalance: newBonusCredits,
-            dailyCreditsUsed: newDailyUsed,
-        };
-
-        const userDocRef = doc(db, 'users', user.uid);
-        updateDoc(userDocRef, finalUpdates).catch(e => {
-            console.error("Failed to update credits in Firestore:", e);
-            // Optionally, revert local state or show an error
+    if (!user || !userProfile) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Cannot deduct credits. Please log in again.",
         });
-        
-        success = true;
-        return { ...currentProfile, ...finalUpdates };
-    });
-    
-    return success;
-  }, [user, isDevMode, toast]);
+        return false;
+    }
+
+    const bonusCredits = userProfile.creditBalance ?? 0;
+    const dailyUsed = userProfile.dailyCreditsUsed ?? 0;
+    const dailyLimit = userProfile.dailyCreditLimit ?? 0;
+    const dailyRemaining = dailyLimit - dailyUsed;
+    const totalAvailable = bonusCredits + dailyRemaining;
+
+    if (totalAvailable < amount) {
+        toast({
+            variant: "destructive",
+            title: "Credits Exhausted",
+            description: "You've used up your bonus and daily credits. Upgrade for more.",
+            action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction>,
+        });
+        return false;
+    }
+
+    let newBonusCredits = bonusCredits;
+    let newDailyUsed = dailyUsed;
+
+    if (bonusCredits >= amount) {
+        newBonusCredits -= amount;
+    } else {
+        const neededFromDaily = amount - bonusCredits;
+        newBonusCredits = 0;
+        newDailyUsed += neededFromDaily;
+    }
+
+    const finalUpdates: Partial<UserProfile> = {
+        creditBalance: newBonusCredits,
+        dailyCreditsUsed: newDailyUsed,
+    };
+
+    setUserProfile(prev => prev ? { ...prev, ...finalUpdates } : null);
+
+    try {
+        const userDocRef = doc(db, 'users', user.uid);
+        await updateDoc(userDocRef, finalUpdates);
+        return true;
+    } catch (e) {
+        console.error("Failed to update credits in Firestore:", e);
+        setUserProfile(prev => prev ? { ...prev, creditBalance: bonusCredits, dailyCreditsUsed: dailyUsed } : null);
+        toast({
+            variant: "destructive",
+            title: "Network Error",
+            description: "Could not save credit usage. Please try again.",
+        });
+        return false;
+    }
+  }, [user, userProfile, isDevMode, toast]);
 
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
