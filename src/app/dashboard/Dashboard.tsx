@@ -400,15 +400,55 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 <CardContent className="space-y-3">
                     {isLoading ? <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-5/6" /></div>
                     : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" defaultValue={sortedMonths.slice(0, 1)} className="w-full">
-                            {sortedMonths.map(month => (
+                        <Accordion type="multiple" defaultValue={sortedMonths.slice(0, 2)} className="w-full">
+                            {sortedMonths.map(month => {
+                                const hasOverdueItems = groupedChecklist[month].some(item => {
+                                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                                    return dueDate < startOfToday() && !item.completed;
+                                });
+
+                                return (
                                 <AccordionItem value={month} key={month}>
-                                    <AccordionTrigger className="text-base font-semibold">{month}</AccordionTrigger>
-                                    <AccordionContent>{groupedChecklist[month].map(item => (
-                                        <div key={item.id} className="flex items-start gap-3 p-3 text-sm rounded-md"><Checkbox id={item.id} checked={item.completed} onCheckedChange={() => handleToggleComplete(item.id)} className="mt-1" /><div className="grid gap-0.5"><label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground")}>{item.text}</label><span className="text-xs text-muted-foreground">Due: {format(new Date(item.dueDate + 'T00:00:00'), 'do MMM, yyyy')}</span></div></div>
-                                    ))}</AccordionContent>
+                                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                            <span>{month}</span>
+                                            {hasOverdueItems && (
+                                                <AlertTriangle className="h-4 w-4 text-destructive" />
+                                            )}
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="space-y-3">
+                                            {groupedChecklist[month].map(item => {
+                                                const dueDate = new Date(item.dueDate + 'T00:00:00');
+                                                const isItemOverdue = dueDate < startOfToday() && !item.completed;
+                                                return (
+                                                    <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
+                                                        <Checkbox
+                                                            id={item.id}
+                                                            checked={item.completed}
+                                                            onCheckedChange={() => handleToggleComplete(item.id)}
+                                                            className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                                        />
+                                                        <div className="flex-1 grid gap-0.5">
+                                                            <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
+                                                                {item.text}
+                                                            </label>
+                                                            <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
+                                                            Due: {format(dueDate, 'do MMM, yyyy')}
+                                                            </span>
+                                                        </div>
+                                                        {isItemOverdue && (
+                                                            <Badge variant="destructive" className="self-center">Overdue</Badge>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </AccordionContent>
                                 </AccordionItem>
-                            ))}
+                                )}
+                            )}
                         </Accordion>
                     ) : <p className="text-center text-muted-foreground p-8">No items found for {selectedChecklistYear}.</p>}
                 </CardContent>
