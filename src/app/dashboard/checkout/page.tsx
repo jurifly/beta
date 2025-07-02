@@ -54,19 +54,29 @@ export default function CheckoutPage() {
         }
         setIsVerifying(true);
         try {
-            const transactionData: any = {
+            const baseData = {
                 userId: user.uid,
                 userEmail: userProfile.email,
                 upiTransactionId: upiId,
-                type: purchaseDetails.type,
                 name: purchaseDetails.name,
                 amount: purchaseDetails.amount,
             };
+    
+            let transactionData;
+    
             if (purchaseDetails.type === 'plan') {
-                transactionData.plan = purchaseDetails.plan;
-                transactionData.cycle = purchaseDetails.cycle;
+                transactionData = {
+                    ...baseData,
+                    type: 'plan' as const,
+                    plan: purchaseDetails.plan,
+                    cycle: purchaseDetails.cycle,
+                };
             } else {
-                transactionData.credits = purchaseDetails.credits;
+                transactionData = {
+                    ...baseData,
+                    type: 'credit_pack' as const,
+                    credits: purchaseDetails.credits,
+                };
             }
             
             const result = await saveUpiTransaction(transactionData);
