@@ -204,7 +204,18 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
-                const checklistItems = response.filings.map((f) => ({
+                // FIX: De-duplicate filings to prevent React key errors
+                const seen = new Set();
+                const uniqueFilings = response.filings.filter(filing => {
+                    const identifier = `${filing.title}-${filing.date}`;
+                    if (seen.has(identifier)) {
+                        return false;
+                    }
+                    seen.add(identifier);
+                    return true;
+                });
+
+                const checklistItems = uniqueFilings.map((f) => ({
                     id: `${f.title}-${f.date}`, text: f.title, dueDate: f.date, completed: savedStatuses[`${f.title}-${f.date}`] ?? false
                 }));
 
