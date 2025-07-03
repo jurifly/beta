@@ -4,15 +4,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowDown, Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight, Lock } from "lucide-react";
+import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
-import { UpgradePrompt } from "../upgrade-prompt";
+import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/hooks/use-toast";
 
 interface CapTableModelingModalProps {
   isOpen: boolean;
@@ -25,6 +25,8 @@ interface ScenarioResult {
   postMoney: any[];
   sharePrice: number;
   postMoneyValuation: number;
+  preMoneyValuation: number;
+  investorStake: number;
 }
 
 const MetricDisplay = ({ title, value, icon }: { title: string, value: string | number, icon: React.ReactNode }) => (
@@ -65,46 +67,42 @@ const renderTable = (title: string, data: any[]) => (
 
 
 export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }: CapTableModelingModalProps) {
-  const [preMoneyValuation, setPreMoneyValuation] = useState(50000000); // e.g. 5 Cr
   const [investment, setInvestment] = useState(10000000); // e.g. 1 Cr
-  const [newEsopPercent, setNewEsopPercent] = useState(10);
+  const [investorStake, setInvestorStake] = useState(20); // e.g. 20%
   const [result, setResult] = useState<ScenarioResult | null>(null);
+  const { toast } = useToast();
   
   const calculateScenario = () => {
     const existingShares = currentCapTable.reduce((acc, entry) => acc + entry.shares, 0);
-    const existingEsop = currentCapTable.find(e => e.type === 'ESOP')?.shares || 0;
+
+    if (existingShares === 0) {
+        toast({
+            variant: "destructive",
+            title: "Cannot Model Scenario",
+            description: "You must have at least one shareholder in your cap table to model a new round.",
+        });
+        return;
+    }
     
-    // Effective pre-money valuation considering new ESOP pool
-    const effectivePreMoney = preMoneyValuation * (1 - (newEsopPercent / 100));
+    // Derive valuations from investment amount and stake
+    const postMoneyValuation = investment / (investorStake / 100);
+    const preMoneyValuation = postMoneyValuation - investment;
     
-    const sharePrice = effectivePreMoney / (existingShares - existingEsop);
-    const postMoneyValuation = preMoneyValuation + investment;
+    // Calculate new total shares and investor shares
+    const totalPostMoneyShares = existingShares / (1 - (investorStake / 100));
+    const investorShares = totalPostMoneyShares - existingShares;
     
-    const investorShares = investment / sharePrice;
-    
-    const totalPostMoneySharesPreEsop = existingShares + investorShares;
-    const requiredEsopShares = (totalPostMoneySharesPreEsop / (1 - (newEsopPercent/100))) * (newEsopPercent/100);
-    
-    const newEsopShares = Math.max(0, requiredEsopShares - existingEsop);
-    
-    const totalPostMoneyShares = existingShares + investorShares + newEsopShares;
+    // Calculate new share price
+    const sharePrice = investment / investorShares;
 
     const preMoneyTable = currentCapTable.map(entry => ({
       ...entry,
       shares: Math.round(entry.shares),
       ownership: (entry.shares / existingShares * 100).toFixed(2) + '%'
-    }));
-    
-    const postMoneyHolders = [...currentCapTable];
-    const esopIndex = postMoneyHolders.findIndex(e => e.type === 'ESOP');
-    if (esopIndex !== -1) {
-        postMoneyHolders[esopIndex] = { ...postMoneyHolders[esopIndex], shares: postMoneyHolders[esopIndex].shares + newEsopShares, id: postMoneyHolders[esopIndex].id.startsWith('new_') ? postMoneyHolders[esopIndex].id : `new_${postMoneyHolders[esopIndex].id}`};
-    } else if (newEsopShares > 0) {
-        postMoneyHolders.push({ id: 'new_esop_pool', holder: 'ESOP Pool', type: 'ESOP', shares: newEsopShares, grantDate: new Date().toISOString().split('T')[0], vesting: 'Unissued' });
-    }
+    })).sort((a,b) => b.shares - a.shares);
     
     const postMoneyTable = [
-      ...postMoneyHolders.map(entry => ({
+      ...currentCapTable.map(entry => ({
         ...entry,
         shares: Math.round(entry.shares),
         ownership: (entry.shares / totalPostMoneyShares * 100).toFixed(2) + '%'
@@ -113,10 +111,12 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
     ].sort((a,b) => b.shares - a.shares);
     
     setResult({
-      preMoney: preMoneyTable.sort((a,b) => b.shares - a.shares),
+      preMoney: preMoneyTable,
       postMoney: postMoneyTable,
       sharePrice,
-      postMoneyValuation
+      postMoneyValuation,
+      preMoneyValuation,
+      investorStake,
     });
   };
 
@@ -135,18 +135,34 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                 <CardHeader>
                     <CardTitle>Scenario Inputs</CardTitle>
                 </CardHeader>
-                <CardContent className="grid sm:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="premoney">Pre-Money Valuation (₹)</Label>
-                        <Input id="premoney" type="number" value={preMoneyValuation} onChange={e => setPreMoneyValuation(Number(e.target.value))} />
-                    </div>
-                    <div className="space-y-2">
+                <CardContent className="grid sm:grid-cols-2 gap-8">
+                     <div className="space-y-2">
                         <Label htmlFor="investment">New Investment (₹)</Label>
-                        <Input id="investment" type="number" value={investment} onChange={e => setInvestment(Number(e.target.value))} />
+                        <div className="flex items-center gap-4">
+                            <Slider
+                                id="investment"
+                                min={100000} // 1 Lakh
+                                max={100000000} // 10 Cr
+                                step={100000}
+                                value={[investment]}
+                                onValueChange={(value) => setInvestment(value[0])}
+                            />
+                            <span className="font-mono text-sm w-28 text-right">₹{investment.toLocaleString()}</span>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="esop">Post-round ESOP Pool Target (%)</Label>
-                        <Input id="esop" type="number" value={newEsopPercent} onChange={e => setNewEsopPercent(Number(e.target.value))} />
+                     <div className="space-y-2">
+                        <Label htmlFor="stake">Investor's Stake (%)</Label>
+                         <div className="flex items-center gap-4">
+                            <Slider
+                                id="stake"
+                                min={1}
+                                max={50}
+                                step={1}
+                                value={[investorStake]}
+                                onValueChange={(value) => setInvestorStake(value[0])}
+                            />
+                             <span className="font-mono text-sm w-16 text-right">{investorStake}%</span>
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter>
@@ -162,7 +178,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                     <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
                     <p className="font-semibold text-lg">Scenario Results</p>
                     <p className="text-sm text-muted-foreground max-w-xs">
-                        Enter your fundraising scenario above and click "Calculate" to see the impact.
+                        Adjust the sliders and click "Calculate" to see the impact of your funding round.
                     </p>
                 </div>
             ) : (
@@ -170,17 +186,17 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                     <div>
                         <h3 className="font-semibold text-lg mb-2 text-center">Key Metrics</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <MetricDisplay title="Pre-Money Valuation" value={`₹${preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
+                            <MetricDisplay title="Pre-Money Valuation" value={`₹${result.preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
                             <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
                             <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
-                            <MetricDisplay title="ESOP Pool Target" value={`${newEsopPercent}%`} icon={<Percent className="h-4 w-4"/>} />
+                            <MetricDisplay title="Investor's Stake" value={`${result.investorStake}%`} icon={<Percent className="h-4 w-4"/>} />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-start gap-6">
                       {renderTable("Pre-Financing", result.preMoney)}
-                      <div className="hidden md:flex justify-center">
-                          <ArrowRight className="w-8 h-8 text-muted-foreground"/>
+                      <div className="hidden md:flex justify-center items-center h-full">
+                          <ArrowRight className="w-8 h-8 text-muted-foreground mt-8"/>
                       </div>
                       {renderTable("Post-Financing", result.postMoney)}
                     </div>
