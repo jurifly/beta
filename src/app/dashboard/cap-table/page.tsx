@@ -157,6 +157,7 @@ export default function CapTablePage() {
                 onOpenChange={setIsModalOpen}
                 onSave={handleAddOrEdit}
                 entryToEdit={entryToEdit}
+                totalShares={totalShares}
             />
             <CapTableModelingModal
                 isOpen={isModelingModalOpen}
