@@ -57,11 +57,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -158,6 +157,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const [selectedChecklistYear, setSelectedChecklistYear] = useState<string>(new Date().getFullYear().toString());
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+    const currentMonthKey = useMemo(() => format(new Date(), 'MMMM yyyy'), []);
 
     const docRequests = activeCompany?.docRequests?.filter(r => r.status === 'Pending') || [];
 
@@ -421,21 +421,23 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 <CardContent className="space-y-3">
                     {isLoading ? <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-5/6" /></div>
                     : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" defaultValue={sortedMonths.slice(0, 2)} className="w-full">
+                        <Accordion type="multiple" className="w-full">
                             {sortedMonths.map(month => {
                                 const hasOverdueItems = groupedChecklist[month].some(item => {
                                     const dueDate = new Date(item.dueDate + 'T00:00:00');
                                     return dueDate < startOfToday() && !item.completed;
                                 });
+                                const isCurrentMonth = month === currentMonthKey;
 
                                 return (
                                 <AccordionItem value={month} key={month}>
-                                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                                    <AccordionTrigger className={cn("text-base font-semibold hover:no-underline", isCurrentMonth && "text-primary")}>
                                         <div className="flex items-center gap-2">
                                             <span>{month}</span>
                                             {hasOverdueItems && (
                                                 <AlertTriangle className="h-4 w-4 text-destructive" />
                                             )}
+                                            {isCurrentMonth && <Badge variant="outline" className="border-primary text-primary">Current</Badge>}
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
@@ -459,20 +461,18 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                                                     {item.text}
                                                                 </label>
                                                                 {item.description && (
-                                                                    <TooltipProvider>
-                                                                        <Tooltip>
-                                                                            <TooltipTrigger asChild>
-                                                                                <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
-                                                                                    <Info className="h-3.5 w-3.5" />
-                                                                                    <span className="sr-only">More info about {item.text}</span>
-                                                                                </button>
-                                                                            </TooltipTrigger>
-                                                                            <TooltipContent className="max-w-xs">
-                                                                                <p className="font-medium text-sm">{item.description}</p>
-                                                                                {item.penalty && <p className="text-xs text-muted-foreground mt-2"><strong className="text-destructive">Penalty:</strong> {item.penalty}</p>}
-                                                                            </TooltipContent>
-                                                                        </Tooltip>
-                                                                    </TooltipProvider>
+                                                                    <Popover>
+                                                                        <PopoverTrigger asChild>
+                                                                            <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
+                                                                                <Info className="h-3.5 w-3.5" />
+                                                                                <span className="sr-only">More info about {item.text}</span>
+                                                                            </button>
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent className="max-w-xs text-sm" align="start">
+                                                                            <p className="font-medium">{item.description}</p>
+                                                                            {item.penalty && <p className="text-xs text-muted-foreground mt-2"><strong className="text-destructive">Penalty:</strong> {item.penalty}</p>}
+                                                                        </PopoverContent>
+                                                                    </Popover>
                                                                 )}
                                                             </div>
                                                             <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
