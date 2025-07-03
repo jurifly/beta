@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type MouseEvent } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,22 +58,36 @@ export default function CapTablePage() {
         }
     };
     
-    const handleDelete = async (idToDelete: string) => {
-        if (!userProfile || !activeCompany) return;
-        if (window.confirm("Are you sure you want to delete this cap table entry? This action cannot be undone.")) {
-            
-            const newCapTable = (activeCompany.capTable || []).filter(e => e.id !== idToDelete);
-            const updatedCompany: Company = { ...activeCompany, capTable: newCapTable };
-            const updatedCompanies = userProfile.companies.map(c => 
-                c.id === activeCompany.id ? updatedCompany : c
-            );
-            
-            try {
-                await updateUserProfile({ companies: updatedCompanies });
-                toast({ title: "Entry Deleted", description: "The shareholder has been removed from the ledger." });
-            } catch (e) {
-                toast({ variant: 'destructive', title: "Delete Failed", description: "Could not delete the entry. Please try again." });
-            }
+    const handleDelete = async (e: MouseEvent, idToDelete: string) => {
+        // Prevent any other click events from firing.
+        e.stopPropagation();
+
+        if (!userProfile || !activeCompany) {
+            toast({ variant: 'destructive', title: "Error", description: "Cannot perform action. User or company not found." });
+            return;
+        }
+
+        if (!window.confirm("Are you sure you want to delete this cap table entry? This action cannot be undone.")) {
+            return;
+        }
+
+        // Create a new array with the item removed.
+        const newCapTable = (activeCompany.capTable || []).filter(e => e.id !== idToDelete);
+        
+        // Create an updated company object with the new cap table.
+        const updatedCompany: Company = { ...activeCompany, capTable: newCapTable };
+
+        // Create a new list of all companies, with the active one replaced by the updated version.
+        const updatedCompanies = userProfile.companies.map(c => 
+            c.id === activeCompany.id ? updatedCompany : c
+        );
+        
+        // Call the master update function with the new list of companies.
+        try {
+            await updateUserProfile({ companies: updatedCompanies });
+            toast({ title: "Entry Deleted", description: "The shareholder has been removed from the ledger." });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: "Delete Failed", description: error.message || "Could not save changes to the database." });
         }
     };
 
@@ -202,7 +216,7 @@ export default function CapTablePage() {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={(e) => handleDelete(e, entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))
