@@ -32,6 +32,7 @@ import {
   FileSignature,
   Scale,
   Lock,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +56,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -114,6 +121,8 @@ type DashboardChecklistItem = {
     text: string;
     completed: boolean;
     dueDate: string;
+    description?: string;
+    penalty?: string;
 };
 
 const currentYearString = new Date().getFullYear().toString();
@@ -168,13 +177,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         const issuedShares = totalShares - esopPoolShares;
         const percentage = (issuedShares / totalShares) * 100;
         
-        const hasFounders = capTable.some(e => e.type === 'Founder');
-        const hasInvestors = capTable.some(e => e.type === 'Investor');
-        
         let subtext = "of total equity";
-        if (hasFounders && hasInvestors) subtext = "Founders & Investors";
-        else if (hasFounders) subtext = "Founder shares";
-        else if (hasInvestors) subtext = "Investor shares";
+        if (capTable.some(e => e.type === 'Founder') && capTable.some(e => e.type === 'Investor')) subtext = "Founders & Investors";
+        else if (capTable.some(e => e.type === 'Founder')) subtext = "Founder shares";
+        else if (capTable.some(e => e.type === 'Investor')) subtext = "Investor shares";
         
         return {
             equityIssued: `${percentage.toFixed(0)}%`,
@@ -215,7 +221,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 });
 
                 const checklistItems = uniqueFilings.map((f) => ({
-                    id: `${f.title}-${f.date}`, text: f.title, dueDate: f.date, completed: savedStatuses[`${f.title}-${f.date}`] ?? false
+                    id: `${f.title}-${f.date}`, text: f.title, dueDate: f.date, completed: savedStatuses[`${f.title}-${f.date}`] ?? false,
+                    description: f.description,
+                    penalty: f.penalty,
                 }));
 
                 // Set the initial checklist, which will trigger the calculation effect
@@ -446,9 +454,27 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                                             className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
-                                                            <label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture ? "cursor-not-allowed" : "cursor-pointer")}>
-                                                                {item.text}
-                                                            </label>
+                                                            <div className="flex items-center gap-2">
+                                                                <label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture ? "cursor-not-allowed" : "cursor-pointer")}>
+                                                                    {item.text}
+                                                                </label>
+                                                                {item.description && (
+                                                                    <TooltipProvider>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
+                                                                                    <Info className="h-3.5 w-3.5" />
+                                                                                    <span className="sr-only">More info about {item.text}</span>
+                                                                                </button>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent className="max-w-xs">
+                                                                                <p className="font-medium text-sm">{item.description}</p>
+                                                                                {item.penalty && <p className="text-xs text-muted-foreground mt-2"><strong className="text-destructive">Penalty:</strong> {item.penalty}</p>}
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                )}
+                                                            </div>
                                                             <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
                                                             Due: {format(dueDate, 'do MMM, yyyy')}
                                                             </span>
