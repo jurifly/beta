@@ -42,7 +42,7 @@ const prompt = ai.definePrompt({
 
 A user will ask a question about a specific topic: "{{topic}}".
 
-1.  **Provide a direct, conversational answer**: First, address the user's question directly in the \`response\` field. Explain the concepts clearly, referencing specific laws or acts relevant to {{legalRegion}} (e.g., Companies Act 2013 for India, Delaware General Corporation Law for USA) where relevant to add credibility. Always frame your answer as informational guidance. For example, instead of saying "You must do X," say "Under the relevant companies act in {{legalRegion}}, companies are generally required to do X."
+1.  **Provide a direct, conversational answer**: First, address the user's question directly in the \`response\` field. Explain the concepts clearly, referencing specific laws or acts relevant to {{legalRegion}}. For example, for a query about hiring an employee in India, you might reference key acts like The Employees' Provident Funds and Miscellaneous Provisions Act, 1952, The Employees' State Insurance Act, 1948, The Payment of Wages Act, 1936, The Minimum Wages Act, 1948, and The Maternity Benefit Act, 1961. Always frame your answer as informational guidance. For example, instead of saying "You must do X," say "Under the relevant companies act in {{legalRegion}}, companies are generally required to do X."
 
 2.  **Generate a checklist (if appropriate)**: If and only if the user's request explicitly asks for a checklist or would strongly benefit from one (e.g., "steps to register a company," "monthly compliance checklist"), generate a structured checklist in the \`checklist\` field. If a checklist is not relevant, do not include this field.
 
