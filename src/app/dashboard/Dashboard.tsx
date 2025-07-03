@@ -307,7 +307,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         const years = new Set(
             checklist
                 .map(item => new Date(item.dueDate + 'T00:00:00').getFullYear())
-                .filter(year => year <= currentYear)
                 .map(year => year.toString())
         );
 
