@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
+import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight, Info } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -131,6 +131,17 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
         </DialogHeader>
         <ScrollArea className="flex-1 -mx-6 px-6">
           <div className="space-y-6 py-4">
+            <Card className="bg-muted/50">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground"><Info className="h-5 w-5 text-primary"/>How Dilution Works</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                    When you bring in new investors, the company issues <strong>new shares</strong> for them. Your personal number of shares doesn't decrease, but since the total number of shares in the company increases, your ownership <strong>percentage</strong> gets smaller (diluted). This tool models exactly that effect.
+                    </p>
+                </CardContent>
+            </Card>
+
             <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle>Scenario Inputs</CardTitle>
