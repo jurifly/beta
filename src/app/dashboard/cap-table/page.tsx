@@ -20,8 +20,6 @@ export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
     const { toast } = useToast();
     
-    // IMPORTANT: Get the active company and its cap table directly from the auth context.
-    // This ensures we are always working with the real, persisted data.
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     const capTable = activeCompany?.capTable || [];
 
@@ -29,45 +27,53 @@ export default function CapTablePage() {
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
 
-    // This function saves the entire cap table to the user's profile.
-    // It's the single source of truth for updates.
-    const handleSaveCapTable = async (newCapTable: CapTableEntry[]) => {
+    const handleAddOrEdit = async (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {
         if (!userProfile || !activeCompany) return;
-        
+
+        let newCapTable;
+        let toastTitle = "";
+        let toastDescription = "";
+
+        if (entry.id) { // Editing
+            newCapTable = (activeCompany.capTable || []).map(e => e.id === entry.id ? { ...e, ...entry } as CapTableEntry : e);
+            toastTitle = "Entry Updated";
+            toastDescription = `Details for ${entry.holder} have been updated.`;
+        } else { // Adding
+            const newEntry: CapTableEntry = { ...entry, id: Date.now().toString() };
+            newCapTable = [...(activeCompany.capTable || []), newEntry];
+            toastTitle = "Issuance Added";
+            toastDescription = `Shares issued to ${entry.holder} have been recorded.`;
+        }
+
         const updatedCompany: Company = { ...activeCompany, capTable: newCapTable };
-        
         const updatedCompanies = userProfile.companies.map(c => 
             c.id === activeCompany.id ? updatedCompany : c
         );
-        
+
         try {
-            // This call updates the central user profile.
             await updateUserProfile({ companies: updatedCompanies });
+            toast({ title: toastTitle, description: toastDescription });
         } catch (e) {
             toast({ variant: 'destructive', title: "Save Failed", description: "Could not save cap table changes." });
         }
     };
-
-    // This function handles both adding a new entry and editing an existing one.
-    const handleAddOrEdit = (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {
-        let newCapTable;
-        if (entry.id) { // Editing an existing entry
-            newCapTable = capTable.map(e => e.id === entry.id ? { ...e, ...entry } as CapTableEntry : e);
-            toast({ title: "Entry Updated", description: `Details for ${entry.holder} have been updated.` });
-        } else { // Adding a new entry
-            const newEntry: CapTableEntry = { ...entry, id: Date.now().toString() };
-            newCapTable = [...capTable, newEntry];
-            toast({ title: "Issuance Added", description: `Shares issued to ${entry.holder} have been recorded.` });
-        }
-        handleSaveCapTable(newCapTable);
-    };
     
-    // This function handles deleting an entry.
-    const handleDelete = (idToDelete: string) => {
+    const handleDelete = async (idToDelete: string) => {
+        if (!userProfile || !activeCompany) return;
         if (window.confirm("Are you sure you want to delete this cap table entry? This action cannot be undone.")) {
-            const newCapTable = capTable.filter(e => e.id !== idToDelete);
-            handleSaveCapTable(newCapTable);
-            toast({ title: "Entry Deleted", description: "The shareholder has been removed from the ledger." });
+            
+            const newCapTable = (activeCompany.capTable || []).filter(e => e.id !== idToDelete);
+            const updatedCompany: Company = { ...activeCompany, capTable: newCapTable };
+            const updatedCompanies = userProfile.companies.map(c => 
+                c.id === activeCompany.id ? updatedCompany : c
+            );
+            
+            try {
+                await updateUserProfile({ companies: updatedCompanies });
+                toast({ title: "Entry Deleted", description: "The shareholder has been removed from the ledger." });
+            } catch (e) {
+                toast({ variant: 'destructive', title: "Delete Failed", description: "Could not delete the entry. Please try again." });
+            }
         }
     };
 
@@ -76,7 +82,6 @@ export default function CapTablePage() {
         setIsModalOpen(true);
     };
 
-    // Calculate metrics based on the real cap table data.
     const { totalShares, esopPool, founderShares, investorShares } = useMemo(() => {
         const total = capTable.reduce((acc, entry) => acc + entry.shares, 0);
         const esop = capTable.find(e => e.type === 'ESOP')?.shares || 0;
@@ -91,7 +96,6 @@ export default function CapTablePage() {
         };
     }, [capTable]);
     
-    // Data for the ownership chart.
     const chartData = useMemo(() => {
         return [
             { name: 'Founders', value: founderShares },
