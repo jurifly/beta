@@ -287,12 +287,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
     
-    // Use a functional update for setUserProfile to get the most recent state
     let success = false;
     await new Promise<void>(resolve => {
       setUserProfile(currentProfile => {
         if (!user || !currentProfile) {
-          toast({ variant: "destructive", title: "Authentication Error", description: "Cannot deduct credits. Please log in again." });
+          setTimeout(() => toast({ variant: "destructive", title: "Authentication Error", description: "Cannot deduct credits. Please log in again." }), 0);
           success = false;
           resolve();
           return currentProfile;
@@ -305,7 +304,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const totalAvailable = bonusCredits + dailyRemaining;
 
         if (totalAvailable < amount) {
-          toast({ variant: "destructive", title: "Credits Exhausted", description: "You've used up your bonus and daily credits. Upgrade for more.", action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction> });
+          setTimeout(() => toast({ variant: "destructive", title: "Credits Exhausted", description: "You've used up your bonus and daily credits. Upgrade for more.", action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction> }), 0);
           success = false;
           resolve();
           return currentProfile;
@@ -337,7 +336,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           })
           .catch(e => {
             console.error("Failed to update credits in Firestore:", e);
-            toast({ variant: "destructive", title: "Network Error", description: "Could not save credit usage. Please try again." });
+            setTimeout(() => toast({ variant: "destructive", title: "Network Error", description: "Could not save credit usage. Please try again." }), 0);
             success = false;
             resolve();
           });
