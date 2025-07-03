@@ -756,13 +756,13 @@ const DocumentGenerator = () => {
         <CardFooter className="mt-auto pt-4"><Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><FilePenLine className="mr-2 h-4 w-4" /> Generate Document</>}</Button></CardFooter>
       </Card>
       <div className="lg:col-span-2 xl:col-span-3 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div><h2 className="text-xl font-bold font-headline">Document Preview</h2></div>
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={handleCopy} className="interactive-lift w-full sm:w-auto justify-center"><Copy className="mr-2 h-4 w-4" /> Copy</Button>
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift w-full sm:w-auto justify-center"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
-                <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift w-full sm:w-auto justify-center"><Download className="mr-2 h-4 w-4" /> Download</Button>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <h2 className="text-xl font-bold font-headline">Document Preview</h2>
+            <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={handleCopy} className="interactive-lift"><Copy className="mr-2 h-4 w-4" /> Copy</Button>
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
+                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
+                <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
         </div>
         {loading ? <Card className="min-h-[400px]"><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent className="space-y-4 pt-4"><Skeleton className="h-4 w-full"/><Skeleton className="h-4 w-5/6"/></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p></Card>}
@@ -1237,6 +1237,17 @@ export default function AiToolkitPage() {
     const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
 
+    const tabs = [
+        { value: 'assistant', label: 'Assistant', icon: MessageSquare },
+        { value: 'studio', label: 'Doc Studio', icon: FilePenLine },
+        { value: 'audit', label: 'Audit', icon: GanttChartSquare },
+        { value: 'analyzer', label: 'Intelligence', icon: FileScan },
+        ...(showReconciliation ? [{ value: 'reconciliation', label: 'Reconciliation', icon: Scale }] : []),
+        { value: 'watcher', label: 'Watcher', icon: RadioTower },
+        { value: 'workflows', label: 'Workflows', icon: Zap },
+        ...(showLegalResearch ? [{ value: 'research', label: 'Research', icon: Gavel }] : []),
+    ];
+
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
             <div>
@@ -1245,15 +1256,12 @@ export default function AiToolkitPage() {
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
                 <div className="w-full overflow-x-auto pb-2">
-                  <TabsList className="grid w-max grid-cols-8">
-                      <TabsTrigger value="assistant" className="interactive-lift"><MessageSquare className="mr-2"/>Assistant</TabsTrigger>
-                      <TabsTrigger value="studio" className="interactive-lift"><FilePenLine className="mr-2"/>Doc Studio</TabsTrigger>
-                      <TabsTrigger value="audit" className="interactive-lift"><GanttChartSquare className="mr-2"/>Audit</TabsTrigger>
-                      <TabsTrigger value="analyzer" className="interactive-lift"><FileScan className="mr-2"/>Intelligence</TabsTrigger>
-                      {showReconciliation && <TabsTrigger value="reconciliation" className="interactive-lift"><Scale className="mr-2"/>Reconciliation</TabsTrigger>}
-                      <TabsTrigger value="watcher" className="interactive-lift"><RadioTower className="mr-2"/>Watcher</TabsTrigger>
-                      <TabsTrigger value="workflows" className="interactive-lift"><Zap className="mr-2"/>Workflows</TabsTrigger>
-                      {showLegalResearch && <TabsTrigger value="research" className="interactive-lift"><Gavel className="mr-2"/>Research</TabsTrigger>}
+                  <TabsList className="inline-flex items-center justify-start w-max">
+                    {tabs.map(t => (
+                        <TabsTrigger key={t.value} value={t.value} className="interactive-lift">
+                            <t.icon className="mr-2"/>{t.label}
+                        </TabsTrigger>
+                    ))}
                   </TabsList>
                 </div>
                 <div className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto">
