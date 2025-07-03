@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight, Info } from "lucide-react";
+import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 interface CapTableModelingModalProps {
   isOpen: boolean;
@@ -131,48 +132,54 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
         </DialogHeader>
         <ScrollArea className="flex-1 -mx-6 px-6">
           <div className="space-y-6 py-4">
-            <Card className="bg-muted/50">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-foreground"><Info className="h-5 w-5 text-primary"/>How Dilution Works</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                    When you bring in new investors, the company issues <strong>new shares</strong> for them. Your personal number of shares doesn't decrease, but since the total number of shares in the company increases, your ownership <strong>percentage</strong> gets smaller (diluted). This tool models exactly that effect.
-                    </p>
-                </CardContent>
-            </Card>
-
             <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle>Scenario Inputs</CardTitle>
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-2 gap-8">
                      <div className="space-y-2">
-                        <Label htmlFor="investment">New Investment (₹)</Label>
+                        <Label htmlFor="investment-slider">New Investment (₹)</Label>
                         <div className="flex items-center gap-4">
-                            <Slider
-                                id="investment"
-                                min={100000} // 1 Lakh
-                                max={100000000} // 10 Cr
+                           <Slider
+                                id="investment-slider"
+                                min={100000}
+                                max={100000000}
                                 step={100000}
                                 value={[investment]}
                                 onValueChange={(value) => setInvestment(value[0])}
+                                className="flex-1"
                             />
-                            <span className="font-mono text-sm w-28 text-right">₹{investment.toLocaleString()}</span>
+                            <Input
+                                id="investment"
+                                type="number"
+                                value={investment}
+                                onChange={(e) => setInvestment(Number(e.target.value))}
+                                className="w-32"
+                            />
                         </div>
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="stake">Investor's Stake (%)</Label>
+                        <Label htmlFor="stake-slider">Investor's Stake (%)</Label>
                          <div className="flex items-center gap-4">
-                            <Slider
-                                id="stake"
+                             <Slider
+                                id="stake-slider"
                                 min={1}
                                 max={50}
                                 step={1}
                                 value={[investorStake]}
                                 onValueChange={(value) => setInvestorStake(value[0])}
+                                className="flex-1"
                             />
-                             <span className="font-mono text-sm w-16 text-right">{investorStake}%</span>
+                             <div className="relative w-24">
+                                <Input
+                                    id="stake"
+                                    type="number"
+                                    value={investorStake}
+                                    onChange={(e) => setInvestorStake(Number(e.target.value))}
+                                    className="pr-6"
+                                />
+                                <span className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">%</span>
+                            </div>
                         </div>
                     </div>
                 </CardContent>
