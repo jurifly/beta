@@ -97,17 +97,20 @@ export default function CapTablePage() {
     };
 
     const { totalShares, esopPool, founderShares, investorShares } = useMemo(() => {
-        const total = capTable.reduce((acc, entry) => acc + entry.shares, 0);
-        const esop = capTable.find(e => e.type === 'ESOP')?.shares || 0;
-        const founders = capTable.filter(e => e.type === 'Founder').reduce((acc, e) => acc + e.shares, 0);
-        const investors = capTable.filter(e => e.type === 'Investor').reduce((acc, e) => acc + e.shares, 0);
-
-        return {
-            totalShares: total,
-            esopPool: esop,
-            founderShares: founders,
-            investorShares: investors,
-        };
+        return capTable.reduce(
+            (acc, entry) => {
+                acc.totalShares += entry.shares;
+                if (entry.type === 'Founder') {
+                    acc.founderShares += entry.shares;
+                } else if (entry.type === 'Investor') {
+                    acc.investorShares += entry.shares;
+                } else if (entry.type === 'ESOP') {
+                    acc.esopPool += entry.shares;
+                }
+                return acc;
+            },
+            { totalShares: 0, founderShares: 0, investorShares: 0, esopPool: 0 }
+        );
     }, [capTable]);
     
     const chartData = useMemo(() => {
