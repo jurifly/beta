@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
 
 Generate a comprehensive due diligence checklist based on the user's request: "{{dealType}}" for a company in {{legalRegion}}.
 
-Your response should be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant due diligence category (e.g., "Corporate Records", "Financial Information", "Intellectual Property", "Material Contracts", "Employee Matters", "Litigation"). The checklist items should be relevant to the legal and business environment of {{legalRegion}}. Be thorough and professional.
+Your response should be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant due diligence category (e.g., "Corporate Records", "Financial Information", "Intellectual Property", "Material Contracts", "Employee Matters", "Litigation"). The checklist items should be relevant to the legal and business environment of {{legalRegion}}. Be thorough, professional, and ensure all generated text is free of spelling and grammatical errors.
 `,
 });
 

@@ -44,6 +44,8 @@ const prompt = ai.definePrompt({
   - **Industry/Sector**: A plausible business sector.
   - **Location**: The registered office location in "City, State/Region" format.
 
+  Ensure all generated names and text are plausible and spelled correctly.
+
   Return the data in the specified JSON format. Do not add any extra explanations or introductory text.
   `,
 });

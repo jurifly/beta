@@ -73,6 +73,8 @@ Document to Analyze: "{{fileName}}"
 Legal Region for Context: {{legalRegion}}
 {{media url=fileDataUri}}
 
+**Quality Standard**: Your entire analysis, including summaries, risk descriptions, and suggested replies, must be professional, clearly written, and free of any spelling or grammatical errors. Review your work carefully before finalizing the output.
+
 Perform the following steps and provide the output in the specified JSON format:
 
 1.  **Classify Document Type**: First, determine the type of document from the following options: 'Legal Contract', 'Government Notice', 'Termination/Warning Letter', 'Compliance Filing', 'Other'.

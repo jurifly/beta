@@ -51,6 +51,8 @@ Based on these details:
 4.  **Cons**: List 2-3 key disadvantages or considerations.
 5.  **Alternative Option**: If there's another close option, suggest it.
 
+**Quality Control**: Before returning your response, critically review all fields for spelling, grammar, and accuracy. The reasoning must be clear and professional.
+
 Return the response in the specified JSON format.
 `,
 });

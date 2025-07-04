@@ -43,6 +43,8 @@ Structure the wiki page with the following sections using markdown:
 -   **Who to contact for questions?** (Suggest a generic role, e.g., "the HR department" or "the Legal team")
 
 The tone should be helpful and straightforward. Use markdown for headings, bold text, and lists.
+
+**Quality Check**: Review the entire generated wiki page for spelling mistakes and grammatical errors. The content must be clear and easy to understand.
 `,
 });
 

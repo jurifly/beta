@@ -25,7 +25,7 @@ const ChecklistSchema = z.object({
 export type ChecklistOutput = z.infer<typeof ChecklistSchema>;
 
 const AssistantOutputSchema = z.object({
-  response: z.string().describe("A conversational, helpful response to the user's query. This should directly answer the question, framed as informational guidance, not definitive legal advice."),
+  response: z.string().describe("A conversational, helpful response to the user's query. This should directly answer the question, framed as an informational guidance, not definitive legal advice."),
   checklist: ChecklistSchema.optional().describe("If the user's query can be best answered with a checklist, provide it here. Otherwise, omit this field.")
 });
 export type AssistantOutput = z.infer<typeof AssistantOutputSchema>;
@@ -61,6 +61,8 @@ Your response has two parts: \`response\` and an optional \`checklist\`.
 -   **User asks a question that does NOT need a list (e.g., "what if I don't file a tax return?"):**
     -   \`response\`: (A detailed explanation of the consequences, like penalties and interest, as per the tax laws of {{legalRegion}}. Do not use a bulleted or numbered list in this response text.)
     -   \`checklist\`: (This field should be omitted entirely).
+
+**Quality Control**: Your response must be professional, well-written, and free of any spelling or grammatical errors. Critically review your entire output for accuracy and clarity before finalizing it.
 
 By separating the conversational intro from the structured data, you provide a much clearer and more useful response. The UI is designed to render the \`checklist\` as a distinct, interactive component.
 `,

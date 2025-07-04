@@ -46,6 +46,8 @@ Follow this process:
 4.  **Provide Rationale**: Explain *why* you chose this code, linking it directly to the business description.
 5.  **Suggest Alternatives**: If the business description is broad or could fit into multiple categories, suggest 1-2 plausible alternative codes.
 
+**Quality Check**: Ensure the \`reasoning\` and all \`title\` fields are well-written and free of spelling errors.
+
 Return the response in the specified JSON format.
 `,
 });

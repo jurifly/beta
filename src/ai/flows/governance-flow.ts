@@ -43,7 +43,7 @@ Meeting Type: "{{meetingType}}"
 Key Topics: {{#each topics}}- {{this}}\n{{/each}}
 Legal Region: {{legalRegion}}
 
-Based on the inputs, generate a structured agenda. Ensure you include standard opening and closing items such as "Call to Order", "Approval of Previous Minutes", "Review of Action Items", and "Adjournment". Assign logical presenters (e.g., CFO for financial review, CEO for business update) and appropriate time allocations for each item. The final output should be well-organized and ready for a formal board or shareholder meeting.
+Based on the inputs, generate a structured agenda. Ensure you include standard opening and closing items such as "Call to Order", "Approval of Previous Minutes", "Review of Action Items", and "Adjournment". Assign logical presenters (e.g., CFO for financial review, CEO for business update) and appropriate time allocations for each item. The final output should be well-organized and ready for a formal board or shareholder meeting. Proofread carefully for any spelling or grammatical errors.
 `,
 });
 
@@ -101,7 +101,7 @@ Raw Notes:
 {{{notes}}}
 \`\`\`
 
-Based on the provided information, generate a complete and formal meeting minutes document in Markdown format. Follow the structure of the agenda. For each agenda item, summarize the discussion from the raw notes, clearly state any decisions made, resolutions passed, and action items assigned. The language must be formal, objective, and clear.
+Based on the provided information, generate a complete and formal meeting minutes document in Markdown format. Follow the structure of the agenda. For each agenda item, summarize the discussion from the raw notes, clearly state any decisions made, resolutions passed, and action items assigned. The language must be formal, objective, and clear. Proofread the entire document meticulously for spelling and grammar before finalizing the output.
 `,
 });
 
