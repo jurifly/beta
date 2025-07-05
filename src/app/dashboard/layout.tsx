@@ -110,14 +110,14 @@ const founderNavItems: NavItem[] = [
 
 const caNavItems: NavItem[] = [
   navItemConfig.dashboard,
-  navItemConfig.clients,
+  { ...navItemConfig.clients, label: "Client Management" },
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.financials,
   navItemConfig.documents,
   navItemConfig.caConnect,
   navItemConfig.analytics,
-  navItemConfig.team,
+  { ...navItemConfig.team, label: "Firm Management" },
   navItemConfig.clauseLibrary,
 ];
 
