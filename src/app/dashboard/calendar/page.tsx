@@ -38,30 +38,49 @@ import { ProvideDocumentModal } from '@/components/dashboard/provide-document-mo
 import type { Company, DocumentRequest } from '@/lib/types';
 
 
-const HowItWorks = () => (
+const HowItWorks = () => {
+  const { userProfile } = useAuth();
+  const isFounder = userProfile?.role === 'Founder';
+
+  const steps = [
+    {
+      icon: <Send className="w-6 h-6" />,
+      title: isFounder ? "1. Receive Requests" : "1. Request Documents",
+      description: isFounder 
+        ? "Your advisor sends requests for documents they need to complete your compliance tasks." 
+        : "As an advisor, you request the documents you need from your clients to complete compliance tasks."
+    },
+    {
+      icon: <FileUp className="w-6 h-6" />,
+      title: isFounder ? "2. Provide Documents" : "2. Fulfill Requests",
+      description: isFounder
+        ? "You get notified and can upload or select documents from your secure vault to fulfill their requests."
+        : "Clients are notified and can upload or select documents from their secure vault to fulfill your requests."
+    },
+    {
+      icon: <ClipboardCheck className="w-6 h-6" />,
+      title: "3. Track Everything",
+      description: "All requests and submissions are tracked in one place, creating a clear audit trail and ensuring deadlines are met."
+    }
+  ];
+
+  return (
     <Card className="bg-primary/5 border-primary/20 interactive-lift">
         <CardHeader>
             <CardTitle>How the Compliance Hub Works</CardTitle>
         </CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-6 text-sm">
-            <div className="flex flex-col items-center text-center gap-2">
-                <div className="p-3 bg-primary/10 rounded-full text-primary"><Send className="w-6 h-6"/></div>
-                <p className="font-semibold">1. Request Documents</p>
-                <p className="text-muted-foreground text-xs">As an advisor, you request the documents you need from your clients to complete compliance tasks.</p>
-            </div>
-             <div className="flex flex-col items-center text-center gap-2">
-                <div className="p-3 bg-primary/10 rounded-full text-primary"><FileUp className="w-6 h-6"/></div>
-                <p className="font-semibold">2. Fulfill Requests</p>
-                <p className="text-muted-foreground text-xs">Clients are notified and can upload or select documents from their secure vault to fulfill your requests.</p>
-            </div>
-             <div className="flex flex-col items-center text-center gap-2">
-                <div className="p-3 bg-primary/10 rounded-full text-primary"><ClipboardCheck className="w-6 h-6"/></div>
-                <p className="font-semibold">3. Track Everything</p>
-                <p className="text-muted-foreground text-xs">All requests and submissions are tracked in one place, creating a clear audit trail and ensuring deadlines are met.</p>
-            </div>
+            {steps.map((step) => (
+                <div key={step.title} className="flex flex-col items-center text-center gap-2">
+                    <div className="p-3 bg-primary/10 rounded-full text-primary">{step.icon}</div>
+                    <p className="font-semibold">{step.title}</p>
+                    <p className="text-muted-foreground text-xs">{step.description}</p>
+                </div>
+            ))}
         </CardContent>
     </Card>
-);
+  );
+};
 
 const statusConfig = {
     Overdue: { color: "border-red-500/50 bg-red-500/10 text-red-500", icon: <AlertTriangle className="h-4 w-4" /> },
