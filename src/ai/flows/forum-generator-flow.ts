@@ -38,7 +38,7 @@ For each thread, provide:
 - A realistic number of replies.
 - A relevant tag from the available options.
 
-Ensure the generated content is diverse, believable, and completely free of spelling or grammatical errors.
+**Quality Control**: Ensure the generated content is diverse, believable, and completely free of spelling or grammatical errors.
 `,
 });
 

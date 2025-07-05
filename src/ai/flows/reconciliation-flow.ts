@@ -76,7 +76,7 @@ Your goal is to identify matches and discrepancies.
 4.  **Summary**: Provide a short, professional summary of your findings.
 5.  **Overall Status**: Set the 'overallStatus' to "Matched" if all key figures align, or "Discrepancies Found" otherwise.
 
-Ensure the \`summary\` and \`reason\` fields are written clearly and professionally, with no spelling errors.
+**Quality Control**: Ensure the \`summary\` and \`reason\` fields are written clearly and professionally, with no spelling errors.
 
 Return your analysis in the specified JSON format.
 `,

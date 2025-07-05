@@ -36,6 +36,7 @@ import {
   Workflow,
   Gavel,
   ClipboardCheck,
+  Flame,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -69,12 +70,12 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  caConnect: { href: "/dashboard/calendar", label: "CA Connect", icon: Flame },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
   governance: { href: "/dashboard/governance", label: "Governance", icon: Gavel },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
-  complianceHub: { href: "/dashboard/compliance-hub", label: "Compliance Hub", icon: ClipboardCheck },
   analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
@@ -92,12 +93,12 @@ type NavItem = (typeof navItemConfig)[NavItemKey];
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
+  navItemConfig.caConnect,
   navItemConfig.businessSetup,
   navItemConfig.governance,
   navItemConfig.capTable,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
-  navItemConfig.complianceHub,
   navItemConfig.analytics,
   navItemConfig.community,
 ];
@@ -107,7 +108,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.clients,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
-  navItemConfig.complianceHub,
+  navItemConfig.caConnect,
   navItemConfig.analytics,
   navItemConfig.team,
   navItemConfig.clauseLibrary,
@@ -128,7 +129,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.team,
   navItemConfig.clients,
   navItemConfig.documents,
-  navItemConfig.complianceHub,
+  navItemConfig.caConnect,
   navItemConfig.analytics,
   navItemConfig.aiToolkit,
   navItemConfig.workflows,

@@ -36,6 +36,7 @@ import {
   PieChart,
   Workflow,
   Gavel,
+  Flame,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -68,12 +69,12 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  caConnect: { href: "/dashboard/calendar", label: "CA Connect", icon: Flame },
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
   governance: { href: "/dashboard/governance", label: "Governance", icon: Gavel },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
-  calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
   analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
@@ -82,7 +83,7 @@ const navItemConfig = {
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  help: { href: "/dashboard/help", label: "Help & Support", icon: LifeBuoy },
+  help: { href: "/dashboard/help", label: "Help and Support", icon: LifeBuoy },
   feedback: { href: "/dashboard/feedback", label: "Feedback", icon: PenSquare },
 } as const;
 
@@ -91,12 +92,12 @@ type NavItem = typeof navItemConfig[NavItemKey];
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
+  navItemConfig.caConnect,
   navItemConfig.businessSetup,
   navItemConfig.governance,
   navItemConfig.capTable,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
-  navItemConfig.calendar,
   navItemConfig.analytics,
   navItemConfig.community,
 ];
@@ -106,7 +107,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.clients,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
-  navItemConfig.calendar,
+  navItemConfig.caConnect,
   navItemConfig.analytics,
   navItemConfig.team,
   navItemConfig.clauseLibrary,
@@ -127,7 +128,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.team,
   navItemConfig.clients,
   navItemConfig.documents,
-  navItemConfig.calendar,
+  navItemConfig.caConnect,
   navItemConfig.analytics,
   navItemConfig.aiToolkit,
   navItemConfig.workflows,
@@ -441,7 +442,7 @@ const MobileSheetNav = ({ navItems }: { navItems: NavItem[] }) => {
                         onClick={handleLinkClick}
                     >
                         <item.icon className="h-5 w-5 transition-transform" />
-                        {item.label}
+                        <span className="flex-1">{item.label}</span>
                     </Link>
                 )
               })}

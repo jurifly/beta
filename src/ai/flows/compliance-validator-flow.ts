@@ -55,7 +55,7 @@ Please perform a detailed analysis by following these steps:
 
 4.  **Identify Gaps & Recommendations**: Identify key policies, controls, or sections that are required by the framework but seem to be missing or insufficient in the document. For each missing item, provide a clear, actionable recommendation on how to remediate the gap.
 
-Your analysis must be professional, well-written, and free of spelling or grammatical errors. Be thorough, professional, and precise.
+**Quality Control**: Your analysis must be professional, well-written, and free of spelling or grammatical errors. Be thorough, professional, and precise.
 
 Return your analysis in the specified JSON format.
 `,

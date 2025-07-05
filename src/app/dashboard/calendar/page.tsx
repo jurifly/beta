@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,6 +19,8 @@ import {
   ListX,
   Send,
   FileUp,
+  Zap,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -44,18 +46,18 @@ const HowItWorks = () => {
 
   const steps = [
     {
-      icon: <Send className="w-6 h-6" />,
-      title: isFounder ? "1. Receive Requests" : "1. Request Documents",
+      icon: <Zap className="w-6 h-6" />,
+      title: "1. Connect with your Advisor",
       description: isFounder 
-        ? "Your advisor sends requests for documents they need to complete your compliance tasks." 
-        : "As an advisor, you request the documents you need from your clients to complete compliance tasks."
+        ? "Invite your CA or legal professional to the platform using their email address." 
+        : "Accept invitations from your founder clients to link your workspaces."
     },
     {
-      icon: <FileUp className="w-6 h-6" />,
-      title: isFounder ? "2. Provide Documents" : "2. Fulfill Requests",
+      icon: <Send className="w-6 h-6" />,
+      title: "2. Request & Provide",
       description: isFounder
-        ? "You get notified and can upload or select documents from your secure vault to fulfill their requests."
-        : "Clients are notified and can upload or select documents from their secure vault to fulfill your requests."
+        ? "Your advisor requests documents they need. You get notified and can provide them directly from your vault."
+        : "Request necessary documents from your clients for compliance tasks. They are notified instantly."
     },
     {
       icon: <ClipboardCheck className="w-6 h-6" />,
@@ -67,7 +69,7 @@ const HowItWorks = () => {
   return (
     <Card className="bg-primary/5 border-primary/20 interactive-lift">
         <CardHeader>
-            <CardTitle>How the Compliance Hub Works</CardTitle>
+            <CardTitle>How CA Connect Works</CardTitle>
         </CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-6 text-sm">
             {steps.map((step) => (
@@ -131,7 +133,7 @@ const EmptyState = ({ onAddRequest }: { onAddRequest: () => void }) => {
   )
 }
 
-export default function ComplianceHubPage() {
+export default function CaConnectPage() {
   const { userProfile, updateUserProfile } = useAuth();
   const { toast } = useToast();
   
@@ -144,7 +146,7 @@ export default function ComplianceHubPage() {
   }, [userProfile]);
   
   const handleAddRequest = (data: Omit<DocumentRequest, 'id' | 'status'>) => {
-    if (!activeCompany) return;
+    if (!activeCompany || !userProfile) return;
     const newRequest: DocumentRequest = { ...data, id: Date.now().toString(), status: 'Pending' };
     const updatedCompany: Company = {
       ...activeCompany,
@@ -161,7 +163,7 @@ export default function ComplianceHubPage() {
   };
   
   const handleFileProvided = (file: { id: string; name: string; url: string; }) => {
-    if (!activeCompany || !selectedRequest) return;
+    if (!activeCompany || !selectedRequest || !userProfile) return;
     const updatedRequest: DocumentRequest = {
         ...selectedRequest,
         status: 'Received',
@@ -209,8 +211,8 @@ export default function ComplianceHubPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-                <h1 className="text-2xl font-bold font-headline">Compliance Hub</h1>
-                <p className="text-muted-foreground">The central place for all compliance document requests and submissions.</p>
+                <h1 className="text-2xl font-bold font-headline">CA Connect</h1>
+                <p className="text-muted-foreground">The central hub for all advisor communication and document requests.</p>
             </div>
             {!isFounder && <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>}
             </div>

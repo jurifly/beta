@@ -73,7 +73,7 @@ Document to Analyze: "{{fileName}}"
 Legal Region for Context: {{legalRegion}}
 {{media url=fileDataUri}}
 
-**Quality Standard**: Your entire analysis, including summaries, risk descriptions, and suggested replies, must be professional, clearly written, and free of any spelling or grammatical errors. Review your work carefully before finalizing the output.
+**Quality Control**: Your entire analysis, including summaries, risk descriptions, and suggested replies, must be professional, clearly written, and free of any spelling or grammatical errors. Review your work carefully before finalizing the output.
 
 Perform the following steps and provide the output in the specified JSON format:
 

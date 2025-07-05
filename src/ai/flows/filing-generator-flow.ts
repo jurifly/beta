@@ -56,7 +56,7 @@ Your goal is to create a complete and accurate compliance calendar.
 
 3.  **Determine Accurate Status**: Compare the calculated due date of EACH task with the \`currentDate\` to set its status to "overdue" or "upcoming". Do not use a "completed" status. A task is overdue if its due date is before the \`currentDate\`.
 
-4.  **Fill All Fields**: For each task, you must provide a 'title', 'date', 'type', 'status', 'description', and 'penalty'. Do not leave any fields blank. Ensure all text is spelled correctly.
+4.  **Quality Control**: For each task, you must provide a 'title', 'date', 'type', 'status', 'description', and 'penalty'. Do not leave any fields blank. Ensure all text is spelled correctly and the data is accurate.
 
 **Compliance Datasets**:
 

@@ -44,7 +44,7 @@ Structure the wiki page with the following sections using markdown:
 
 The tone should be helpful and straightforward. Use markdown for headings, bold text, and lists.
 
-**Quality Check**: Review the entire generated wiki page for spelling mistakes and grammatical errors. The content must be clear and easy to understand.
+**Quality Control**: Review the entire generated wiki page for spelling mistakes and grammatical errors. The content must be clear and easy to understand.
 `,
 });
 
