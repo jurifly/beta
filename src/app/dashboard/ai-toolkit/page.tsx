@@ -1323,6 +1323,27 @@ export default function AiToolkitPage() {
     const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
 
+    const pageTitle = useMemo(() => {
+        if (!userProfile) return "AI Toolkit";
+        switch (userProfile.role) {
+            case 'CA': return 'AI Practice Suite';
+            case 'Legal Advisor': return 'AI Counsel Tools';
+            case 'Enterprise': return 'AI Compliance Suite';
+            default: return 'AI Toolkit';
+        }
+    }, [userProfile]);
+
+    const pageDescription = useMemo(() => {
+        if (!userProfile) return "Your unified AI workspace for legal and compliance tasks.";
+        switch (userProfile.role) {
+            case 'CA': return 'A suite of AI-powered tools to enhance your practice and client services.';
+            case 'Legal Advisor': return 'Leverage AI for legal research, document analysis, and drafting.';
+            case 'Enterprise': return 'AI-driven tools for managing enterprise-wide compliance and governance.';
+            default: return 'Your unified AI workspace for legal and compliance tasks.';
+        }
+    }, [userProfile]);
+    
+
     const tabs = [
         { value: 'assistant', label: 'Assistant', icon: MessageSquare },
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine },
@@ -1337,8 +1358,8 @@ export default function AiToolkitPage() {
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
             <div>
-                <h1 className="text-3xl font-bold font-headline">AI Toolkit</h1>
-                <p className="text-muted-foreground">Your unified AI workspace for legal and compliance tasks.</p>
+                <h1 className="text-3xl font-bold font-headline">{pageTitle}</h1>
+                <p className="text-muted-foreground">{pageDescription}</p>
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
                 <div className="w-full overflow-x-auto pb-2">

@@ -98,7 +98,7 @@ type NavItem = (typeof navItemConfig)[NavItemKey];
 
 const founderNavItems: NavItem[] = [
   { ...navItemConfig.dashboard },
-  { ...navItemConfig.caConnect, label: "CA Connect", icon: Flame },
+  { ...navItemConfig.caConnect, label: "CA Connect" },
   { ...navItemConfig.aiToolkit },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.capTable },
@@ -112,7 +112,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
   navItemConfig.invitations,
-  navItemConfig.aiToolkit,
+  { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.financials,
   navItemConfig.documents,
   navItemConfig.caConnect,
@@ -124,7 +124,7 @@ const caNavItems: NavItem[] = [
 const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
-  navItemConfig.aiToolkit,
+  { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
   navItemConfig.documents,
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
@@ -138,7 +138,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.documents,
   { ...navItemConfig.caConnect, label: "Compliance Hub" },
   navItemConfig.analytics,
-  navItemConfig.aiToolkit,
+  { ...navItemConfig.aiToolkit, label: "AI Compliance Suite" },
   navItemConfig.workflows,
   navItemConfig.clauseLibrary,
 ];
