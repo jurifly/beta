@@ -477,6 +477,11 @@ export default function AnalyticsPage() {
     );
   }
   
+  const pageTitle = userProfile.role === 'CA' ? "Portfolio Analytics" : "Analytics";
+  const pageDescription = userProfile.role === 'CA' 
+    ? "An overview of your entire client portfolio's health and risk."
+    : "Measure and track your legal and compliance performance.";
+  
   const renderAnalyticsByRole = () => {
     switch (userProfile.role) {
       case 'Founder':
@@ -495,10 +500,8 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
-        <p className="text-muted-foreground">
-          Measure and track your legal and compliance performance.
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{pageTitle}</h2>
+        <p className="text-muted-foreground">{pageDescription}</p>
       </div>
       {renderAnalyticsByRole()}
     </div>

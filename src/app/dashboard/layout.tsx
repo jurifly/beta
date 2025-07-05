@@ -73,13 +73,13 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", label: "CA Connect", icon: Flame },
+  caConnect: { href: "/dashboard/ca-connect", label: "Compliance Hub", icon: ClipboardCheck },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   financials: { href: "/dashboard/financials", label: "Financials", icon: Receipt },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
-  analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
+  analytics: { href: "/dashboard/analytics", label: "Portfolio Analytics", icon: LineChart },
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
@@ -97,15 +97,15 @@ type NavItemKey = keyof typeof navItemConfig;
 type NavItem = (typeof navItemConfig)[NavItemKey];
 
 const founderNavItems: NavItem[] = [
-  navItemConfig.dashboard,
-  navItemConfig.caConnect,
-  navItemConfig.aiToolkit,
-  navItemConfig.launchPad,
-  navItemConfig.capTable,
-  navItemConfig.financials,
-  navItemConfig.documents,
-  navItemConfig.analytics,
-  navItemConfig.community,
+  { ...navItemConfig.dashboard },
+  { ...navItemConfig.caConnect, label: "CA Connect", icon: Flame },
+  { ...navItemConfig.aiToolkit },
+  { ...navItemConfig.launchPad },
+  { ...navItemConfig.capTable },
+  { ...navItemConfig.financials },
+  { ...navItemConfig.documents },
+  { ...navItemConfig.analytics, label: "Analytics" },
+  { ...navItemConfig.community },
 ];
 
 const caNavItems: NavItem[] = [
@@ -136,7 +136,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.team,
   navItemConfig.clients,
   navItemConfig.documents,
-  navItemConfig.caConnect,
+  { ...navItemConfig.caConnect, label: "Compliance Hub" },
   navItemConfig.analytics,
   navItemConfig.aiToolkit,
   navItemConfig.workflows,

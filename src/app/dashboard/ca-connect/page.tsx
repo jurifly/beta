@@ -225,6 +225,10 @@ export default function CaConnectPage() {
 
   const allRequests = [...overdueRequests, ...pendingRequests, ...completedRequests];
   const isFounder = userProfile?.role === 'Founder';
+  const pageTitle = userProfile?.role === 'Founder' ? "CA Connect" : "Compliance Hub";
+  const pageDescription = userProfile?.role === 'Founder'
+    ? "The central hub for all advisor communication and document requests."
+    : "Manage client filings, track deadlines, and handle document requests from one central place.";
 
   return (
     <>
@@ -241,8 +245,8 @@ export default function CaConnectPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-                <h1 className="text-2xl font-bold font-headline">CA Connect</h1>
-                <p className="text-muted-foreground">The central hub for all advisor communication and document requests.</p>
+                <h1 className="text-2xl font-bold font-headline">{pageTitle}</h1>
+                <p className="text-muted-foreground">{pageDescription}</p>
             </div>
             {!isFounder && <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>}
             </div>
