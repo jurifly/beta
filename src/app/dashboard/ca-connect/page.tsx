@@ -219,7 +219,7 @@ export default function CaConnectPage() {
 
             <HowItWorks/>
 
-            <Card>
+            <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle>Document Requests for {activeCompany?.name || 'your company'}</CardTitle>
                 </CardHeader>

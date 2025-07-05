@@ -302,7 +302,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                 {!isLoading && result && (
                     <div className="flex-1 flex flex-col min-h-0 animate-in fade-in-50 duration-500">
                         <div className="overflow-y-auto pr-2 -mr-4">
-                            <Card className="bg-background text-center mb-4">
+                            <Card className="bg-background text-center mb-4 interactive-lift">
                                 <CardHeader>
                                     <CardTitle className="text-2xl text-primary">{result.recommendedType}</CardTitle>
                                 </CardHeader>
@@ -315,7 +315,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                                 <AccordionItem value="pros-cons">
                                     <AccordionTrigger>Pros & Cons</AccordionTrigger>
                                     <AccordionContent>
-                                        <Card className="bg-background">
+                                        <Card className="bg-background interactive-lift">
                                           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-left p-4">
                                               <div className="space-y-3">
                                                   <h4 className="font-semibold flex items-center gap-2"><ThumbsUp className="text-green-500"/> Pros</h4>
@@ -436,7 +436,7 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
           )}
           {!isLoading && result && (
              <div className="space-y-6 animate-in fade-in-50 duration-500">
-                <Card className="bg-primary/10 border-primary/20 text-center">
+                <Card className="bg-primary/10 border-primary/20 text-center interactive-lift">
                     <CardHeader>
                         <CardTitle className="text-primary font-mono">{result.nicCode}</CardTitle>
                         <CardDescription className="font-semibold">{result.nicTitle}</CardDescription>
@@ -632,15 +632,14 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
                           <p className="mt-4 font-semibold">Generating {loadingDoc}...</p>
                         </div>
                     )}
-                    {generatedContent && (
+                    {generatedContent ? (
                         <Textarea
                             value={editorContent}
                             onChange={handleEditorChange}
-                            className="w-full h-full p-4 resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent font-code"
+                            className="w-full h-full p-4 resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent font-code interactive-lift"
                         />
-                    )}
-                    {!loadingDoc && !generatedContent && (
-                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground interactive-lift">
                             <FileSignature className="w-12 h-12 text-primary/20 mb-4" />
                             <p className="font-medium">Your generated document will appear here.</p>
                         </div>

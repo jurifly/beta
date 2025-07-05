@@ -76,7 +76,7 @@ export default function ClauseLibraryPage() {
                         Search, manage, and use pre-approved legal clauses for your documents.
                     </p>
                 </div>
-                <Card>
+                <Card className="interactive-lift">
                     <CardHeader className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <CardTitle>Your Clause Collection</CardTitle>

@@ -138,7 +138,7 @@ const PendingInvites = () => {
     if (invites.length === 0) return null;
 
     return (
-        <Card>
+        <Card className="interactive-lift">
             <CardHeader><CardTitle>Pending Client Invites</CardTitle></CardHeader>
             <CardContent className="space-y-2">
                 {invites.map(invite => (

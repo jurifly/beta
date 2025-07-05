@@ -93,11 +93,11 @@ export default function GovernancePage() {
                {activeTab === 'meetings' && <Button onClick={() => setModalOpen(true)}><Plus className="mr-2"/>Schedule Meeting</Button>}
             </div>
             <TabsContent value="meetings" className="mt-6">
-              <Card>
+              <Card className="interactive-lift">
                   <CardHeader><CardTitle>Upcoming & Past Meetings</CardTitle></CardHeader>
                   <CardContent>
                       {meetings.length > 0 ? meetings.map(meeting => (
-                          <Card key={meeting.id} className="mb-4">
+                          <Card key={meeting.id} className="mb-4 interactive-lift">
                               <CardHeader>
                                   <div className="flex justify-between items-start flex-wrap gap-4">
                                       <div>
@@ -186,7 +186,7 @@ function AgendaGenerator({ legalRegion, deductCredits }: { legalRegion: string, 
     };
 
     return (
-        <Card>
+        <Card className="interactive-lift">
             <CardHeader>
                 <CardTitle>AI Agenda Generator</CardTitle>
                 <CardDescription>Create a professional meeting agenda in seconds.</CardDescription>
@@ -257,7 +257,7 @@ function MinutesGenerator({ legalRegion, deductCredits }: { legalRegion: string,
     };
 
     return (
-        <Card>
+        <Card className="interactive-lift">
             <CardHeader>
                 <CardTitle>AI Minutes Generator</CardTitle>
                 <CardDescription>Convert your raw notes into formal meeting minutes.</CardDescription>

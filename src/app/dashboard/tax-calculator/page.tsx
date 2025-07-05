@@ -108,7 +108,7 @@ const PersonalTaxCalculator = () => {
   return (
     <div className="grid lg:grid-cols-5 gap-6 items-start">
         <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="interactive-lift">
             <CardHeader><CardTitle>Income Details</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2"><Label htmlFor="salary">Annual Salary (Gross)</Label><Controller name="income.salary" control={control} render={({ field }) => <Input type="number" id="salary" {...field} />} /></div>
@@ -117,7 +117,7 @@ const PersonalTaxCalculator = () => {
               <div className="space-y-2"><Label htmlFor="otherIncome">Other Income</Label><Controller name="income.otherIncome" control={control} render={({ field }) => <Input type="number" id="otherIncome" {...field} />} /></div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="interactive-lift">
             <CardHeader><CardTitle>Deductions & Exemptions</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2"><Label htmlFor="section80C">Section 80C Investments</Label><Controller name="deductions.section80C" control={control} render={({ field }) => <Input type="number" id="section80C" {...field} />} /></div>
@@ -129,7 +129,7 @@ const PersonalTaxCalculator = () => {
           <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}Calculate & Advise</Button>
         </form>
         <div className="lg:col-span-3 space-y-6">
-            <Card className="min-h-[600px] sticky top-6">
+            <Card className="min-h-[600px] sticky top-6 interactive-lift">
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div><CardTitle>Tax Report & AI Advice</CardTitle><CardDescription>Your personalized tax breakdown and recommendations.</CardDescription></div>
@@ -202,7 +202,7 @@ const CorporateTaxCalculator = () => {
     return (
         <div className="grid lg:grid-cols-5 gap-6 items-start">
             <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
-                <Card>
+                <Card className="interactive-lift">
                     <CardHeader><CardTitle>Corporate Financials</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2"><Label>Company Type</Label><Controller name="companyType" control={control} render={({ field }) => ( <Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger><SelectContent>{companyTypesByRegion.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select> )} /></div>
@@ -213,7 +213,7 @@ const CorporateTaxCalculator = () => {
                 <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}Calculate Corporate Tax</Button>
             </form>
             <div className="lg:col-span-3 space-y-6">
-                <Card className="min-h-[400px]">
+                <Card className="min-h-[400px] interactive-lift">
                     <CardHeader><CardTitle>Corporate Tax Report</CardTitle><CardDescription>AI-powered corporate tax estimation.</CardDescription></CardHeader>
                     <CardContent>
                         {isPending && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Calculating...</p></div>}
