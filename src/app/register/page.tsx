@@ -3,7 +3,7 @@
 
 import { useAuth } from "@/hooks/auth";
 import { useRouter, redirect, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { type UserRole } from "@/lib/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -48,6 +49,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, control } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -153,7 +155,18 @@ export default function RegisterPage() {
                 />
               {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+             <div className="items-top flex space-x-2">
+                <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />
+                <div className="grid gap-1.5 leading-none">
+                  <label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    I agree to the 
+                    <Link href="/dashboard/legal-policies?tab=terms" target="_blank" className="underline text-primary"> Terms of Service </Link> 
+                    and 
+                    <Link href="/dashboard/legal-policies?tab=privacy" target="_blank" className="underline text-primary"> Privacy Policy</Link>.
+                  </label>
+                </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting || !agreedToTerms}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
             </Button>

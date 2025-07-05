@@ -38,6 +38,8 @@ import {
   ClipboardCheck,
   Flame,
   Receipt,
+  Mail,
+  BookLock,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -83,10 +85,12 @@ const navItemConfig = {
   team: { href: "/dashboard/team", label: "Team", icon: Users },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
+  invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
   help: { href: "/dashboard/help", label: "Help and Support", icon: LifeBuoy },
   feedback: { href: "/dashboard/feedback", label: "Feedback", icon: PenSquare },
+  policies: { href: "/dashboard/legal-policies", label: "Policies", icon: BookLock },
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
@@ -107,6 +111,7 @@ const founderNavItems: NavItem[] = [
 const caNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
+  navItemConfig.invitations,
   navItemConfig.aiToolkit,
   navItemConfig.financials,
   navItemConfig.documents,
@@ -330,7 +335,7 @@ export default function DashboardLayout({
 const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userProfile: UserProfile }) => {
     const pathname = usePathname();
 
-    const bottomNavItems = [navItemConfig.billing, navItemConfig.settings, navItemConfig.help, navItemConfig.feedback];
+    const bottomNavItems = [navItemConfig.settings, navItemConfig.billing, navItemConfig.help, navItemConfig.feedback, navItemConfig.policies];
     const isPro = planHierarchy[userProfile.plan] > 0;
 
     return (
@@ -383,7 +388,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                               href={item.href}
                               className={cn(
                                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                                  pathname === item.href && "bg-muted text-primary font-semibold"
+                                  pathname.startsWith(item.href) && "bg-muted text-primary font-semibold"
                               )}
                             >
                               <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -409,7 +414,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
       setIsOpen(false);
     }
     
-    const bottomNavItems = [navItemConfig.billing, navItemConfig.settings, navItemConfig.help, navItemConfig.feedback];
+    const bottomNavItems = [navItemConfig.settings, navItemConfig.billing, navItemConfig.help, navItemConfig.feedback, navItemConfig.policies];
     const isPro = planHierarchy[userProfile.plan] > 0;
 
     return (
@@ -462,7 +467,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                         key={item.href}
                         href={item.href}
                         className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
-                            pathname === item.href && "bg-muted text-primary"
+                            pathname.startsWith(item.href) && "bg-muted text-primary"
                         )}
                         onClick={handleLinkClick}
                     >

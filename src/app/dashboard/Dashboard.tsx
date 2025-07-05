@@ -160,6 +160,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     const uniqueId = `${filing.title}-${filing.date}`;
                     const dueDate = new Date(filing.date + 'T00:00:00');
                     const isFuture = dueDate > today;
+                    // Critical fix: A future task can never be complete.
                     const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
 
                     return {
@@ -318,11 +319,12 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         const totalShares = capTable.reduce((acc, entry) => acc + entry.shares, 0);
         if (totalShares === 0) return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
         
-        const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.vesting === 'Unissued')?.shares || 0;
+        // Assuming any entry of type 'ESOP' and holder 'ESOP Pool' is the unissued pool. A more robust system might need a flag.
+        const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.holder.toLowerCase().includes('pool'))?.shares || 0;
         const issuedShares = totalShares - esopPoolShares;
         const percentage = (issuedShares / totalShares) * 100;
         
-        return { equityIssued: `${percentage.toFixed(0)}%`, equityIssuedSubtext: "of total equity issued" };
+        return { equityIssued: `${percentage.toFixed(0)}%`, equityIssuedSubtext: `of total shares issued (excl. pool)` };
     }, [activeCompany]);
 
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';

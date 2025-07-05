@@ -11,11 +11,6 @@ import type { Company } from "@/lib/types";
 import BillingForm from "./billing-form";
 import NotificationsForm from "./notifications-form";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase/config";
 
 const SecurityForm = () => (
     <Card className="interactive-lift">
@@ -43,50 +38,6 @@ const SecurityForm = () => (
         </CardContent>
     </Card>
 )
-
-const PendingInvites = () => {
-    const { userProfile, getPendingInvites, acceptInvite } = useAuth();
-    const [invites, setInvites] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        if (userProfile?.role === 'CA') {
-            getPendingInvites().then(setInvites).finally(() => setLoading(false));
-        }
-    }, [userProfile, getPendingInvites]);
-    
-    const handleAccept = async (inviteId: string) => {
-        try {
-            await acceptInvite(inviteId);
-            setInvites(prev => prev.filter(i => i.id !== inviteId));
-            toast({ title: 'Connection Successful!', description: 'You can now manage the new client.' });
-        } catch(e: any) {
-            toast({ title: 'Error', description: e.message, variant: 'destructive' });
-        }
-    }
-
-    if (userProfile?.role !== 'CA' || loading) return null;
-    if (invites.length === 0) return null;
-
-    return (
-        <Card className="interactive-lift">
-            <CardHeader><CardTitle>Pending Client Invites</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-                {invites.map(invite => (
-                    <div key={invite.id} className="flex justify-between items-center p-2 border rounded-md">
-                        <div>
-                            <p className="font-semibold">{invite.companyName}</p>
-                            <p className="text-sm text-muted-foreground">From: {invite.founderName}</p>
-                        </div>
-                        <Button size="sm" onClick={() => handleAccept(invite.id)}>Accept</Button>
-                    </div>
-                ))}
-            </CardContent>
-        </Card>
-    )
-};
-
 
 export default function SettingsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -141,7 +92,6 @@ export default function SettingsPage() {
               </TabsList>
           </div>
           <TabsContent value="profile" className="space-y-6">
-            <PendingInvites />
             <SettingsForm 
               onAddCompanyClick={handleAddCompanyClick}
               onEditCompanyClick={handleEditCompanyClick}

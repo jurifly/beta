@@ -2,88 +2,31 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   AlertTriangle,
-  Briefcase,
   CheckCircle,
   Clock,
   Loader2,
   Plus,
-  Calendar as CalendarIcon,
-  Receipt,
   ClipboardCheck,
-  Save,
   ListX,
-  Send,
-  FileUp,
-  Zap,
   Users,
   Sparkles,
+  FileUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/auth';
 import { cn } from '@/lib/utils';
-import { format, startOfToday, formatDistanceToNowStrict } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { AddDocRequestModal } from '@/components/dashboard/add-doc-request-modal';
 import { ProvideDocumentModal } from '@/components/dashboard/provide-document-modal';
 import type { Company, DocumentRequest } from '@/lib/types';
 
-
-const HowItWorks = () => {
-  const { userProfile } = useAuth();
-  const isFounder = userProfile?.role === 'Founder';
-
-  const steps = [
-    {
-      icon: <Zap className="w-6 h-6" />,
-      title: "1. Connect with your Advisor",
-      description: isFounder 
-        ? "Invite your CA or legal professional to the platform using their email address." 
-        : "Accept invitations from your founder clients to link your workspaces."
-    },
-    {
-      icon: <Send className="w-6 h-6" />,
-      title: "2. Request & Provide",
-      description: isFounder
-        ? "Your advisor requests documents they need. You get notified and can provide them directly from your vault."
-        : "Request necessary documents from your clients for compliance tasks. They are notified instantly."
-    },
-    {
-      icon: <ClipboardCheck className="w-6 h-6" />,
-      title: "3. Track Everything",
-      description: "All requests and submissions are tracked in one place, creating a clear audit trail and ensuring deadlines are met."
-    }
-  ];
-
-  return (
-    <Card className="bg-primary/5 border-primary/20 interactive-lift">
-        <CardHeader>
-            <CardTitle>How CA Connect Works</CardTitle>
-        </CardHeader>
-        <CardContent className="grid md:grid-cols-3 gap-6 text-sm">
-            {steps.map((step) => (
-                <div key={step.title} className="flex flex-col items-center text-center gap-2">
-                    <div className="p-3 bg-primary/10 rounded-full text-primary">{step.icon}</div>
-                    <p className="font-semibold">{step.title}</p>
-                    <p className="text-muted-foreground text-xs">{step.description}</p>
-                </div>
-            ))}
-        </CardContent>
-    </Card>
-  );
-};
 
 const statusConfig = {
     Overdue: { color: "border-red-500/50 bg-red-500/10 text-red-500", icon: <AlertTriangle className="h-4 w-4" /> },
@@ -305,9 +248,7 @@ export default function CaConnectPage() {
             </div>
 
             <AdvisorConnectCard />
-
-            <HowItWorks/>
-
+            
             <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle>Document Requests for {activeCompany?.name || 'your company'}</CardTitle>
