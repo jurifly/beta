@@ -1,22 +1,20 @@
 
 "use client";
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Download, PieChart, ShieldCheck, CheckSquare, CalendarClock } from 'lucide-react';
+import { Loader2, FileText, Download, PieChart, ShieldCheck } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import type { Company } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { format, startOfToday } from 'date-fns';
-import { Progress } from '@/components/ui/progress';
-import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend } from 'recharts';
-import Image from 'next/image';
+import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
 
 type ReportData = {
   client: Company;
@@ -31,81 +29,107 @@ type ReportData = {
 
 const ReportTemplate = ({ data }: { data: ReportData }) => {
     const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
 
     return (
-        <div className="bg-white text-black font-sans p-8" style={{ width: '210mm', minHeight: '297mm' }}>
+        <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm' }}>
             {/* Header */}
-            <div className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                 <div className="flex items-center gap-2 font-bold text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                    <span className="text-xl">LexIQ</span>
+            <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
+                <div className="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-blue-600"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                    <div>
+                        <h2 className="text-2xl font-bold text-blue-600">LexIQ</h2>
+                        <p className="text-xs text-gray-500">AI-Powered Compliance</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Compliance Health Report</h1>
-                    <p className="text-sm text-gray-500 text-right">For: {data.client.name}</p>
-                    <p className="text-sm text-gray-500 text-right">Generated: {format(new Date(), 'PPP')}</p>
+                <div className="text-right">
+                    <h1 className="text-3xl font-extrabold text-gray-700">Compliance Health Report</h1>
+                    <p className="text-sm font-medium text-gray-500">{data.client.name}</p>
                 </div>
-            </div>
+            </header>
 
             {/* Main Content */}
-            <div className="mt-8 grid grid-cols-3 gap-8">
-                {/* Left Column */}
-                <div className="col-span-1 space-y-6">
-                    <div className="p-4 border rounded-lg text-center">
-                        <h3 className="text-sm font-semibold text-gray-600 flex items-center justify-center gap-2"><ShieldCheck/> Legal Hygiene Score</h3>
-                        <p className="text-5xl font-bold text-blue-600">{data.hygieneScore}</p>
-                        <p className="text-xs text-gray-500">Out of 100</p>
+            <main className="mt-8">
+                {/* Score Section */}
+                <section className="grid grid-cols-3 gap-6 mb-8">
+                    <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50/70 p-6 rounded-xl border border-gray-200">
+                        <p className="text-sm font-semibold text-gray-600">Legal Hygiene Score</p>
+                        <div className={`mt-2 text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                        <p className="text-xs font-medium text-gray-500">Out of 100</p>
                     </div>
-                     <div className="p-4 border rounded-lg">
-                        <h3 className="text-sm font-semibold text-gray-600 mb-2">Score Components</h3>
-                        <div className="space-y-3">
-                            <div>
-                                <div className="flex justify-between text-xs mb-1"><span className="font-medium">Filing Performance</span><span>{data.filingPerformance.toFixed(0)}%</span></div>
-                                <Progress value={data.filingPerformance} className="h-2"/>
+                    <div className="col-span-2 bg-gray-50/70 p-6 rounded-xl border border-gray-200 flex flex-col justify-center">
+                        <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
+                        <div className="space-y-4">
+                             <div>
+                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-500 h-2 rounded-full" style={{ width: `${data.filingPerformance}%` }}></div></div>
                             </div>
                             <div>
-                                <div className="flex justify-between text-xs mb-1"><span className="font-medium">Profile Completeness</span><span>{data.profileCompleteness.toFixed(0)}%</span></div>
-                                <Progress value={data.profileCompleteness} className="h-2"/>
+                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-teal-500 h-2 rounded-full" style={{ width: `${data.profileCompleteness}%` }}></div></div>
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 border rounded-lg">
-                        <h3 className="text-sm font-semibold text-gray-600 flex items-center justify-center gap-2 mb-2"><PieChart/> Ownership Structure</h3>
-                        <ResponsiveContainer width="100%" height={150}>
-                            <RechartsPieChart>
-                                <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={30} outerRadius={50} paddingAngle={5}>
-                                    {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                </Pie>
-                                <Legend layout="vertical" align="right" verticalAlign="middle" iconSize={8} wrapperStyle={{fontSize: "10px"}}/>
-                            </RechartsPieChart>
-                        </ResponsiveContainer>
+                </section>
+                
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    {/* Left Column */}
+                    <div className="md:col-span-2 space-y-6">
+                         <div className="p-4 border border-gray-200 rounded-xl bg-white">
+                            <h3 className="text-base font-semibold text-gray-700 mb-3">Client Details</h3>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between"><span className="text-gray-500">Company:</span><span className="font-medium text-right">{data.client.name}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Type:</span><span className="font-medium">{data.client.type}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Inc. Date:</span><span className="font-medium">{format(new Date(data.client.incorporationDate + 'T00:00:00'), 'do MMM, yyyy')}</span></div>
+                            </div>
+                        </div>
+                        <div className="p-4 border border-gray-200 rounded-xl bg-white">
+                            <h3 className="text-base font-semibold text-gray-700 mb-2">Ownership Structure</h3>
+                            <ResponsiveContainer width="100%" height={150}>
+                                <RechartsPieChart>
+                                    <RechartsTooltip />
+                                    <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                                        {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                    </Pie>
+                                    <Legend iconSize={8} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: '11px', lineHeight: '1.4' }}/>
+                                </RechartsPieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Right Column */}
+                     <div className="md:col-span-3 space-y-6">
+                        <div className="p-4 border border-red-300 bg-red-50/50 rounded-xl h-full">
+                            <h3 className="text-base font-semibold text-red-700 mb-2">Overdue Filings ({data.overdueFilings.length})</h3>
+                            {data.overdueFilings.length > 0 ? (
+                                <ul className="text-sm list-disc pl-5 space-y-1.5 text-red-900">
+                                    {data.overdueFilings.map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
+                                </ul>
+                            ) : <p className="text-sm text-gray-600">None. All caught up!</p>}
+                        </div>
+                        <div className="p-4 border border-gray-200 rounded-xl bg-white h-full">
+                            <h3 className="text-base font-semibold text-gray-700 mb-2">Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})</h3>
+                            {data.upcomingFilings.length > 0 ? (
+                                <ul className="text-sm list-disc pl-5 space-y-1.5 text-gray-700">
+                                    {data.upcomingFilings.map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
+                                </ul>
+                            ) : <p className="text-sm text-gray-600">No filings due in the next 30 days.</p>}
+                        </div>
                     </div>
                 </div>
 
-                {/* Right Column */}
-                <div className="col-span-2 space-y-6">
-                     <div className="p-4 border rounded-lg">
-                        <h3 className="text-sm font-semibold text-gray-600 flex items-center gap-2"><CalendarClock/> Overdue Filings ({data.overdueFilings.length})</h3>
-                        <ul className="text-xs list-disc pl-5 mt-2 space-y-1 text-red-600">
-                           {data.overdueFilings.length > 0 ? data.overdueFilings.map((f: any) => <li key={f.id}>{f.text} (Due: {format(new Date(f.dueDate + 'T00:00:00'), 'do MMM')})</li>) : <li>None. Great work!</li>}
-                        </ul>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                        <h3 className="text-sm font-semibold text-gray-600 flex items-center gap-2"><CheckSquare/> Upcoming Filings ({data.upcomingFilings.length})</h3>
-                        <ul className="text-xs list-disc pl-5 mt-2 space-y-1 text-gray-700">
-                           {data.upcomingFilings.length > 0 ? data.upcomingFilings.map((f: any) => <li key={f.id}>{f.text} (Due: {format(new Date(f.dueDate + 'T00:00:00'), 'do MMM')})</li>) : <li>No filings in the next 30 days.</li>}
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            </main>
 
-             {/* Footer */}
-            <div className="text-center text-xs text-gray-400 mt-12 border-t pt-4">
-                This report was generated by LexIQ AI and is intended for informational purposes only.
-            </div>
+            {/* Footer */}
+            <footer className="text-center text-xs text-gray-400 mt-12 border-t border-gray-100 pt-4">
+                This report was generated by LexIQ AI and is intended for informational purposes only. Please verify all data before taking any action.
+                <br />
+                LexIQ &copy; {new Date().getFullYear()} - All Rights Reserved
+            </footer>
         </div>
     );
 };
+
 
 export default function ReportCenterPage() {
     const { userProfile } = useAuth();

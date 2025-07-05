@@ -117,7 +117,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.documents,
   { ...navItemConfig.caConnect, label: "Compliance Hub" },
   navItemConfig.reportCenter,
-  { ...navItemConfig.team, label: "Firm Management" },
+  navItemConfig.team,
   navItemConfig.clauseLibrary,
 ];
 

@@ -303,7 +303,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                             <Skeleton className="h-10 w-full" />
                         </div>
                     ) : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" defaultValue={sortedMonths.slice(0, 2)} className="w-full">
+                        <Accordion type="multiple" className="w-full">
                             {sortedMonths.map(month => {
                                 const today = startOfToday();
                                 const hasOverdueItems = groupedChecklist[month].some(item => {
