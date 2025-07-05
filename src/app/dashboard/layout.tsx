@@ -37,6 +37,7 @@ import {
   Gavel,
   ClipboardCheck,
   Flame,
+  Receipt,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -74,6 +75,7 @@ const navItemConfig = {
   businessSetup: { href: "/dashboard/business-setup", label: "Setup Assistant", icon: Network },
   governance: { href: "/dashboard/governance", label: "Governance", icon: Gavel },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
+  taxCalculator: { href: "/dashboard/tax-calculator", label: "Tax Calculator", icon: Receipt },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
@@ -97,6 +99,7 @@ const founderNavItems: NavItem[] = [
   navItemConfig.businessSetup,
   navItemConfig.governance,
   navItemConfig.capTable,
+  navItemConfig.taxCalculator,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.analytics,
@@ -106,6 +109,7 @@ const founderNavItems: NavItem[] = [
 const caNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
+  navItemConfig.taxCalculator,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
   navItemConfig.caConnect,

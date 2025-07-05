@@ -33,6 +33,7 @@ import {
   Scale,
   Lock,
   Info,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -245,9 +246,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 </Card>
             </div>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Pending Requests" value={`${dynamicData.filings}`} subtext="From your advisor" icon={<FileSignature />} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Pending Requests" value={`${dynamicData.filings}`} subtext="From your advisor" icon={<FileSignature />} isLoading={dynamicData.loading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext="Overdue requests" icon={<AlertTriangle />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/tax-calculator" className="block"><StatCard title="Estimated Tax" value="N/A" subtext="Click to calculate" icon={<Receipt />} isLoading={false} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
 
@@ -262,7 +263,7 @@ function CADashboard({ userProfile }: { userProfile: UserProfile }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users />} /></Link>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck />} /></Link>
-            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
             <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.creditBalance ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
 
             <div className="md:col-span-4 lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
