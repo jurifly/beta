@@ -3,11 +3,11 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, increment, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, where, deleteDoc } from 'firebase/firestore';
 import { add, type Duration } from 'date-fns';
 import { ToastAction } from '@/components/ui/toast';
 import Link from 'next/link';
@@ -31,6 +31,10 @@ export interface AuthContextType {
   addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => Promise<void>;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
+  inviteCA: (email: string) => Promise<void>;
+  revokeCA: () => Promise<void>;
+  getPendingInvites: () => Promise<any[]>;
+  acceptInvite: (inviteId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -365,7 +369,85 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return querySnapshot.docs.map(doc => doc.data().messages as ChatMessage[]);
   };
   
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead };
+  const inviteCA = async (email: string) => {
+    if (!user || !userProfile || userProfile.role !== 'Founder') throw new Error("Only founders can send invites.");
+    if (userProfile.connectedCaUid) throw new Error("You already have a connected advisor.");
+    
+    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+    if (!activeCompany) throw new Error("You must have an active company selected.");
+
+    const invitesRef = collection(db, 'invites');
+    await addDoc(invitesRef, {
+      caEmail: email,
+      founderId: user.uid,
+      founderName: userProfile.name,
+      companyName: activeCompany.name,
+      companyId: activeCompany.id,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    });
+
+    await updateUserProfile({ invitedCaEmail: email });
+  };
+  
+  const revokeCA = async () => {
+    if (!user || !userProfile || !userProfile.connectedCaUid) return;
+    
+    const caUid = userProfile.connectedCaUid;
+    const batch = writeBatch(db);
+
+    const founderRef = doc(db, "users", user.uid);
+    batch.update(founderRef, { connectedCaUid: null });
+
+    const caRef = doc(db, "users", caUid);
+    const caProfile = (await getDoc(caRef)).data() as UserProfile;
+    if (caProfile) {
+        const updatedCompanies = caProfile.companies.filter(c => c.founderUid !== user.uid);
+        batch.update(caRef, { companies: updatedCompanies });
+    }
+    
+    await batch.commit();
+    await fetchUserProfile(user); // Refresh user profile
+  };
+  
+  const getPendingInvites = async () => {
+    if (!user || userProfile?.role !== 'CA') return [];
+    const invitesRef = collection(db, 'invites');
+    const q = query(invitesRef, where('caEmail', '==', user.email), where('status', '==', 'pending'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  };
+
+  const acceptInvite = async (inviteId: string) => {
+    if (!user || userProfile?.role !== 'CA') throw new Error("Only CAs can accept invites.");
+    
+    const inviteRef = doc(db, 'invites', inviteId);
+    await runTransaction(db, async (transaction) => {
+        const inviteDoc = await transaction.get(inviteRef);
+        if (!inviteDoc.exists()) throw new Error("Invite not found.");
+
+        const { founderId, companyId } = inviteDoc.data();
+        const founderRef = doc(db, 'users', founderId);
+        const caRef = doc(db, 'users', user.uid);
+
+        const founderDoc = await transaction.get(founderRef);
+        if (!founderDoc.exists()) throw new Error("Founder account not found.");
+
+        const founderProfile = founderDoc.data() as UserProfile;
+        const companyToAccept = founderProfile.companies.find(c => c.id === companyId);
+        if (!companyToAccept) throw new Error("Company not found in founder's profile.");
+        
+        const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
+
+        transaction.update(founderRef, { connectedCaUid: user.uid, invitedCaEmail: null });
+        transaction.update(caRef, { companies: [...userProfile.companies, companyForCa] });
+        transaction.delete(inviteRef);
+    });
+
+    await fetchUserProfile(user); // Refresh CA's profile
+  };
+
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, inviteCA, revokeCA, getPendingInvites, acceptInvite };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

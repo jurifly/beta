@@ -320,15 +320,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-4">
-                <Card className="bg-gradient-to-r from-primary/10 via-card to-card border-primary/20 p-6 flex flex-col md:flex-row items-center justify-between gap-6 interactive-lift">
-                    <div>
-                        <CardTitle className="flex items-center gap-3 font-headline"><Network/> Startup Setup Assistant</CardTitle>
-                        <CardDescription className="mt-2 max-w-2xl break-words">Get a step-by-step AI-guided roadmap for registering your company.</CardDescription>
-                    </div>
-                    <Button asChild size="lg" className="shrink-0 w-full md:w-auto"><Link href="/dashboard/business-setup">Start Setup <ArrowRight className="ml-2 h-4 w-4"/></Link></Button>
-                </Card>
-            </div>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
             <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar />} isLoading={dynamicData.loading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
@@ -372,6 +363,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                             {groupedChecklist[month].map(item => {
                                                 const dueDate = new Date(item.dueDate + 'T00:00:00');
                                                 const isItemOverdue = dueDate < today && !item.completed;
+                                                const isFuture = dueDate > today;
                                                 return (
                                                     <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                                         <Checkbox
@@ -379,9 +371,10 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                                             checked={item.completed}
                                                             onCheckedChange={() => handleToggleComplete(item.id)}
                                                             className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                                            disabled={isFuture}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
-                                                            <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
+                                                            <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
                                                                 {item.text}
                                                             </label>
                                                             <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
