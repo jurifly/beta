@@ -56,6 +56,8 @@ import { addDays, format, startOfToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -119,6 +121,8 @@ type DashboardChecklistItem = {
     text: string;
     completed: boolean;
     dueDate: string;
+    description: string;
+    penalty: string;
 };
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
@@ -163,6 +167,8 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         text: filing.title,
                         dueDate: filing.date,
                         completed: isCompleted,
+                        description: filing.description,
+                        penalty: filing.penalty,
                     };
                 });
                 setChecklist(checklistItems);
@@ -377,9 +383,24 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                                                             disabled={isFuture}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
-                                                            <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
-                                                                {item.text}
-                                                            </label>
+                                                             <div className="flex items-center gap-2">
+                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
+                                                                    {item.text}
+                                                                </label>
+                                                                <TooltipProvider delayDuration={0}>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent className="max-w-xs p-3">
+                                                                            <p className="font-semibold mb-2">About this task:</p>
+                                                                            <p className="text-xs mb-3">{item.description}</p>
+                                                                            <p className="font-semibold mb-2">Penalty for non-compliance:</p>
+                                                                            <p className="text-xs text-destructive">{item.penalty}</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </div>
                                                             <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
                                                             Due: {format(dueDate, 'do MMM, yyyy')}
                                                             </span>
