@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useAuth } from "@/hooks/auth";
@@ -79,7 +80,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 mx-auto text-primary mb-2"><circle cx="12" cy="12" r="10"></circle><path d="M8 8v8h8"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 mx-auto text-primary mb-2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
           <CardTitle className="text-2xl font-headline">Welcome back</CardTitle>
           <CardDescription>Sign in to continue to your dashboard</CardDescription>
         </CardHeader>
