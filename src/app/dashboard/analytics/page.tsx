@@ -46,11 +46,6 @@ function FounderAnalytics() {
   const [isLoading, setIsLoading] = useState(true);
   const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
   const { toast } = useToast();
-  
-  const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
-  const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
-  const [cashBalance, setCashBalance] = useState(activeCompany?.financials?.cashBalance || 0);
-  const [isSavingFinancials, setIsSavingFinancials] = useState(false);
 
   useEffect(() => {
     if (!activeCompany) {
@@ -75,10 +70,6 @@ function FounderAnalytics() {
           return;
         }
         setIsLoading(true);
-        if(!await deductCredits(1)) { // Charge for analytics generation
-            setIsLoading(false);
-            return;
-        }
         try {
           const currentDate = format(new Date(), 'yyyy-MM-dd');
           const response = await generateFilings({
@@ -154,33 +145,6 @@ function FounderAnalytics() {
     };
   }, [deadlines, activeCompany]);
   
-  const { burnRate, runway, runwayLabel } = useMemo(() => {
-    const burn = expenses - revenue;
-    if (burn <= 0) {
-      return { burnRate: burn, runway: "Profitable", runwayLabel: "Financial Status" };
-    }
-    if (cashBalance <= 0) {
-      return { burnRate: burn, runway: "0 months", runwayLabel: "Estimated Runway" };
-    }
-    const runwayMonths = Math.floor(cashBalance / burn);
-    return { burnRate: burn, runway: `${runwayMonths} months`, runwayLabel: "Estimated Runway" };
-  }, [revenue, expenses, cashBalance]);
-
-  const handleSaveFinancials = async () => {
-    if (!activeCompany || !userProfile) return;
-    setIsSavingFinancials(true);
-    const updatedCompany = { ...activeCompany, financials: { cashBalance: cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses }};
-    const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
-    try {
-        await updateUserProfile({ companies: updatedCompanies });
-        toast({ title: "Financials Saved", description: "Your burn rate and runway have been updated."});
-    } catch(e) {
-        toast({ variant: 'destructive', title: "Save Failed", description: "Could not save financial data."});
-    } finally {
-        setIsSavingFinancials(false);
-    }
-  };
-  
    if (!activeCompany) {
     return (
       <Card className="lg:col-span-3">
@@ -193,134 +157,88 @@ function FounderAnalytics() {
 
   return (
     <div className="space-y-6">
-        <Tabs defaultValue="hygiene" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="hygiene"><ShieldCheck className="mr-2"/>Compliance Hygiene</TabsTrigger>
-                <TabsTrigger value="financials"><DollarSign className="mr-2"/>Financial Snapshot</TabsTrigger>
-            </TabsList>
-            <TabsContent value="hygiene" className="mt-6 space-y-6">
-                <Card className="interactive-lift">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 font-headline"><ShieldCheck className="w-6 h-6 text-primary"/> Legal Hygiene Score</CardTitle>
-                        <CardDescription>An AI-generated score based on your company's legal preparedness and compliance health.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-                         {isLoading ? (
-                            <>
-                                <Skeleton className="h-[140px] w-full rounded-lg" />
-                                <div className="lg:col-span-3 space-y-4 w-full">
-                                    <Skeleton className="h-8 w-full rounded-lg" />
-                                    <Skeleton className="h-8 w-full rounded-lg" />
-                                </div>
-                            </>
-                         ) : (
-                            <>
-                                <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary/10 to-transparent rounded-lg text-center border">
-                                    <p className="text-6xl font-bold text-primary">{hygieneScore}</p>
-                                    <p className="text-lg font-medium">Out of 100</p>
-                                </div>
-                                <div className="lg:col-span-3 space-y-4">
-                                    <div>
-                                        <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance (70% weight)</span><span>{filingPerformance}%</span></div>
-                                        <Progress value={filingPerformance} />
-                                        <p className="text-xs text-muted-foreground mt-1">Based on timely completion of compliance calendar tasks.</p>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between text-sm mb-1 font-medium"><span>Profile Completeness (30% weight)</span><span>{profileCompleteness}%</span></div>
-                                        <Progress value={profileCompleteness} />
-                                        <p className="text-xs text-muted-foreground mt-1">Based on completeness of your company's records in Settings.</p>
-                                    </div>
-                                </div>
-                            </>
-                         )}
-                    </CardContent>
-                </Card>
+      <Card className="interactive-lift">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline"><ShieldCheck className="w-6 h-6 text-primary"/> Legal Hygiene Score</CardTitle>
+              <CardDescription>An AI-generated score based on your company's legal preparedness and compliance health.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+                {isLoading ? (
+                  <>
+                      <Skeleton className="h-[140px] w-full rounded-lg" />
+                      <div className="lg:col-span-3 space-y-4 w-full">
+                          <Skeleton className="h-8 w-full rounded-lg" />
+                          <Skeleton className="h-8 w-full rounded-lg" />
+                      </div>
+                  </>
+                ) : (
+                  <>
+                      <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary/10 to-transparent rounded-lg text-center border">
+                          <p className="text-6xl font-bold text-primary">{hygieneScore}</p>
+                          <p className="text-lg font-medium">Out of 100</p>
+                      </div>
+                      <div className="lg:col-span-3 space-y-4">
+                          <div>
+                              <div className="flex justify-between text-sm mb-1 font-medium"><span>Filing Performance (70% weight)</span><span>{filingPerformance}%</span></div>
+                              <Progress value={filingPerformance} />
+                              <p className="text-xs text-muted-foreground mt-1">Based on timely completion of compliance calendar tasks.</p>
+                          </div>
+                          <div>
+                              <div className="flex justify-between text-sm mb-1 font-medium"><span>Profile Completeness (30% weight)</span><span>{profileCompleteness}%</span></div>
+                              <Progress value={profileCompleteness} />
+                              <p className="text-xs text-muted-foreground mt-1">Based on completeness of your company's records in Settings.</p>
+                          </div>
+                      </div>
+                  </>
+                )}
+          </CardContent>
+      </Card>
 
-                <Card className="interactive-lift flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><CheckSquare className="w-6 h-6 text-primary"/> Fundraising Readiness</CardTitle>
-                        <CardDescription>A dynamic checklist to prepare your company for due diligence.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-1">
-                         {checklistState?.data ? (
-                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                   <div className="flex justify-between items-center text-sm font-medium">
-                                        <Label>{checklistState.data.reportTitle} ({completedCount}/{totalCount})</Label>
-                                        <span className="font-bold text-primary">{dataroomProgress}%</span>
-                                   </div>
-                                   <Progress value={dataroomProgress} />
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-sm mb-2">Pending Items:</h4>
-                                    <div className="space-y-2">
-                                        {pendingItems.length > 0 ? (
-                                            pendingItems.map(item => (
-                                                <div key={item.id} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"/>
-                                                    <span>{item.task}</span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground">All items completed!</p>
-                                        )}
-                                    </div>
-                                </div>
-                             </div>
-                         ) : (
-                            <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                                <p>Generate a due diligence list to see your readiness.</p>
-                            </div>
-                         )}
-                    </CardContent>
-                    <CardFooter>
-                        <Button asChild variant="link" className="p-0 h-auto">
-                            <Link href="/dashboard/ai-toolkit?tab=audit">
-                                Go to Audit Hub <ArrowRight className="ml-2 h-4 w-4"/>
-                            </Link>
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </TabsContent>
-             <TabsContent value="financials" className="mt-6 space-y-6">
-                <Card className="interactive-lift">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Burn Rate & Runway Calculator</CardTitle>
-                        <CardDescription>Input your monthly financials to get a snapshot of your startup's health.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
-                                <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
-                                <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
-                                <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
-                            </div>
-                            <Button onClick={handleSaveFinancials} disabled={isSavingFinancials}>
-                                {isSavingFinancials && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                                Save & Recalculate
-                            </Button>
-                        </div>
-                        <div className="space-y-4">
-                             <div className="p-4 rounded-lg bg-muted border text-center">
-                                <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
-                            </div>
-                             <div className="p-4 rounded-lg bg-muted border text-center">
-                                <p className="text-sm text-muted-foreground">{runwayLabel}</p>
-                                <p className="text-2xl font-bold">{runway}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
+      <Card className="interactive-lift flex flex-col">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2"><CheckSquare className="w-6 h-6 text-primary"/> Fundraising Readiness</CardTitle>
+              <CardDescription>A dynamic checklist to prepare your company for due diligence.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 flex-1">
+                {checklistState?.data ? (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                          <div className="flex justify-between items-center text-sm font-medium">
+                              <Label>{checklistState.data.reportTitle} ({completedCount}/{totalCount})</Label>
+                              <span className="font-bold text-primary">{dataroomProgress}%</span>
+                          </div>
+                          <Progress value={dataroomProgress} />
+                      </div>
+                      <div>
+                          <h4 className="font-medium text-sm mb-2">Pending Items:</h4>
+                          <div className="space-y-2">
+                              {pendingItems.length > 0 ? (
+                                  pendingItems.map(item => (
+                                      <div key={item.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"/>
+                                          <span>{item.task}</span>
+                                      </div>
+                                  ))
+                              ) : (
+                                  <p className="text-sm text-muted-foreground">All items completed!</p>
+                              )}
+                          </div>
+                      </div>
+                    </div>
+                ) : (
+                  <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                      <p>Generate a due diligence list to see your readiness.</p>
+                  </div>
+                )}
+          </CardContent>
+          <CardFooter>
+              <Button asChild variant="link" className="p-0 h-auto">
+                  <Link href="/dashboard/ai-toolkit?tab=audit">
+                      Go to Audit Hub <ArrowRight className="ml-2 h-4 w-4"/>
+                  </Link>
+              </Button>
+          </CardFooter>
+      </Card>
     </div>
   )
 }
@@ -586,5 +504,3 @@ export default function AnalyticsPage() {
     </div>
   )
 }
-
-    

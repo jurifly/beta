@@ -75,7 +75,7 @@ const navItemConfig = {
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
-  financials: { href: "/dashboard/tax-calculator", label: "Financials", icon: Receipt },
+  financials: { href: "/dashboard/financials", label: "Financials", icon: Receipt },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },

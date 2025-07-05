@@ -123,7 +123,7 @@ type DashboardChecklistItem = {
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const { toast } = useToast();
-    const [dynamicData, setDynamicData] = useState({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
+    const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
@@ -131,11 +131,11 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!activeCompany) {
-                setDynamicData({ loading: false, filings: 0, hygieneScore: 0, alerts: 0 });
+                setIsLoading(false);
                 setChecklist([]);
                 return;
             }
-            setDynamicData(prev => ({ ...prev, loading: true }));
+            setIsLoading(true);
 
             try {
                 const currentDate = format(new Date(), 'yyyy-MM-dd');
@@ -156,8 +156,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     const uniqueId = `${filing.title}-${filing.date}`;
                     const dueDate = new Date(filing.date + 'T00:00:00');
                     const isFuture = dueDate > today;
-                    // A task cannot be completed if it's in the future.
-                    // This prevents loading incorrect "completed" states from localStorage.
                     const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
 
                     return {
@@ -167,50 +165,22 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         completed: isCompleted,
                     };
                 });
-
                 setChecklist(checklistItems);
-                
-                const thirtyDaysFromNow = addDays(today, 30);
-                const upcomingFilings = checklistItems.filter(item => {
-                    const dueDate = new Date(item.dueDate + 'T00:00:00');
-                    return dueDate >= today && dueDate <= thirtyDaysFromNow && !item.completed;
-                });
-                const overdueFilings = checklistItems.filter(item => {
-                    const dueDate = new Date(item.dueDate + 'T00:00:00');
-                    return dueDate < today && !item.completed;
-                });
-
-                // HYGIENE SCORE CALCULATION
-                const totalFilings = checklistItems.length;
-                const overdueFilingsCount = overdueFilings.length;
-                const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilingsCount) / totalFilings) * 100 : 100;
-
-                let profileCompleteness = 0;
-                if (activeCompany) {
-                    const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-                    if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
-                    const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
-                    profileCompleteness = (filledFields / requiredFields.length) * 100;
-                }
-                
-                const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
-
-                setDynamicData({
-                    filings: upcomingFilings.length,
-                    hygieneScore: score,
-                    alerts: overdueFilings.length,
-                    loading: false
-                });
-
             } catch (error) {
                 console.error("Failed to fetch AI-generated dashboard data:", error);
-                setDynamicData({ filings: 0, hygieneScore: 0, alerts: 0, loading: false });
+                 toast({
+                    title: "Could not fetch filings",
+                    description: "There was an error generating the compliance checklist.",
+                    variant: "destructive"
+                });
+            } finally {
+                setIsLoading(false);
             }
         }
 
         fetchDashboardData();
-    }, [activeCompany]);
-
+    }, [activeCompany, toast]);
+    
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
 
@@ -228,8 +198,42 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         localStorage.setItem(storageKey, JSON.stringify(newStatuses));
     };
 
+    const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
+        if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0 };
+        
+        const today = startOfToday();
+        const thirtyDaysFromNow = addDays(today, 30);
+        
+        const upcomingFilings = checklist.filter(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            return dueDate >= today && dueDate <= thirtyDaysFromNow && !item.completed;
+        });
+        const overdueFilings = checklist.filter(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            return dueDate < today && !item.completed;
+        });
+
+        // HYGIENE SCORE CALCULATION
+        const totalFilings = checklist.length;
+        const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
+        
+        const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+        if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
+        const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
+        const profileCompleteness = (filledFields / requiredFields.length) * 100;
+        
+        const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+        return {
+            upcomingFilingsCount: upcomingFilings.length,
+            overdueFilingsCount: overdueFilings.length,
+            hygieneScore: score,
+        }
+    }, [checklist, activeCompany]);
+
     const groupedChecklist = useMemo(() => {
         if (!checklist || checklist.length === 0) return {};
+        const today = startOfToday();
 
         const grouped = checklist.reduce((acc, item) => {
             const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
@@ -239,25 +243,20 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             acc[monthKey].push(item);
             return acc;
         }, {} as Record<string, DashboardChecklistItem[]>);
-
-        const today = startOfToday();
+        
         for (const monthKey in grouped) {
             grouped[monthKey].sort((a, b) => {
                 const aDueDate = new Date(a.dueDate + 'T00:00:00');
                 const bDueDate = new Date(b.dueDate + 'T00:00:00');
-
                 if (a.completed && !b.completed) return 1;
                 if (!a.completed && b.completed) return -1;
-
                 const aIsOverdue = aDueDate < today && !a.completed;
                 const bIsOverdue = bDueDate < today && !b.completed;
                 if (aIsOverdue && !bIsOverdue) return -1;
                 if (!aIsOverdue && bIsOverdue) return 1;
-
                 return aDueDate.getTime() - bDueDate.getTime();
             });
         }
-
         return grouped;
     }, [checklist]);
     
@@ -320,16 +319,14 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         return { equityIssued: `${percentage.toFixed(0)}%`, equityIssuedSubtext: "of total equity issued" };
     }, [activeCompany]);
 
-
-    const { hygieneScore, loading: isLoading } = dynamicData;
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar />} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext={dynamicData.alerts > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
             
@@ -466,9 +463,9 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
 function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
   const stats = [
     { title: "Risk Score", value: "Low", icon: <ShieldCheck />, color: "text-green-500", href: "/dashboard/analytics" },
-    { title: "Upcoming", value: "0", icon: <Calendar />, color: "text-orange-500", href: "/dashboard/calendar" },
+    { title: "Upcoming", value: "0", icon: <Calendar />, color: "text-orange-500", href: "/dashboard/ca-connect" },
     { title: "Generated", value: "0", icon: <FileText />, color: "text-blue-500", href: "/dashboard/ai-toolkit?tab=generator" },
-    { title: "Alerts", value: "0", icon: <AlertTriangle />, color: "text-red-500", href: "/dashboard/calendar" },
+    { title: "Alerts", value: "0", icon: <AlertTriangle />, color: "text-red-500", href: "/dashboard/ca-connect" },
   ];
 
   const actions = [
