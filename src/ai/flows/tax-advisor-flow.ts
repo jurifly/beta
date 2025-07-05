@@ -21,7 +21,7 @@ const DeductionDetailsSchema = z.object({
     otherDeductions: z.number().default(0).describe("Any other applicable deductions."),
 });
 
-export const TaxAdvisorInputSchema = z.object({
+const TaxAdvisorInputSchema = z.object({
   income: IncomeDetailsSchema,
   deductions: DeductionDetailsSchema,
   entityType: z.enum(["Individual", "Company"]).describe("The type of entity for tax calculation."),
@@ -38,7 +38,7 @@ const TaxCalculationSchema = z.object({
     effectiveRate: z.string().optional().describe("The effective tax rate as a percentage."),
 });
 
-export const TaxAdvisorOutputSchema = z.object({
+const TaxAdvisorOutputSchema = z.object({
   oldRegime: TaxCalculationSchema.describe("Tax calculation as per the old tax regime. For corporate tax or regions without this concept, this will mirror the newRegime field."),
   newRegime: TaxCalculationSchema.describe("Tax calculation as per the new/default tax regime."),
   recommendedRegime: z.enum(["Old", "New", "N/A"]).describe("The recommended tax regime for saving more tax. 'N/A' if not applicable."),
