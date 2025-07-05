@@ -78,7 +78,8 @@ export function UserNav() {
   }
 
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-  
+  const canShowActiveCompany = userProfile.role === 'Founder' || userProfile.role === 'Enterprise';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -86,10 +87,16 @@ export function UserNav() {
           <Avatar className="h-8 w-8">
              <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
           </Avatar>
-          {activeCompany && (
+          {canShowActiveCompany && activeCompany && (
             <div className="text-left hidden md:block">
               <p className="text-sm font-medium leading-tight">{activeCompany.name}</p>
               <p className="text-xs text-muted-foreground">{activeCompany.type}</p>
+            </div>
+          )}
+           {!canShowActiveCompany && (
+            <div className="text-left hidden md:block">
+              <p className="text-sm font-medium leading-tight">{userProfile.name}</p>
+              <p className="text-xs text-muted-foreground">{userProfile.role}</p>
             </div>
           )}
         </Button>
@@ -133,38 +140,42 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-         <DropdownMenuSub open={openCompanySwitcher} onOpenChange={setOpenCompanySwitcher}>
-          <DropdownMenuSubTrigger>
-            <Building className="mr-2 h-4 w-4" />
-            <span>Switch Company</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent className="p-0">
-               <Command>
-                <CommandInput placeholder="Search company..." autoFocus={true} />
-                <CommandList>
-                  <CommandEmpty>No company found.</CommandEmpty>
-                  <CommandGroup>
-                    {userProfile.companies.map(company => (
-                      <CommandItem
-                        key={company.id}
-                        value={company.name}
-                        onSelect={() => {
-                           handleCompanyChange(company.id);
-                           setOpenCompanySwitcher(false);
-                        }}
-                      >
-                        {company.name}
-                        {company.id === userProfile.activeCompanyId && <Check className="ml-auto h-4 w-4" />}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-        <DropdownMenuSeparator />
+        {canShowActiveCompany && (
+            <>
+                <DropdownMenuSub open={openCompanySwitcher} onOpenChange={setOpenCompanySwitcher}>
+                    <DropdownMenuSubTrigger>
+                        <Building className="mr-2 h-4 w-4" />
+                        <span>Switch Company</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="p-0">
+                        <Command>
+                            <CommandInput placeholder="Search company..." autoFocus={true} />
+                            <CommandList>
+                            <CommandEmpty>No company found.</CommandEmpty>
+                            <CommandGroup>
+                                {userProfile.companies.map(company => (
+                                <CommandItem
+                                    key={company.id}
+                                    value={company.name}
+                                    onSelect={() => {
+                                    handleCompanyChange(company.id);
+                                    setOpenCompanySwitcher(false);
+                                    }}
+                                >
+                                    {company.name}
+                                    {company.id === userProfile.activeCompanyId && <Check className="ml-auto h-4 w-4" />}
+                                </CommandItem>
+                                ))}
+                            </CommandGroup>
+                            </CommandList>
+                        </Command>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
+            </>
+        )}
         <DropdownMenuGroup>
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Developer Tools</DropdownMenuLabel>
           <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center justify-between">

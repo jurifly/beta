@@ -20,7 +20,6 @@ import {
   Lock,
   Menu,
   MessageSquare,
-  Monitor,
   Network,
   RadioTower,
   Scale,
@@ -109,14 +108,13 @@ const founderNavItems: NavItem[] = [
 ];
 
 const caNavItems: NavItem[] = [
-  navItemConfig.dashboard,
+  { ...navItemConfig.dashboard, label: "Portfolio Dashboard" },
   { ...navItemConfig.clients, label: "Client Management" },
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.financials,
   navItemConfig.documents,
-  navItemConfig.caConnect,
-  navItemConfig.analytics,
+  { ...navItemConfig.caConnect, label: "Compliance Hub" },
   { ...navItemConfig.team, label: "Firm Management" },
   navItemConfig.clauseLibrary,
 ];
@@ -199,6 +197,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const totalCreditsRemaining = bonusCredits + dailyRemaining;
 
   const isPro = planHierarchy[userProfile.plan] > 0;
+  const canShowActiveCompany = userProfile.role === 'Founder' || userProfile.role === 'Enterprise';
 
   return (
       <>
@@ -222,7 +221,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="hidden md:flex items-center gap-4">
-                  {activeCompany && (
+                  {canShowActiveCompany && activeCompany && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Building className="w-4 h-4"/>
                           <span>{activeCompany.name}</span>

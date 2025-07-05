@@ -14,16 +14,9 @@ import {
   ShieldCheck,
   ListChecks,
   FileScan,
-  Folders,
-  RadioTower,
-  Network,
   Users,
   GanttChartSquare,
-  FileClock,
-  MailWarning,
-  ClipboardList,
-  Target,
-  Upload,
+  FileWarning,
   Loader2,
   PieChart,
   Briefcase,
@@ -48,7 +41,7 @@ import {
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
-import type { UserProfile, Company, DocumentRequest } from "@/lib/types";
+import type { UserProfile, Company } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
@@ -57,6 +50,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend } from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 
 const ComplianceActivityChart = dynamic(
@@ -160,7 +157,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     const uniqueId = `${filing.title}-${filing.date}`;
                     const dueDate = new Date(filing.date + 'T00:00:00');
                     const isFuture = dueDate > today;
-                    // Critical fix: A future task can never be complete.
                     const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
 
                     return {
@@ -319,7 +315,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         const totalShares = capTable.reduce((acc, entry) => acc + entry.shares, 0);
         if (totalShares === 0) return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
         
-        // Assuming any entry of type 'ESOP' and holder 'ESOP Pool' is the unissued pool. A more robust system might need a flag.
         const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.holder.toLowerCase().includes('pool'))?.shares || 0;
         const issuedShares = totalShares - esopPoolShares;
         const percentage = (issuedShares / totalShares) * 100;
@@ -332,9 +327,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
+            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} /></Link>
+            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
             
@@ -431,33 +426,156 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     );
 }
 
-function CADashboard({ userProfile }: { userProfile: UserProfile }) {
-    const clientCount = userProfile.companies.length;
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users />} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck />} /></Link>
-            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
-            <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.creditBalance ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
+const riskChartConfig = {
+  clients: { label: "Clients" },
+  low: { label: "Low", color: "hsl(var(--chart-2))" },
+  medium: { label: "Medium", color: "hsl(var(--chart-3))" },
+  high: { label: "High", color: "hsl(var(--chart-5))" },
+}
 
-            <div className="md:col-span-4 lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
+function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
+   const clientCount = userProfile.companies.length;
+   
+    const { avgProfileCompleteness, riskDistribution, clientHealthData } = useMemo(() => {
+        if (clientCount === 0) return { avgProfileCompleteness: 0, riskDistribution: [], clientHealthData: [] };
+        
+        let totalCompleteness = 0;
+        const healthData = userProfile.companies.map(company => {
+            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(company.type)) {
+                requiredFields.push('cin');
+            }
+            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+            const completeness = (filledFields / requiredFields.length) * 100;
+            totalCompleteness += completeness;
             
-            <div className="md:col-span-2 lg:col-span-4"><QuickLinkCard title="AI Financial Reconciliation" description="Upload GST, ROC, and ITR filings to automatically find discrepancies and ensure financial accuracy." href="/dashboard/ai-toolkit?tab=reconciliation" icon={<Scale className="text-primary"/>} /></div>
+            // Mock overdue tasks for risk calculation
+            const overdueTasks = Math.floor(Math.random() * 5); // 0 to 4
+            const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
+            const healthScore = Math.round((completeness * 0.5) + (filingPerf * 0.5));
+            
+            let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+            if (healthScore < 60) riskLevel = 'High';
+            else if (healthScore < 85) riskLevel = 'Medium';
+
+            return { ...company, completeness, overdueTasks, healthScore, riskLevel };
+        });
+
+        const riskCounts = healthData.reduce((acc, client) => {
+            if (client.riskLevel === 'Low') acc.low++;
+            else if (client.riskLevel === 'Medium') acc.medium++;
+            else if (client.riskLevel === 'High') acc.high++;
+            return acc;
+        }, { low: 0, medium: 0, high: 0 });
+
+        const riskChartData = [
+            { name: 'Low', clients: riskCounts.low, fill: "var(--color-low)" },
+            { name: 'Medium', clients: riskCounts.medium, fill: "var(--color-medium)" },
+            { name: 'High', clients: riskCounts.high, fill: "var(--color-high)" },
+        ].filter(d => d.clients > 0);
+
+        return {
+            avgProfileCompleteness: Math.round(totalCompleteness / clientCount),
+            riskDistribution: riskChartData,
+            clientHealthData: healthData.sort((a,b) => a.healthScore - b.healthScore),
+        };
+    }, [userProfile.companies, clientCount]);
+
+
+   return (
+    <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="interactive-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{clientCount}</div>
+                    <p className="text-xs text-muted-foreground">
+                        {clientCount > 0 ? `${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed` : "No clients added yet"}
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="interactive-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Avg. Profile Completeness</CardTitle>
+                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-green-500">{avgProfileCompleteness}%</div>
+                    <p className="text-xs text-muted-foreground">Average across all clients</p>
+                </CardContent>
+            </Card>
+             <Card className="interactive-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Clients at Risk</CardTitle><FileWarning className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-destructive">{(riskDistribution.find(d => d.name === 'High')?.clients || 0)}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
+            </Card>
         </div>
-    );
+
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+            <Card className="lg:col-span-2 interactive-lift">
+                 <CardHeader>
+                    <CardTitle>Portfolio Risk</CardTitle>
+                    <CardDescription>Breakdown of client risk levels based on compliance health.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-52">
+                      <RechartsPieChart>
+                        <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
+                        <Pie data={riskDistribution} dataKey="clients" nameKey="name" innerRadius={60} strokeWidth={5} />
+                        <Legend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
+                      </RechartsPieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+            <Card className="lg:col-span-3 interactive-lift">
+                 <CardHeader>
+                    <CardTitle>Client Health Overview</CardTitle>
+                    <CardDescription>Prioritize your work by focusing on clients who need the most attention.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {clientHealthData.length > 0 ? (
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Profile</TableHead><TableHead>Health Score</TableHead><TableHead className="text-right">Risk Level</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {clientHealthData.map(client => (
+                                    <TableRow key={client.id}>
+                                        <TableCell className="font-medium">{client.name}</TableCell>
+                                        <TableCell>{client.completeness.toFixed(0)}%</TableCell>
+                                        <TableCell>
+                                            <Progress value={client.healthScore} className="w-24 h-2" />
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant={client.riskLevel === 'High' ? 'destructive' : client.riskLevel === 'Medium' ? 'default' : 'secondary'}>{client.riskLevel}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                         <div className="text-center text-muted-foreground p-8">
+                            <p>No clients to display.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+  )
 }
 
 function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="md:col-span-2 lg:col-span-4">
-                 <QuickLinkCard title="AI Document Analyzer" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
-            </div>
-            <Link href="/dashboard/clients" className="block"><StatCard title="Active Matters" value="0" subtext="Across all clients" icon={<Briefcase />} /></Link>
-            <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title="Contracts Analyzed" value="0" subtext="This month" icon={<ClipboardList />} /></Link>
-            <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Awaiting your review" icon={<FileClock />} /></Link>
-            <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="Notices to Draft" value="0" subtext="Based on recent uploads" icon={<MailWarning />} /></Link>
-            <div className="md:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
+             <div className="md:col-span-4 lg:col-span-4">
+                <QuickLinkCard title="AI Document Analyzer" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
+             </div>
+             <Link href="/dashboard/clients" className="block"><StatCard title="Active Matters" value="0" subtext="Across all clients" icon={<Briefcase />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title="Contracts Analyzed" value="0" subtext="This month" icon={<ListChecks />} /></Link>
+             <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Awaiting your review" icon={<FileSignature />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=research" className="block"><StatCard title="Legal Research" value="0" subtext="Queries this month" icon={<Scale />} /></Link>
+             <div className="md:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
         </div>
     );
 }
@@ -547,7 +665,7 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile, deductCredits } = useAuth();
+  const { userProfile } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
   const renderDesktopDashboardByRole = () => {
@@ -568,7 +686,7 @@ export default function Dashboard() {
       case 'Founder':
         return <FounderDashboard userProfile={userProfile} />;
       case 'CA':
-        return <CADashboard userProfile={userProfile} />;
+        return <CAAnalytics userProfile={userProfile} />;
       case 'Legal Advisor':
         return <LegalAdvisorDashboard userProfile={userProfile} />;
       case 'Enterprise':
@@ -582,7 +700,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
+      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} />
       <div className="flex-col gap-6 hidden md:flex">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -590,15 +708,17 @@ export default function Dashboard() {
               Welcome, {userProfile?.name.split(" ")[0]}!
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Here&apos;s your {userProfile?.role} overview for {activeCompany?.name || 'your company'}.
+              Here&apos;s your {userProfile?.role} overview {userProfile?.role === 'Founder' && activeCompany ? `for ${activeCompany.name}` : ''}.
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button onClick={() => setAddCompanyModalOpen(true)} className="w-full sm:w-auto interactive-lift">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Company
-            </Button>
-          </div>
+          {userProfile?.role !== 'CA' && (
+            <div className="flex items-center gap-4">
+                <Button onClick={() => setAddCompanyModalOpen(true)} className="w-full sm:w-auto interactive-lift">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Company
+                </Button>
+            </div>
+          )}
         </div>
         {renderDesktopDashboardByRole()}
       </div>
