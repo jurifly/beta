@@ -65,7 +65,8 @@ const legalRegions = [
     { value: 'USA', label: 'United States' },
     { value: 'UK', label: 'United Kingdom' },
     { value: 'Singapore', label: 'Singapore' },
-    { value: 'Other', label: 'Other' },
+    { value: 'Australia', label: 'Australia' },
+    { value: 'Canada', label: 'Canada' },
 ]
 
 const STEPS = [

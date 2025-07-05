@@ -19,8 +19,8 @@ import { LifeBuoy, Mail } from "lucide-react"
 
 const faqs = [
   {
-    question: "What is Clausey?",
-    answer: "Clausey is an AI-powered platform designed to help startups, CAs, and legal professionals manage their legal and compliance needs efficiently. From document generation to compliance tracking, Clausey is your AI legal co-pilot.",
+    question: "What is LexIQ?",
+    answer: "LexIQ is an AI-powered platform designed to help startups, CAs, and legal professionals manage their legal and compliance needs efficiently. From document generation to compliance tracking, LexIQ is your AI legal co-pilot.",
   },
   {
     question: "How do AI credits work?",
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     question: "Who can I contact for support?",
-    answer: "You can reach our support team by emailing support@clausey.com. We're happy to help with any questions or issues you may have.",
+    answer: "You can reach our support team by emailing support@lexiq.com. We're happy to help with any questions or issues you may have.",
   },
 ];
 
@@ -75,7 +75,7 @@ export default function HelpPage() {
                 </CardHeader>
                 <CardContent>
                     <Button asChild className="w-full">
-                        <a href="mailto:support@clausey.com">
+                        <a href="mailto:support@lexiq.com">
                             <Mail className="mr-2 h-4 w-4" /> Email Support
                         </a>
                     </Button>

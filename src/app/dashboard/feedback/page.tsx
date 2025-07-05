@@ -48,7 +48,7 @@ export default function FeedbackPage() {
     
     toast({
       title: "Feedback Submitted!",
-      description: "Thank you for helping us improve Clausey. We've received your feedback.",
+      description: "Thank you for helping us improve LexIQ. We've received your feedback.",
     });
     reset();
   };

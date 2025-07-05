@@ -135,7 +135,7 @@ export default function CheckoutPage() {
     }
 
     const amountString = purchaseDetails.amount.toFixed(2);
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=alex.varghese@superyes&pn=Clausey&am=${amountString}&cu=INR&tn=Clausey%20Purchase`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=alex.varghese@superyes&pn=LexIQ&am=${amountString}&cu=INR&tn=LexIQ%20Purchase`;
     
     return (
         <div className="max-w-4xl mx-auto space-y-6">
