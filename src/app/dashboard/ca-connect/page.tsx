@@ -21,6 +21,7 @@ import {
   FileUp,
   Zap,
   Users,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -133,6 +134,92 @@ const EmptyState = ({ onAddRequest }: { onAddRequest: () => void }) => {
   )
 }
 
+const AdvisorConnectCard = () => {
+    const { userProfile, inviteCA, revokeCA } = useAuth();
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
+
+    if (!userProfile || userProfile.role !== 'Founder') return null;
+
+    const handleInvite = async () => {
+        if (!email) return;
+        setLoading(true);
+        try {
+            await inviteCA(email);
+            toast({ title: "Invite Sent!", description: `An invitation has been sent to ${email}.`});
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    const handleRevoke = async () => {
+        if (!window.confirm("Are you sure you want to revoke access for your advisor?")) return;
+        setLoading(true);
+        try {
+            await revokeCA();
+            toast({ title: "Access Revoked" });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (userProfile.connectedCaUid) {
+        return (
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Users /> My Advisor</CardTitle>
+                    <CardDescription>Your connected compliance professional.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <p className="font-semibold text-green-600">You are connected with your advisor.</p>
+                    <Button variant="destructive" onClick={handleRevoke} disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                        Revoke Access
+                    </Button>
+                </CardContent>
+            </Card>
+        );
+    }
+    
+    if (userProfile.invitedCaEmail) {
+        return (
+             <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Users /> My Advisor</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="font-semibold text-yellow-600">Invitation Pending</p>
+                    <p className="text-sm text-muted-foreground">An invite has been sent to {userProfile.invitedCaEmail}. They need to accept it to connect.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <Card className="interactive-lift bg-muted/50">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Connect Your Advisor</CardTitle>
+                <CardDescription>Invite your CA or legal advisor to collaborate on your compliance.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="ca-email">Advisor's Email</Label>
+                    <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your CA's registered email"/>
+                </div>
+                <Button onClick={handleInvite} disabled={loading || !email}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Send Invite
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function CaConnectPage() {
   const { userProfile, updateUserProfile } = useAuth();
   const { toast } = useToast();
@@ -216,6 +303,8 @@ export default function CaConnectPage() {
             </div>
             {!isFounder && <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>}
             </div>
+
+            <AdvisorConnectCard />
 
             <HowItWorks/>
 
