@@ -151,19 +151,25 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
+                const today = startOfToday();
                 const checklistItems = processedFilings.map((filing) => {
                     const uniqueId = `${filing.title}-${filing.date}`;
+                    const dueDate = new Date(filing.date + 'T00:00:00');
+                    const isFuture = dueDate > today;
+                    // A task cannot be completed if it's in the future.
+                    // This prevents loading incorrect "completed" states from localStorage.
+                    const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
+
                     return {
                         id: uniqueId,
                         text: filing.title,
                         dueDate: filing.date,
-                        completed: savedStatuses[uniqueId] ?? false,
+                        completed: isCompleted,
                     };
                 });
 
                 setChecklist(checklistItems);
                 
-                const today = startOfToday();
                 const thirtyDaysFromNow = addDays(today, 30);
                 const upcomingFilings = checklistItems.filter(item => {
                     const dueDate = new Date(item.dueDate + 'T00:00:00');
