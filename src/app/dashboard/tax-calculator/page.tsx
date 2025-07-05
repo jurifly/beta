@@ -143,9 +143,10 @@ const PersonalTaxCalculator = () => {
                         <div ref={resultRef} className="p-4 bg-background animate-in fade-in-50">
                             <Alert className="mb-6 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-300"><AlertTriangle className="h-4 w-4 !text-amber-500"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is an AI-generated estimate for informational purposes only. Consult a professional for final tax advice.</AlertDescription></Alert>
                             <div className="p-4 text-center rounded-lg bg-primary/10 border border-primary/20 mb-6"><p className="text-sm font-semibold text-primary">Recommended Regime</p><p className="text-2xl font-bold">{result.recommendedRegime}</p><p className="text-xs text-muted-foreground">{result.recommendationReason}</p></div>
+                             <p className="text-sm text-center text-muted-foreground mb-6">{result.summary}</p>
                             <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div className="p-4 border rounded-lg space-y-3"><h3 className="font-semibold flex items-center gap-2"><XCircle className="text-destructive"/> Old Regime</h3><dl className="space-y-2"><InfoCard title="Gross Income" value={result.oldRegime.grossIncome} /><InfoCard title="Deductions" value={result.oldRegime.totalDeductions} /><InfoCard title="Taxable Income" value={result.oldRegime.taxableIncome} /><InfoCard title="Tax Payable" value={result.oldRegime.taxPayable} /></dl></div>
-                                <div className="p-4 border rounded-lg space-y-3"><h3 className="font-semibold flex items-center gap-2"><CheckCircle className="text-green-500"/> New Regime</h3><dl className="space-y-2"><InfoCard title="Gross Income" value={result.newRegime.grossIncome} /><InfoCard title="Deductions" value={result.newRegime.totalDeductions} /><InfoCard title="Taxable Income" value={result.newRegime.taxableIncome} /><InfoCard title="Tax Payable" value={result.newRegime.taxPayable} /></dl></div>
+                                <div className="p-4 border rounded-lg space-y-3"><h3 className="font-semibold flex items-center gap-2"><XCircle className="text-destructive"/> Old Regime</h3><dl className="space-y-2"><InfoCard title="Gross Income" value={result.oldRegime.grossIncome} /><InfoCard title="Deductions" value={result.oldRegime.totalDeductions} /><InfoCard title="Taxable Income" value={result.oldRegime.taxableIncome} /><InfoCard title="Tax Payable" value={result.oldRegime.taxPayable} />{result.oldRegime.effectiveRate && <InfoCard title="Effective Tax Rate" value={result.oldRegime.effectiveRate} />}</dl></div>
+                                <div className="p-4 border rounded-lg space-y-3"><h3 className="font-semibold flex items-center gap-2"><CheckCircle className="text-green-500"/> New Regime</h3><dl className="space-y-2"><InfoCard title="Gross Income" value={result.newRegime.grossIncome} /><InfoCard title="Deductions" value={result.newRegime.totalDeductions} /><InfoCard title="Taxable Income" value={result.newRegime.taxableIncome} /><InfoCard title="Tax Payable" value={result.newRegime.taxPayable} />{result.newRegime.effectiveRate && <InfoCard title="Effective Tax Rate" value={result.newRegime.effectiveRate} />}</dl></div>
                             </div>
                            <Separator className="my-6"/>
                            <div><h3 className="font-semibold mb-3 flex items-center gap-2"><Lightbulb className="text-primary"/> AI Tax Saving Tips</h3><ul className="space-y-3">{result.optimizationTips.map((tip, index) => (<li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border"><TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/><span>{tip}</span></li>))}</ul></div>
@@ -220,11 +221,13 @@ const CorporateTaxCalculator = () => {
                         {!isPending && result && (
                             <div className="animate-in fade-in-50">
                                 <Alert className="mb-6"><AlertTriangle className="h-4 w-4"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is a simplified estimate. Consult a professional for accurate tax filing.</AlertDescription></Alert>
+                                <p className="text-sm text-center text-muted-foreground mb-6">{result.summary}</p>
                                 <div className="p-4 border rounded-lg space-y-3">
                                     <h3 className="font-semibold text-lg">Tax Calculation</h3>
                                     <dl className="space-y-2">
                                         <InfoCard title="Taxable Income" value={result.newRegime.taxableIncome} />
                                         <InfoCard title="Final Tax Payable" value={result.newRegime.taxPayable} />
+                                        {result.newRegime.effectiveRate && <InfoCard title="Effective Tax Rate" value={result.newRegime.effectiveRate} />}
                                     </dl>
                                 </div>
                                 <Separator className="my-6"/>

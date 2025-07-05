@@ -75,7 +75,7 @@ const prompt = ai.definePrompt({
 **CRITICAL INSTRUCTIONS**:
 1.  **Select Correct Rules**: Based on the \`legalRegion\` and \`entityType\`, use the specific tax rules provided in the datasets below.
 2.  **Calculate Gross Income**: Sum up all relevant income sources. For 'Company' type, use 'Salary' as Revenue and 'Business Income' as Profit.
-3.  **Perform Calculations**: Calculate the tax liability precisely. Show all monetary values in a human-readable local currency format (e.g., "₹ 1,50,000", "$10,000", "£5,000").
+3.  **Perform Calculations**: Calculate the tax liability precisely. You MUST also calculate the **effective tax rate** (defined as Tax Payable / Gross Income * 100) and include it in the \`effectiveRate\` field, formatted as a percentage string (e.g., "15.75%"). Show all monetary values in a human-readable local currency format (e.g., "₹ 1,50,000", "$10,000", "£5,000").
 4.  **Handle Tax Regimes**:
     -   **For India (Individual)**: Calculate for BOTH old and new regimes. Compare the final tax payable and set \`recommendedRegime\` to 'Old' or 'New'.
     -   **For other regions or Corporate tax**: The concept of dual regimes doesn't apply. Perform a single calculation. Populate BOTH \`oldRegime\` and \`newRegime\` fields in the output with the IDENTICAL calculation results. Set \`recommendedRegime\` to 'N/A' and \`recommendationReason\` to "Only one tax regime applies for this entity/region."
