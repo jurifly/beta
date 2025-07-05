@@ -43,6 +43,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradePrompt } from '@/components/upgrade-prompt';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- Tab: AI Legal Assistant ---
 
@@ -690,22 +691,62 @@ const templateLibrary: TemplateCategoryData[] = [
   { name: 'Enterprise Suite', roles: ['Enterprise'], templates: [ { name: 'HR Policy Docs', isPremium: true }, { name: 'Cross-border NDA', isPremium: true }, ], },
 ];
 
+const templatePlaceholders: Record<string, { context: string; reason: string }> = {
+  "Non-Disclosure Agreement": {
+    context: "e.g., Discussing a potential partnership with a new software vendor.",
+    reason: "e.g., To protect our proprietary algorithms during initial talks.",
+  },
+  "Founders Agreement": {
+    context: "e.g., Two co-founders starting a new tech venture.",
+    reason: "e.g., To clearly define equity split, roles, and responsibilities.",
+  },
+  "Terms of Service": {
+    context: "e.g., For our new SaaS application launching next month.",
+    reason: "e.g., To set the legal terms for users of our platform.",
+  },
+  "Employment Offer Letter": {
+    context: "e.g., Hiring a new Senior Software Engineer.",
+    reason: "e.g., To formalize the employment offer with salary and terms.",
+  },
+  "Vendor Agreement": {
+      context: "e.g., Onboarding a new marketing agency for a 6-month contract.",
+      reason: "e.g., To define scope of work, deliverables, and payment terms."
+  },
+  "Default": {
+    context: "e.g., Describe the situation for this document.",
+    reason: "e.g., What is the main goal you want to achieve?",
+  }
+};
+
 const DocumentGenerator = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [activeAccordion, setActiveAccordion] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
   const { toast } = useToast();
   const { userProfile, deductCredits } = useAuth();
+  
   const [editorContent, setEditorContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const hasUserEdited = useRef(false);
   const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 1);
 
+  const [context, setContext] = useState("");
+  const [reason, setReason] = useState("");
+  const [placeholders, setPlaceholders] = useState({ context: "", reason: "" });
+
+  useEffect(() => {
+    if (selectedTemplate && templatePlaceholders[selectedTemplate]) {
+        setPlaceholders(templatePlaceholders[selectedTemplate]);
+    } else {
+        setPlaceholders(templatePlaceholders.Default);
+    }
+    setContext('');
+    setReason('');
+  }, [selectedTemplate]);
+
   useEffect(() => { if (isTyping && !hasUserEdited.current) setEditorContent(typewriterText); if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedDoc?.content || '').length) setIsTyping(false); }, [typewriterText, isTyping, generatedDoc]);
   const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { if (isTyping) { hasUserEdited.current = true; setIsTyping(false); } setEditorContent(e.target.value); };
   const availableCategories = useMemo(() => { if (!userProfile) return []; return templateLibrary.filter(category => category.roles.includes(userProfile.role)); }, [userProfile]);
-  useEffect(() => { if (availableCategories.length > 0 && !activeAccordion) setActiveAccordion(availableCategories[0].name); }, [availableCategories, activeAccordion]);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   
   useEffect(() => {
@@ -721,7 +762,20 @@ const DocumentGenerator = () => {
 
     if (!await deductCredits(1)) return;
     setLoading(true); setGeneratedDoc(null); setEditorContent(''); hasUserEdited.current = false;
-    try { const result = await AiActions.generateDocumentAction({ templateName: selectedTemplate, legalRegion: userProfile.legalRegion }); setGeneratedDoc(result); setIsTyping(true); } catch (error: any) { toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); } finally { setLoading(false); }
+    try { 
+        const result = await AiActions.generateDocumentAction({ 
+            templateName: selectedTemplate, 
+            legalRegion: userProfile.legalRegion,
+            context: context,
+            reason: reason,
+        }); 
+        setGeneratedDoc(result); 
+        setIsTyping(true); 
+    } catch (error: any) { 
+        toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); 
+    } finally { 
+        setLoading(false); 
+    }
   };
 
   const handleDownload = () => { if (!generatedDoc) return; const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.setAttribute('download', `${generatedDoc.title.replace(/ /g, '_')}.txt`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
@@ -737,35 +791,67 @@ const DocumentGenerator = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
       <Card className="lg:col-span-1 xl:col-span-1 flex flex-col bg-card interactive-lift lg:max-h-[calc(100vh-22rem)]">
-        <CardHeader><CardTitle className="text-base">Template Library</CardTitle><CardDescription className="text-xs">Select a template to generate.</CardDescription></CardHeader>
-        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search templates..." className="pl-10 h-9" /></div>
-          <div className="flex-1 overflow-y-auto -mr-4 pr-4 py-2">
-             <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                <Accordion type="single" collapsible className="w-full" value={activeAccordion} onValueChange={setActiveAccordion}>
-                    {availableCategories.map((category) => (
-                        <AccordionItem value={category.name} key={category.name}>
-                            <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
-                            <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium; return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}><RadioGroupItem value={template.name} id={template.name} /><span className="font-normal text-sm">{template.name}</span></Label> ) })}</div></AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-             </RadioGroup>
-          </div>
-        </CardContent>
-        <CardFooter className="mt-auto pt-4"><Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><FilePenLine className="mr-2 h-4 w-4" /> Generate Document</>}</Button></CardFooter>
+        <CardHeader>
+          <CardTitle className="text-base">Document Generator</CardTitle>
+        </CardHeader>
+        <ScrollArea className="flex-1">
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm">1. Select a template</Label>
+              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
+                  <Accordion type="multiple" defaultValue={availableCategories.map(c => c.name)} className="w-full">
+                      {availableCategories.map((category) => (
+                          <AccordionItem value={category.name} key={category.name}>
+                              <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
+                              <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium; return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}><RadioGroupItem value={template.name} id={template.name} /><span className="font-normal text-sm">{template.name}</span></Label> ) })}</div></AccordionContent>
+                          </AccordionItem>
+                      ))}
+                  </Accordion>
+              </RadioGroup>
+            </div>
+            
+            {selectedTemplate && (
+              <div className="space-y-4 pt-4 border-t animate-in fade-in-50">
+                  <Label className="text-sm">2. Add context (Optional)</Label>
+                  <div className="space-y-2">
+                      <Label htmlFor="context" className="text-xs font-normal">Situation / Context</Label>
+                      <Textarea
+                          id="context"
+                          value={context}
+                          onChange={(e) => setContext(e.target.value)}
+                          placeholder={placeholders.context}
+                          className="text-xs h-20"
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="reason" className="text-xs font-normal">Goal / Reason</Label>
+                      <Textarea
+                          id="reason"
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder={placeholders.reason}
+                          className="text-xs h-20"
+                      />
+                  </div>
+              </div>
+            )}
+          </CardContent>
+        </ScrollArea>
+        <CardFooter className="mt-auto pt-4 border-t">
+          <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
+          </Button>
+        </CardFooter>
       </Card>
       <div className="lg:col-span-2 xl:col-span-3 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <h2 className="text-xl font-bold font-headline">Document Preview</h2>
+            <h2 className="text-xl font-bold font-headline">Document Preview & Edit</h2>
             <div className="flex flex-wrap items-center gap-2">
                 <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={handleCopy} className="interactive-lift"><Copy className="mr-2 h-4 w-4" /> Copy</Button>
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><FilePenLine className="mr-2 h-4 w-4" /> Sign Document</Button>
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={() => toast({ title: "Feature Coming Soon"})} className="interactive-lift"><Send className="mr-2 h-4 w-4" /> Send for Signature</Button>
                 <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
             </div>
         </div>
-        {loading ? <Card className="min-h-[400px]"><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent className="space-y-4 pt-4"><Skeleton className="h-4 w-full"/><Skeleton className="h-4 w-5/6"/></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template from the library and click "Generate" to get started.</p></Card>}
+        {loading ? <Card className="min-h-[400px]"><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent className="space-y-4 pt-4"><Skeleton className="h-4 w-full"/><Skeleton className="h-4 w-5/6"/></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template, add optional context, and click "Generate" to get started.</p></Card>}
       </div>
     </div>
   )

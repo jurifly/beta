@@ -10,6 +10,8 @@ import {z} from 'genkit';
 const DocumentGeneratorInputSchema = z.object({
   templateName: z.string().describe('The name of the legal template to generate.'),
   legalRegion: z.string().describe('The country/legal region for which to generate the document, e.g., "India", "USA".'),
+  context: z.string().optional().describe("The specific situation or context for the document's use."),
+  reason: z.string().optional().describe("The primary goal or reason for generating this document."),
 });
 export type DocumentGeneratorInput = z.infer<typeof DocumentGeneratorInputSchema>;
 
@@ -32,7 +34,15 @@ const prompt = ai.definePrompt({
 Template Name: "{{templateName}}"
 Legal Region: "{{legalRegion}}"
 
-Generate the full document text as plain text. The document should be comprehensive and ready for use. Use placeholders like "[Party A Name]" or "[Date]" where user input would be required. The 'title' field in your output should be the document's main title. 
+{{#if context}}
+**Context for Generation:** The user has provided the following context. You MUST tailor the document to fit this specific situation.
+- **Situation:** {{context}}
+{{/if}}
+{{#if reason}}
+- **Goal:** {{reason}}
+{{/if}}
+
+Generate the full document text as plain text. The document should be comprehensive and ready for use. Use placeholders like "[Party A Name]" or "[Date]" where user input would be required. The 'title' field in your output should be the document's main title.
 
 **Quality Control**: Before finalizing your response, you must act as a meticulous editor and critically proofread the entire document for any spelling mistakes, grammatical errors, or formatting issues. The final output must be polished and professional.
 
