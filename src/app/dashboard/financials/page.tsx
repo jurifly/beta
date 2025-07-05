@@ -7,19 +7,21 @@ import { z } from "zod";
 import { useState, useRef, useTransition, useMemo } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
-import { getTaxAdviceAction } from "./actions";
+import { getTaxAdviceAction, getFinancialReportAction } from "./actions";
 import type { TaxAdvisorOutput } from "@/ai/flows/tax-advisor-flow";
+import type { FinancialReportOutput } from "@/ai/flows/financial-report-flow";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart, FileText } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ReactMarkdown from "react-markdown";
 
 
 const personalIncomeSchema = z.object({
@@ -242,8 +244,10 @@ const CorporateTaxCalculator = () => {
 };
 
 const FinancialSnapshot = () => {
-    const { userProfile, updateUserProfile } = useAuth();
+    const { userProfile, updateUserProfile, deductCredits } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
+    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+    const [report, setReport] = useState<string | null>(null);
     const { toast } = useToast();
 
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
@@ -278,6 +282,26 @@ const FinancialSnapshot = () => {
             setIsSaving(false);
         }
     };
+
+    const handleGenerateReport = async () => {
+        if (!userProfile) return;
+        if (!await deductCredits(5)) return;
+        setIsGeneratingReport(true);
+        setReport(null);
+        try {
+            const response = await getFinancialReportAction({ monthlyRevenue: revenue, monthlyExpenses: expenses, cashBalance, legalRegion: userProfile.legalRegion });
+            if (response.error) {
+                toast({ variant: 'destructive', title: "Report Generation Failed", description: response.error });
+            } else {
+                setReport(response.data?.report || null);
+                toast({ title: "Report Generated!", description: "Your financial health summary is ready." });
+            }
+        } catch(e) {
+            toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred." });
+        } finally {
+            setIsGeneratingReport(false);
+        }
+    };
     
     if (!activeCompany) {
       return (
@@ -290,42 +314,61 @@ const FinancialSnapshot = () => {
     }
 
     return (
-        <Card className="interactive-lift">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Burn Rate & Runway Calculator</CardTitle>
-                <CardDescription>Input your monthly financials to get a snapshot of your startup's health.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
-                        <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
+        <div className="space-y-6">
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Burn Rate & Runway Calculator</CardTitle>
+                    <CardDescription>Input your monthly financials to get a snapshot of your startup's health.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
+                            <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
+                            <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
+                            <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Button onClick={handleSaveFinancials} disabled={isSaving}>
+                                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
+                                Save & Recalculate
+                            </Button>
+                             <Button onClick={handleGenerateReport} disabled={isGeneratingReport}>
+                                {isGeneratingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
+                                Generate AI Report
+                            </Button>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
-                        <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
-                        <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
-                    </div>
-                    <Button onClick={handleSaveFinancials} disabled={isSaving}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                        Save & Recalculate
-                    </Button>
-                </div>
-                <div className="space-y-4">
+                    <div className="space-y-4">
                         <div className="p-4 rounded-lg bg-muted border text-center">
-                        <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                        <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
-                    </div>
+                            <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                            <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
+                        </div>
                         <div className="p-4 rounded-lg bg-muted border text-center">
-                        <p className="text-sm text-muted-foreground">{runwayLabel}</p>
-                        <p className="text-2xl font-bold">{runway}</p>
+                            <p className="text-sm text-muted-foreground">{runwayLabel}</p>
+                            <p className="text-2xl font-bold">{runway}</p>
+                        </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+            {isGeneratingReport && <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Generating Financial Report...</p></div>}
+            {report && (
+                <Card className="interactive-lift animate-in fade-in-50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><FileText/> AI Financial Health Report</CardTitle>
+                    </CardHeader>
+                    <CardContent className="prose dark:prose-invert max-w-none">
+                        <ReactMarkdown>{report}</ReactMarkdown>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
     )
 }
 

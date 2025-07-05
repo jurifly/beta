@@ -85,9 +85,12 @@ Perform the following steps and provide the output in the specified JSON format:
     *   For a 'Legal Contract', look for penalty clauses, unilateral indemnity clauses, ambiguous termination conditions, restrictive non-compete clauses, unfavorable jurisdiction, or long lock-in periods.
     *   For a 'Government Notice', identify the core issue, potential legal implications (e.g., citation of a specific section of the relevant tax or companies act for {{legalRegion}}), and any mentioned deadlines.
     *   For any document, flag items that require urgent attention.
-    *   Assign a 'High', 'Medium', o 'Low' severity to each risk. If no risks are found, return an empty array.
+    *   Assign a 'High', 'Medium', or 'Low' severity to each risk. If no risks are found, return an empty array.
 
-4.  **Suggest a Reply (If Applicable)**: If and only if the document is a 'Government Notice', a 'Termination/Warning Letter', or any other document that clearly requires a formal response, generate a complete, professionally drafted reply. The reply should be structured, respectful, and address the core points of the notice, using language and tone appropriate for {{legalRegion}}. Use markdown for formatting. If no reply is needed, omit the 'replySuggestion' field.
+4.  **Suggest a Reply (If Applicable)**:
+    *   **If the document is a 'Government Notice' (e.g., from tax authorities)**: Generate a complete, professionally drafted, point-by-point preliminary reply. The reply should be structured, respectful, and address the core points of the notice, using language and tone appropriate for {{legalRegion}}. It should cite the relevant legal sections mentioned in the notice and provide a clear, logical response to each query. Use markdown for formatting.
+    *   **For other documents requiring a response (e.g., 'Termination/Warning Letter')**: Generate a suitable professional reply.
+    *   If no reply is needed, omit the 'replySuggestion' field.
 
 5.  **Suggest a Reminder (If Applicable)**: If the document contains a specific deadline, response date, or a clear follow-up action with a timeframe, suggest a reminder. The reminder date should be set a few days *before* the actual deadline. If no clear date or timeframe is found, omit the 'reminder' field.
 
