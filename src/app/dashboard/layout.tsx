@@ -9,7 +9,6 @@ import {
   Bell,
   Bolt,
   Building,
-  Calendar,
   CreditCard,
   FileClock,
   FileText,
@@ -36,6 +35,7 @@ import {
   PieChart,
   Workflow,
   Gavel,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -74,7 +74,7 @@ const navItemConfig = {
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
-  calendar: { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
+  complianceHub: { href: "/dashboard/compliance-hub", label: "Compliance Hub", icon: ClipboardCheck },
   analytics: { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
@@ -83,7 +83,7 @@ const navItemConfig = {
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  help: { href: "/dashboard/help", label: "Help & Support", icon: LifeBuoy },
+  help: { href: "/dashboard/help", label: "Help and Support", icon: LifeBuoy },
   feedback: { href: "/dashboard/feedback", label: "Feedback", icon: PenSquare },
 } as const;
 
@@ -97,7 +97,7 @@ const founderNavItems: NavItem[] = [
   navItemConfig.capTable,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
-  navItemConfig.calendar,
+  navItemConfig.complianceHub,
   navItemConfig.analytics,
   navItemConfig.community,
 ];
@@ -107,7 +107,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.clients,
   navItemConfig.aiToolkit,
   navItemConfig.documents,
-  navItemConfig.calendar,
+  navItemConfig.complianceHub,
   navItemConfig.analytics,
   navItemConfig.team,
   navItemConfig.clauseLibrary,
@@ -128,7 +128,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.team,
   navItemConfig.clients,
   navItemConfig.documents,
-  navItemConfig.calendar,
+  navItemConfig.complianceHub,
   navItemConfig.analytics,
   navItemConfig.aiToolkit,
   navItemConfig.workflows,

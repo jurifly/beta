@@ -31,6 +31,11 @@ export interface DocumentRequest {
   title: string;
   dueDate: string;
   status: 'Pending' | 'Received' | 'Overdue';
+  providedFile?: {
+      id: string;
+      name: string;
+      url: string;
+  };
 }
 
 export interface GovernanceActionItem {
@@ -71,6 +76,7 @@ export interface Company {
         monthlyRevenue: number;
         monthlyExpenses: number;
     };
+    founderUid?: string;
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
@@ -102,6 +108,11 @@ export interface UserProfile {
   dailyCreditLimit?: number;
   dailyCreditsUsed?: number;
   lastCreditReset?: string; // ISO string
+
+  // Founder-CA Connection
+  invitedCaEmail?: string;
+  connectedCaUid?: string;
+  clientUids?: string[];
 }
 
 export type ChecklistItemStatus = 'Pending' | 'Completed' | 'In Progress' | 'Not Applicable';

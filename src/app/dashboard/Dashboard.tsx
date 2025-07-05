@@ -47,20 +47,11 @@ import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
 import type { UserProfile, Company, DocumentRequest } from "@/lib/types";
-import { planHierarchy } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
-import { addDays, addMonths, format, startOfToday } from "date-fns";
+import { addDays, format, startOfToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 const ComplianceActivityChart = dynamic(
   () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
@@ -115,254 +106,73 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
 
 // --- Dashboards ---
 
-type DashboardChecklistItem = {
-    id: string;
-    text: string;
-    completed: boolean;
-    dueDate: string;
-    description?: string;
-    penalty?: string;
-};
-
-const currentYearString = new Date().getFullYear().toString();
 const staticChartDataByYear = {
-    [currentYearString]: Array(12).fill(null).map((_, i) => ({ month: format(new Date(Number(currentYearString), i, 1), 'MMM'), activity: 0 })),
+    [new Date().getFullYear().toString()]: Array(12).fill(null).map((_, i) => ({ month: format(new Date(Number(new Date().getFullYear().toString()), i, 1), 'MMM'), activity: 0 })),
 };
 
-function DocRequestItem({ request, onComplete }: { request: DocumentRequest, onComplete: (id: string) => void }) {
-  const isOverdue = new Date(request.dueDate) < startOfToday() && request.status === 'Pending';
-  return (
-    <div className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isOverdue && "bg-destructive/10 border-destructive/20")}>
-      <div className="flex-1 grid gap-0.5">
-        <p className={cn("font-medium", isOverdue && "text-destructive")}>{request.title}</p>
-        <p className={cn("text-xs", isOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-          Due: {format(new Date(request.dueDate), 'do MMM, yyyy')}
-        </p>
-      </div>
-      {request.status === 'Pending' ? (
-        <Button size="sm" variant="outline" onClick={() => onComplete(request.id)}>
-          <Upload className="mr-2 h-4 w-4" /> Upload
-        </Button>
-      ) : (
-        <Badge variant="secondary" className="bg-green-100 text-green-800 self-center">Received</Badge>
-      )}
-    </div>
-  )
+function MyCaCard() {
+    const { userProfile } = useAuth();
+    if (!userProfile) return null;
+
+    if (userProfile.connectedCaUid) {
+        // In a real app, you'd fetch the CA's details using the UID
+        return (
+            <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Users /> My Advisor</CardTitle>
+                    <CardDescription>Your connected compliance professional.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="font-semibold">Connected</p>
+                    <p className="text-sm text-muted-foreground">You can manage this connection in Settings.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <Card className="md:col-span-2 lg:col-span-2 interactive-lift bg-muted/50">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Connect Your Advisor</CardTitle>
+                <CardDescription>Invite your CA or legal advisor to collaborate on your compliance.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Button asChild>
+                    <Link href="/dashboard/settings">Invite Advisor <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+            </CardContent>
+        </Card>
+    )
 }
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const { toast } = useToast();
-    const { updateUserProfile } = useAuth();
     const [dynamicData, setDynamicData] = useState({ filings: 0, hygieneScore: 0, alerts: 0, loading: true });
-    const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
-    const [selectedChecklistYear, setSelectedChecklistYear] = useState<string>(new Date().getFullYear().toString());
+    
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
-    const currentMonthKey = useMemo(() => format(new Date(), 'MMMM yyyy'), []);
 
-    const docRequests = activeCompany?.docRequests?.filter(r => r.status === 'Pending') || [];
+    const docRequests = activeCompany?.docRequests || [];
+    const pendingRequests = docRequests.filter(r => r.status === 'Pending').length;
+    const overdueRequests = docRequests.filter(r => r.status === 'Pending' && new Date(r.dueDate) < startOfToday()).length;
 
-    const { equityIssued, equityIssuedSubtext } = useMemo(() => {
-        const capTable = activeCompany?.capTable;
-        if (!capTable || capTable.length === 0) {
-            return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
-        }
-        
-        const totalShares = capTable.reduce((acc, entry) => acc + entry.shares, 0);
-        if (totalShares === 0) {
-            return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
-        }
-        
-        const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.vesting === 'Unissued')?.shares || 0;
-        
-        const issuedShares = totalShares - esopPoolShares;
-        const percentage = (issuedShares / totalShares) * 100;
-        
-        let subtext = "of total equity";
-        if (capTable.some(e => e.type === 'Founder') && capTable.some(e => e.type === 'Investor')) subtext = "Founders & Investors";
-        else if (capTable.some(e => e.type === 'Founder')) subtext = "Founder shares";
-        else if (capTable.some(e => e.type === 'Investor')) subtext = "Investor shares";
-        
-        return {
-            equityIssued: `${percentage.toFixed(0)}%`,
-            equityIssuedSubtext: subtext,
-        };
-    }, [activeCompany]);
-
-    // Effect to fetch initial data from AI
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            if (!activeCompany) {
-                setDynamicData({ loading: false, filings: 0, hygieneScore: 0, alerts: 0 });
-                setChecklist([]);
-                return;
-            }
-            setDynamicData(prev => ({ ...prev, loading: true }));
-
-            try {
-                const response = await generateFilings({
-                    companyType: activeCompany.type,
-                    incorporationDate: activeCompany.incorporationDate,
-                    currentDate: format(new Date(), 'yyyy-MM-dd'),
-                    legalRegion: activeCompany.legalRegion,
-                });
-                
-                const storageKey = `dashboard-checklist-${activeCompany.id}`;
-                const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                
-                // FIX: De-duplicate filings to prevent React key errors
-                const seen = new Set();
-                const uniqueFilings = response.filings.filter(filing => {
-                    const identifier = `${filing.title}-${filing.date}`;
-                    if (seen.has(identifier)) {
-                        return false;
-                    }
-                    seen.add(identifier);
-                    return true;
-                });
-
-                const checklistItems = uniqueFilings.map((f) => ({
-                    id: `${f.title}-${f.date}`, text: f.title, dueDate: f.date, completed: savedStatuses[`${f.title}-${f.date}`] ?? false,
-                    description: f.description,
-                    penalty: f.penalty,
-                }));
-
-                // Set the initial checklist, which will trigger the calculation effect
-                setChecklist(checklistItems);
-            } catch (error) {
-                console.error("Failed to fetch dashboard data:", error);
-                setDynamicData({ filings: 0, hygieneScore: 0, alerts: 0, loading: false });
-            }
-        }
-        fetchDashboardData();
-    }, [activeCompany]);
-
-    // Effect to recalculate stats whenever the checklist is updated
-    useEffect(() => {
-      if (!activeCompany) return;
-
-      const today = startOfToday();
-      const upcomingFilings = checklist.filter(item => {
-          const dueDate = new Date(item.dueDate + 'T00:00:00');
-          return !item.completed && dueDate >= today && dueDate <= addDays(today, 30);
-      });
-      const overdueFilings = checklist.filter(item => {
-          const dueDate = new Date(item.dueDate + 'T00:00:00');
-          return !item.completed && dueDate < today;
-      });
-
-      const totalFilings = checklist.length;
-      const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
-      
-      let profileCompleteness = 0;
-      const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-      if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
-      const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
-      profileCompleteness = (filledFields / requiredFields.length) * 100;
-      
-      const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
-
-      setDynamicData(prev => ({
-          ...prev,
-          filings: upcomingFilings.length, 
-          hygieneScore: score, 
-          alerts: overdueFilings.length, 
-          loading: false 
-      }));
-
-    }, [checklist, activeCompany]);
-
-
-    const handleToggleComplete = (itemId: string) => {
-        if (!activeCompany) return;
-        const newChecklist = checklist.map(item => item.id === itemId ? { ...item, completed: !item.completed } : item);
-        setChecklist(newChecklist);
-
-        const newStatuses = newChecklist.reduce((acc, item) => ({ ...acc, [item.id]: item.completed }), {});
-        localStorage.setItem(`dashboard-checklist-${activeCompany.id}`, JSON.stringify(newStatuses));
-    };
-
-    const handleCompleteRequest = async (requestId: string) => {
-        if (!userProfile || !activeCompany) return;
-    
-        const updatedDocRequests = (activeCompany.docRequests || []).map(req => 
-          req.id === requestId ? { ...req, status: 'Received' as const } : req
-        );
-      
-        const updatedCompany: Company = { ...activeCompany, docRequests: updatedDocRequests };
-        
-        const updatedCompanies = userProfile.companies.map(c => 
-          c.id === activeCompany.id ? updatedCompany : c
-        );
-        
-        await updateUserProfile({ companies: updatedCompanies });
-
-        toast({
-          title: "Document Marked as Uploaded",
-          description: "Your advisor has been notified.",
-        });
-    };
-    
-    const checklistYears = useMemo(() => {
-        const currentYear = new Date().getFullYear();
-        const years = new Set(
-            checklist
-                .map(item => new Date(item.dueDate + 'T00:00:00').getFullYear())
-                .map(year => year.toString())
-        );
-
-        if (years.size === 0) {
-            years.add(currentYear.toString());
-        }
-        return Array.from(years).sort((a, b) => Number(b) - Number(a));
-    }, [checklist]);
-    
-    useEffect(() => {
-        if (!checklistYears.includes(selectedChecklistYear)) {
-            setSelectedChecklistYear(checklistYears[0] || new Date().getFullYear().toString());
-        }
-    }, [checklistYears, selectedChecklistYear]);
-
-    const groupedChecklist = useMemo(() => {
-        const grouped = checklist.reduce((acc, item) => {
-            const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
-            (acc[monthKey] = acc[monthKey] || []).push(item);
-            return acc;
-        }, {} as Record<string, DashboardChecklistItem[]>);
-
-        Object.values(grouped).forEach(monthItems => monthItems.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
-        return grouped;
-    }, [checklist]);
-
-    const sortedMonths = useMemo(() => {
-        return Object.keys(groupedChecklist)
-            .filter(month => month.endsWith(selectedChecklistYear))
-            .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    }, [groupedChecklist, selectedChecklistYear]);
-    
     const complianceChartDataByYear = useMemo(() => {
         const activityByYear: Record<string, number[]> = {};
+        const completedRequests = docRequests.filter(r => r.status === 'Received');
 
-        checklist.forEach(item => {
-            if (item.completed) {
-                // adding T00:00:00 to avoid timezone issues where it might become the previous day
-                const date = new Date(item.dueDate + 'T00:00:00');
-                const year = date.getFullYear().toString();
-                if (!activityByYear[year]) {
-                    activityByYear[year] = Array(12).fill(0);
-                }
-                activityByYear[year][date.getMonth()]++;
+        completedRequests.forEach(req => {
+            const date = new Date(req.dueDate);
+            const year = date.getFullYear().toString();
+            if (!activityByYear[year]) {
+                activityByYear[year] = Array(12).fill(0);
             }
+            activityByYear[year][date.getMonth()]++;
         });
-        
+
         const yearsWithActivity = Object.keys(activityByYear);
+        if (yearsWithActivity.length === 0) return staticChartDataByYear;
+
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const result: Record<string, { month: string; activity: number }[]> = {};
-
-        if (yearsWithActivity.length === 0) {
-            const currentYear = new Date().getFullYear().toString();
-            result[currentYear] = monthNames.map(month => ({ month, activity: 0 }));
-            return result;
-        }
 
         for (const year of yearsWithActivity) {
             const yearData = activityByYear[year];
@@ -373,7 +183,52 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         }
 
         return result;
-    }, [checklist]);
+    }, [docRequests]);
+
+    const { equityIssued, equityIssuedSubtext } = useMemo(() => {
+        const capTable = activeCompany?.capTable;
+        if (!capTable || capTable.length === 0) return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
+        
+        const totalShares = capTable.reduce((acc, entry) => acc + entry.shares, 0);
+        if (totalShares === 0) return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
+        
+        const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.vesting === 'Unissued')?.shares || 0;
+        const issuedShares = totalShares - esopPoolShares;
+        const percentage = (issuedShares / totalShares) * 100;
+        
+        return { equityIssued: `${percentage.toFixed(0)}%`, equityIssuedSubtext: "of total equity issued" };
+    }, [activeCompany]);
+
+    useEffect(() => {
+        const calculateScore = () => {
+             if (!activeCompany) {
+                setDynamicData({ loading: false, filings: 0, hygieneScore: 0, alerts: 0 });
+                return;
+            }
+            setDynamicData(prev => ({ ...prev, loading: true }));
+
+            const totalRequests = docRequests.length;
+            const completedRequests = docRequests.filter(r => r.status === 'Received').length;
+            const filingPerf = totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 100;
+
+            let profileCompleteness = 0;
+            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
+            const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
+            profileCompleteness = (filledFields / requiredFields.length) * 100;
+            
+            const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+            setDynamicData({
+                filings: pendingRequests,
+                hygieneScore: score,
+                alerts: overdueRequests,
+                loading: false
+            });
+        }
+        calculateScore();
+    }, [activeCompany, docRequests, pendingRequests, overdueRequests]);
+
 
     const { hygieneScore, loading: isLoading } = dynamicData;
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
@@ -383,128 +238,20 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             <div className="lg:col-span-4">
                 <Card className="bg-gradient-to-r from-primary/10 via-card to-card border-primary/20 p-6 flex flex-col md:flex-row items-center justify-between gap-6 interactive-lift">
                     <div>
-                        <CardTitle className="flex items-center gap-3 font-headline"><Network/> Setup Assistant</CardTitle>
+                        <CardTitle className="flex items-center gap-3 font-headline"><Network/> Startup Setup Assistant</CardTitle>
                         <CardDescription className="mt-2 max-w-2xl break-words">Get a step-by-step AI-guided roadmap for registering your company.</CardDescription>
                     </div>
                     <Button asChild size="lg" className="shrink-0 w-full md:w-auto"><Link href="/dashboard/business-setup">Start Setup <ArrowRight className="ml-2 h-4 w-4"/></Link></Button>
                 </Card>
             </div>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/calendar" className="block"><StatCard title="Upcoming Filings" value={`${dynamicData.filings}`} subtext="In next 30 days" icon={<Calendar />} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Pending Requests" value={`${dynamicData.filings}`} subtext="From your advisor" icon={<FileSignature />} isLoading={dynamicData.loading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/calendar" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext="Overdue tasks" icon={<AlertTriangle />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
+            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Alerts" value={`${dynamicData.alerts}`} subtext="Overdue requests" icon={<AlertTriangle />} colorClass={dynamicData.alerts > 0 ? 'text-destructive' : ''} isLoading={dynamicData.loading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
 
-             <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
-                <CardHeader>
-                    <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
-                        <div>
-                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                            <CardDescription>Key compliance items for your company.</CardDescription>
-                        </div>
-                        {checklistYears.length > 1 && (
-                             <Select value={selectedChecklistYear} onValueChange={setSelectedChecklistYear}>
-                                <SelectTrigger className="w-full sm:w-[120px]">
-                                    <SelectValue placeholder="Select year" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {checklistYears.map(year => (
-                                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {isLoading ? <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-5/6" /></div>
-                    : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" className="w-full">
-                            {sortedMonths.map(month => {
-                                const hasOverdueItems = groupedChecklist[month].some(item => {
-                                    const dueDate = new Date(item.dueDate + 'T00:00:00');
-                                    return dueDate < startOfToday() && !item.completed;
-                                });
-                                const isCurrentMonth = month === currentMonthKey;
-
-                                return (
-                                <AccordionItem value={month} key={month}>
-                                    <AccordionTrigger className={cn("text-base font-semibold hover:no-underline", isCurrentMonth && "text-primary")}>
-                                        <div className="flex items-center gap-2">
-                                            <span>{month}</span>
-                                            {hasOverdueItems && (
-                                                <AlertTriangle className="h-4 w-4 text-destructive" />
-                                            )}
-                                            {isCurrentMonth && <Badge variant="outline" className="border-primary text-primary">Current</Badge>}
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="space-y-3">
-                                            {groupedChecklist[month].map(item => {
-                                                const dueDate = new Date(item.dueDate + 'T00:00:00');
-                                                const isItemOverdue = dueDate < startOfToday() && !item.completed;
-                                                const isFuture = dueDate > startOfToday();
-                                                return (
-                                                    <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
-                                                        <Checkbox
-                                                            id={item.id}
-                                                            checked={item.completed}
-                                                            onCheckedChange={() => handleToggleComplete(item.id)}
-                                                            disabled={isFuture}
-                                                            className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
-                                                        />
-                                                        <div className="flex-1 grid gap-0.5">
-                                                            <div className="flex items-center gap-2">
-                                                                <label htmlFor={item.id} className={cn("font-medium", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture ? "cursor-not-allowed" : "cursor-pointer")}>
-                                                                    {item.text}
-                                                                </label>
-                                                                {item.description && (
-                                                                    <Popover>
-                                                                        <PopoverTrigger asChild>
-                                                                            <button type="button" className="text-muted-foreground hover:text-primary transition-colors">
-                                                                                <Info className="h-3.5 w-3.5" />
-                                                                                <span className="sr-only">More info about {item.text}</span>
-                                                                            </button>
-                                                                        </PopoverTrigger>
-                                                                        <PopoverContent className="max-w-xs text-sm" align="start">
-                                                                            <p className="font-medium">{item.description}</p>
-                                                                            {item.penalty && <p className="text-xs text-muted-foreground mt-2"><strong className="text-destructive">Penalty:</strong> {item.penalty}</p>}
-                                                                        </PopoverContent>
-                                                                    </Popover>
-                                                                )}
-                                                            </div>
-                                                            <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-                                                            Due: {format(dueDate, 'do MMM, yyyy')}
-                                                            </span>
-                                                        </div>
-                                                        {isItemOverdue && (
-                                                            <Badge variant="destructive" className="self-center">Overdue</Badge>
-                                                        )}
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                )}
-                            )}
-                        </Accordion>
-                    ) : <p className="text-center text-muted-foreground p-8">No items found for {selectedChecklistYear}.</p>}
-                </CardContent>
-             </Card>
-
-             {docRequests.length > 0 && (
-              <Card className="md:col-span-2 lg:col-span-4 interactive-lift">
-                  <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><FileSignature/> Document Requests</CardTitle>
-                      <CardDescription>Your advisor has requested the following documents.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                      {docRequests.map(req => <DocRequestItem key={req.id} request={req} onComplete={handleCompleteRequest} />)}
-                  </CardContent>
-              </Card>
-             )}
+            <MyCaCard/>
         </div>
     );
 }
@@ -515,7 +262,7 @@ function CADashboard({ userProfile }: { userProfile: UserProfile }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext="Clients actively managed" icon={<Users />} /></Link>
             <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Risk" value="N/A" subtext="Risk analysis coming soon" icon={<ShieldCheck />} /></Link>
-            <Link href="/dashboard/calendar" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
+            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Pending Actions" value="N/A" subtext="Across all clients" icon={<FileClock />} /></Link>
             <Link href="/dashboard/ai-toolkit?tab=assistant" className="block"><StatCard title="AI Credits Used" value={`${1000 - (userProfile.creditBalance ?? 1000)}`} subtext="This billing cycle" icon={<Sparkles />} /></Link>
 
             <div className="md:col-span-4 lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
@@ -625,41 +372,8 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile, addNotification, deductCredits } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
-  const fetchDashboardDataCalled = React.useRef(false);
-
-  useEffect(() => {
-    if (!userProfile) return;
-    const fetchDashboardData = async () => {
-        const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-        if (!activeCompany) return;
-
-        try {
-            const currentDate = format(new Date(), 'yyyy-MM-dd');
-            const response = await generateFilings({
-                companyType: activeCompany.type,
-                incorporationDate: activeCompany.incorporationDate,
-                currentDate: currentDate,
-                legalRegion: activeCompany.legalRegion,
-            });
-            const overdueFilings = response.filings.filter(f => f.status === 'overdue');
-            
-            const today = new Date();
-            const twoWeeksFromNow = new Date();
-            twoWeeksFromNow.setDate(today.getDate() + 14);
-
-            const upcomingSoon = response.filings.filter(filing => {
-                const dueDate = new Date(filing.date + 'T00:00:00');
-                return filing.status === 'upcoming' && dueDate > today && dueDate <= twoWeeksFromNow;
-            });
-
-        } catch (error) {
-            console.error("Failed to fetch initial dashboard notifications:", error);
-        }
-    }
-    fetchDashboardData();
-  }, [userProfile, addNotification]);
 
   const renderDesktopDashboardByRole = () => {
     if (!userProfile) return <div className="space-y-6">
