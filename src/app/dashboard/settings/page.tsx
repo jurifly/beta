@@ -44,74 +44,6 @@ const SecurityForm = () => (
     </Card>
 )
 
-const MyCaSettings = () => {
-    const { userProfile, inviteCA, revokeCA } = useAuth();
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
-
-    if (!userProfile || userProfile.role !== 'Founder') return null;
-
-    const handleInvite = async () => {
-        if (!email) return;
-        setLoading(true);
-        try {
-            await inviteCA(email);
-            toast({ title: "Invite Sent!", description: `An invitation has been sent to ${email}.`});
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
-        } finally {
-            setLoading(false);
-        }
-    }
-    
-    const handleRevoke = async () => {
-        if (!window.confirm("Are you sure you want to revoke access for your advisor?")) return;
-        setLoading(true);
-        try {
-            await revokeCA();
-            toast({ title: "Access Revoked" });
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    return (
-        <Card className="interactive-lift">
-            <CardHeader><CardTitle>My Advisor</CardTitle><CardDescription>Connect with your CA or Legal Advisor.</CardDescription></CardHeader>
-            <CardContent>
-                {userProfile.connectedCaUid ? (
-                    <div className="space-y-4">
-                        <p className="font-semibold text-green-600">You are connected with your advisor.</p>
-                        <Button variant="destructive" onClick={handleRevoke} disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                            Revoke Access
-                        </Button>
-                    </div>
-                ) : userProfile.invitedCaEmail ? (
-                    <div>
-                        <p className="font-semibold text-yellow-600">Invitation Pending</p>
-                        <p className="text-sm text-muted-foreground">An invite has been sent to {userProfile.invitedCaEmail}. They need to accept it to connect.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="ca-email">Advisor's Email</Label>
-                            <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your CA's registered email"/>
-                        </div>
-                        <Button onClick={handleInvite} disabled={loading || !email}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                            Send Invite
-                        </Button>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
-
 const PendingInvites = () => {
     const { userProfile, getPendingInvites, acceptInvite } = useAuth();
     const [invites, setInvites] = useState<any[]>([]);
@@ -214,7 +146,6 @@ export default function SettingsPage() {
               onAddCompanyClick={handleAddCompanyClick}
               onEditCompanyClick={handleEditCompanyClick}
             />
-            {userProfile.role === 'Founder' && <MyCaSettings />}
           </TabsContent>
           <TabsContent value="billing">
             <BillingForm />
