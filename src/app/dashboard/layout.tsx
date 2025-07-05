@@ -85,6 +85,7 @@ const navItemConfig = {
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
   invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail },
+  reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText },
   billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
   help: { href: "/dashboard/help", label: "Help and Support", icon: LifeBuoy },
@@ -108,13 +109,14 @@ const founderNavItems: NavItem[] = [
 ];
 
 const caNavItems: NavItem[] = [
-  { ...navItemConfig.dashboard, label: "Portfolio Dashboard" },
+  { ...navItemConfig.dashboard, label: "Portfolio Analytics" },
   { ...navItemConfig.clients, label: "Client Management" },
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.financials,
   navItemConfig.documents,
   { ...navItemConfig.caConnect, label: "Compliance Hub" },
+  navItemConfig.reportCenter,
   { ...navItemConfig.team, label: "Firm Management" },
   navItemConfig.clauseLibrary,
 ];
