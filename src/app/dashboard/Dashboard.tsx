@@ -148,7 +148,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                     legalRegion: activeCompany.legalRegion,
                 });
                 
-                let processedFilings = response.filings;
+                const processedFilings = response.filings.filter(f => f.date && !isNaN(new Date(f.date).getTime()));
                 
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
