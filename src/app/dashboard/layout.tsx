@@ -69,6 +69,7 @@ import { cn } from "@/lib/utils";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "@/components/dashboard/beta-banner";
+import { useToast } from "@/hooks/use-toast";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -97,7 +98,7 @@ type NavItemKey = keyof typeof navItemConfig;
 type NavItem = (typeof navItemConfig)[NavItemKey];
 
 const founderNavItems: NavItem[] = [
-  { ...navItemConfig.dashboard },
+  { ...navItemConfig.dashboard, label: "Portfolio" },
   { ...navItemConfig.caConnect, label: "CA Connect" },
   { ...navItemConfig.aiToolkit },
   { ...navItemConfig.launchPad },
@@ -334,9 +335,20 @@ export default function DashboardLayout({
 
 const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userProfile: UserProfile }) => {
     const pathname = usePathname();
+    const { toast } = useToast();
 
     const bottomNavItems = [navItemConfig.settings, navItemConfig.billing, navItemConfig.help, navItemConfig.feedback, navItemConfig.policies];
     const isPro = planHierarchy[userProfile.plan] > 0;
+
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (href === '/dashboard/community') {
+            e.preventDefault();
+            toast({
+                title: "Coming Soon!",
+                description: "The community forum is under development and will be launched soon.",
+            });
+        }
+    };
 
     return (
       <div className="hidden border-r bg-card md:block">
@@ -363,6 +375,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                       <TooltipTrigger asChild>
                         <Link
                           href={item.href}
+                          onClick={(e) => handleLinkClick(e, item.href)}
                           className={cn(
                               "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
                               isActive && "bg-muted text-primary font-semibold"
@@ -409,8 +422,17 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
 const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userProfile: UserProfile }) => {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const { toast } = useToast();
     
-    const handleLinkClick = () => {
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+      if (href === '/dashboard/community') {
+            e.preventDefault();
+            toast({
+                title: "Coming Soon!",
+                description: "The community forum is under development and will be launched soon.",
+            });
+            return;
+      }
       setIsOpen(false);
     }
     
@@ -432,7 +454,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
         <SheetContent side="left" className="flex flex-col p-0 w-full max-w-[300px]">
            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
            <div className="flex h-14 items-center border-b px-4">
-            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary" onClick={handleLinkClick}>
+            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary" onClick={(e) => handleLinkClick(e, '/dashboard')}>
                 {isPro && <Flame className="h-6 w-6 text-accent" />}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                 <span className="flex items-center">
@@ -454,7 +476,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                         className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
                             isActive && "bg-muted text-primary"
                         )}
-                        onClick={handleLinkClick}
+                        onClick={(e) => handleLinkClick(e, item.href)}
                     >
                         <item.icon className="h-5 w-5 transition-transform" />
                         <span className="flex-1">{item.label}</span>
@@ -469,7 +491,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                         className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
                             pathname.startsWith(item.href) && "bg-muted text-primary"
                         )}
-                        onClick={handleLinkClick}
+                        onClick={(e) => handleLinkClick(e, item.href)}
                     >
                         <item.icon className="h-5 w-5" />
                         {item.label}
