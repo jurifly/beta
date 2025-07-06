@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -383,11 +383,8 @@ const DocumentIntelligenceTab = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [activeDoc, setActiveDoc] = useState<string | null>(null);
+  const [activeDocId, setActiveDocId] = useState<string | null>(null);
   
-  const [editedContent, setEditedContent] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-
   const STORAGE_KEY = 'documentIntelligenceHistory';
 
   useEffect(() => {
@@ -399,18 +396,6 @@ const DocumentIntelligenceTab = () => {
     }
   }, []);
   
-  const currentDoc = useMemo(() => {
-    return analyzedDocs.find(d => d.id === activeDoc)
-  }, [analyzedDocs, activeDoc]);
-
-  useEffect(() => {
-    if (currentDoc) {
-      setEditedContent(currentDoc.redlineContent || currentDoc.summary);
-      setIsEditing(false);
-    }
-  }, [currentDoc]);
-
-
   const saveDocs = (docs: DocumentAnalysis[]) => {
     setAnalyzedDocs(docs);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
@@ -438,7 +423,7 @@ const DocumentIntelligenceTab = () => {
         };
 
         saveDocs([newAnalysis, ...analyzedDocs]);
-        setActiveDoc(newAnalysis.id);
+        setActiveDocId(newAnalysis.id);
         toast({ title: "Analysis Complete", description: `"${file.name}" has been analyzed.` });
       } catch (error: any) {
         toast({ variant: "destructive", title: "Analysis Failed", description: error.message });
@@ -475,12 +460,10 @@ const DocumentIntelligenceTab = () => {
      toast({ title: "Deleted", description: "Analysis has been removed from history." });
   }
 
-  const handleSaveRedline = () => {
-    if (!currentDoc) return;
-    const updatedDocs = analyzedDocs.map(doc => doc.id === currentDoc.id ? { ...doc, redlineContent: editedContent } : doc);
+  const handleSaveRedline = (docId: string, newContent: string) => {
+    const updatedDocs = analyzedDocs.map(doc => doc.id === docId ? { ...doc, redlineContent: newContent } : doc);
     saveDocs(updatedDocs);
-    setIsEditing(false);
-    toast({ title: "Changes Saved", description: "Your redlined summary has been saved." });
+    toast({ title: "Changes Saved", description: "Your summary has been saved." });
   }
 
   return (
@@ -526,8 +509,8 @@ const DocumentIntelligenceTab = () => {
               <p className="font-semibold">{analyzedDocs.length > 0 ? "No documents match filters" : "Upload a document to start"}</p>
             </div>
           ) : (
-            <Accordion type="single" collapsible value={activeDoc || undefined} onValueChange={setActiveDoc} className="w-full space-y-4">
-              {filteredDocs.map(doc => <AnalyzedDocItem key={doc.id} doc={doc} onDelete={handleDelete} />)}
+            <Accordion type="single" collapsible value={activeDocId || undefined} onValueChange={setActiveDocId} className="w-full space-y-4">
+              {filteredDocs.map(doc => <AnalyzedDocItem key={doc.id} doc={doc} onDelete={handleDelete} onSaveRedline={handleSaveRedline} />)}
             </Accordion>
           )}
       </div>
@@ -555,8 +538,15 @@ const EmptyTabContent = ({ icon, title, description }: { icon: React.ElementType
   );
 };
 
-const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (id: string) => void }) => {
+const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalysis, onDelete: (id: string) => void, onSaveRedline: (id: string, content: string) => void }) => {
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(doc.redlineContent || doc.summary);
+
+  useEffect(() => {
+    setEditedContent(doc.redlineContent || doc.summary);
+  }, [doc]);
+
   const highestSeverity = useMemo(() => {
     if (doc.riskFlags.some(f => f.severity === 'High')) return 'High';
     if (doc.riskFlags.some(f => f.severity === 'Medium')) return 'Medium';
@@ -568,6 +558,11 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!', description: `${title} has been copied.` });
   };
+
+  const handleSaveClick = () => {
+    onSaveRedline(doc.id, editedContent);
+    setIsEditing(false);
+  }
 
   return (
     <AccordionItem value={doc.id} className="border-b-0">
@@ -593,7 +588,24 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                       <TabsTrigger value="reply" ><MessageSquare/>Reply</TabsTrigger>
                       <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
+                  <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-lg">AI Summary</h4>
+                      {isEditing ? (
+                        <div className="flex gap-2">
+                           <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+                           <Button size="sm" onClick={handleSaveClick}><Save className="mr-2"/>Save</Button>
+                        </div>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}><Edit className="mr-2"/>Edit Summary</Button>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="min-h-[200px]"/>
+                    ) : (
+                       <div className="prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{editedContent}</ReactMarkdown></div>
+                    )}
+                  </TabsContent>
                   <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <EmptyTabContent icon={ShieldCheck} title="No Significant Risks Found" description="The AI did not find any major risks in this document." />}</TabsContent>
                   <TabsContent value="details">
                     {doc.contractDetails ? (

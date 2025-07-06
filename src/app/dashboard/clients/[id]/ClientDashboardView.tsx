@@ -84,6 +84,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
@@ -191,11 +192,24 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         }
     }, [checklist, activeCompany]);
 
+    const checklistYears = useMemo(() => {
+        const years = new Set(checklist.map(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString()));
+        return Array.from(years).sort((a,b) => Number(b) - Number(a));
+    }, [checklist]);
+
+    useEffect(() => {
+        if(checklistYears.length > 0 && !checklistYears.includes(selectedYear)) {
+            setSelectedYear(checklistYears[0]);
+        }
+    }, [checklistYears, selectedYear]);
+
     const groupedChecklist = useMemo(() => {
         if (!checklist || checklist.length === 0) return {};
         const today = startOfToday();
 
-        const grouped = checklist.reduce((acc, item) => {
+        const filteredByYear = checklist.filter(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString() === selectedYear);
+
+        const grouped = filteredByYear.reduce((acc, item) => {
             const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
             if (!acc[monthKey]) {
                 acc[monthKey] = [];
@@ -218,7 +232,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
             });
         }
         return grouped;
-    }, [checklist]);
+    }, [checklist, selectedYear]);
     
     const sortedMonths = useMemo(() => {
         return Object.keys(groupedChecklist).sort((a, b) => {
@@ -291,9 +305,20 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
             
             <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                    <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
+                 <CardHeader>
+                    <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                        <div>
+                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
+                            <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
+                        </div>
+                        {checklistYears.length > 0 && (
+                             <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
+                                {checklistYears.map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {isLoading ? (
@@ -303,7 +328,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                             <Skeleton className="h-10 w-full" />
                         </div>
                     ) : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" className="w-full">
+                        <Accordion type="multiple" defaultValue={[]} className="w-full">
                             {sortedMonths.map(month => {
                                 const today = startOfToday();
                                 const hasOverdueItems = groupedChecklist[month].some(item => {
@@ -373,7 +398,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                         </Accordion>
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
-                            <p>No items yet. AI couldn't generate a checklist.</p>
+                            <p>No items for {selectedYear}. Select another year or check back later.</p>
                         </div>
                     )}
                 </CardContent>

@@ -47,7 +47,7 @@ type PersonalFormData = z.infer<typeof personalTaxCalculatorSchema>;
 const corporateTaxCalculatorSchema = z.object({
     revenue: z.coerce.number().min(0, "Revenue cannot be negative.").default(0),
     profit: z.coerce.number().min(0, "Profit cannot be negative.").default(0),
-    companyType: z.string().min(1, "Please select a company type."),
+    companyType: z.string({ required_error: "Please select a company type."}).min(1, "Please select a company type."),
 });
 type CorporateFormData = z.infer<typeof corporateTaxCalculatorSchema>;
 
@@ -167,7 +167,7 @@ const CorporateTaxCalculator = () => {
     const [isPending, startTransition] = useTransition();
     const [result, setResult] = useState<TaxAdvisorOutput | null>(null);
 
-    const { control, handleSubmit } = useForm<CorporateFormData>({
+    const { control, handleSubmit, formState: { errors } } = useForm<CorporateFormData>({
         resolver: zodResolver(corporateTaxCalculatorSchema),
         defaultValues: { revenue: 0, profit: 0, companyType: "" },
     });
@@ -207,7 +207,9 @@ const CorporateTaxCalculator = () => {
                 <Card className="interactive-lift">
                     <CardHeader><CardTitle>Corporate Financials</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2"><Label>Company Type</Label><Controller name="companyType" control={control} render={({ field }) => ( <Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger><SelectContent>{companyTypesByRegion.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select> )} /></div>
+                        <div className="space-y-2"><Label>Company Type</Label><Controller name="companyType" control={control} render={({ field }) => ( <Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger><SelectContent>{companyTypesByRegion.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select> )} />
+                         {errors.companyType && <p className="text-sm text-destructive">{errors.companyType.message}</p>}
+                        </div>
                         <div className="space-y-2"><Label>Annual Revenue</Label><Controller name="revenue" control={control} render={({ field }) => <Input type="number" {...field} />} /></div>
                         <div className="space-y-2"><Label>Profit Before Tax (PBT)</Label><Controller name="profit" control={control} render={({ field }) => <Input type="number" {...field} />} /></div>
                     </CardContent>
@@ -334,12 +336,12 @@ const FinancialSnapshot = () => {
                             <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
                             <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-center gap-4">
                             <Button onClick={handleSaveFinancials} disabled={isSaving}>
                                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
                                 Save & Recalculate
                             </Button>
-                             <Button onClick={handleGenerateReport} disabled={isGeneratingReport}>
+                             <Button onClick={handleGenerateReport} disabled={isGeneratingReport || !revenue || !expenses}>
                                 {isGeneratingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
                                 Generate AI Report
                             </Button>

@@ -36,9 +36,9 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
             {/* Header */}
             <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
                 <div className="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-blue-600"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-primary"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                     <div>
-                        <h2 className="text-2xl font-bold text-blue-600">LexIQ</h2>
+                        <h2 className="text-2xl font-bold text-primary">LexIQ</h2>
                         <p className="text-xs text-gray-500">AI-Powered Compliance</p>
                     </div>
                 </div>
@@ -296,5 +296,5 @@ export default function ReportCenterPage() {
                 </Card>
             )}
         </div>
-    )
+    );
 }

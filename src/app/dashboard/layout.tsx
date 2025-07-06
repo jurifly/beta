@@ -109,13 +109,13 @@ const founderNavItems: NavItem[] = [
 ];
 
 const caNavItems: NavItem[] = [
-  { ...navItemConfig.dashboard, label: "Portfolio Analytics" },
+  { ...navItemConfig.dashboard },
   { ...navItemConfig.clients, label: "Client Management" },
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.financials,
   navItemConfig.documents,
-  { ...navItemConfig.caConnect, label: "Compliance Hub" },
+  { ...navItemConfig.caConnect },
   navItemConfig.reportCenter,
   navItemConfig.team,
   navItemConfig.clauseLibrary,
@@ -295,12 +295,11 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <UserNav />
                 </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
+            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-8 md:pb-6 overflow-y-auto">
                 <BetaBanner />
                 {children}
             </main>
             </div>
-            <MobileBottomNav />
         </div>
     </>
   );
@@ -482,43 +481,4 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
         </SheetContent>
       </Sheet>
     )
-}
-
-const MobileBottomNav = () => {
-  const { userProfile } = useAuth();
-  const pathname = usePathname();
-  
-  if (!userProfile) return null;
-
-  const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/dashboard/ai-toolkit", icon: Sparkles, label: "AI Tools" },
-    { href: "/dashboard/documents", icon: Archive, label: "Vault" },
-    { href: "/dashboard/analytics", icon: LineChart, label: "Analytics" },
-    { href: "/dashboard/settings", icon: Settings, label: "Profile" },
-  ];
-
-  return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-50">
-      <div className="grid h-full grid-cols-5">
-        {navItems.map(item => {
-           const isActive = item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href);
-           return (
-             <Link key={item.href} href={item.href} className="relative flex flex-col items-center justify-center h-full p-1 text-center">
-              <div className={cn(
-                  "flex flex-col items-center justify-center gap-1 w-full h-full rounded-md transition-colors active:scale-90", 
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
-              )}>
-                {isActive && (
-                  <div className="absolute top-0 h-1 w-8 rounded-b-full bg-primary" />
-                )}
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium leading-tight break-words">{item.label}</span>
-              </div>
-             </Link>
-           )
-        })}
-      </div>
-    </div>
-  )
 }
