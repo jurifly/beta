@@ -308,4 +308,3 @@ export function EnterpriseAnalytics({ userProfile }: { userProfile: UserProfile 
         </div>
     );
 }
-

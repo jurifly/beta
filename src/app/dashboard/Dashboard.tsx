@@ -29,6 +29,7 @@ import {
   Receipt,
   Check,
   Upload,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,12 +47,13 @@ import type { UserProfile, Company } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
-import { addDays, format, startOfToday } from "date-fns";
+import { getProactiveInsights, type ProactiveInsightsOutput } from "@/ai/flows/proactive-insights-flow";
+import { addDays, format, startOfToday, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend } from "recharts";
+import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -66,6 +68,31 @@ const ComplianceActivityChart = dynamic(
 );
 
 // --- Helper Components ---
+
+const InsightCard = ({ insight, onCtaClick }: { insight: ProactiveInsightsOutput['insights'][0], onCtaClick: (href: string) => void }) => {
+  const icons: Record<string, React.ReactNode> = {
+    Lightbulb: <Lightbulb className="w-5 h-5 text-yellow-500" />,
+    BarChart: <BarChart className="w-5 h-5 text-blue-500" />,
+    FileText: <FileText className="w-5 h-5 text-green-500" />,
+    AlertTriangle: <AlertTriangle className="w-5 h-5 text-red-500" />,
+    Users: <Users className="w-5 h-5 text-indigo-500" />,
+    ShieldCheck: <ShieldCheck className="w-5 h-5 text-teal-500" />,
+  };
+
+  return (
+    <div className="p-4 border rounded-lg flex items-start gap-4 bg-card hover:bg-muted/50 transition-colors">
+      <div className="p-2 bg-muted rounded-full">{icons[insight.icon] || <Sparkles className="w-5 h-5 text-primary"/>}</div>
+      <div className="flex-1">
+        <p className="font-semibold">{insight.title}</p>
+        <p className="text-sm text-muted-foreground">{insight.description}</p>
+        <Button variant="link" className="p-0 h-auto mt-2 text-sm" onClick={() => onCtaClick(insight.href)}>
+            {insight.cta} <ArrowRight className="ml-2 h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 
 const StatCard = ({ title, value, subtext, icon, colorClass, isLoading }: { title: string, value: string, subtext: string, icon: React.ReactNode, colorClass?: string, isLoading?: boolean }) => (
     <Card className="interactive-lift h-full">
@@ -125,15 +152,52 @@ type DashboardChecklistItem = {
 
 function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const { toast } = useToast();
+    const router = require("next/navigation").useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
+    const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
+    const [insightsLoading, setInsightsLoading] = useState(true);
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+
+    const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
+        if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0 };
+        
+        const today = startOfToday();
+        const thirtyDaysFromNow = addDays(today, 30);
+        
+        const upcomingFilings = checklist.filter(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            return dueDate >= today && dueDate <= thirtyDaysFromNow && !item.completed;
+        });
+        const overdueFilings = checklist.filter(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            return dueDate < today && !item.completed;
+        });
+
+        // HYGIENE SCORE CALCULATION
+        const totalFilings = checklist.length;
+        const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
+        
+        const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+        if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
+        const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
+        const profileCompleteness = (filledFields / requiredFields.length) * 100;
+        
+        const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+        return {
+            upcomingFilingsCount: upcomingFilings.length,
+            overdueFilingsCount: overdueFilings.length,
+            hygieneScore: score,
+        }
+    }, [checklist, activeCompany]);
     
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!activeCompany) {
                 setIsLoading(false);
+                setInsightsLoading(false);
                 setChecklist([]);
                 return;
             }
@@ -184,6 +248,38 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
 
         fetchDashboardData();
     }, [activeCompany, toast]);
+
+    useEffect(() => {
+        const fetchInsights = async () => {
+            if (isLoading || !activeCompany) return;
+            setInsightsLoading(true);
+
+            const burnRate = (activeCompany.financials?.monthlyExpenses || 0) - (activeCompany.financials?.monthlyRevenue || 0);
+
+            try {
+                const response = await getProactiveInsights({
+                    userRole: 'Founder',
+                    legalRegion: userProfile.legalRegion,
+                    founderContext: {
+                        companyAgeInDays: differenceInDays(new Date(), new Date(activeCompany.incorporationDate)),
+                        companyType: activeCompany.type,
+                        hygieneScore: hygieneScore,
+                        overdueCount: overdueFilingsCount,
+                        upcomingIn30DaysCount: upcomingFilingsCount,
+                        burnRate: burnRate > 0 ? burnRate : 0,
+                    }
+                });
+                setInsights(response.insights);
+            } catch (error: any) {
+                console.error("Could not fetch insights", error);
+                toast({ title: 'AI Insights Failed', description: error.message, variant: 'destructive' });
+            } finally {
+                setInsightsLoading(false);
+            }
+        };
+
+        fetchInsights();
+    }, [isLoading, activeCompany, hygieneScore, overdueFilingsCount, upcomingFilingsCount, userProfile.legalRegion, toast]);
     
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
@@ -201,39 +297,6 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         
         localStorage.setItem(storageKey, JSON.stringify(newStatuses));
     };
-
-    const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
-        if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0 };
-        
-        const today = startOfToday();
-        const thirtyDaysFromNow = addDays(today, 30);
-        
-        const upcomingFilings = checklist.filter(item => {
-            const dueDate = new Date(item.dueDate + 'T00:00:00');
-            return dueDate >= today && dueDate <= thirtyDaysFromNow && !item.completed;
-        });
-        const overdueFilings = checklist.filter(item => {
-            const dueDate = new Date(item.dueDate + 'T00:00:00');
-            return dueDate < today && !item.completed;
-        });
-
-        // HYGIENE SCORE CALCULATION
-        const totalFilings = checklist.length;
-        const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
-        
-        const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-        if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
-        const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
-        const profileCompleteness = (filledFields / requiredFields.length) * 100;
-        
-        const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
-
-        return {
-            upcomingFilingsCount: upcomingFilings.length,
-            overdueFilingsCount: overdueFilings.length,
-            hygieneScore: score,
-        }
-    }, [checklist, activeCompany]);
 
     const groupedChecklist = useMemo(() => {
         if (!checklist || checklist.length === 0) return {};
@@ -328,9 +391,9 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/compliance-hub" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} /></Link>
             
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
             
@@ -347,7 +410,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                             <Skeleton className="h-10 w-full" />
                         </div>
                     ) : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" defaultValue={sortedMonths.slice(0, 2)} className="w-full">
+                        <Accordion type="multiple" defaultValue={[]} className="w-full">
                             {sortedMonths.map(month => {
                                 const today = startOfToday();
                                 const hasOverdueItems = groupedChecklist[month].some(item => {
@@ -423,6 +486,27 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                 </CardContent>
              </Card>
 
+             <Card className="md:col-span-4 lg:col-span-4 interactive-lift">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
+                    <CardDescription>Timely suggestions from our AI to help you stay ahead.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {insightsLoading ? (
+                        <div className="space-y-2">
+                            <Skeleton className="h-16 w-full" />
+                            <Skeleton className="h-16 w-full" />
+                        </div>
+                    ) : insights.length > 0 ? (
+                       insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
+                    ) : (
+                        <div className="text-center text-muted-foreground p-8">
+                            <p>No special insights at the moment. You're all set!</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
         </div>
     );
 }
@@ -437,8 +521,8 @@ const riskChartConfig = {
 function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
    const clientCount = userProfile.companies.length;
    
-    const { avgProfileCompleteness, riskDistribution, clientHealthData } = useMemo(() => {
-        if (clientCount === 0) return { avgProfileCompleteness: 0, riskDistribution: [], clientHealthData: [] };
+    const { avgProfileCompleteness, riskDistribution, clientHealthData, highRiskClientCount } = useMemo(() => {
+        if (clientCount === 0) return { avgProfileCompleteness: 0, riskDistribution: [], clientHealthData: [], highRiskClientCount: 0 };
         
         let totalCompleteness = 0;
         const healthData = userProfile.companies.map(company => {
@@ -479,8 +563,58 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             avgProfileCompleteness: Math.round(totalCompleteness / clientCount),
             riskDistribution: riskChartData,
             clientHealthData: healthData.sort((a,b) => a.healthScore - b.healthScore),
+            highRiskClientCount: riskCounts.high,
         };
     }, [userProfile.companies, clientCount]);
+    
+    const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
+    const [insightsLoading, setInsightsLoading] = useState(true);
+    const { toast } = useToast();
+    const router = require("next/navigation").useRouter();
+
+     useEffect(() => {
+        const fetchInsights = async () => {
+            if (clientCount === 0 && avgProfileCompleteness === 0) {
+                 try {
+                    const response = await getProactiveInsights({
+                        userRole: 'CA',
+                        legalRegion: userProfile.legalRegion,
+                        caContext: {
+                            clientCount: 0,
+                            highRiskClientCount: 0,
+                        }
+                    });
+                    setInsights(response.insights);
+                } catch (error: any) {
+                    toast({ title: 'AI Insights Failed', description: error.message, variant: 'destructive' });
+                } finally {
+                    setInsightsLoading(false);
+                }
+                return;
+            }
+
+            if (clientHealthData.length === 0) return;
+            setInsightsLoading(true);
+            try {
+                const response = await getProactiveInsights({
+                    userRole: 'CA',
+                    legalRegion: userProfile.legalRegion,
+                    caContext: {
+                        clientCount: clientCount,
+                        highRiskClientCount: highRiskClientCount,
+                    }
+                });
+                setInsights(response.insights);
+            } catch (error: any) {
+                console.error("Could not fetch insights", error);
+                toast({ title: 'AI Insights Failed', description: error.message, variant: 'destructive' });
+            } finally {
+                setInsightsLoading(false);
+            }
+        };
+
+        fetchInsights();
+    }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast, avgProfileCompleteness, clientHealthData]);
 
 
    return (
@@ -510,26 +644,44 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             </Card>
              <Card className="interactive-lift">
                 <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Clients at Risk</CardTitle><FileWarning className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-destructive">{(riskDistribution.find(d => d.name === 'High')?.clients || 0)}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
+                <CardContent><div className="text-2xl font-bold text-destructive">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
             </Card>
         </div>
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
-            <Card className="lg:col-span-2 interactive-lift">
-                 <CardHeader>
-                    <CardTitle>Portfolio Risk</CardTitle>
-                    <CardDescription>Breakdown of client risk levels based on compliance health.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-52">
-                      <RechartsPieChart>
-                        <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
-                        <Pie data={riskDistribution} dataKey="clients" nameKey="name" innerRadius={60} strokeWidth={5} />
-                        <Legend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
-                      </RechartsPieChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
+            <div className="lg:col-span-2 space-y-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Portfolio Risk</CardTitle>
+                        <CardDescription>Breakdown of client risk levels based on compliance health.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-52">
+                        <RechartsPieChart>
+                            <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
+                            <Pie data={riskDistribution} dataKey="clients" nameKey="name" innerRadius={60} strokeWidth={5} />
+                            <Legend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
+                        </RechartsPieChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+                 <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {insightsLoading ? (
+                            <div className="space-y-2"><Skeleton className="h-16 w-full" /></div>
+                        ) : insights.length > 0 ? (
+                        insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
+                        ) : (
+                            <div className="text-center text-muted-foreground p-4">
+                                <p>No special insights at the moment.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
             <Card className="lg:col-span-3 interactive-lift">
                  <CardHeader>
                     <CardTitle>Client Health Overview</CardTitle>
@@ -666,7 +818,7 @@ function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
 
 
 export default function Dashboard() {
-  const { userProfile } = useAuth();
+  const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
   const renderDesktopDashboardByRole = () => {
@@ -701,7 +853,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} />
+      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
       <div className="flex-col gap-6 hidden md:flex">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

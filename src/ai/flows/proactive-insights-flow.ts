@@ -106,4 +106,3 @@ const proactiveInsightsFlow = ai.defineFlow(
     return output;
   }
 );
-`
