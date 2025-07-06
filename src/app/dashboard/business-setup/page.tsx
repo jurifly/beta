@@ -270,9 +270,9 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="< 10 Lakhs">Under ₹10 Lakhs</SelectItem>
+                                    <SelectItem value="Under 10 Lakhs">Under ₹10 Lakhs</SelectItem>
                                     <SelectItem value="10 Lakhs - 1 Crore">₹10 Lakhs - ₹1 Crore</SelectItem>
-                                    <SelectItem value="> 1 Crore">Over ₹1 Crore</SelectItem>
+                                    <SelectItem value="Over 1 Crore">Over ₹1 Crore</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}/>
@@ -768,3 +768,4 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         </div>
     )
 }
+`

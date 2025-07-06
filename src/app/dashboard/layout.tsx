@@ -504,7 +504,7 @@ const MobileBottomNav = () => {
         {navItems.map(item => {
            const isActive = item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href);
            return (
-             <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center h-full p-1 text-center">
+             <Link key={item.href} href={item.href} className="relative flex flex-col items-center justify-center h-full p-1 text-center">
               <div className={cn(
                   "flex flex-col items-center justify-center gap-1 w-full h-full rounded-md transition-colors active:scale-90", 
                   isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
@@ -513,7 +513,7 @@ const MobileBottomNav = () => {
                   <div className="absolute top-0 h-1 w-8 rounded-b-full bg-primary" />
                 )}
                 <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium leading-tight break-all">{item.label}</span>
+                <span className="text-[10px] font-medium leading-tight break-words">{item.label}</span>
               </div>
              </Link>
            )

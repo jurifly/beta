@@ -544,6 +544,17 @@ const getRiskColor = (severity: 'High' | 'Medium' | 'Low') => {
   }
 };
 
+const EmptyTabContent = ({ icon, title, description }: { icon: React.ElementType, title: string, description: string }) => {
+  const Icon = icon;
+  return (
+    <div className="text-center text-muted-foreground p-8 min-h-[200px] flex flex-col items-center justify-center">
+      <Icon className="mx-auto w-8 h-8 mb-2 opacity-50" />
+      <p className="font-semibold text-foreground">{title}</p>
+      <p className="text-xs">{description}</p>
+    </div>
+  );
+};
+
 const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (id: string) => void }) => {
   const { toast } = useToast();
   const highestSeverity = useMemo(() => {
@@ -583,38 +594,34 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                       <TabsTrigger value="reminder"><CalendarPlus/>Reminder</TabsTrigger>
                   </TabsList>
                   <TabsContent value="summary" className="p-4 bg-muted/50 rounded-lg border prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{doc.summary}</ReactMarkdown></TabsContent>
-                  <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <p className="text-sm text-muted-foreground p-4 text-center">No significant risks found.</p>}</TabsContent>
-                  <TabsContent value="details" className="min-h-[200px] flex items-center justify-center">
+                  <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <EmptyTabContent icon={ShieldCheck} title="No Significant Risks Found" description="The AI did not find any major risks in this document." />}</TabsContent>
+                  <TabsContent value="details">
                     {doc.contractDetails ? (
-                      <div className="w-full space-y-3">
-                        <div className="p-3 border rounded-md">
+                      <div className="w-full space-y-3 p-4 bg-muted/50 rounded-lg border">
+                        <div className="p-3 border rounded-md bg-card">
                           <p className="text-xs text-muted-foreground">Parties</p>
                           <p className="font-medium">{doc.contractDetails.contractingParties.join(', ')}</p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="p-3 border rounded-md">
+                          <div className="p-3 border rounded-md bg-card">
                             <p className="text-xs text-muted-foreground">Effective Date</p>
                             <p className="font-medium">{format(new Date(doc.contractDetails.effectiveDate), "PPP")}</p>
                           </div>
-                          <div className="p-3 border rounded-md">
+                          <div className="p-3 border rounded-md bg-card">
                             <p className="text-xs text-muted-foreground">Term</p>
                             <p className="font-medium">{doc.contractDetails.term}</p>
                           </div>
-                          <div className="p-3 border rounded-md">
+                          <div className="p-3 border rounded-md bg-card">
                             <p className="text-xs text-muted-foreground">Renewal Notice</p>
                             <p className="font-medium">{doc.contractDetails.renewalNoticeDate ? format(new Date(doc.contractDetails.renewalNoticeDate), "PPP") : 'N/A'}</p>
                           </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center text-muted-foreground">
-                        <FileSignature className="mx-auto w-8 h-8 mb-2 opacity-50" />
-                        <p className="font-semibold">No Contract Details Extracted</p>
-                        <p className="text-xs">The AI did not identify this as a standard contract.</p>
-                      </div>
+                      <EmptyTabContent icon={FileSignature} title="No Contract Details Extracted" description="The AI did not identify this as a standard contract." />
                     )}
                   </TabsContent>
-                   <TabsContent value="reply" className="p-4 bg-muted/50 rounded-lg border min-h-[200px] flex items-center justify-center">
+                   <TabsContent value="reply" className="p-4 bg-muted/50 rounded-lg border">
                     {doc.replySuggestion ? (
                         <div className="prose dark:prose-invert max-w-none text-sm w-full">
                             <div className="flex justify-between items-center not-prose mb-4">
@@ -624,14 +631,10 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                             <ReactMarkdown>{doc.replySuggestion.content}</ReactMarkdown>
                         </div>
                     ) : (
-                        <div className="text-center text-muted-foreground">
-                            <MessageSquare className="mx-auto w-8 h-8 mb-2 opacity-50" />
-                            <p className="font-semibold">No Reply Suggested</p>
-                            <p className="text-xs">The AI did not detect a need for a reply for this document.</p>
-                        </div>
+                        <EmptyTabContent icon={MessageSquare} title="No Reply Suggested" description="The AI did not detect a need for a reply for this document."/>
                     )}
                   </TabsContent>
-                   <TabsContent value="reminder" className="p-4 bg-muted/50 rounded-lg border min-h-[200px] flex items-center justify-center">
+                   <TabsContent value="reminder">
                     {doc.reminder ? (
                        <div className="bg-blue-500/10 text-blue-800 dark:text-blue-300 rounded-lg border border-blue-500/20 flex items-center justify-between gap-4 p-4 w-full">
                           <div className="flex items-center gap-3">
@@ -644,11 +647,7 @@ const AnalyzedDocItem = ({ doc, onDelete }: { doc: DocumentAnalysis, onDelete: (
                           <Button size="sm" onClick={() => toast({title:"Feature coming soon"})}>Add to Calendar</Button>
                         </div>
                     ) : (
-                       <div className="text-center text-muted-foreground">
-                            <CalendarPlus className="mx-auto w-8 h-8 mb-2 opacity-50" />
-                            <p className="font-semibold">No Reminder Needed</p>
-                            <p className="text-xs">The AI did not find a specific deadline in this document.</p>
-                        </div>
+                       <EmptyTabContent icon={CalendarPlus} title="No Reminder Needed" description="The AI did not find a specific deadline in this document." />
                     )}
                   </TabsContent>
               </Tabs>
@@ -1229,7 +1228,7 @@ const ReconciliationTab = () => {
                     <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg border">{result.summary}</p>
                   </div>
                   <Accordion type="multiple" defaultValue={['discrepancies', 'matched']} className="w-full">
-                      <AccordionItem value="discrepancies"><AccordionTrigger className="text-base font-medium">Discrepancies Found ({result.discrepancies.length})</AccordionTrigger><AccordionContent className="pt-2">{result.discrepancies.length > 0 ? ( <div className="space-y-4">{result.discrepancies.map((item, index) => ( <Card key={index} className="bg-destructive/10 border-destructive/20"><CardHeader><CardTitle className="text-base text-destructive flex items-center gap-2"><AlertTriangle/> {item.field}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid grid-cols-3 gap-4 text-center">{item.values.map(v => ( <div key={v.source} className="p-2 border rounded-md bg-background"><p className="text-xs font-semibold">{v.source}</p><p className="text-sm font-mono">{v.value}</p></div> )) }</div><div><p className="text-sm font-semibold">Probable Cause:</p><p className="text-sm text-destructive/80">{item.reason}</p></div></CardContent></Card> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No discrepancies found.</p> )}</AccordionContent></AccordionItem>
+                      <AccordionItem value="discrepancies"><AccordionTrigger className="text-base font-medium">Discrepancies Found ({result.discrepancies.length})</AccordionTrigger><AccordionContent className="pt-2">{result.discrepancies.length > 0 ? ( <div className="space-y-4">{result.discrepancies.map((item, index) => ( <Card key={index} className="bg-destructive/10 border-destructive/20"><CardHeader><CardTitle className="text-base text-destructive flex items-center gap-2"><AlertTriangle/> {item.field}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid grid-cols-3 gap-4 text-center">{item.values.map(v => ( <div key={v.source} className="p-2 border rounded-md bg-card"><p className="text-xs font-semibold">{v.source}</p><p className="text-sm font-mono">{v.value}</p></div> )) }</div><div><p className="text-sm font-semibold">Probable Cause:</p><p className="text-sm text-destructive/80">{item.reason}</p></div></CardContent></Card> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No discrepancies found.</p> )}</AccordionContent></AccordionItem>
                       <AccordionItem value="matched"><AccordionTrigger className="text-base font-medium">Matched Items ({result.matchedItems.length})</AccordionTrigger><AccordionContent className="pt-2">{result.matchedItems.length > 0 ? ( <div className="space-y-3">{result.matchedItems.map((item, index) => ( <div key={index} className="p-3 border rounded-md flex items-center justify-between bg-muted/50"><p className="font-medium text-sm flex items-center gap-2"><CheckCircle className="text-green-500"/>{item.field}</p><p className="font-mono text-sm">{item.value}</p></div> ))}</div> ) : ( <p className="text-sm text-muted-foreground p-4">No fully matched items found.</p> )}</AccordionContent></AccordionItem>
                   </Accordion>
               </CardContent>
@@ -1385,3 +1384,4 @@ export default function AiToolkitPage() {
         </div>
     );
 }
+`

@@ -29,10 +29,10 @@ type ReportData = {
 
 const ReportTemplate = ({ data }: { data: ReportData }) => {
     const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
+    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
     return (
-        <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm' }}>
+        <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Inter, sans-serif' }}>
             {/* Header */}
             <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
                 <div className="flex items-center gap-3">
@@ -45,6 +45,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                 <div className="text-right">
                     <h1 className="text-3xl font-extrabold text-gray-700">Compliance Health Report</h1>
                     <p className="text-sm font-medium text-gray-500">{data.client.name}</p>
+                    <p className="text-xs text-gray-400">Generated: {format(new Date(), 'do MMM, yyyy')}</p>
                 </div>
             </header>
 
@@ -52,12 +53,12 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
             <main className="mt-8">
                 {/* Score Section */}
                 <section className="grid grid-cols-3 gap-6 mb-8">
-                    <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50/70 p-6 rounded-xl border border-gray-200">
+                    <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
                         <p className="text-sm font-semibold text-gray-600">Legal Hygiene Score</p>
                         <div className={`mt-2 text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
                         <p className="text-xs font-medium text-gray-500">Out of 100</p>
                     </div>
-                    <div className="col-span-2 bg-gray-50/70 p-6 rounded-xl border border-gray-200 flex flex-col justify-center">
+                    <div className="col-span-2 bg-gray-50 p-6 rounded-xl border border-gray-200 flex flex-col justify-center">
                         <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
                         <div className="space-y-4">
                              <div>
@@ -72,9 +73,9 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                     </div>
                 </section>
                 
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <div className="grid grid-cols-5 gap-6">
                     {/* Left Column */}
-                    <div className="md:col-span-2 space-y-6">
+                    <div className="col-span-2 space-y-6">
                          <div className="p-4 border border-gray-200 rounded-xl bg-white">
                             <h3 className="text-base font-semibold text-gray-700 mb-3">Client Details</h3>
                             <div className="space-y-2 text-sm">
@@ -87,7 +88,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                             <h3 className="text-base font-semibold text-gray-700 mb-2">Ownership Structure</h3>
                             <ResponsiveContainer width="100%" height={150}>
                                 <RechartsPieChart>
-                                    <RechartsTooltip />
+                                    <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
                                     <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                         {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                     </Pie>
@@ -98,8 +99,8 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                     </div>
 
                     {/* Right Column */}
-                     <div className="md:col-span-3 space-y-6">
-                        <div className="p-4 border border-red-300 bg-red-50/50 rounded-xl h-full">
+                     <div className="col-span-3 space-y-6">
+                        <div className="p-4 border border-red-300 bg-red-50 rounded-xl h-full">
                             <h3 className="text-base font-semibold text-red-700 mb-2">Overdue Filings ({data.overdueFilings.length})</h3>
                             {data.overdueFilings.length > 0 ? (
                                 <ul className="text-sm list-disc pl-5 space-y-1.5 text-red-900">
@@ -190,14 +191,13 @@ export default function ReportCenterPage() {
 
             // 4. Process Cap Table data
             const capTable = client.capTable || [];
-            const { totalShares, founderShares, investorShares, esopPool } = capTable.reduce(
+            const { founderShares, investorShares, esopPool } = capTable.reduce(
                 (acc, entry) => {
-                    acc.totalShares += entry.shares;
                     if (entry.type === 'Founder') acc.founderShares += entry.shares;
                     else if (entry.type === 'Investor') acc.investorShares += entry.shares;
                     else if (entry.type === 'ESOP') acc.esopPool += entry.shares;
                     return acc;
-                }, { totalShares: 0, founderShares: 0, investorShares: 0, esopPool: 0 }
+                }, { founderShares: 0, investorShares: 0, esopPool: 0 }
             );
             const ownershipData = [
                 { name: 'Founders', value: founderShares },
@@ -298,3 +298,4 @@ export default function ReportCenterPage() {
         </div>
     )
 }
+`
