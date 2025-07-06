@@ -30,6 +30,7 @@ import {
   Check,
   Upload,
   Lightbulb,
+  BarChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -157,6 +158,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
     const [insightsLoading, setInsightsLoading] = useState(true);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
 
@@ -297,12 +299,25 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
         
         localStorage.setItem(storageKey, JSON.stringify(newStatuses));
     };
+    
+    const checklistYears = useMemo(() => {
+        const years = new Set(checklist.map(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString()));
+        return Array.from(years).sort((a,b) => Number(b) - Number(a));
+    }, [checklist]);
+
+    useEffect(() => {
+        if(checklistYears.length > 0 && !checklistYears.includes(selectedYear)) {
+            setSelectedYear(checklistYears[0]);
+        }
+    }, [checklistYears, selectedYear]);
 
     const groupedChecklist = useMemo(() => {
         if (!checklist || checklist.length === 0) return {};
         const today = startOfToday();
+        
+        const filteredByYear = checklist.filter(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString() === selectedYear);
 
-        const grouped = checklist.reduce((acc, item) => {
+        const grouped = filteredByYear.reduce((acc, item) => {
             const monthKey = format(new Date(item.dueDate + 'T00:00:00'), 'MMMM yyyy');
             if (!acc[monthKey]) {
                 acc[monthKey] = [];
@@ -325,7 +340,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             });
         }
         return grouped;
-    }, [checklist]);
+    }, [checklist, selectedYear]);
     
     const sortedMonths = useMemo(() => {
         return Object.keys(groupedChecklist).sort((a, b) => {
@@ -399,8 +414,19 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
             
             <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                    <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
+                    <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                        <div>
+                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
+                            <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
+                        </div>
+                        {checklistYears.length > 0 && (
+                             <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
+                                {checklistYears.map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {isLoading ? (
@@ -480,7 +506,7 @@ function FounderDashboard({ userProfile }: { userProfile: UserProfile }) {
                         </Accordion>
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
-                            <p>No items yet. AI couldn't generate a checklist.</p>
+                            <p>No items for {selectedYear}. Select another year or check back later.</p>
                         </div>
                     )}
                 </CardContent>
