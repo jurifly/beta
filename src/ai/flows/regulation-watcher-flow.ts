@@ -43,7 +43,7 @@ Instructions:
     -   A clear markdown heading (e.g., \`### Update from [Date]\`) including the specific date of the circular or notification.
     -   A brief, clear summary of the change.
     -   A "**Why it matters**" section explaining the direct impact on businesses or professionals in {{legalRegion}}. Use bold markdown for the "Why it matters" title.
-4.  **Quality Control**: Before finalizing your response, proofread the entire summary for any spelling mistakes, grammatical errors, or formatting issues. The final output must be polished and professional.
+4.  **CRITICAL QUALITY CONTROL**: Before finalizing your response, you MUST proofread the entire summary for any spelling mistakes, grammatical errors, or formatting issues. The final output must be polished, professional, and error-free.
 
 Return ONLY the markdown summary in the 'summary' field of the JSON output. Do not include any introductory text or apologies in the summary itself.
 `,

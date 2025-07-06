@@ -89,6 +89,8 @@ const prompt = ai.definePrompt({
 3.  Generate a list of 1 to 3 unique insights. Do not repeat suggestions.
 4.  For each insight, provide a concise \`title\`, \`description\`, a clear call-to-action \`cta\`, a valid \`href\`, and a matching \`icon\`.
 5.  **Crucially for Founders**, when suggesting they visit their compliance page, use the term "CA Connect" for the \`cta\` and the link \`/dashboard/ca-connect\` for the \`href\`. Do not use "Compliance Hub".
+
+**CRITICAL QUALITY CONTROL**: All generated text in the \`title\`, \`description\`, and \`cta\` fields must be professional and completely free of any spelling or grammatical errors.
 `,
 });
 

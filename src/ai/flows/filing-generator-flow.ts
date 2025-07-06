@@ -51,7 +51,7 @@ const prompt = ai.definePrompt({
 3.  **Include All One-Time Filings**: You MUST include all one-time initial filings (e.g., "Open bank account", "Commencement of Business") for every company, regardless of its age. Their due dates are calculated from the \`incorporationDate\`. For a company incorporated in the past, these will likely be 'overdue'.
 4.  **Include Recurring Filings**: For recurring tasks (annual, quarterly), generate the NEXT upcoming instance. Calculate the due date based on the \`currentDate\`. For example, if the \`currentDate\` is in 2024 and a task is due "By 30 September every year", the due date should be in 2024.
 5.  **Determine Accurate Status**: Compare the calculated due date of EACH task with the \`currentDate\` to set its status to "overdue" or "upcoming". Do not use a "completed" status. A task is overdue if its due date is before the \`currentDate\`.
-6.  **Quality Control**: For each task, you must provide a 'title', 'date', 'type', 'status', 'description', and 'penalty'. Do not leave any fields blank. Ensure all text is spelled correctly and the data is accurate.
+6.  **CRITICAL QUALITY CONTROL**: For each task, you MUST provide a 'title', 'date', 'type', 'status', 'description', and 'penalty'. Do not leave any fields blank. Ensure all text is spelled perfectly and all data is accurate.
 
 **Compliance Datasets**:
 

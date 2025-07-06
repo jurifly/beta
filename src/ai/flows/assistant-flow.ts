@@ -62,7 +62,7 @@ Your response has two parts: \`response\` and an optional \`checklist\`.
     -   \`response\`: (A detailed explanation of the consequences, like penalties and interest, as per the tax laws of {{legalRegion}}. Do not use a bulleted or numbered list in this response text.)
     -   \`checklist\`: (This field should be omitted entirely).
 
-**Quality Control**: Your response must be professional, well-written, and free of any spelling or grammatical errors. Critically review your entire output for accuracy and clarity before finalizing it.
+**CRITICAL QUALITY CONTROL**: Before returning your response, you MUST act as a meticulous editor. Proofread your entire output multiple times to ensure it is professional, well-written, and completely free of any spelling or grammatical errors. The final output must be polished and accurate.
 
 By separating the conversational intro from the structured data, you provide a much clearer and more useful response. The UI is designed to render the \`checklist\` as a distinct, interactive component.
 `,

@@ -38,7 +38,7 @@ Generate a comprehensive due diligence checklist based on the user's request: "{
 
 Your response should be a structured checklist with a clear title. For each task, provide a concise action and assign it to a relevant due diligence category (e.g., "Corporate Records", "Financial Information", "Intellectual Property", "Material Contracts", "Employee Matters", "Litigation"). The checklist items should be relevant to the legal and business environment of {{legalRegion}}.
 
-**Quality Control**: Be thorough, professional, and ensure all generated text is free of spelling and grammatical errors.
+**CRITICAL QUALITY CONTROL**: You must be thorough and professional. Ensure all generated text is completely free of spelling and grammatical errors. Proofread the entire checklist before responding.
 `,
 });
 

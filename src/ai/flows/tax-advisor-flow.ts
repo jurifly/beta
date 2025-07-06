@@ -80,7 +80,7 @@ const prompt = ai.definePrompt({
     -   **For India (Individual)**: Calculate for BOTH old and new regimes. Compare the final tax payable and set \`recommendedRegime\` to 'Old' or 'New'.
     -   **For other regions or Corporate tax**: The concept of dual regimes doesn't apply. Perform a single calculation. Populate BOTH \`oldRegime\` and \`newRegime\` fields in the output with the IDENTICAL calculation results. Set \`recommendedRegime\` to 'N/A' and \`recommendationReason\` to "Only one tax regime applies for this entity/region."
 5.  **Generate Tips**: Provide 3-5 specific, actionable tax optimization tips relevant to the user's inputs and region.
-6.  **Quality Control**: Double-check all calculations and ensure the advice is logical and relevant.
+6.  **CRITICAL QUALITY CONTROL**: Double-check all calculations and ensure the advice is logical and relevant. All generated text, especially in \`optimizationTips\` and \`summary\`, must be professional and completely free of spelling or grammatical errors.
 
 ---
 **TAX DATASETS (Financial Year 2023-24)**

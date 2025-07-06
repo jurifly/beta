@@ -38,7 +38,7 @@ For each thread, provide:
 - A realistic number of replies.
 - A relevant tag from the available options.
 
-**Quality Control**: Ensure the generated content is diverse, believable, and completely free of spelling or grammatical errors.
+**CRITICAL QUALITY CONTROL**: You MUST ensure the generated content is diverse, believable, and completely free of spelling or grammatical errors. Proofread all generated text before returning the output.
 `,
 });
 

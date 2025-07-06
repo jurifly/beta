@@ -44,7 +44,7 @@ const prompt = ai.definePrompt({
   - **Industry/Sector**: A plausible business sector.
   - **Location**: The registered office location in "City, State/Region" format.
 
-  **Quality Control**: Ensure all generated names and text are plausible and spelled correctly.
+  **CRITICAL QUALITY CONTROL**: You must act as a meticulous editor. Ensure all generated names and text are plausible and spelled correctly. There should be ZERO spelling or grammar errors in the output.
 
   Return the data in the specified JSON format. Do not add any extra explanations or introductory text.
   `,

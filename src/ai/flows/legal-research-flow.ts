@@ -43,7 +43,7 @@ Your task is to provide a structured, comprehensive, and insightful legal analys
 2.  **Detailed Analysis**: Provide an in-depth analysis of the legal topic. Explain the relevant statutes, regulations, and legal principles that apply in {{legalRegion}}. Use clear, professional language.
 3.  **Precedents**: Identify and list 2-3 key legal precedents or landmark cases relevant to the query within {{legalRegion}}. For each precedent, provide the case name and a short summary of its significance and how it applies. For the purpose of this demonstration, these can be realistic but fictitious examples if necessary.
 
-**Quality Control**: Your final output must be impeccably written, with no spelling or grammatical errors. The analysis should be clear, coherent, and professional.
+**CRITICAL QUALITY CONTROL**: Your final output must be impeccably written, with ZERO spelling or grammatical errors. The analysis must be clear, coherent, and professional.
 
 Return the response in the specified JSON format.
 `,

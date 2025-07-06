@@ -44,7 +44,7 @@ Legal Region: "{{legalRegion}}"
 
 Generate the full document text as plain text. The document should be comprehensive and ready for use. Use placeholders like "[Party A Name]" or "[Date]" where user input would be required. The 'title' field in your output should be the document's main title.
 
-**Quality Control**: Before finalizing your response, you must act as a meticulous editor and critically proofread the entire document for any spelling mistakes, grammatical errors, or formatting issues. The final output must be polished and professional.
+**CRITICAL QUALITY CONTROL**: Before finalizing your response, you MUST act as a meticulous editor. Proofread the entire document multiple times for any spelling mistakes, grammatical errors, or formatting issues. The final output must be polished, professional, and ready for legal use.
 
 Ensure the content is well-structured with clear paragraphs, line breaks, and terminology appropriate for {{legalRegion}}.
 `,
