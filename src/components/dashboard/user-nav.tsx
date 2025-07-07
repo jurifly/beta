@@ -28,12 +28,14 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, userProfile, updateUserProfile, signOut, isDevMode, setDevMode } = useAuth();
   const [openCompanySwitcher, setOpenCompanySwitcher] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     if (signOut) {
@@ -125,21 +127,26 @@ export function UserNav() {
                 <DropdownMenuSeparator />
             </>
         )}
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-            <UserIcon className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        {!isMobile && (
+          <>
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Billing</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        
         {canShowActiveCompany && (
             <>
                 <DropdownMenuSub open={openCompanySwitcher} onOpenChange={setOpenCompanySwitcher}>

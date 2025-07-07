@@ -40,6 +40,7 @@ import {
   Mail,
   BookLock,
   BookOpenCheck,
+  User,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -174,7 +175,7 @@ const getIcon = (iconName: string) => {
     return icons[iconName] || icons.Default;
 }
 
-const getBottomNavItems = (role: UserRole): NavItem[] => {
+const getBottomNavItems = (role: UserRole): (NavItem | { href: string; label: string; icon: React.ElementType })[] => {
   switch (role) {
     case 'CA':
       return [
@@ -204,10 +205,10 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
     default:
       return [
         { ...navItemConfig.dashboard, label: "Dashboard" },
-        { ...navItemConfig.caConnect, label: "Compliance" },
+        { ...navItemConfig.financials, label: "Financials" },
         { ...navItemConfig.aiToolkit, label: "AI Toolkit" },
         { ...navItemConfig.capTable, label: "Cap Table" },
-        { ...navItemConfig.documents, label: "Docs" },
+        { href: "/dashboard/settings", label: "Profile", icon: User },
       ];
   }
 };
