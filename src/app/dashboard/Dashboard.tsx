@@ -222,15 +222,14 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 const today = startOfToday();
                 const checklistItems = processedFilings.map((filing) => {
                     const uniqueId = `${filing.title}-${filing.date}`;
+                    const isCompleted = savedStatuses[uniqueId] ?? false;
                     const dueDate = new Date(filing.date + 'T00:00:00');
-                    const isFuture = dueDate > today;
-                    const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
 
                     return {
                         id: uniqueId,
                         text: filing.title,
                         dueDate: filing.date,
-                        completed: isCompleted,
+                        completed: (isCompleted && dueDate < today) ? true : false,
                         description: filing.description,
                         penalty: filing.penalty,
                     };
@@ -475,6 +474,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                         <Accordion type="multiple" defaultValue={[]} className="w-full">
                             {sortedMonths.map(month => {
                                 const today = startOfToday();
+                                const isCurrentMonth = month === format(today, 'MMMM yyyy');
                                 const hasOverdueItems = groupedChecklist[month].some(item => {
                                     const dueDate = new Date(item.dueDate + 'T00:00:00');
                                     return dueDate < today && !item.completed;
@@ -484,6 +484,18 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                 <AccordionItem value={month} key={month}>
                                     <AccordionTrigger className="text-base font-semibold hover:no-underline">
                                         <div className="flex items-center gap-2">
+                                            {isCurrentMonth && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <CalendarClock className="h-4 w-4 text-primary" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Current Month</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
                                             <span>{month}</span>
                                             {hasOverdueItems && (
                                                 <AlertTriangle className="h-4 w-4 text-destructive" />
