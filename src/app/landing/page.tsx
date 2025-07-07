@@ -58,7 +58,7 @@ export default function LandingPage() {
                         <div className="text-center lg:text-start space-y-6">
                             <div className="text-4xl md:text-6xl font-bold">
                                 <h1 className="inline">
-                                    <span className="inline bg-gradient-to-r from-primary to-accent/80 text-transparent bg-clip-text">
+                                    <span className="inline text-primary">
                                         Your AI Co-Pilot
                                     </span>{" "}
                                     for Startup Compliance & Docs
@@ -92,14 +92,14 @@ export default function LandingPage() {
                         <div className="flex flex-col items-center justify-center space-y-4 text-center">
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                                    Key <span className="bg-gradient-to-r from-primary to-accent/80 text-transparent bg-clip-text">Benefits</span>
+                                    Key <span className="text-primary">Benefits</span>
                                 </h2>
                                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                                     Everything you need to stay compliant and scale your business, all in one place.
                                 </p>
                             </div>
                         </div>
-                        <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:grid-cols-3 lg:gap-12">
+                        <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:grid-cols-3 lg:gap-12 justify-center">
                              <div className="grid gap-1 text-left">
                                 <h3 className="text-lg font-bold flex items-center gap-2"><ShieldCheck className="text-primary"/>Compliance Dashboard</h3>
                                 <p className="text-sm text-muted-foreground">
