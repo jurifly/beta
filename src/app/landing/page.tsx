@@ -60,15 +60,15 @@ export default function LandingPage() {
                     </div>
                     <div className="container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10">
                         <div className="text-center lg:text-start space-y-6">
-                            <main className="text-5xl md:text-6xl font-bold">
+                            <div className="text-5xl md:text-6xl font-bold">
                                 <h1 className="inline">
                                     <span className="inline bg-gradient-to-r from-primary to-accent/80 text-transparent bg-clip-text">
                                         Your AI Co-Pilot
                                     </span>{" "}
                                     for Startup Compliance & Docs
                                 </h1>
-                            </main>
-                            <p className="text-xl text-muted-foreground md:w-10/12 mx-auto lg:mx-0">
+                            </div>
+                            <p className="text-xl md:text-2xl text-muted-foreground md:w-10/12 mx-auto lg:mx-0">
                                 Organize legal tasks, track compliance, and collaborate with your CA in one place.
                             </p>
                             <div className="space-y-4 md:space-y-0 md:space-x-4">
@@ -92,12 +92,14 @@ export default function LandingPage() {
                 
                 {/* Key Benefits Section */}
                 <section id="features" className="container py-24 sm:py-32 space-y-8">
-                    <h2 className="text-3xl lg:text-4xl font-bold text-center">
-                        Key{" "}
-                        <span className="bg-gradient-to-r from-primary to-accent/80 text-transparent bg-clip-text">
-                            Benefits
-                        </span>
-                    </h2>
+                    <div className="text-center">
+                        <h2 className="text-3xl lg:text-4xl font-bold">
+                            Key{" "}
+                            <span className="bg-gradient-to-r from-primary to-accent/80 text-transparent bg-clip-text">
+                                Benefits
+                            </span>
+                        </h2>
+                    </div>
                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                          <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
                             <CardHeader>
