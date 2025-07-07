@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Briefcase, Building, CreditCard, LogOut, Settings, User as UserIcon, Check, Bolt, Sparkles } from "lucide-react";
+import { Briefcase, Building, LogOut, Settings, User as UserIcon, Check, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -24,19 +24,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
 import type { UserProfile, UserRole } from "@/lib/types";
 import { Badge } from "../ui/badge";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, userProfile, updateUserProfile, signOut, isDevMode, setDevMode } = useAuth();
-  const [openCompanySwitcher, setOpenCompanySwitcher] = useState(false);
-  const isMobile = useIsMobile();
-
+  
   const handleLogout = async () => {
     if (signOut) {
         router.push("/landing");
@@ -80,7 +75,7 @@ export function UserNav() {
   }
 
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-  const canShowActiveCompany = userProfile.role === 'Founder' || userProfile.role === 'Enterprise';
+  const canShowActiveCompany = userProfile.role === 'Founder' || userProfile.role === 'Enterprise' || userProfile.role === 'CA' || userProfile.role === 'Legal Advisor';
 
   return (
     <DropdownMenu>
@@ -89,13 +84,12 @@ export function UserNav() {
           <Avatar className="h-8 w-8">
              <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
           </Avatar>
-          {canShowActiveCompany && activeCompany && (
+          {canShowActiveCompany && activeCompany ? (
             <div className="text-left hidden md:block">
               <p className="text-sm font-medium leading-tight">{activeCompany.name}</p>
               <p className="text-xs text-muted-foreground">{activeCompany.type}</p>
             </div>
-          )}
-           {!canShowActiveCompany && (
+          ) : (
             <div className="text-left hidden md:block">
               <p className="text-sm font-medium leading-tight">{userProfile.name}</p>
               <p className="text-xs text-muted-foreground">{userProfile.role}</p>
@@ -115,74 +109,28 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {userProfile.plan === 'Starter' && (
+        
+        {canShowActiveCompany && userProfile.companies.length > 0 && (
             <>
-                <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
-                    <Sparkles className="mr-2 h-4 w-4 text-primary" />
-                    <span>Upgrade to Pro</span>
-                </DropdownMenuItem>
-                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
+                <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={userProfile.activeCompanyId} onValueChange={handleCompanyChange}>
+                    {userProfile.companies.map(company => (
+                        <DropdownMenuRadioItem key={company.id} value={company.id}>
+                            {company.name}
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                 <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    <span>Add/Edit Companies</span>
+                 </DropdownMenuItem>
             </>
-        )}
-        {!isMobile && (
-          <>
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                <UserIcon className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Billing</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-          </>
         )}
         
-        {canShowActiveCompany && (
-            <>
-                <DropdownMenuSub open={openCompanySwitcher} onOpenChange={setOpenCompanySwitcher}>
-                    <DropdownMenuSubTrigger>
-                        <Building className="mr-2 h-4 w-4" />
-                        <span>Switch Company</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="p-0">
-                        <Command>
-                            <CommandInput placeholder="Search company..." autoFocus={true} />
-                            <CommandList>
-                            <CommandEmpty>No company found.</CommandEmpty>
-                            <CommandGroup>
-                                {userProfile.companies.map(company => (
-                                <CommandItem
-                                    key={company.id}
-                                    value={company.name}
-                                    onSelect={() => {
-                                    handleCompanyChange(company.id);
-                                    setOpenCompanySwitcher(false);
-                                    }}
-                                >
-                                    {company.name}
-                                    {company.id === userProfile.activeCompanyId && <Check className="ml-auto h-4 w-4" />}
-                                </CommandItem>
-                                ))}
-                            </CommandGroup>
-                            </CommandList>
-                        </Command>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                    <DropdownMenuSeparator />
-            </>
-        )}
+        <DropdownMenuSeparator />
+
         <DropdownMenuGroup>
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Developer Tools</DropdownMenuLabel>
           <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center justify-between">
