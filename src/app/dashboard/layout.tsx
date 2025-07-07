@@ -64,7 +64,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
-import type { UserProfile, UserPlan, AppNotification } from "@/lib/types";
+import type { UserProfile, UserPlan, AppNotification, UserRole } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -174,6 +174,75 @@ const getIcon = (iconName: string) => {
     return icons[iconName] || icons.Default;
 }
 
+const getBottomNavItems = (role: UserRole): NavItem[] => {
+  switch (role) {
+    case 'CA':
+      return [
+        { ...navItemConfig.dashboard, label: "Dashboard" },
+        { ...navItemConfig.clients, label: "Clients" },
+        { ...navItemConfig.aiToolkit, label: "AI Suite" },
+        { ...navItemConfig.caConnect, label: "Compliance" },
+        { ...navItemConfig.reportCenter, label: "Reports" },
+      ];
+    case 'Legal Advisor':
+      return [
+        { ...navItemConfig.dashboard, label: "Dashboard" },
+        { ...navItemConfig.clients, label: "Clients" },
+        { ...navItemConfig.aiToolkit, label: "AI Tools" },
+        { ...navItemConfig.documents, label: "Docs" },
+        { ...navItemConfig.settings, label: "Settings" },
+      ];
+    case 'Enterprise':
+      return [
+        { ...navItemConfig.dashboard, label: "Dashboard" },
+        { ...navItemConfig.team, label: "Team" },
+        { ...navItemConfig.caConnect, label: "Compliance" },
+        { ...navItemConfig.analytics, label: "Analytics" },
+        { ...navItemConfig.documents, label: "Docs" },
+      ];
+    case 'Founder':
+    default:
+      return [
+        { ...navItemConfig.dashboard, label: "Dashboard" },
+        { ...navItemConfig.caConnect, label: "Compliance" },
+        { ...navItemConfig.aiToolkit, label: "AI Toolkit" },
+        { ...navItemConfig.capTable, label: "Cap Table" },
+        { ...navItemConfig.documents, label: "Docs" },
+      ];
+  }
+};
+
+const BottomNavBar = ({ userProfile }: { userProfile: UserProfile }) => {
+    const pathname = usePathname();
+    const bottomNavItems = getBottomNavItems(userProfile.role);
+
+    return (
+        <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
+            <div className="grid h-full grid-cols-5 mx-auto">
+                {bottomNavItems.map(item => {
+                    const isActive = (item.href === '/dashboard' && pathname === item.href) ||
+                                     (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                    
+                    return (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            className={cn(
+                                "inline-flex flex-col items-center justify-center px-1 text-center group",
+                                isActive ? "text-primary" : "text-muted-foreground"
+                            )}
+                        >
+                            <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
+                            <span className="text-[10px] font-medium">{item.label}</span>
+                        </Link>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
+
 function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
@@ -196,6 +265,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   }
   
   const navItems = getNavItems(userProfile.role);
+  const bottomNavItems = getBottomNavItems(userProfile.role);
+  const bottomNavHrefs = bottomNavItems.map(item => item.href);
+  const sheetNavItems = navItems.filter(item => !bottomNavHrefs.includes(item.href));
+
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
   const bonusCredits = userProfile.creditBalance ?? 0;
@@ -218,7 +291,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <MobileSheetNav navItems={navItems} userProfile={userProfile} />
+                <MobileSheetNav navItems={sheetNavItems} userProfile={userProfile} />
                 <div className="flex-1">
                 <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Link href="/dashboard" className="flex items-center gap-2">
@@ -307,10 +380,11 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <UserNav />
                 </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-8 md:pb-6 overflow-y-auto">
+            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
                 <BetaBanner />
                 {children}
             </main>
+            <BottomNavBar userProfile={userProfile} />
             </div>
         </div>
     </>
