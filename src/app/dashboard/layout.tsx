@@ -100,7 +100,7 @@ type NavItemKey = keyof typeof navItemConfig;
 type NavItem = (typeof navItemConfig)[NavItemKey];
 
 const founderNavItems: NavItem[] = [
-  { ...navItemConfig.dashboard, label: "Portfolio" },
+  navItemConfig.dashboard,
   { ...navItemConfig.caConnect, label: "CA Connect" },
   { ...navItemConfig.aiToolkit },
   { ...navItemConfig.launchPad },

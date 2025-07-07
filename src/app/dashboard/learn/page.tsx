@@ -2,108 +2,72 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/hooks/auth';
-import { getLearningContentAction } from './actions';
-import type { LearnOutput } from '@/ai/flows/learn-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, BookHeart, BookOpenCheck } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { Skeleton } from '@/components/ui/skeleton';
+import { categorizedTopics, learningTopics, type LearningTopic } from '@/lib/learn-content';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
-const learningTopics = [
-    {
-        category: 'Company Registration',
-        topics: ['Private Limited Company', 'Limited Liability Partnership (LLP)', 'One Person Company (OPC)', 'Choosing a Business Name']
-    },
-    {
-        category: 'Tax & Compliance',
-        topics: ['GST Basics', 'TDS Explained', 'Director KYC', 'Annual Filings']
-    },
-    {
-        category: 'Funding Basics',
-        topics: ['Bootstrapping', 'Angel Investing', 'Venture Capital', 'Term Sheet Basics', 'SAFE vs Convertible Note']
-    },
-    {
-        category: 'Startup Metrics',
-        topics: ['Burn Rate', 'CAC (Customer Acquisition Cost)', 'LTV (Lifetime Value)', 'MRR vs ARR', 'Churn Rate']
-    }
-];
-
-const LoadingState = () => (
-    <div className="space-y-6">
-        <Skeleton className="h-8 w-1/2" />
-        <div className="space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-5/6" />
-        </div>
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
-    </div>
-);
+const TopicContent = ({ topic, onSelectTopic }: { topic: LearningTopic, onSelectTopic: (slug: string) => void }) => {
+    return (
+      <Card className="animate-in fade-in-50">
+          <CardHeader>
+              <CardTitle className="text-3xl font-headline flex items-center gap-3">
+                <div className="p-3 bg-muted rounded-lg text-primary"><BookOpenCheck className="w-6 h-6"/></div>
+                {topic.title}
+              </CardTitle>
+              <Alert className="mt-4 border-amber-500/20 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+                  <BookHeart className="h-4 w-4 !text-amber-500"/>
+                  <AlertTitle className="font-semibold text-amber-800 dark:text-amber-200">ELI5: Explain Like I'm 5</AlertTitle>
+                  <AlertDescription className="text-amber-700 dark:text-amber-300">
+                      {topic.summary}
+                  </AlertDescription>
+              </Alert>
+          </CardHeader>
+          <CardContent>
+              <div className="prose dark:prose-invert max-w-none">
+                  <ReactMarkdown>{topic.content}</ReactMarkdown>
+              </div>
+              {topic.furtherReading && topic.furtherReading.length > 0 && (
+                  <div className="mt-8 pt-6 border-t">
+                      <h3 className="font-semibold mb-3 text-lg">Keep Learning...</h3>
+                      <div className="flex flex-wrap gap-2">
+                          {topic.furtherReading.map(slug => {
+                              const nextTopic = learningTopics.find(t => t.slug === slug);
+                              if (!nextTopic) return null;
+                              return (
+                                  <Button key={slug} variant="secondary" onClick={() => onSelectTopic(slug)} className="interactive-lift">
+                                      {nextTopic.title}
+                                  </Button>
+                              );
+                          })}
+                      </div>
+                  </div>
+              )}
+          </CardContent>
+      </Card>
+    );
+};
 
 export default function LearnPage() {
-    const { userProfile, deductCredits } = useAuth();
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [content, setContent] = useState<LearnOutput | null>(null);
-    const { toast } = useToast();
+    const [selectedTopicSlug, setSelectedTopicSlug] = useState<string | null>(null);
 
-    const handleTopicSelect = async (topic: string) => {
-        if (!userProfile) return;
-        if (!await deductCredits(1)) return;
-
-        setSelectedTopic(topic);
-        setIsLoading(true);
-        setContent(null);
-
-        try {
-            const result = await getLearningContentAction({ topic, legalRegion: userProfile.legalRegion });
-            setContent(result);
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error fetching content', description: error.message });
-            setSelectedTopic(null);
-        } finally {
-            setIsLoading(false);
-        }
+    const handleTopicSelect = (slug: string) => {
+        setSelectedTopicSlug(slug);
     };
+
+    const selectedTopic = learningTopics.find(t => t.slug === selectedTopicSlug);
 
     if (selectedTopic) {
         return (
             <div className="max-w-4xl mx-auto">
-                <Button variant="ghost" onClick={() => setSelectedTopic(null)} className="mb-4">
-                    <ArrowLeft className="mr-2" /> Back to Topics
+                <Button variant="ghost" onClick={() => setSelectedTopicSlug(null)} className="mb-4">
+                    <ArrowLeft className="mr-2" /> Back to All Topics
                 </Button>
-                {isLoading ? (
-                    <Card><CardContent className="p-6"><LoadingState /></CardContent></Card>
-                ) : content && (
-                    <Card className="animate-in fade-in-50">
-                        <CardHeader>
-                            <CardTitle className="text-3xl font-headline">{content.title}</CardTitle>
-                            <CardDescription className="pt-2 text-base bg-amber-100/50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-500/20">
-                                <strong>ELI5:</strong> {content.summary}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="prose dark:prose-invert max-w-none">
-                                <ReactMarkdown>{content.content}</ReactMarkdown>
-                            </div>
-                            {content.furtherReading && (
-                                <div className="mt-8 pt-6 border-t">
-                                    <h3 className="font-semibold mb-3">Keep Learning...</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {content.furtherReading.map(topic => (
-                                            <Button key={topic} variant="secondary" onClick={() => handleTopicSelect(topic)}>
-                                                {topic}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
+                <TopicContent topic={selectedTopic} onSelectTopic={handleTopicSelect} />
             </div>
         );
     }
@@ -113,25 +77,28 @@ export default function LearnPage() {
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Learn Hub</h1>
                 <p className="text-muted-foreground mt-1">
-                    AI-powered explainers on key startup, legal, and financial topics.
+                    Your knowledge base for key startup, legal, and financial topics.
                 </p>
             </div>
             <div className="space-y-8">
-                {learningTopics.map(category => (
-                    <Card key={category.category} className="interactive-lift">
+                {Object.entries(categorizedTopics).map(([category, topics]) => (
+                    <Card key={category} className="interactive-lift">
                         <CardHeader>
-                            <CardTitle>{category.category}</CardTitle>
+                            <CardTitle>{category}</CardTitle>
                         </CardHeader>
-                        <CardContent className="flex flex-wrap gap-3">
-                            {category.topics.map(topic => (
-                                <Button
-                                    key={topic}
-                                    variant="outline"
-                                    onClick={() => handleTopicSelect(topic)}
-                                    className="interactive-lift"
+                        <CardContent className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {topics.map(topic => (
+                                <button
+                                    key={topic.slug}
+                                    onClick={() => handleTopicSelect(topic.slug)}
+                                    className="p-4 border rounded-lg text-left hover:bg-muted hover:border-primary transition-colors flex flex-col justify-between items-start h-full interactive-lift"
                                 >
-                                    {topic}
-                                </Button>
+                                  <div>
+                                    <h3 className="font-semibold text-base">{topic.title}</h3>
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{topic.summary}</p>
+                                  </div>
+                                   <div className="text-xs font-medium text-primary mt-3">Read more &rarr;</div>
+                                </button>
                             ))}
                         </CardContent>
                     </Card>
