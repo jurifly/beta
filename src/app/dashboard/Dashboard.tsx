@@ -217,12 +217,9 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
-                const today = startOfToday();
                 const checklistItems = processedFilings.map((filing) => {
                     const uniqueId = `${filing.title}-${filing.date}`;
-                    const dueDate = new Date(filing.date + 'T00:00:00');
-                    const isFuture = dueDate > today;
-                    const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
+                    const isCompleted = savedStatuses[uniqueId] ?? false;
 
                     return {
                         id: uniqueId,
@@ -421,8 +418,29 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
             <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
             <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
             <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} /></Link>
+            <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
             
+            <Card className="md:col-span-4 lg:col-span-4 interactive-lift">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
+                    <CardDescription>Timely suggestions from our AI to help you stay ahead.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {insightsLoading ? (
+                        <div className="space-y-2">
+                            <Skeleton className="h-16 w-full" />
+                            <Skeleton className="h-16 w-full" />
+                        </div>
+                    ) : insights.length > 0 ? (
+                       insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
+                    ) : (
+                        <div className="text-center text-muted-foreground p-8">
+                            <p>No special insights at the moment. You're all set!</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
             <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
             
             <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
@@ -472,7 +490,6 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                             {groupedChecklist[month].map(item => {
                                                 const dueDate = new Date(item.dueDate + 'T00:00:00');
                                                 const isItemOverdue = dueDate < today && !item.completed;
-                                                const isFuture = dueDate > today;
                                                 return (
                                                     <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                                         <Checkbox
@@ -480,11 +497,10 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                             checked={item.completed}
                                                             onCheckedChange={() => handleToggleComplete(item.id)}
                                                             className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
-                                                            disabled={isFuture}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
                                                              <div className="flex items-center gap-2">
-                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
+                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
                                                                     {item.text}
                                                                 </label>
                                                                 <TooltipProvider delayDuration={0}>
@@ -524,28 +540,6 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                     )}
                 </CardContent>
              </Card>
-
-             <Card className="md:col-span-4 lg:col-span-4 interactive-lift">
-                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
-                    <CardDescription>Timely suggestions from our AI to help you stay ahead.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {insightsLoading ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-16 w-full" />
-                            <Skeleton className="h-16 w-full" />
-                        </div>
-                    ) : insights.length > 0 ? (
-                       insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
-                    ) : (
-                        <div className="text-center text-muted-foreground p-8">
-                            <p>No special insights at the moment. You're all set!</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
         </div>
     );
 }
