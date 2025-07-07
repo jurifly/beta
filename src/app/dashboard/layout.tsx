@@ -209,9 +209,9 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             onOpenChange={() => setSelectedNotification(null)}
             notification={selectedNotification}
         />
-        <div className="grid h-screen w-full md:grid-cols-[280px_1fr]">
+        <div className="flex h-screen w-full">
             <DesktopSidebar navItems={navItems} userProfile={userProfile} />
-            <div className="flex flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <MobileSheetNav navItems={navItems} userProfile={userProfile} />
                 <div className="flex-1">
@@ -351,7 +351,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
     };
 
     return (
-      <div className="hidden border-r bg-card md:block">
+      <div className="hidden w-[280px] shrink-0 border-r bg-card md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
