@@ -240,7 +240,7 @@ export default function DocumentsPage() {
                         key={item.id}
                         onClick={() => item.type === 'folder' ? handleFolderClick(item) : handleFileClick(item)}
                         onDoubleClick={() => item.type === 'folder' ? handleFolderClick(item) : window.open(item.webViewLink, '_blank')}
-                        className="group relative flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-muted cursor-pointer interactive-lift"
+                        className="group relative flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-muted cursor-pointer interactive-lift text-center"
                       >
                         <Button
                           variant="ghost"
@@ -251,9 +251,9 @@ export default function DocumentsPage() {
                           <Trash2 className="h-4 w-4 text-destructive" />
                           <span className="sr-only">Delete</span>
                         </Button>
-                        <Image src={item.iconLink!} alt={item.type} width={64} height={64} className="w-16 h-16"/>
+                        <Image src={item.iconLink!} alt={item.type} width={48} height={48} className="w-12 h-12"/>
                         <p
-                          className="text-sm font-medium text-center truncate w-full"
+                          className="text-xs font-medium w-full break-words"
                           title={item.name}
                         >
                           {item.name}

@@ -1054,7 +1054,7 @@ const RegulationWatcherTab = () => {
                     <CardContent className="space-y-6">
                         <div className="space-y-3">
                             <Label className="text-base font-medium">1. Select a Regulatory Portal</Label>
-                            <RadioGroup name="portal" defaultValue="MCA" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            <RadioGroup name="portal" defaultValue="MCA" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                                 {watcherPortals.map((portal) => (
                                     <Label key={portal.id} htmlFor={portal.id} className="group flex flex-col items-center justify-center gap-2 border rounded-lg p-4 hover:bg-accent/50 has-[input:checked]:border-primary has-[input:checked]:bg-primary/10 transition-colors cursor-pointer text-center interactive-lift">
                                         <RadioGroupItem value={portal.id} id={portal.id} className="sr-only" />
@@ -1373,17 +1373,17 @@ export default function AiToolkitPage() {
                 <p className="text-muted-foreground">{pageDescription}</p>
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
-                <div className="w-full overflow-x-auto pb-2">
-                  <TabsList className="inline-flex items-center justify-start w-max">
-                    {tabs.map(t => (
-                        <TabsTrigger key={t.value} value={t.value} className="interactive-lift">
-                            <t.icon className="mr-2"/>{t.label}
-                        </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </div>
-                <div className="mt-6 md:flex-1 md:min-h-0 overflow-y-auto">
-                    <TabsContent value="assistant" className="h-full"><ChatAssistant /></TabsContent>
+                <ScrollArea className="w-full -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
+                        {tabs.map(t => (
+                            <TabsTrigger key={t.value} value={t.value} className="interactive-lift">
+                                <t.icon className="mr-2"/>{t.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </ScrollArea>
+                <div className="mt-6 md:flex-1 md:min-h-0 md:overflow-y-auto">
+                    <TabsContent value="assistant" className="h-full mt-0 md:mt-0"><ChatAssistant /></TabsContent>
                     <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
                     <TabsContent value="audit"><DataroomAudit /></TabsContent>
                     <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>

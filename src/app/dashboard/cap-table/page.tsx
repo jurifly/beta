@@ -173,7 +173,7 @@ export default function CapTablePage() {
                     <p className="text-muted-foreground">An overview of {activeCompany.name}'s equity ownership.</p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                      <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Shares</CardTitle><Scale className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares.toLocaleString()}</div><p className="text-xs text-muted-foreground">Issued and outstanding</p></CardContent></Card>
                      <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Founder Ownership</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares > 0 ? ((founderShares / totalShares) * 100).toFixed(1) : 0}%</div><p className="text-xs text-muted-foreground">of total issued equity</p></CardContent></Card>
                      <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Investor Ownership</CardTitle><PieChartIcon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{totalShares > 0 ? ((investorShares / totalShares) * 100).toFixed(1) : 0}%</div><p className="text-xs text-muted-foreground">of total issued equity</p></CardContent></Card>
@@ -182,57 +182,97 @@ export default function CapTablePage() {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <Card className="lg:col-span-2 interactive-lift">
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <CardTitle>Shareholder Ledger</CardTitle>
                                 <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
                             </div>
-                             <div className="flex gap-2">
-                                <Button variant="outline" onClick={() => setIsModelingModalOpen(true)}>
+                             <div className="flex w-full sm:w-auto gap-2">
+                                <Button variant="outline" onClick={() => setIsModelingModalOpen(true)} className="flex-1 sm:flex-initial">
                                     <TrendingUp className="mr-2"/>
                                     Model Round
                                 </Button>
-                                <Button onClick={() => handleOpenModal()}><PlusCircle className="mr-2"/>Add Issuance</Button>
+                                <Button onClick={() => handleOpenModal()} className="flex-1 sm:flex-initial"><PlusCircle className="mr-2"/>Add Issuance</Button>
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Shareholder</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Grant Date</TableHead>
-                                        <TableHead>Shares</TableHead>
-                                        <TableHead className="text-right">Ownership</TableHead>
-                                        <TableHead className="text-right w-[100px]">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {capTable.length > 0 ? (
-                                        capTable.map(entry => (
-                                            <TableRow key={entry.id}>
-                                                <TableCell className="font-medium">{entry.holder}</TableCell>
-                                                <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
-                                                <TableCell>{entry.grantDate}</TableCell>
-                                                <TableCell>{entry.shares.toLocaleString()}</TableCell>
-                                                <TableCell className="text-right font-mono">
-                                                    {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
-                                                    <Button variant="ghost" size="icon" onClick={(e) => handleDelete(e, entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Shareholder</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Grant Date</TableHead>
+                                            <TableHead>Shares</TableHead>
+                                            <TableHead className="text-right">Ownership</TableHead>
+                                            <TableHead className="text-right w-[100px]">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {capTable.length > 0 ? (
+                                            capTable.map(entry => (
+                                                <TableRow key={entry.id}>
+                                                    <TableCell className="font-medium">{entry.holder}</TableCell>
+                                                    <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
+                                                    <TableCell>{entry.grantDate}</TableCell>
+                                                    <TableCell>{entry.shares.toLocaleString()}</TableCell>
+                                                    <TableCell className="text-right font-mono">
+                                                        {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
+                                                        <Button variant="ghost" size="icon" onClick={(e) => handleDelete(e, entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                                    Your shareholder ledger is empty. Click "Add Issuance" to begin.
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                                Your shareholder ledger is empty. Click "Add Issuance" to begin.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                             <div className="md:hidden space-y-4">
+                                {capTable.length > 0 ? (
+                                    capTable.map(entry => (
+                                        <Card key={entry.id} className="p-4">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-semibold">{entry.holder}</p>
+                                                    <Badge variant="outline" className="mt-1">{entry.type}</Badge>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenModal(entry)}><Edit className="h-4 w-4" /></Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => handleDelete(e, entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <p className="text-muted-foreground">Shares</p>
+                                                    <p className="font-medium">{entry.shares.toLocaleString()}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-muted-foreground">Ownership</p>
+                                                    <p className="font-medium font-mono">
+                                                        {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
+                                                    </p>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <p className="text-muted-foreground">Grant Date</p>
+                                                    <p className="font-medium">{entry.grantDate}</p>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md">
+                                        Your shareholder ledger is empty. Click "Add Issuance" to begin.
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 

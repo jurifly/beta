@@ -54,7 +54,7 @@ const renderTable = (title: string, data: any[]) => (
         </TableHeader>
         <TableBody>
           {data.map(row => (
-            <TableRow key={row.id} className={cn(row.id.startsWith('new_') && 'bg-primary/5 text-primary')}>
+            <TableRow key={row.id} className={cn(row.id === 'new_investor' && 'bg-primary/5 text-primary font-medium')}>
               <TableCell className="font-medium text-sm">{row.holder}</TableCell>
               <TableCell className="font-mono text-sm">{row.shares.toLocaleString()}</TableCell>
               <TableCell className="text-right font-mono text-sm">{row.ownership}</TableCell>
@@ -130,101 +130,92 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          <div className="space-y-6 py-4">
-            <Card className="interactive-lift">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 min-h-0">
+            <Card className="interactive-lift flex flex-col">
                 <CardHeader>
                     <CardTitle>Scenario Inputs</CardTitle>
                 </CardHeader>
-                <CardContent className="grid sm:grid-cols-2 gap-8">
-                     <div className="space-y-2">
+                <CardContent className="space-y-8 flex-1">
+                     <div className="space-y-3">
                         <Label htmlFor="investment-slider">New Investment (₹)</Label>
-                        <div className="flex items-center gap-4">
-                           <Slider
-                                id="investment-slider"
-                                min={100000}
-                                max={100000000}
-                                step={100000}
-                                value={[investment]}
-                                onValueChange={(value) => setInvestment(value[0])}
-                                className="flex-1"
-                            />
-                            <Input
-                                id="investment"
-                                type="number"
-                                value={investment}
-                                onChange={(e) => setInvestment(Number(e.target.value))}
-                                className="w-32"
-                            />
-                        </div>
+                        <Input
+                            id="investment"
+                            type="number"
+                            value={investment}
+                            onChange={(e) => setInvestment(Number(e.target.value))}
+                            className="w-full text-lg font-mono"
+                        />
+                        <Slider
+                            id="investment-slider"
+                            min={100000}
+                            max={100000000}
+                            step={100000}
+                            value={[investment]}
+                            onValueChange={(value) => setInvestment(value[0])}
+                        />
                     </div>
-                     <div className="space-y-2">
+                     <div className="space-y-3">
                         <Label htmlFor="stake-slider">Investor's Stake (%)</Label>
-                         <div className="flex items-center gap-4">
-                             <Slider
-                                id="stake-slider"
-                                min={1}
-                                max={50}
-                                step={1}
-                                value={[investorStake]}
-                                onValueChange={(value) => setInvestorStake(value[0])}
-                                className="flex-1"
+                        <div className="relative">
+                            <Input
+                                id="stake"
+                                type="number"
+                                value={investorStake}
+                                onChange={(e) => setInvestorStake(Number(e.target.value))}
+                                className="w-full text-lg font-mono pr-8"
                             />
-                             <div className="relative w-24">
-                                <Input
-                                    id="stake"
-                                    type="number"
-                                    value={investorStake}
-                                    onChange={(e) => setInvestorStake(Number(e.target.value))}
-                                    className="pr-6"
-                                />
-                                <span className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">%</span>
-                            </div>
+                            <span className="absolute inset-y-0 right-3 flex items-center text-lg text-muted-foreground">%</span>
                         </div>
+                         <Slider
+                            id="stake-slider"
+                            min={1}
+                            max={50}
+                            step={1}
+                            value={[investorStake]}
+                            onValueChange={(value) => setInvestorStake(value[0])}
+                        />
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={calculateScenario}>
+                    <Button onClick={calculateScenario} className="w-full">
                         <Sparkles className="mr-2 h-4 w-4"/>
                         Calculate Scenario
                     </Button>
                 </CardFooter>
             </Card>
 
-            {!result ? (
-                <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
-                    <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
-                    <p className="font-semibold text-lg">Scenario Results</p>
-                    <p className="text-sm text-muted-foreground max-w-xs">
-                        Adjust the sliders and click "Calculate" to see the impact of your funding round.
-                    </p>
-                </div>
-            ) : (
-                <div className="space-y-6 animate-in fade-in-50 duration-500">
-                    <div>
-                        <h3 className="font-semibold text-lg mb-2 text-center">Key Metrics</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <MetricDisplay title="Pre-Money Valuation" value={`₹${result.preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
-                            <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
-                            <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
-                            <MetricDisplay title="Investor's Stake" value={`${result.investorStake}%`} icon={<Percent className="h-4 w-4"/>} />
+            <ScrollArea className="flex-1 -mx-4 px-4">
+                {!result ? (
+                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
+                        <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
+                        <p className="font-semibold text-lg">Scenario Results</p>
+                        <p className="text-sm text-muted-foreground max-w-xs">
+                            Adjust the sliders and click "Calculate" to see the impact of your funding round.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-6 animate-in fade-in-50 duration-500">
+                        <div>
+                            <h3 className="font-semibold text-lg mb-2 text-center">Key Metrics</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <MetricDisplay title="Pre-Money Valuation" value={`₹${result.preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
+                                <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
+                                <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
+                                <MetricDisplay title="Investor's Stake" value={`${result.investorStake}%`} icon={<Percent className="h-4 w-4"/>} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] items-start gap-6">
+                            {renderTable("Pre-Financing", result.preMoney)}
+                            <div className="hidden xl:flex justify-center items-center h-full">
+                                <ArrowRight className="w-8 h-8 text-muted-foreground mt-8"/>
+                            </div>
+                            {renderTable("Post-Financing", result.postMoney)}
                         </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-start gap-6">
-                      {renderTable("Pre-Financing", result.preMoney)}
-                      <div className="hidden md:flex justify-center items-center h-full">
-                          <ArrowRight className="w-8 h-8 text-muted-foreground mt-8"/>
-                      </div>
-                      {renderTable("Post-Financing", result.postMoney)}
-                    </div>
-                </div>
-            )}
-          </div>
-        </ScrollArea>
-        <DialogFooter className="pt-4 border-t mt-auto -mx-6 px-6 pb-6">
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Close</Button>
-        </DialogFooter>
+                )}
+            </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

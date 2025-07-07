@@ -261,10 +261,10 @@ const FinancialSnapshot = () => {
     const { burnRate, runway, runwayLabel } = useMemo(() => {
         const burn = expenses - revenue;
         if (burn <= 0) {
-        return { burnRate: burn, runway: "Profitable", runwayLabel: "Financial Status" };
+            return { burnRate: burn, runway: "Profitable", runwayLabel: "Financial Status" };
         }
         if (cashBalance <= 0) {
-        return { burnRate: burn, runway: "0 months", runwayLabel: "Estimated Runway" };
+            return { burnRate: burn, runway: "0 months", runwayLabel: "Estimated Runway" };
         }
         const runwayMonths = Math.floor(cashBalance / burn);
         return { burnRate: burn, runway: `${runwayMonths} months`, runwayLabel: "Estimated Runway" };
@@ -336,12 +336,12 @@ const FinancialSnapshot = () => {
                             <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
                             <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
                         </div>
-                        <div className="flex flex-wrap items-center gap-4">
-                            <Button onClick={handleSaveFinancials} disabled={isSaving}>
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <Button onClick={handleSaveFinancials} disabled={isSaving} className="w-full sm:w-auto">
                                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
                                 Save & Recalculate
                             </Button>
-                             <Button onClick={handleGenerateReport} disabled={isGeneratingReport || !revenue || !expenses}>
+                             <Button onClick={handleGenerateReport} disabled={isGeneratingReport || !revenue || !expenses} className="w-full sm:w-auto">
                                 {isGeneratingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
                                 Generate AI Report
                             </Button>
