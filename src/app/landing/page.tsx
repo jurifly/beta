@@ -100,20 +100,20 @@ export default function LandingPage() {
                             </span>
                         </h2>
                     </div>
-                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
+                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full max-w-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><ShieldCheck className="text-primary"/>Compliance Health Dashboard</CardTitle>
                             </CardHeader>
                             <CardContent className="flex-1">See your company's legal hygiene score, track filing deadlines, and get automated reminders so nothing falls through the cracks.</CardContent>
                         </Card>
-                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
+                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full max-w-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><Zap className="text-primary"/>AI Document Generation & Insights</CardTitle>
                             </CardHeader>
                             <CardContent className="flex-1">Instantly generate NDAs, employment letters, and other legal docs. Analyze incoming contracts for risks and get AI-powered insights.</CardContent>
                         </Card>
-                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
+                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full max-w-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><Users className="text-primary"/>Founder-CA Collaboration Tools</CardTitle>
                             </CardHeader>
@@ -145,8 +145,8 @@ export default function LandingPage() {
                     <div className="text-center mb-12">
                          <h2 className="text-3xl lg:text-4xl font-bold">What Early Adopters Say</h2>
                     </div>
-                    <div className="grid lg:grid-cols-3 gap-8">
-                        <Card className="interactive-lift">
+                    <div className="grid lg:grid-cols-3 gap-8 justify-center">
+                        <Card className="interactive-lift max-w-sm">
                             <CardContent className="pt-6">
                                 <blockquote className="italic border-l-4 border-primary/50 pl-4">"LexIQ has been a game-changer for us. The automated compliance calendar saved us from missing critical deadlines."</blockquote>
                             </CardContent>
@@ -160,7 +160,7 @@ export default function LandingPage() {
                                 </div>
                             </CardHeader>
                         </Card>
-                        <Card className="interactive-lift">
+                        <Card className="interactive-lift max-w-sm">
                              <CardContent className="pt-6">
                                 <blockquote className="italic border-l-4 border-primary/50 pl-4">"The AI contract analyzer is like having a lawyer on call 24/7. It identified a risky clause in a vendor agreement that we had completely missed."</blockquote>
                             </CardContent>
@@ -174,7 +174,7 @@ export default function LandingPage() {
                                 </div>
                             </CardHeader>
                         </Card>
-                         <Card className="interactive-lift">
+                         <Card className="interactive-lift max-w-sm">
                              <CardContent className="pt-6">
                                 <blockquote className="italic border-l-4 border-primary/50 pl-4">"As a CA, managing multiple clients' compliance is a challenge. LexIQ's portfolio dashboard gives me a bird's-eye view of everything."</blockquote>
                             </CardContent>
