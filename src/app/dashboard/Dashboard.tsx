@@ -30,7 +30,11 @@ import {
   Check,
   Upload,
   Lightbulb,
-  BarChart
+  BarChart,
+  Activity,
+  CalendarClock,
+  CheckCircle,
+  FileUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -221,7 +225,8 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 const checklistItems = processedFilings.map((filing) => {
                     const uniqueId = `${filing.title}-${filing.date}`;
                     const dueDate = new Date(filing.date + 'T00:00:00');
-                    const isCompleted = savedStatuses[uniqueId] ?? false;
+                    const isFuture = dueDate > today;
+                    const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
 
                     return {
                         id: uniqueId,
@@ -492,6 +497,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                             {groupedChecklist[month].map(item => {
                                                 const dueDate = new Date(item.dueDate + 'T00:00:00');
                                                 const isItemOverdue = dueDate < today && !item.completed;
+                                                const isFuture = dueDate > today;
                                                 return (
                                                     <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                                         <Checkbox
@@ -499,10 +505,11 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                             checked={item.completed}
                                                             onCheckedChange={() => handleToggleComplete(item.id)}
                                                             className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                                            disabled={isFuture}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
                                                              <div className="flex items-center gap-2">
-                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
+                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
                                                                     {item.text}
                                                                 </label>
                                                                 <TooltipProvider delayDuration={0}>
@@ -650,6 +657,18 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         fetchInsights();
     }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast, avgProfileCompleteness, clientHealthData]);
 
+   const mockDeadlines = userProfile.companies.length > 0 ? [
+       { client: userProfile.companies[0 % userProfile.companies.length].name, task: 'GSTR-3B Filing', due: 'in 2 days', icon: <Receipt className="w-5 h-5"/> },
+       { client: userProfile.companies[Math.min(1, userProfile.companies.length-1)].name, task: 'ADT-1 Auditor Appointment', due: 'in 5 days', icon: <Briefcase className="w-5 h-5"/> },
+       { client: userProfile.companies[Math.min(2, userProfile.companies.length-1)].name, task: 'ROC Annual Return (MGT-7)', due: 'in 1 week', icon: <FileText className="w-5 h-5"/> },
+   ] : [];
+   
+   const mockActivities = userProfile.companies.length > 0 ? [
+       { client: userProfile.companies[0 % userProfile.companies.length].name, action: 'uploaded "Bank Statement.pdf"', time: '2h ago', icon: <FileUp className="w-5 h-5"/> },
+       { client: userProfile.companies[Math.min(1, userProfile.companies.length-1)].name, action: 'updated their PAN details', time: '1 day ago', icon: <Users className="w-5 h-5"/> },
+       { client: userProfile.companies[Math.min(2, userProfile.companies.length-1)].name, action: 'completed "Director KYC"', time: '3 days ago', icon: <CheckCircle className="w-5 h-5"/> },
+   ] : [];
+
 
    return (
     <div className="space-y-6">
@@ -681,6 +700,27 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                 <CardContent><div className="text-2xl font-bold text-destructive">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
             </Card>
         </div>
+        
+        <Card className="interactive-lift">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
+                <CardDescription>Timely suggestions to help you manage your practice.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {insightsLoading ? (
+                    <div className="space-y-2">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                    </div>
+                ) : insights.length > 0 ? (
+                   insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
+                ) : (
+                    <div className="text-center text-muted-foreground p-8">
+                        <p>No special insights at the moment. You're all set!</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
             <div className="lg:col-span-2 space-y-6">
@@ -729,6 +769,51 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                             <p>No clients to display.</p>
                         </div>
                     )}
+                </CardContent>
+            </Card>
+        </div>
+
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><CalendarClock/> Portfolio Deadlines</CardTitle>
+                    <CardDescription>Upcoming key dates across all your clients.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {mockDeadlines.length > 0 ? (
+                        <div className="space-y-4">
+                            {mockDeadlines.map((item, index) => (
+                                <div key={index} className="flex items-center gap-4">
+                                    <div className="p-2 bg-muted rounded-full text-primary">{item.icon}</div>
+                                    <div>
+                                        <p className="font-medium text-sm">{item.task}</p>
+                                        <p className="text-xs text-muted-foreground">{item.client} &bull; <span className="font-semibold">Due {item.due}</span></p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : <p className="text-sm text-muted-foreground">No upcoming deadlines.</p>}
+                </CardContent>
+            </Card>
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Activity/> Recent Client Activity</CardTitle>
+                    <CardDescription>The latest actions from across your portfolio.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {mockActivities.length > 0 ? (
+                        <div className="space-y-4">
+                            {mockActivities.map((item, index) => (
+                                <div key={index} className="flex items-center gap-4">
+                                    <div className="p-2 bg-muted rounded-full text-muted-foreground">{item.icon}</div>
+                                    <div>
+                                        <p className="text-sm"><span className="font-semibold">{item.client}</span> {item.action}.</p>
+                                        <p className="text-xs text-muted-foreground">{item.time}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : <p className="text-sm text-muted-foreground">No recent activity.</p>}
                 </CardContent>
             </Card>
         </div>
