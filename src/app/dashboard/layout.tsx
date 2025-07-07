@@ -562,7 +562,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
             </Link>
           </div>
           <ScrollArea className="flex-1">
-            <nav className="grid gap-2 text-base font-medium p-4">
+            <nav className="grid gap-1 text-sm font-medium p-4">
               {navItems.map(item => {
                 const isActive = item.href === '/dashboard' 
                   ? pathname === item.href 
@@ -571,7 +571,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                     <Link
                         key={item.href}
                         href={item.href}
-                        className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
+                        className={cn("group flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
                             isActive && "bg-muted text-primary"
                         )}
                         onClick={(e) => handleLinkClick(e, item.href)}
@@ -586,7 +586,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                     <Link
                         key={item.href}
                         href={item.href}
-                        className={cn("group flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
+                        className={cn("group flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
                             pathname.startsWith(item.href) && "bg-muted text-primary"
                         )}
                         onClick={(e) => handleLinkClick(e, item.href)}
