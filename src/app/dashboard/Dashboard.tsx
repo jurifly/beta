@@ -28,10 +28,8 @@ import {
   Info,
   Receipt,
   Check,
-  Upload,
   Lightbulb,
   BarChart,
-  Activity,
   CalendarClock,
   CheckCircle,
   FileUp
@@ -797,7 +795,7 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             </Card>
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Activity/> Recent Client Activity</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><CheckCircle/> Recent Client Activity</CardTitle>
                     <CardDescription>The latest actions from across your portfolio.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -857,74 +855,11 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
     );
 }
 
-function MobileDashboardView({ userProfile }: { userProfile: UserProfile }) {
-  const stats = [
-    { title: "Risk Score", value: "Low", icon: <ShieldCheck />, color: "text-green-500", href: "/dashboard/analytics" },
-    { title: "Upcoming", value: "0", icon: <Calendar />, color: "text-orange-500", href: "/dashboard/ca-connect" },
-    { title: "Generated", value: "0", icon: <FileText />, color: "text-blue-500", href: "/dashboard/ai-toolkit?tab=generator" },
-    { title: "Alerts", value: "0", icon: <AlertTriangle />, color: "text-red-500", href: "/dashboard/ca-connect" },
-  ];
-
-  const actions = [
-    { title: "Ask AI Assistant", icon: <Sparkles />, href: "/dashboard/ai-toolkit?tab=assistant", color: "bg-blue-100 text-blue-700" },
-    { title: "Analyze Document", icon: <FileScan />, href: "/dashboard/ai-toolkit?tab=analyzer", color: "bg-orange-100 text-orange-700" },
-    { title: "Dataroom Audit", icon: <GanttChartSquare />, href: "/dashboard/ai-toolkit?tab=audit", color: "bg-purple-100 text-purple-700" },
-    { title: "Upload to Vault", icon: <Upload />, href: "/dashboard/documents", color: "bg-green-100 text-green-700" },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <Card className="bg-primary text-primary-foreground p-6 shadow-lg interactive-lift">
-        <h2 className="text-xl font-semibold">Welcome, {userProfile.name.split(' ')[0]}!</h2>
-        <p className="text-sm text-primary-foreground/80 mt-1">Your legal and compliance overview.</p>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-4">
-        {stats.map(stat => (
-          <Link href={stat.href} key={stat.title} className="block">
-            <Card className="interactive-lift h-full text-center">
-              <CardContent className="p-3 flex flex-col items-center justify-center">
-                <div className={cn("mb-2 h-10 w-10 flex items-center justify-center rounded-full", stat.color.replace('text-', 'bg-') + '/20')}>
-                    {React.cloneElement(stat.icon, { className: cn("h-5 w-5", stat.color) })}
-                </div>
-                <p className="text-xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.title}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Quick Actions</h3>
-        <div className="space-y-3">
-            {actions.map(action => (
-                <Link href={action.href} key={action.title}>
-                    <Card className="interactive-lift hover:border-primary/50">
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", action.color)}>
-                                    {React.cloneElement(action.icon, { className: "h-5 w-5"})}
-                                </div>
-                                <span className="font-medium text-sm">{action.title}</span>
-                            </div>
-                            <ArrowRight className="w-5 h-5 text-muted-foreground" />
-                        </CardContent>
-                    </Card>
-                </Link>
-            ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 export default function Dashboard() {
   const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
-  const renderDesktopDashboardByRole = () => {
+  const renderDashboardByRole = () => {
     if (!userProfile) return <div className="space-y-6">
         <Skeleton className="h-24 w-full" />
         <div className="grid grid-cols-4 gap-6">
@@ -957,7 +892,7 @@ export default function Dashboard() {
   return (
     <>
       <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
-      <div className="flex-col gap-6 hidden md:flex">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight font-headline">
@@ -974,11 +909,7 @@ export default function Dashboard() {
                 </Button>
             </div>
         </div>
-        {renderDesktopDashboardByRole()}
-      </div>
-
-      <div className="block md:hidden">
-        {userProfile && <MobileDashboardView userProfile={userProfile} />}
+        {renderDashboardByRole()}
       </div>
     </>
   );
