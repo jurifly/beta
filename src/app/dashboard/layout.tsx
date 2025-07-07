@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -304,7 +303,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             <path d="m14 8-2-2-2 2" />
                             <path d="m10 12 2 2 2-2" />
                         </svg>
-                        <span>LexIQ</span>
+                        <span>Taxxmo</span>
                     </Link>
                 </div>
 
@@ -450,7 +449,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                   <path d="m10 12 2 2 2-2" />
               </svg>
               <span className="flex items-center">
-                LexIQ
+                Taxxmo
                  <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
               </span>
             </Link>
@@ -556,7 +555,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                     <path d="m10 12 2 2 2-2" />
                 </svg>
                 <span className="flex items-center">
-                  LexIQ
+                  Taxxmo
                   <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
                 </span>
             </Link>
