@@ -562,7 +562,7 @@ const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userPr
             </Link>
           </div>
           <ScrollArea className="flex-1">
-            <nav className="grid gap-2 text-lg font-medium p-4">
+            <nav className="grid gap-2 text-base font-medium p-4">
               {navItems.map(item => {
                 const isActive = item.href === '/dashboard' 
                   ? pathname === item.href 

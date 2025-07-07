@@ -113,7 +113,6 @@ export function UserNav() {
         {canShowActiveCompany && userProfile.companies.length > 0 && (
             <>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
                 <DropdownMenuRadioGroup value={userProfile.activeCompanyId} onValueChange={handleCompanyChange}>
                     {userProfile.companies.map(company => (
                         <DropdownMenuRadioItem key={company.id} value={company.id}>

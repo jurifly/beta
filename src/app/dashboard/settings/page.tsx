@@ -11,6 +11,7 @@ import type { Company } from "@/lib/types";
 import BillingForm from "./billing-form";
 import NotificationsForm from "./notifications-form";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SecurityForm = () => (
     <Card className="interactive-lift">
@@ -83,14 +84,14 @@ export default function SettingsPage() {
             </div>
         </div>
         <Tabs defaultValue="profile" className="space-y-6">
-          <div className="overflow-x-auto w-full">
-              <TabsList className="flex-nowrap w-max sm:w-full">
+          <ScrollArea className="w-full -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
                 <TabsTrigger value="profile" className="interactive-lift"><User className="mr-2 h-4 w-4"/>Profile & Company</TabsTrigger>
                 <TabsTrigger value="billing" className="interactive-lift"><CreditCard className="mr-2 h-4 w-4"/>Billing</TabsTrigger>
                 <TabsTrigger value="notifications" className="interactive-lift"><Bell className="mr-2 h-4 w-4"/>Notifications</TabsTrigger>
                 <TabsTrigger value="security" className="interactive-lift"><Lock className="mr-2 h-4 w-4"/>Security</TabsTrigger>
               </TabsList>
-          </div>
+          </ScrollArea>
           <TabsContent value="profile" className="space-y-6">
             <SettingsForm 
               onAddCompanyClick={handleAddCompanyClick}
