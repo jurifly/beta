@@ -221,8 +221,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 const checklistItems = processedFilings.map((filing) => {
                     const uniqueId = `${filing.title}-${filing.date}`;
                     const dueDate = new Date(filing.date + 'T00:00:00');
-                    const isFuture = dueDate > today;
-                    const isCompleted = isFuture ? false : (savedStatuses[uniqueId] ?? false);
+                    const isCompleted = savedStatuses[uniqueId] ?? false;
 
                     return {
                         id: uniqueId,
