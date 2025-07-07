@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   ListChecks,
   PieChart,
-  Info
+  Info,
+  CalendarClock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -296,114 +297,130 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} />
-            <StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} />
-            <StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} />
-            <StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} />
-            
-            <div className="md:col-span-2 lg:col-span-2"><ComplianceActivityChart dataByYear={complianceChartDataByYear} /></div>
-            
-            <Card className="md:col-span-2 lg:col-span-2 interactive-lift">
-                 <CardHeader>
-                    <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
-                        <div>
-                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                            <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
-                        </div>
-                        {checklistYears.length > 0 && (
-                             <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
-                                {checklistYears.map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {isLoading ? (
-                        <div className="space-y-3">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-5/6" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                    ) : sortedMonths.length > 0 ? (
-                        <Accordion type="multiple" defaultValue={[]} className="w-full">
-                            {sortedMonths.map(month => {
-                                const today = startOfToday();
-                                const hasOverdueItems = groupedChecklist[month].some(item => {
-                                    const dueDate = new Date(item.dueDate + 'T00:00:00');
-                                    return dueDate < today && !item.completed;
-                                });
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} />
+                <StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} />
+                <StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} />
+                <StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} isLoading={isLoading} />
+            </div>
 
-                                return (
-                                <AccordionItem value={month} key={month}>
-                                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
-                                        <div className="flex items-center gap-2">
-                                            <span>{month}</span>
-                                            {hasOverdueItems && (
-                                                <AlertTriangle className="h-4 w-4 text-destructive" />
-                                            )}
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="space-y-3">
-                                            {groupedChecklist[month].map(item => {
-                                                const dueDate = new Date(item.dueDate + 'T00:00:00');
-                                                const isItemOverdue = dueDate < today && !item.completed;
-                                                const isFuture = dueDate > today;
-                                                return (
-                                                    <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
-                                                        <Checkbox
-                                                            id={item.id}
-                                                            checked={item.completed}
-                                                            onCheckedChange={() => handleToggleComplete(item.id)}
-                                                            className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
-                                                            disabled={isFuture}
-                                                        />
-                                                        <div className="flex-1 grid gap-0.5">
-                                                             <div className="flex items-center gap-2">
-                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
-                                                                    {item.text}
-                                                                </label>
-                                                                <TooltipProvider delayDuration={0}>
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent className="max-w-xs p-3">
-                                                                            <p className="font-semibold mb-2">About this task:</p>
-                                                                            <p className="text-xs mb-3">{item.description}</p>
-                                                                            <p className="font-semibold mb-2">Penalty for non-compliance:</p>
-                                                                            <p className="text-xs text-destructive">{item.penalty}</p>
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                            </div>
-                                                            <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-                                                            Due: {format(dueDate, 'do MMM, yyyy')}
-                                                            </span>
-                                                        </div>
-                                                        {isItemOverdue && (
-                                                            <Badge variant="destructive" className="self-center">Overdue</Badge>
-                                                        )}
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ComplianceActivityChart dataByYear={complianceChartDataByYear} />
+                
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                            <div>
+                                <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
+                                <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
+                            </div>
+                            {checklistYears.length > 0 && (
+                                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
+                                    {checklistYears.map(year => (
+                                        <option key={year} value={year}>{year}</option>
+                                    ))}
+                                </select>
                             )}
-                        </Accordion>
-                    ) : (
-                        <div className="text-center text-muted-foreground p-8">
-                            <p>No items for {selectedYear}. Select another year or check back later.</p>
                         </div>
-                    )}
-                </CardContent>
-             </Card>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {isLoading ? (
+                            <div className="space-y-3">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-5/6" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        ) : sortedMonths.length > 0 ? (
+                            <Accordion type="multiple" defaultValue={[]} className="w-full">
+                                {sortedMonths.map(month => {
+                                    const today = startOfToday();
+                                     const isCurrentMonth = month === format(today, 'MMMM yyyy');
+                                    const hasOverdueItems = groupedChecklist[month].some(item => {
+                                        const dueDate = new Date(item.dueDate + 'T00:00:00');
+                                        return dueDate < today && !item.completed;
+                                    });
 
+                                    return (
+                                    <AccordionItem value={month} key={month}>
+                                        <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                                            <div className="flex items-center gap-2">
+                                                {isCurrentMonth && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <CalendarClock className="h-4 w-4 text-primary" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Current Month</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )}
+                                                <span>{month}</span>
+                                                {hasOverdueItems && (
+                                                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                                                )}
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="space-y-3">
+                                                {groupedChecklist[month].map(item => {
+                                                    const dueDate = new Date(item.dueDate + 'T00:00:00');
+                                                    const isItemOverdue = dueDate < today && !item.completed;
+                                                    const isFuture = dueDate > today;
+                                                    return (
+                                                        <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
+                                                            <Checkbox
+                                                                id={item.id}
+                                                                checked={item.completed}
+                                                                onCheckedChange={() => handleToggleComplete(item.id)}
+                                                                className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
+                                                                disabled={isFuture}
+                                                            />
+                                                            <div className="flex-1 grid gap-0.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
+                                                                        {item.text}
+                                                                    </label>
+                                                                    <TooltipProvider delayDuration={0}>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent className="max-w-xs p-3">
+                                                                                <p className="font-semibold mb-2">About this task:</p>
+                                                                                <p className="text-xs mb-3">{item.description}</p>
+                                                                                <p className="font-semibold mb-2">Penalty for non-compliance:</p>
+                                                                                <p className="text-xs text-destructive">{item.penalty}</p>
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                </div>
+                                                                <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
+                                                                Due: {format(dueDate, 'do MMM, yyyy')}
+                                                                </span>
+                                                            </div>
+                                                            {isItemOverdue && (
+                                                                <Badge variant="destructive" className="self-center">Overdue</Badge>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    )}
+                                )}
+                            </Accordion>
+                        ) : (
+                            <div className="text-center text-muted-foreground p-8">
+                                <p>No items for {selectedYear}. Select another year or check back later.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }
