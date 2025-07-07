@@ -39,6 +39,7 @@ import {
   Receipt,
   Mail,
   BookLock,
+  BookOpenCheck,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -76,6 +77,7 @@ const navItemConfig = {
   caConnect: { href: "/dashboard/ca-connect", label: "Compliance Hub", icon: ClipboardCheck },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
+  learn: { href: "/dashboard/learn", label: "Learn Hub", icon: BookOpenCheck },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   financials: { href: "/dashboard/financials", label: "Financials", icon: Receipt },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
@@ -102,6 +104,7 @@ const founderNavItems: NavItem[] = [
   { ...navItemConfig.caConnect, label: "CA Connect" },
   { ...navItemConfig.aiToolkit },
   { ...navItemConfig.launchPad },
+  navItemConfig.learn,
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.documents },
@@ -114,6 +117,7 @@ const caNavItems: NavItem[] = [
   { ...navItemConfig.clients, label: "Client Management" },
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
+  navItemConfig.learn,
   navItemConfig.financials,
   navItemConfig.documents,
   { ...navItemConfig.caConnect },
@@ -126,6 +130,7 @@ const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
+  navItemConfig.learn,
   navItemConfig.documents,
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
@@ -309,7 +314,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
