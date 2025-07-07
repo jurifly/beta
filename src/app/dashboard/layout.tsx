@@ -211,7 +211,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
         />
         <div className="flex h-screen w-full">
             <DesktopSidebar navItems={navItems} userProfile={userProfile} />
-            <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <MobileSheetNav navItems={navItems} userProfile={userProfile} />
                 <div className="flex-1">
