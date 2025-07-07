@@ -12,13 +12,14 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 96%; /* Light gray #F5F5F5 */
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 220.4 89.6% 58%; /* Vivid blue #4285F4 */
+    --primary-rgb: 66, 133, 244;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -46,6 +47,7 @@ body {
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
     --primary: 221 83% 63%;
+    --primary-rgb: 93, 161, 241;
     --primary-foreground: 210 40% 98%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
