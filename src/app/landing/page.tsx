@@ -92,30 +92,30 @@ export default function LandingPage() {
                 
                 {/* Key Benefits Section */}
                 <section id="features" className="container py-24 sm:py-32 space-y-8">
-                    <h2 className="text-3xl lg:text-4xl font-bold md:text-center">
+                    <h2 className="text-3xl lg:text-4xl font-bold text-center">
                         Key{" "}
                         <span className="bg-gradient-to-r from-primary to-accent/80 text-transparent bg-clip-text">
                             Benefits
                         </span>
                     </h2>
                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm">
+                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><ShieldCheck className="text-primary"/>Compliance Health Dashboard</CardTitle>
                             </CardHeader>
-                            <CardContent>See your company's legal hygiene score, track filing deadlines, and get automated reminders so nothing falls through the cracks.</CardContent>
+                            <CardContent className="flex-1">See your company's legal hygiene score, track filing deadlines, and get automated reminders so nothing falls through the cracks.</CardContent>
                         </Card>
-                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm">
+                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><Zap className="text-primary"/>AI Document Generation & Insights</CardTitle>
                             </CardHeader>
-                            <CardContent>Instantly generate NDAs, employment letters, and other legal docs. Analyze incoming contracts for risks and get AI-powered insights.</CardContent>
+                            <CardContent className="flex-1">Instantly generate NDAs, employment letters, and other legal docs. Analyze incoming contracts for risks and get AI-powered insights.</CardContent>
                         </Card>
-                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm">
+                         <Card className="interactive-lift bg-card/50 backdrop-blur-sm flex flex-col text-left h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><Users className="text-primary"/>Founder-CA Collaboration Tools</CardTitle>
                             </CardHeader>
-                            <CardContent>Securely invite your CA or lawyer to your workspace. Request and share documents, and manage compliance tasks together seamlessly.</CardContent>
+                            <CardContent className="flex-1">Securely invite your CA or lawyer to your workspace. Request and share documents, and manage compliance tasks together seamlessly.</CardContent>
                         </Card>
                     </div>
                 </section>
