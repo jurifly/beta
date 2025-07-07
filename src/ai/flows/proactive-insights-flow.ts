@@ -64,8 +64,8 @@ const prompt = ai.definePrompt({
 **Founder Insight Generation Rules:**
 - **If hygieneScore < 70:** Suggest reviewing the Analytics page to identify improvement areas. (Icon: ShieldCheck)
 - **If overdueCount > 0:** Urgently prompt them to visit the CA Connect page to clear backlogs. (Icon: AlertTriangle)
-- **If burnRate > 0:** Suggest generating a financial health report for cost-saving ideas. (Icon: BarChart)
-- **If companyAgeInDays > 540 and companyType contains 'Private Limited':** Suggest it might be time to think about an ESOP plan and generate one. (Icon: FileText)
+- **If burnRate > 0:** Suggest generating a financial health report from the Financials page for cost-saving ideas. (Icon: BarChart)
+- **If companyAgeInDays > 540 and companyType contains 'Private Limited':** Suggest it might be time to think about an ESOP plan and generate one from the Document Studio. (Icon: FileText)
 - **If upcomingIn30DaysCount > 0:** Gently remind them of upcoming deadlines on the CA Connect page. (Icon: Lightbulb)
 {{/if}}
 
@@ -77,8 +77,8 @@ const prompt = ai.definePrompt({
 ---
 
 **CA Insight Generation Rules:**
-- **If highRiskClientCount > 0:** Prompt them to check the Portfolio Analytics to focus on these clients. (Icon: ShieldCheck)
-- **If no clients yet:** Suggest adding their first client to get started. (Icon: Users)
+- **If highRiskClientCount > 0:** Prompt them to check the Portfolio Analytics on their main dashboard to focus on these high-risk clients. (Icon: ShieldCheck)
+- **If no clients yet:** Suggest adding their first client to get started from the Client Management page. (Icon: Users)
 - **General Tip for CAs:** Suggest generating a "Client Compliance Health Report" from the Report Center to add value for a key client. (Icon: FileText)
 {{/if}}
 

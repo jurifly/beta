@@ -492,7 +492,6 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                             {groupedChecklist[month].map(item => {
                                                 const dueDate = new Date(item.dueDate + 'T00:00:00');
                                                 const isItemOverdue = dueDate < today && !item.completed;
-                                                const isFuture = dueDate > today;
                                                 return (
                                                     <div key={item.id} className={cn("flex items-start gap-3 p-3 text-sm rounded-md transition-colors border", isItemOverdue && "bg-destructive/10 border-destructive/20")}>
                                                         <Checkbox
@@ -500,11 +499,10 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                             checked={item.completed}
                                                             onCheckedChange={() => handleToggleComplete(item.id)}
                                                             className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
-                                                            disabled={isFuture}
                                                         />
                                                         <div className="flex-1 grid gap-0.5">
                                                              <div className="flex items-center gap-2">
-                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive", isFuture && "cursor-not-allowed")}>
+                                                                <label htmlFor={item.id} className={cn("font-medium cursor-pointer", item.completed && "line-through text-muted-foreground", isItemOverdue && "text-destructive")}>
                                                                     {item.text}
                                                                 </label>
                                                                 <TooltipProvider delayDuration={0}>
