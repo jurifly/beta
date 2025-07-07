@@ -211,7 +211,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     });
 
     const onSubmit = async (data: BusinessTypeFormData) => {
-        if (!await deductCredits(1)) return;
+        if (!await deductCredits(2)) return;
         setIsLoading(true);
         setResult(undefined);
         updateState({ businessTypeForm: data });
@@ -287,7 +287,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                     </div>
                     <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
-                        Get Recommendation
+                        Get Recommendation (2 Credits)
                     </Button>
                 </form>
             </div>
@@ -392,7 +392,6 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
   });
 
   const onSubmit = async (data: IncCodeFormData) => {
-    if (!await deductCredits(1)) return;
     setIsLoading(true);
     setResult(undefined);
     updateState({ incCodeForm: data });
@@ -558,7 +557,6 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     };
 
     const handleGenerate = async (templateName: string) => {
-        if (!await deductCredits(1)) return;
         setLoadingDoc(templateName);
         setGeneratedContent(null);
         setEditorContent('');
@@ -662,7 +660,6 @@ function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
     const { userProfile, deductCredits } = useAuth();
 
     const handleGenerateChecklist = async () => {
-        if (!await deductCredits(1)) return;
         setIsLoading(true);
         setChecklist(undefined);
         const businessDesc = navigatorState.businessTypeForm?.businessDescription || navigatorState.incCodeForm?.businessDescription;

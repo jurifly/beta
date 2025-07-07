@@ -251,6 +251,7 @@ const ChatAssistant = () => {
               </Button>
           </div>
         </form>
+        <p className="text-xs text-muted-foreground text-center pt-2">1 Credit per message.</p>
       </div>
     </div>
   );
@@ -403,7 +404,7 @@ const DocumentIntelligenceTab = () => {
 
   const handleAnalysis = useCallback(async (file: File) => {
     if (!userProfile) return;
-    if (!await deductCredits(10)) return;
+    if (!await deductCredits(2)) return;
     setIsProcessing(true);
 
     const reader = new FileReader();
@@ -487,7 +488,8 @@ const DocumentIntelligenceTab = () => {
                     <FileScan className="w-16 h-16 text-primary/20" />
                     <p className="font-semibold text-lg text-foreground">Drop a document here</p>
                     <p className="text-sm max-w-xs">Or click the button below to select a file.</p>
-                    <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
+                    <p className="text-xs text-muted-foreground mt-2">(2 Credits per analysis)</p>
+                    <Button type="button" variant="outline" onClick={openFileDialog} className="mt-2 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
                   </>
                 )}
             </div>
@@ -771,7 +773,7 @@ const DocumentGenerator = () => {
     if (!selectedTemplate) { toast({ title: 'No Template Selected', description: 'Please select a template from the library first.', variant: 'destructive' }); return; }
     if (!userProfile) { toast({ title: 'Error', description: 'User profile not found.', variant: 'destructive' }); return; }
 
-    if (!await deductCredits(1)) return;
+    if (!await deductCredits(3)) return;
     setLoading(true); setGeneratedDoc(null); setEditorContent(''); hasUserEdited.current = false;
     try { 
         const result = await AiActions.generateDocumentAction({ 
@@ -850,7 +852,7 @@ const DocumentGenerator = () => {
         </ScrollArea>
         <CardFooter className="mt-auto pt-4 border-t">
           <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document (3 Credits)</>}
           </Button>
         </CardFooter>
       </Card>
@@ -990,7 +992,7 @@ function WatcherSubmitButton({ isPending }: { isPending: boolean }) {
     return (
         <Button type="submit" disabled={isPending} size="lg" className="w-full sm:w-auto interactive-lift">
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Telescope className="mr-2 h-4 w-4" />}
-            Get Latest Updates
+            Get Latest Updates (2 Credits)
         </Button>
     );
 }
@@ -1018,7 +1020,7 @@ const RegulationWatcherTab = () => {
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!userProfile || !formRef.current) return;
-        if (!await deductCredits(1)) return;
+        if (!await deductCredits(2)) return;
         
         const formData = new FormData(formRef.current);
         const portal = formData.get("portal") as string;
@@ -1200,7 +1202,7 @@ const ReconciliationTab = () => {
   
     const handleReconcile = async () => {
       if (!files.gst || !files.roc || !files.itr) { toast({ variant: "destructive", title: "Missing Files", description: "Please upload all three documents to proceed." }); return; }
-      if (!userProfile || !await deductCredits(15)) return;
+      if (!userProfile || !await deductCredits(2)) return;
       setIsProcessing(true); setResult(null);
       try {
         const [gstDataUri, rocDataUri, itrDataUri] = await Promise.all([ getFileAsDataURI(files.gst), getFileAsDataURI(files.roc), getFileAsDataURI(files.itr), ]);
@@ -1223,7 +1225,7 @@ const ReconciliationTab = () => {
         <Card className="interactive-lift">
           <CardHeader><CardTitle>Upload Filings</CardTitle><CardDescription>Provide all three documents for a comprehensive reconciliation.</CardDescription></CardHeader>
           <CardContent><div className="grid grid-cols-1 md:grid-cols-3 gap-6"> <div {...getGstRootProps()}><input {...getGstInputProps()} /><DropzoneCard file={files.gst} type="GST" open={openGstDialog} disabled={isProcessing} /></div> <div {...getRocRootProps()}><input {...getRocInputProps()} /><DropzoneCard file={files.roc} type="ROC" open={openRocDialog} disabled={isProcessing} /></div> <div {...getItrRootProps()}><input {...getItrInputProps()} /><DropzoneCard file={files.itr} type="ITR" open={openItrDialog} disabled={isProcessing} /></div></div></CardContent>
-          <CardFooter className="border-t pt-6 flex-col items-center gap-4"><Button onClick={handleReconcile} disabled={isProcessing || !files.gst || !files.roc || !files.itr}>{isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>} Reconcile Documents</Button><p className="text-xs text-muted-foreground flex items-center gap-2"><Info className="w-4 h-4"/>This analysis uses 15 credits.</p></CardFooter>
+          <CardFooter className="border-t pt-6 flex-col items-center gap-4"><Button onClick={handleReconcile} disabled={isProcessing || !files.gst || !files.roc || !files.itr}>{isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>} Reconcile Documents</Button><p className="text-xs text-muted-foreground flex items-center gap-2"><Info className="w-4 h-4"/>This analysis uses 2 credits.</p></CardFooter>
         </Card>
         {isProcessing && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Our AI is crunching the numbers...</p></div> )}
         {result && (
