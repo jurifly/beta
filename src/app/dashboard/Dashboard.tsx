@@ -3,7 +3,6 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import {
   ArrowRight,
   Calendar,
@@ -61,15 +60,8 @@ import { addDays, format, startOfToday, differenceInDays } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { ComplianceActivityChart } from "@/components/dashboard/compliance-activity-chart";
 
-
-const ComplianceActivityChart = dynamic(
-  () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
-  { 
-    ssr: false,
-    loading: () => <Skeleton className="h-[350px] w-full rounded-lg" />
-  }
-);
 
 // --- Helper Components ---
 

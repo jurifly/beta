@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { BookCheck } from "lucide-react"
+import { Skeleton } from "../ui/skeleton"
 
 const chartConfig = {
   activity: {
@@ -36,18 +37,41 @@ interface ComplianceActivityChartProps {
 }
 
 export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const years = React.useMemo(() => Object.keys(dataByYear).sort((a,b) => Number(b) - Number(a)), [dataByYear]);
   const [selectedYear, setSelectedYear] = React.useState(years[0] || new Date().getFullYear().toString());
   
   React.useEffect(() => {
-    // If the selected year is no longer in the list of available years,
-    // update it to the first available year or the current year as a fallback.
     if (!years.includes(selectedYear)) {
       setSelectedYear(years[0] || new Date().getFullYear().toString());
     }
   }, [years, selectedYear]);
 
   const chartData = dataByYear[selectedYear] || [];
+  
+  if (!isMounted) {
+    return (
+        <Card className="interactive-lift h-full">
+            <CardHeader>
+                <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
+                    <div>
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-4 w-32 mt-2" />
+                    </div>
+                    <Skeleton className="h-10 w-[120px]" />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-64 w-full" />
+            </CardContent>
+        </Card>
+    );
+  }
 
   return (
     <Card className="interactive-lift h-full">
