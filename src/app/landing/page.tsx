@@ -1,13 +1,20 @@
 
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Inter } from "next/font/google";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ArrowRight, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 const LandingHeader = () => (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -52,32 +59,32 @@ export default function LandingPage() {
         { 
             title: "Company Overview", 
             description: "Stay on top of your compliance health, alerts, and key filings.", 
-            image: { src: "https://placehold.co/600x400.png", hint: "dashboard compliance" }
+            image: { src: "https://placehold.co/1200x675.png", hint: "dashboard compliance" }
         },
         { 
             title: "LaunchPad", 
             description: "AI-guided company formation. Choose the right structure, NIC code, and generate setup docs in minutes.",
-            image: { src: "https://placehold.co/600x400.png", hint: "business setup" }
+            image: { src: "https://placehold.co/1200x675.png", hint: "business setup" }
         },
         { 
             title: "AI Document Generator", 
             description: "From NDAs to board resolutions — just describe, and generate.", 
-            image: { src: "https://placehold.co/600x400.png", hint: "document generation" }
+            image: { src: "https://placehold.co/1200x675.png", hint: "document generation" }
         },
         { 
             title: "Document Vault", 
             description: "Secure your compliance files. Integrated with your Google Drive.",
-            image: { src: "https://placehold.co/600x400.png", hint: "cloud storage" }
+            image: { src: "https://placehold.co/1200x675.png", hint: "cloud storage" }
         },
         { 
             title: "Cap Table & Equity Modeling", 
             description: "See founder holdings, simulate dilution, plan fundraising.",
-            image: { src: "https://placehold.co/600x400.png", hint: "financial chart" }
+            image: { src: "https://placehold.co/1200x675.png", hint: "financial chart" }
         },
         { 
             title: "Financials", 
             description: "Track burn rate, runway, and calculate taxes (personal + corporate). Global support.",
-            image: { src: "https://placehold.co/600x400.png", hint: "tax calculator" }
+            image: { src: "https://placehold.co/1200x675.png", hint: "tax calculator" }
         },
     ];
 
@@ -86,16 +93,24 @@ export default function LandingPage() {
         "No missed filings",
         "No chaos",
     ];
+
+    const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+
+    const nextFeature = () => {
+        setCurrentFeatureIndex((prevIndex) => (prevIndex + 1) % features.length);
+    };
+
+    const prevFeature = () => {
+        setCurrentFeatureIndex((prevIndex) => (prevIndex - 1 + features.length) % features.length);
+    };
     
     return (
-        <div className="flex min-h-screen flex-col bg-background">
+        <div className={`flex min-h-screen flex-col bg-background ${inter.variable} font-body`}>
             <LandingHeader />
             <main className="flex-1">
                 {/* Hero Section */}
                 <section className="relative w-full py-24 md:py-32">
-                     <div className="absolute inset-0 -z-10 h-full w-full bg-background">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
-                    </div>
+                     <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
                     <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
                         <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
                             Your Startup’s Legal & Compliance Copilot
@@ -133,25 +148,59 @@ export default function LandingPage() {
                                 Everything your startup needs, one clean interface.
                             </p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {features.map(feature => (
-                                <Card key={feature.title} className="bg-card/80 backdrop-blur-sm overflow-hidden interactive-lift">
-                                    <CardHeader className="p-0">
-                                        <Image
-                                            src={feature.image.src}
-                                            width={600}
-                                            height={400}
-                                            alt={feature.title}
-                                            className="border-b"
-                                            data-ai-hint={feature.image.hint}
-                                        />
-                                    </CardHeader>
-                                    <CardContent className="p-6">
-                                        <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                                        <p className="text-muted-foreground">{feature.description}</p>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        
+                        <div className="relative max-w-4xl mx-auto">
+                            <Card key={features[currentFeatureIndex].title} className="bg-card/80 backdrop-blur-sm overflow-hidden interactive-lift animate-in fade-in-50 duration-500">
+                                <CardHeader className="p-0">
+                                    <Image
+                                        src={features[currentFeatureIndex].image.src}
+                                        width={1200}
+                                        height={675}
+                                        alt={features[currentFeatureIndex].title}
+                                        className="border-b"
+                                        data-ai-hint={features[currentFeatureIndex].image.hint}
+                                    />
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    <h3 className="text-xl font-bold mb-2">{features[currentFeatureIndex].title}</h3>
+                                    <p className="text-muted-foreground">{features[currentFeatureIndex].description}</p>
+                                </CardContent>
+                            </Card>
+
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full h-12 w-12 hidden md:flex"
+                                onClick={prevFeature}
+                            >
+                                <ChevronLeft className="h-6 w-6" />
+                                <span className="sr-only">Previous feature</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rounded-full h-12 w-12 hidden md:flex"
+                                onClick={nextFeature}
+                            >
+                                <ChevronRight className="h-6 w-6" />
+                                <span className="sr-only">Next feature</span>
+                            </Button>
+                        </div>
+                         <div className="flex md:hidden items-center justify-center gap-4">
+                            <Button
+                                variant="outline"
+                                onClick={prevFeature}
+                            >
+                                <ChevronLeft className="h-4 w-4 mr-2" />
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={nextFeature}
+                            >
+                                Next
+                                <ChevronRight className="h-4 w-4 ml-2" />
+                            </Button>
                         </div>
                     </div>
                 </section>
