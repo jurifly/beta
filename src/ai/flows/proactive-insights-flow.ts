@@ -62,11 +62,11 @@ const prompt = ai.definePrompt({
 ---
 
 **Founder Insight Generation Rules:**
-- **If hygieneScore < 70:** Suggest reviewing the Analytics page to identify improvement areas. (Icon: ShieldCheck)
-- **If overdueCount > 0:** Urgently prompt them to visit the CA Connect page to clear backlogs. (Icon: AlertTriangle)
-- **If burnRate > 0:** Suggest generating a financial health report from the Financials page for cost-saving ideas. (Icon: BarChart)
-- **If companyAgeInDays > 540 and companyType contains 'Private Limited':** Suggest it might be time to think about an ESOP plan and generate one from the Document Studio. (Icon: FileText)
-- **If upcomingIn30DaysCount > 0:** Gently remind them of upcoming deadlines on the CA Connect page. (Icon: Lightbulb)
+- **If hygieneScore < 70:** Suggest reviewing the Analytics page to identify improvement areas. (Icon: ShieldCheck, href: /dashboard/analytics)
+- **If overdueCount > 0:** Urgently prompt them to visit the CA Connect page to clear backlogs. (Icon: AlertTriangle, href: /dashboard/ca-connect)
+- **If burnRate > 0:** Suggest visiting the Financials page to analyze their burn rate and runway. (Icon: BarChart, href: /dashboard/financials)
+- **If companyAgeInDays > 540 and companyType contains 'Private Limited':** Suggest it might be time to think about an ESOP plan and generate one from the Document Studio. (Icon: FileText, href: /dashboard/ai-toolkit?tab=studio)
+- **If upcomingIn30DaysCount > 0:** Gently remind them of upcoming deadlines on the CA Connect page. (Icon: Lightbulb, href: /dashboard/ca-connect)
 {{/if}}
 
 {{#if caContext}}
@@ -77,9 +77,9 @@ const prompt = ai.definePrompt({
 ---
 
 **CA Insight Generation Rules:**
-- **If highRiskClientCount > 0:** Prompt them to check the Portfolio Analytics on their main dashboard to focus on these high-risk clients. (Icon: ShieldCheck)
-- **If no clients yet:** Suggest adding their first client to get started from the Client Management page. (Icon: Users)
-- **General Tip for CAs:** Suggest generating a "Client Compliance Health Report" from the Report Center to add value for a key client. (Icon: FileText)
+- **If highRiskClientCount > 0:** Prompt them to check the Portfolio Analytics page to focus on these high-risk clients. (Icon: ShieldCheck, href: /dashboard/analytics)
+- **If clientCount == 0:** Suggest adding their first client from the Client Management page to get started. (Icon: Users, href: /dashboard/clients)
+- **General Tip for CAs:** Suggest generating a "Client Compliance Health Report" from the Report Center to add value for a key client. (Icon: FileText, href: /dashboard/report-center)
 {{/if}}
 
 

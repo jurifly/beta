@@ -195,14 +195,11 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                     </div>
                 ) : (
                     <div className="space-y-6 animate-in fade-in-50 duration-500">
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2 text-center">Key Metrics</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <MetricDisplay title="Pre-Money Valuation" value={`₹${result.preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
-                                <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
-                                <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
-                                <MetricDisplay title="Investor's Stake" value={`${result.investorStake}%`} icon={<Percent className="h-4 w-4"/>} />
-                            </div>
+                        <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <MetricDisplay title="Pre-Money Valuation" value={`₹${result.preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
+                            <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
+                            <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
+                            <MetricDisplay title="Investor's Stake" value={`${result.investorStake}%`} icon={<Percent className="h-4 w-4"/>} />
                         </div>
 
                         <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] items-start gap-6">

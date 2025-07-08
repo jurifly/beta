@@ -183,7 +183,7 @@ const getBottomNavItems = (role: UserRole): (NavItem | { href: string; label: st
         { ...navItemConfig.clients, label: "Clients" },
         { ...navItemConfig.aiToolkit, label: "AI Suite" },
         { ...navItemConfig.caConnect, label: "Compliance" },
-        { ...navItemConfig.reportCenter, label: "Reports" },
+        { ...navItemConfig.settings, label: "Settings" },
       ];
     case 'Legal Advisor':
       return [
@@ -208,7 +208,7 @@ const getBottomNavItems = (role: UserRole): (NavItem | { href: string; label: st
         { ...navItemConfig.financials, label: "Financials" },
         { ...navItemConfig.aiToolkit, label: "AI Toolkit" },
         { ...navItemConfig.capTable, label: "Cap Table" },
-        { href: "/dashboard/settings", label: "Profile", icon: User },
+        { ...navItemConfig.caConnect, label: "CA Connect" },
       ];
   }
 };

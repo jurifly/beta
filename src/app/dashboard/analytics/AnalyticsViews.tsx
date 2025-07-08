@@ -13,7 +13,11 @@ import { generateFilings } from "@/ai/flows/filing-generator-flow"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CheckSquare, ShieldCheck, ArrowRight, Briefcase, ListTodo, CalendarClock, Users, GanttChartSquare, LineChart, FileText } from "lucide-react"
+import { CheckSquare, ShieldCheck, ArrowRight, Briefcase, ListTodo, CalendarClock, Users, GanttChartSquare, LineChart, FileText, PieChart, FileWarning } from "lucide-react"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
+import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell } from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 type Deadline = {
     date: string;
@@ -226,6 +230,147 @@ export function FounderAnalytics() {
   )
 }
 
+
+// --- CA Analytics ---
+const riskChartConfig = {
+  clients: { label: "Clients" },
+  low: { label: "Low", color: "hsl(var(--chart-2))" },
+  medium: { label: "Medium", color: "hsl(var(--chart-3))" },
+  high: { label: "High", color: "hsl(var(--chart-5))" },
+}
+
+export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
+   const clientCount = userProfile.companies.length;
+   
+    const { avgProfileCompleteness, riskDistribution, clientHealthData, highRiskClientCount } = useMemo(() => {
+        if (clientCount === 0) return { avgProfileCompleteness: 0, riskDistribution: [], clientHealthData: [], highRiskClientCount: 0 };
+        
+        let totalCompleteness = 0;
+        const healthData = userProfile.companies.map(company => {
+            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(company.type)) {
+                requiredFields.push('cin');
+            }
+            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+            const completeness = (filledFields / requiredFields.length) * 100;
+            totalCompleteness += completeness;
+            
+            const overdueTasks = Math.floor(Math.random() * 5); 
+            const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
+            const healthScore = Math.round((completeness * 0.5) + (filingPerf * 0.5));
+            
+            let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+            if (healthScore < 60) riskLevel = 'High';
+            else if (healthScore < 85) riskLevel = 'Medium';
+
+            return { ...company, completeness, overdueTasks, healthScore, riskLevel };
+        });
+
+        const riskCounts = healthData.reduce((acc, client) => {
+            if (client.riskLevel === 'Low') acc.low++;
+            else if (client.riskLevel === 'Medium') acc.medium++;
+            else if (client.riskLevel === 'High') acc.high++;
+            return acc;
+        }, { low: 0, medium: 0, high: 0 });
+
+        const riskChartData = [
+            { name: 'Low', clients: riskCounts.low, fill: "var(--color-low)" },
+            { name: 'Medium', clients: riskCounts.medium, fill: "var(--color-medium)" },
+            { name: 'High', clients: riskCounts.high, fill: "var(--color-high)" },
+        ].filter(d => d.clients > 0);
+
+        return {
+            avgProfileCompleteness: Math.round(totalCompleteness / clientCount),
+            riskDistribution: riskChartData,
+            clientHealthData: healthData.sort((a,b) => a.healthScore - b.healthScore),
+            highRiskClientCount: riskCounts.high,
+        };
+    }, [userProfile.companies, clientCount]);
+    
+   return (
+    <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="interactive-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{clientCount}</div>
+                    <p className="text-xs text-muted-foreground">
+                        {clientCount > 0 ? `${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed` : "No clients added yet"}
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="interactive-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Avg. Profile Completeness</CardTitle>
+                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-green-500">{avgProfileCompleteness}%</div>
+                    <p className="text-xs text-muted-foreground">Average across all clients</p>
+                </CardContent>
+            </Card>
+             <Card className="interactive-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Clients at Risk</CardTitle><FileWarning className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold text-destructive">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
+            </Card>
+        </div>
+        
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+            <div className="lg:col-span-2 space-y-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Portfolio Risk</CardTitle>
+                        <CardDescription>Breakdown of client risk levels based on compliance health.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-52">
+                        <RechartsPieChart>
+                            <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
+                            <Pie data={riskDistribution} dataKey="clients" nameKey="name" innerRadius={60} strokeWidth={5} />
+                            <ChartLegend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
+                        </RechartsPieChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+            </div>
+            <Card className="lg:col-span-3 interactive-lift">
+                 <CardHeader>
+                    <CardTitle>Client Health Overview</CardTitle>
+                    <CardDescription>Prioritize your work by focusing on clients who need the most attention.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {clientHealthData.length > 0 ? (
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Profile</TableHead><TableHead>Health Score</TableHead><TableHead className="text-right">Risk Level</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {clientHealthData.map(client => (
+                                    <TableRow key={client.id}>
+                                        <TableCell className="font-medium">{client.name}</TableCell>
+                                        <TableCell>{client.completeness.toFixed(0)}%</TableCell>
+                                        <TableCell>
+                                            <Progress value={client.healthScore} className="w-24 h-2" />
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant={client.riskLevel === 'High' ? 'destructive' : client.riskLevel === 'Medium' ? 'default' : 'secondary'}>{client.riskLevel}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                         <div className="text-center text-muted-foreground p-8">
+                            <p>No clients to display.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+  )
+}
 
 // --- Legal Advisor Analytics ---
 export function LegalAdvisorAnalytics({ userProfile }: { userProfile: UserProfile }) {

@@ -568,88 +568,28 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
     );
 }
 
-const riskChartConfig = {
-  clients: { label: "Clients" },
-  low: { label: "Low", color: "hsl(var(--chart-2))" },
-  medium: { label: "Medium", color: "hsl(var(--chart-3))" },
-  high: { label: "High", color: "hsl(var(--chart-5))" },
-}
-
-function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
-   const clientCount = userProfile.companies.length;
-   
-    const { avgProfileCompleteness, riskDistribution, clientHealthData, highRiskClientCount } = useMemo(() => {
-        if (clientCount === 0) return { avgProfileCompleteness: 0, riskDistribution: [], clientHealthData: [], highRiskClientCount: 0 };
-        
-        let totalCompleteness = 0;
-        const healthData = userProfile.companies.map(company => {
-            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-            if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(company.type)) {
-                requiredFields.push('cin');
-            }
-            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-            const completeness = (filledFields / requiredFields.length) * 100;
-            totalCompleteness += completeness;
-            
-            const overdueTasks = Math.floor(Math.random() * 5); 
-            const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
-            const healthScore = Math.round((completeness * 0.5) + (filingPerf * 0.5));
-            
-            let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
-            if (healthScore < 60) riskLevel = 'High';
-            else if (healthScore < 85) riskLevel = 'Medium';
-
-            return { ...company, completeness, overdueTasks, healthScore, riskLevel };
-        });
-
-        const riskCounts = healthData.reduce((acc, client) => {
-            if (client.riskLevel === 'Low') acc.low++;
-            else if (client.riskLevel === 'Medium') acc.medium++;
-            else if (client.riskLevel === 'High') acc.high++;
-            return acc;
-        }, { low: 0, medium: 0, high: 0 });
-
-        const riskChartData = [
-            { name: 'Low', clients: riskCounts.low, fill: "var(--color-low)" },
-            { name: 'Medium', clients: riskCounts.medium, fill: "var(--color-medium)" },
-            { name: 'High', clients: riskCounts.high, fill: "var(--color-high)" },
-        ].filter(d => d.clients > 0);
-
-        return {
-            avgProfileCompleteness: Math.round(totalCompleteness / clientCount),
-            riskDistribution: riskChartData,
-            clientHealthData: healthData.sort((a,b) => a.healthScore - b.healthScore),
-            highRiskClientCount: riskCounts.high,
-        };
-    }, [userProfile.companies, clientCount]);
-    
+function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfile, onAddClientClick: () => void }) {
+    const { toast } = useToast();
+    const router = useRouter();
     const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
     const [insightsLoading, setInsightsLoading] = useState(true);
-    const { toast } = useToast();
-    const router = require("next/navigation").useRouter();
 
-     useEffect(() => {
+    const clientCount = userProfile.companies.length;
+    const { highRiskClientCount } = useMemo(() => {
+        if (clientCount === 0) return { highRiskClientCount: 0 };
+        
+        let highRisk = 0;
+        userProfile.companies.forEach(company => {
+            const overdueTasks = Math.floor(Math.random() * 5); 
+            const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
+            const healthScore = Math.round(filingPerf);
+            if (healthScore < 60) highRisk++;
+        });
+        return { highRiskClientCount: highRisk };
+    }, [userProfile.companies, clientCount]);
+
+    useEffect(() => {
         const fetchInsights = async () => {
-            if (clientCount === 0 && avgProfileCompleteness === 0) {
-                 try {
-                    const response = await getProactiveInsights({
-                        userRole: 'CA',
-                        legalRegion: userProfile.legalRegion,
-                        caContext: {
-                            clientCount: 0,
-                            highRiskClientCount: 0,
-                        }
-                    });
-                    setInsights(response.insights);
-                } catch (error: any) {
-                    toast({ title: 'AI Insights Failed', description: error.message, variant: 'destructive' });
-                } finally {
-                    setInsightsLoading(false);
-                }
-                return;
-            }
-
-            if (clientHealthData.length === 0) return;
             setInsightsLoading(true);
             try {
                 const response = await getProactiveInsights({
@@ -670,9 +610,9 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         };
 
         fetchInsights();
-    }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast, avgProfileCompleteness, clientHealthData]);
+    }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast]);
 
-   const mockDeadlines = userProfile.companies.length > 0 ? [
+    const mockDeadlines = userProfile.companies.length > 0 ? [
        { client: userProfile.companies[0 % userProfile.companies.length].name, task: 'GSTR-3B Filing', due: 'in 2 days', icon: <Receipt className="w-5 h-5"/> },
        { client: userProfile.companies[Math.min(1, userProfile.companies.length-1)].name, task: 'ADT-1 Auditor Appointment', due: 'in 5 days', icon: <Briefcase className="w-5 h-5"/> },
        { client: userProfile.companies[Math.min(2, userProfile.companies.length-1)].name, task: 'ROC Annual Return (MGT-7)', due: 'in 1 week', icon: <FileText className="w-5 h-5"/> },
@@ -684,36 +624,32 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
        { client: userProfile.companies[Math.min(2, userProfile.companies.length-1)].name, action: 'completed "Director KYC"', time: '3 days ago', icon: <CheckCircle className="w-5 h-5"/> },
    ] : [];
 
+   if (clientCount === 0) {
+     return (
+        <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
+            <Users className="w-16 h-16 text-primary/20 mb-4"/>
+            <p className="font-semibold text-lg">Welcome, Advisor!</p>
+            <p className="text-sm text-muted-foreground max-w-xs mb-6">
+                Add your first client company to get started, or accept pending invitations.
+            </p>
+            <div className="flex gap-4">
+                <Button onClick={onAddClientClick}>
+                    <Plus className="mr-2 h-4 w-4"/> Add Client
+                </Button>
+                <Button variant="outline" asChild>
+                    <Link href="/dashboard/invitations">View Invitations</Link>
+                </Button>
+            </div>
+        </div>
+     );
+   }
 
    return (
     <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="interactive-lift">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{clientCount}</div>
-                    <p className="text-xs text-muted-foreground">
-                        {clientCount > 0 ? `${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed` : "No clients added yet"}
-                    </p>
-                </CardContent>
-            </Card>
-            <Card className="interactive-lift">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Avg. Profile Completeness</CardTitle>
-                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-green-500">{avgProfileCompleteness}%</div>
-                    <p className="text-xs text-muted-foreground">Average across all clients</p>
-                </CardContent>
-            </Card>
-             <Card className="interactive-lift">
-                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Clients at Risk</CardTitle><FileWarning className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-destructive">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
-            </Card>
+            <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed`} icon={<Users className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title="Clients at Risk" value={`${highRiskClientCount}`} subtext="Clients with low health scores" icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Analytics" value="View" subtext="Deep dive into client health" icon={<LineChart className="h-4 w-4" />} /></Link>
         </div>
         
         <Card className="interactive-lift">
@@ -736,57 +672,6 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                 )}
             </CardContent>
         </Card>
-
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
-            <div className="lg:col-span-2 space-y-6">
-                <Card className="interactive-lift">
-                    <CardHeader>
-                        <CardTitle>Portfolio Risk</CardTitle>
-                        <CardDescription>Breakdown of client risk levels based on compliance health.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-52">
-                        <RechartsPieChart>
-                            <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
-                            <Pie data={riskDistribution} dataKey="clients" nameKey="name" innerRadius={60} strokeWidth={5} />
-                            <ChartLegend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
-                        </RechartsPieChart>
-                        </ChartContainer>
-                    </CardContent>
-                </Card>
-            </div>
-            <Card className="lg:col-span-3 interactive-lift">
-                 <CardHeader>
-                    <CardTitle>Client Health Overview</CardTitle>
-                    <CardDescription>Prioritize your work by focusing on clients who need the most attention.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {clientHealthData.length > 0 ? (
-                        <Table>
-                            <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Profile</TableHead><TableHead>Health Score</TableHead><TableHead className="text-right">Risk Level</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {clientHealthData.map(client => (
-                                    <TableRow key={client.id}>
-                                        <TableCell className="font-medium">{client.name}</TableCell>
-                                        <TableCell>{client.completeness.toFixed(0)}%</TableCell>
-                                        <TableCell>
-                                            <Progress value={client.healthScore} className="w-24 h-2" />
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Badge variant={client.riskLevel === 'High' ? 'destructive' : client.riskLevel === 'Medium' ? 'default' : 'secondary'}>{client.riskLevel}</Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    ) : (
-                         <div className="text-center text-muted-foreground p-8">
-                            <p>No clients to display.</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
             <Card className="interactive-lift">
@@ -893,7 +778,7 @@ export default function Dashboard() {
       case 'Founder':
         return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} />;
       case 'CA':
-        return <CAAnalytics userProfile={userProfile} />;
+        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} />;
       case 'Legal Advisor':
         return <LegalAdvisorDashboard userProfile={userProfile} />;
       case 'Enterprise':

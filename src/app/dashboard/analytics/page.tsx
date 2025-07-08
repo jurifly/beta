@@ -5,18 +5,12 @@ import { useAuth } from "@/hooks/auth"
 import { Loader2, ArrowLeft } from "lucide-react"
 import { useEffect } from "react";
 import { redirect, useRouter } from "next/navigation";
-import { FounderAnalytics, LegalAdvisorAnalytics, EnterpriseAnalytics } from "./AnalyticsViews";
+import { FounderAnalytics, CAAnalytics, LegalAdvisorAnalytics, EnterpriseAnalytics } from "./AnalyticsViews";
 
 
 export default function AnalyticsPage() {
   const { userProfile } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (userProfile?.role === 'CA') {
-      redirect('/dashboard');
-    }
-  }, [userProfile]);
 
   if (!userProfile) {
     return (
@@ -35,16 +29,16 @@ export default function AnalyticsPage() {
     switch (userProfile.role) {
       case 'Founder':
         return <FounderAnalytics />;
+      case 'CA':
+        return <CAAnalytics userProfile={userProfile} />;
       case 'Legal Advisor':
         return <LegalAdvisorAnalytics userProfile={userProfile} />;
       case 'Enterprise':
           return <EnterpriseAnalytics userProfile={userProfile} />;
       default:
-        return <p>No analytics available for this role.</p>;
+        return <FounderAnalytics />;
     }
   }
-
-  if (userProfile.role === 'CA') return null;
 
   return (
     <div className="space-y-6">
