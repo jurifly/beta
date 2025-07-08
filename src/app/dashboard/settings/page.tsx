@@ -1,44 +1,85 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import SettingsForm from './form';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, CreditCard, Bell, Lock, Loader2, KeyRound } from 'lucide-react';
-import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
+import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
-import type { Company } from "@/lib/types";
+import SettingsForm from './form';
 import BillingForm from "./billing-form";
 import NotificationsForm from "./notifications-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, CreditCard, Bell, Lock, KeyRound, Loader2, MessageCircle, BookLock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
+import type { Company } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from "next/link";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { Bug, Lightbulb, Palette, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 
-const SecurityForm = () => (
+// --- Policies Tab Content ---
+const policies = {
+    "terms": { title: "Terms of Service", lastUpdated: "October 26, 2023", content: `<p>Welcome to Legalizd. These terms and conditions outline the rules and regulations for the use of our website and services.</p><h3 class="font-semibold mt-4 mb-2">1. Acceptance of Terms</h3><p>By accessing this platform, you accept these terms and conditions. Do not continue to use Legalizd if you do not agree to all of the terms and conditions stated on this page.</p><h3 class="font-semibold mt-4 mb-2">2. User Responsibilities</h3><p>You are responsible for ensuring that all information you provide is accurate and that your use of the platform is lawful. You must not use our platform for any illegal or unauthorized purpose.</p><h3 class="font-semibold mt-4 mb-2">3. Intellectual Property</h3><p>The Service and its original content, features, and functionality are and will remain the exclusive property of Legalizd and its licensors. Our trademarks may not be used in connection with any product or service without the prior written consent of Legalizd.</p><h3 class="font-semibold mt-4 mb-2">4. Limitation of Liability</h3><p>In no event shall Legalizd, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p><h3 class="font-semibold mt-4 mb-2">5. Governing Law</h3><p>These Terms shall be governed and construed in accordance with the laws of India, without regard to its conflict of law provisions.</p>` },
+    "privacy": { title: "Privacy Policy", lastUpdated: "October 26, 2023", content: `<p>Your privacy is important to us. It is Legalizd's policy to respect your privacy regarding any information we may collect from you across our website.</p><h3 class="font-semibold mt-4 mb-2">1. Information We Collect</h3><p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent. We may collect information like your name, email address, company details, and usage data.</p><h3 class="font-semibold mt-4 mb-2">2. How We Use Your Data</h3><p>We use the collected data to provide and maintain our Service, to notify you about changes to our Service, to allow you to participate in interactive features of our Service when you choose to do so, and to provide customer support.</p><h3 class="font-semibold mt-4 mb-2">3. Data Security</h3><p>We take the security of your data seriously and use appropriate technical and organizational measures to protect it against unauthorized or unlawful processing and against accidental loss, destruction, or damage.</p><h3 class="font-semibold mt-4 mb-2">4. User Rights</h3><p>You have the right to access, update or to delete the information we have on you. Whenever made possible, you can access, update or request deletion of your Personal Data directly within your account settings section.</p>` },
+    "disclaimer": { title: "AI Disclaimer", lastUpdated: "October 26, 2023", content: `<p>The features and information generated by the Artificial Intelligence (AI) on the Legalizd platform are provided for informational purposes only.</p><h3 class="font-semibold mt-4 mb-2">1. Not Professional Advice</h3><p>The content generated by our AI is not intended to be a substitute for professional legal, financial, or tax advice. Always seek the advice of a qualified professional with any questions you may have regarding a legal or financial matter.</p><h3 class="font-semibold mt-4 mb-2">2. No Guarantees</h3><p>While we strive to provide accurate and up-to-date information, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the AI-generated content. Any reliance you place on such information is therefore strictly at your own risk.</p><h3 class="font-semibold mt-4 mb-2">3. Limitation of Liability</h3><p>Legalizd disclaims all liability for any errors or omissions in the content provided by the AI and for any actions taken in reliance on that content.</p>` }
+};
+const PoliciesTab = () => (
+  <Card className="interactive-lift">
+    <CardHeader><CardTitle>Legal & Policies</CardTitle><CardDescription>Our terms, privacy policy, and other legal documents.</CardDescription></CardHeader>
+    <CardContent>
+      <Accordion type="single" collapsible className="w-full">
+        {Object.entries(policies).map(([key, policy]) => (
+          <AccordionItem value={key} key={key}><AccordionTrigger className="text-left hover:no-underline">{policy.title}</AccordionTrigger><AccordionContent className="prose dark:prose-invert max-w-none border-t pt-4"><p className="text-sm text-muted-foreground">Last updated: {policy.lastUpdated}</p><div dangerouslySetInnerHTML={{ __html: policy.content }} /></AccordionContent></AccordionItem>
+        ))}
+      </Accordion>
+    </CardContent>
+  </Card>
+);
+
+// --- Feedback Tab Content ---
+const feedbackSchema = z.object({ category: z.string().min(1, "Please select a category."), sentiment: z.enum(['positive', 'negative']).optional(), message: z.string().min(10, "Feedback must be at least 10 characters long."), });
+type FeedbackFormData = z.infer<typeof feedbackSchema>;
+const feedbackCategories = [ { id: 'bug-report', label: 'Bug Report', icon: Bug }, { id: 'feature-request', label: 'Feature Request', icon: Lightbulb }, { id: 'ui-ux', label: 'UI/UX Feedback', icon: Palette }, { id: 'general', label: 'General Comment', icon: MessageCircle }, ];
+const FeedbackTab = () => {
+    const { toast } = useToast();
+    const { control, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm<FeedbackFormData>({ resolver: zodResolver(feedbackSchema), defaultValues: { category: "", sentiment: undefined, message: "" } });
+    const selectedCategory = watch("category");
+    const onSubmit = async (data: FeedbackFormData) => { await new Promise(resolve => setTimeout(resolve, 1000)); toast({ title: "Feedback Submitted!", description: "Thank you for helping us improve." }); reset(); };
+
+    return (
+        <Card className="interactive-lift">
+            <CardHeader><CardTitle>Share Your Feedback</CardTitle><CardDescription>Tell us what you love, what's not working, or what features you'd like to see next.</CardDescription></CardHeader>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <CardContent className="space-y-6">
+                    <div className="space-y-3"><Label>1. What's this about?</Label><Controller name="category" control={control} render={({ field }) => (<div className="grid grid-cols-2 md:grid-cols-4 gap-2">{feedbackCategories.map(cat => (<Button key={cat.id} type="button" variant="outline" className={cn("flex-col h-20 gap-1", field.value === cat.id && "border-primary ring-2 ring-primary/50")} onClick={() => field.onChange(cat.id)}><cat.icon className="w-5 h-5"/>{cat.label}</Button>))}</div>)}/>{errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}</div>
+                    {selectedCategory === 'ui-ux' && (<div className="space-y-3"><Label>2. How did it feel?</Label><Controller name="sentiment" control={control} render={({ field }) => (<div className="grid grid-cols-2 gap-2"><Button type="button" variant="outline" className={cn("h-16", field.value === 'positive' && "border-green-500 bg-green-500/10 text-green-700")} onClick={() => field.onChange('positive')}><ThumbsUp className="w-5 h-5 mr-2"/> I liked it</Button><Button type="button" variant="outline" className={cn("h-16", field.value === 'negative' && "border-red-500 bg-red-500/10 text-red-700")} onClick={() => field.onChange('negative')}><ThumbsDown className="w-5 h-5 mr-2"/> Needs improvement</Button></div>)}/></div>)}
+                    <div className="space-y-2"><Label htmlFor="message">3. Your message</Label><Controller name="message" control={control} render={({ field }) => (<Textarea id="message" placeholder="Tell us what you think..." className="min-h-[150px]" {...field}/>)}/>{errors.message && <p className="text-sm text-destructive">{errors.message.message}</p>}</div>
+                </CardContent>
+                <CardFooter className="flex justify-end"><Button type="submit" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4"/>}Submit Feedback</Button></CardFooter>
+            </form>
+        </Card>
+    );
+};
+
+// --- Security Tab ---
+const SecurityTab = () => (
     <Card className="interactive-lift">
-        <CardHeader>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>Manage your workspace security settings like Single Sign-On (SSO).</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center justify-between">
-                        Single Sign-On (SSO)
-                        <Lock className="w-4 h-4 text-muted-foreground"/>
-                    </CardTitle>
-                    <CardDescription>
-                        Allow your team to sign in with your corporate identity provider.
-                    </CardDescription>
-                </CardHeader>
-                <CardFooter className="border-t pt-4">
-                    <p className="text-sm text-muted-foreground">
-                        SSO is an enterprise feature. Please contact sales to enable it.
-                    </p>
-                </CardFooter>
-            </Card>
+        <CardHeader><CardTitle>Security</CardTitle><CardDescription>Manage your workspace security settings.</CardDescription></CardHeader>
+        <CardContent className="space-y-4">
+          <Card><CardHeader><CardTitle className="text-base">Change Password</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">Password management is handled by your login provider (e.g., Google or Email). Use their password recovery tools if needed.</p></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-base flex items-center justify-between">Single Sign-On (SSO)<Lock className="w-4 h-4 text-muted-foreground"/></CardTitle><CardDescription>Allow your team to sign in with your corporate identity provider.</CardDescription></CardHeader><CardFooter className="border-t pt-4"><p className="text-sm text-muted-foreground">SSO is an enterprise feature. Please contact sales to enable it.</p></CardFooter></Card>
         </CardContent>
     </Card>
-)
+);
 
 export default function SettingsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -75,38 +116,32 @@ export default function SettingsPage() {
         deductCredits={deductCredits}
       />
       <div className="space-y-6">
-        <div className="flex items-center justify-between space-y-2">
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-                <p className="text-muted-foreground">
-                  Manage your personal, billing, and company information.
-                </p>
-            </div>
+        <div>
+            <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+            <p className="text-muted-foreground">Manage your personal, billing, and company information.</p>
         </div>
         <Tabs defaultValue="profile" className="space-y-6">
-          <ScrollArea className="w-full -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
-                <TabsTrigger value="profile" className="interactive-lift"><User className="mr-2 h-4 w-4"/>Profile & Company</TabsTrigger>
-                <TabsTrigger value="billing" className="interactive-lift"><CreditCard className="mr-2 h-4 w-4"/>Billing</TabsTrigger>
-                <TabsTrigger value="notifications" className="interactive-lift"><Bell className="mr-2 h-4 w-4"/>Notifications</TabsTrigger>
-                <TabsTrigger value="security" className="interactive-lift"><Lock className="mr-2 h-4 w-4"/>Security</TabsTrigger>
+                <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
+                <TabsTrigger value="subscription"><CreditCard className="mr-2 h-4 w-4"/>Subscription</TabsTrigger>
+                <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4"/>Notifications</TabsTrigger>
+                <TabsTrigger value="security"><Lock className="mr-2 h-4 w-4"/>Security</TabsTrigger>
+                <TabsTrigger value="policies"><BookLock className="mr-2 h-4 w-4"/>Policies</TabsTrigger>
+                <TabsTrigger value="feedback"><MessageCircle className="mr-2 h-4 w-4"/>Feedback</TabsTrigger>
               </TabsList>
-          </ScrollArea>
+          </div>
           <TabsContent value="profile" className="space-y-6">
             <SettingsForm 
               onAddCompanyClick={handleAddCompanyClick}
               onEditCompanyClick={handleEditCompanyClick}
             />
           </TabsContent>
-          <TabsContent value="billing">
-            <BillingForm />
-          </TabsContent>
-          <TabsContent value="notifications">
-            <NotificationsForm />
-          </TabsContent>
-           <TabsContent value="security">
-            <SecurityForm />
-          </TabsContent>
+          <TabsContent value="subscription"><BillingForm /></TabsContent>
+          <TabsContent value="notifications"><NotificationsForm /></TabsContent>
+          <TabsContent value="security"><SecurityTab /></TabsContent>
+          <TabsContent value="policies"><PoliciesTab /></TabsContent>
+          <TabsContent value="feedback"><FeedbackTab /></TabsContent>
         </Tabs>
       </div>
     </>

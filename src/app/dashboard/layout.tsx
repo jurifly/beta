@@ -42,11 +42,13 @@ import {
   BookOpenCheck,
   User,
   MoreHorizontal,
+  ChevronRight,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,11 +92,7 @@ const navItemConfig = {
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
   invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail },
   reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText },
-  billing: { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  help: { href: "/dashboard/help", label: "Help and Support", icon: LifeBuoy },
-  feedback: { href: "/dashboard/feedback", label: "Feedback", icon: PenSquare },
-  policies: { href: "/dashboard/legal-policies", label: "Policies", icon: BookLock },
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
@@ -104,66 +102,74 @@ const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
   { ...navItemConfig.caConnect, label: "CA Connect" },
   { ...navItemConfig.aiToolkit },
-  { ...navItemConfig.launchPad },
-  navItemConfig.learn,
-  { ...navItemConfig.capTable },
-  { ...navItemConfig.financials },
-  { ...navItemConfig.documents },
-  { ...navItemConfig.analytics, label: "Analytics" },
-  { ...navItemConfig.community },
+  navItemConfig.capTable,
+  navItemConfig.financials,
 ];
 
 const caNavItems: NavItem[] = [
-  { ...navItemConfig.dashboard },
+  navItemConfig.dashboard,
   { ...navItemConfig.clients, label: "Client Management" },
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
-  navItemConfig.learn,
-  navItemConfig.financials,
-  navItemConfig.documents,
-  { ...navItemConfig.caConnect },
   navItemConfig.reportCenter,
-  navItemConfig.team,
-  navItemConfig.clauseLibrary,
 ];
 
 const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
-  navItemConfig.learn,
-  navItemConfig.documents,
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
-  navItemConfig.team,
 ];
 
 const enterpriseNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.team,
   navItemConfig.clients,
-  navItemConfig.documents,
   { ...navItemConfig.caConnect, label: "Compliance Hub" },
   navItemConfig.analytics,
-  { ...navItemConfig.aiToolkit, label: "AI Compliance Suite" },
-  navItemConfig.workflows,
-  navItemConfig.clauseLibrary,
 ];
 
-
-const getNavItems = (role: UserProfile['role']) => {
+const getSidebarNavItems = (role: UserRole) => {
     switch (role) {
-        case 'CA':
-            return caNavItems;
-        case 'Legal Advisor':
-            return legalAdvisorNavItems;
-        case 'Enterprise':
-            return enterpriseNavItems;
-        case 'Founder':
-        default:
-            return founderNavItems;
+        case 'CA': return caNavItems;
+        case 'Legal Advisor': return legalAdvisorNavItems;
+        case 'Enterprise': return enterpriseNavItems;
+        case 'Founder': default: return founderNavItems;
     }
 }
+
+const getMoreMenuItems = (role: UserRole): NavItem[] => {
+    const allItems = { ...navItemConfig };
+    const baseItems = getSidebarNavItems(role).map(item => item.href);
+    const bottomItems = [navItemConfig.settings.href];
+
+    const moreItemsMap: Record<string, NavItem> = {};
+
+    if(role === 'Founder') {
+        Object.assign(moreItemsMap, {
+            launchPad: allItems.launchPad,
+            documents: allItems.documents,
+            learn: allItems.learn,
+            analytics: { ...allItems.analytics, label: "Analytics" },
+            community: allItems.community,
+        })
+    }
+    if (role === 'CA') {
+        Object.assign(moreItemsMap, {
+            learn: allItems.learn,
+            financials: allItems.financials,
+            documents: allItems.documents,
+            caConnect: allItems.caConnect,
+            team: allItems.team,
+            clauseLibrary: allItems.clauseLibrary,
+        })
+    }
+    // Add other roles as needed
+    
+    return Object.values(moreItemsMap);
+}
+
 
 const getIcon = (iconName: string) => {
     const icons: { [key: string]: React.ReactNode } = {
@@ -182,14 +188,14 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
         navItemConfig.dashboard,
         navItemConfig.clients,
         { ...navItemConfig.aiToolkit, label: "AI Suite" },
-        navItemConfig.caConnect,
+        navItemConfig.invitations,
       ];
     case 'Legal Advisor':
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
         { ...navItemConfig.aiToolkit, label: "AI Tools" },
-        navItemConfig.documents,
+        navItemConfig.clauseLibrary,
       ];
     case 'Enterprise':
       return [
@@ -209,6 +215,55 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
   }
 };
 
+const MoreMenuSheet = () => {
+    const { userProfile } = useAuth();
+    const router = useRouter();
+    if (!userProfile) return null;
+
+    const menuItems = getMoreMenuItems(userProfile.role);
+    
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <button className="inline-flex flex-col items-center justify-center px-1 text-center text-muted-foreground group">
+                    <MoreHorizontal className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
+                    <span className="text-[10px] font-medium">More</span>
+                </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-3/4 rounded-t-lg">
+                <SheetHeader>
+                    <SheetTitle>More Options</SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(100%-4rem)]">
+                    <nav className="flex flex-col gap-1 p-4">
+                        {menuItems.map(item => (
+                             <SheetTrigger asChild key={item.label}>
+                                <Link href={item.href} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                    <div className="flex items-center gap-4">
+                                        <item.icon className="h-5 w-5 text-muted-foreground" />
+                                        <span className="font-medium">{item.label}</span>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                </Link>
+                            </SheetTrigger>
+                        ))}
+                         <SheetTrigger asChild>
+                            <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted mt-4 border-t">
+                                <div className="flex items-center gap-4">
+                                    <Settings className="h-5 w-5 text-muted-foreground" />
+                                    <span className="font-medium">Settings</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                        </SheetTrigger>
+                    </nav>
+                </ScrollArea>
+            </SheetContent>
+        </Sheet>
+    );
+};
+
+
 const BottomNavBar = () => {
     const pathname = usePathname();
     const { userProfile } = useAuth();
@@ -218,7 +273,7 @@ const BottomNavBar = () => {
 
     return (
         <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
-            <div className="grid h-full grid-cols-4 mx-auto">
+            <div className="grid h-full grid-cols-5 mx-auto">
                 {bottomNavItems.map(item => {
                     const isActive = (item.href === '/dashboard' && pathname === item.href) ||
                                      (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -237,6 +292,7 @@ const BottomNavBar = () => {
                         </Link>
                     )
                 })}
+                <MoreMenuSheet />
             </div>
         </div>
     );
@@ -264,7 +320,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
     );
   }
   
-  const navItems = getNavItems(userProfile.role);
+  const navItems = getSidebarNavItems(userProfile.role);
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
   const bonusCredits = userProfile.creditBalance ?? 0;
@@ -274,7 +330,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const totalCreditsRemaining = bonusCredits + dailyRemaining;
 
   const isPro = planHierarchy[userProfile.plan] > 0;
-  const canShowActiveCompany = userProfile.role === 'Founder' || userProfile.role === 'Enterprise';
 
   return (
       <>
@@ -295,24 +350,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                         <span>Legalizd</span>
                     </Link>
                 </div>
-
-                <div className="hidden md:flex items-center gap-4">
-                  {canShowActiveCompany && activeCompany && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Building className="w-4 h-4"/>
-                          <span>{activeCompany.name}</span>
-                      </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground border-l pl-4">
-                      <Globe className="w-4 h-4"/>
-                      <span>{userProfile.legalRegion}</span>
-                  </div>
-                </div>
-
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-4">
-                <Link href="/dashboard/billing" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
+                <Link href="/dashboard/settings?tab=subscription" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
                     <span className="text-muted-foreground">{isDevMode ? 'Unlimited Credits' : `${totalCreditsRemaining} Credits Left`}</span>
                 </Link>
@@ -411,8 +452,9 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
     const pathname = usePathname();
     const { toast } = useToast();
 
-    const bottomNavItems = [navItemConfig.settings, navItemConfig.billing, navItemConfig.help, navItemConfig.feedback, navItemConfig.policies];
+    const bottomNavItems = getMoreMenuItems(userProfile.role);
     const isPro = planHierarchy[userProfile.plan] > 0;
+    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
         if (href === '/dashboard/community') {
@@ -437,8 +479,8 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
               </span>
             </Link>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
+          <ScrollArea className="flex-1">
+             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
                 const isActive = item.href === '/dashboard' 
                   ? pathname === item.href 
@@ -464,29 +506,41 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                 )
               })}
             </nav>
-          </div>
-          <div className="mt-auto p-4">
-            <div className="border-t pt-4 grid items-start px-2 text-sm font-medium lg:px-0">
-               {bottomNavItems.map((item) => (
-                    <TooltipProvider key={item.href} delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Link
-                              href={item.href}
-                              className={cn(
-                                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                                  pathname.startsWith(item.href) && "bg-muted text-primary font-semibold"
-                              )}
-                            >
-                              <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
-                              {item.label}
-                            </Link>
-                          </TooltipTrigger>
-                      </Tooltip>
-                    </TooltipProvider>
-                 )
-               )}
+            <div className="px-2 lg:px-4">
+                <DropdownMenuSeparator />
+                <nav className="grid items-start text-sm font-medium py-4">
+                    <p className="px-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">More</p>
+                    {bottomNavItems.map((item) => (
+                        <TooltipProvider key={item.href} delayDuration={0}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <Link
+                                    href={item.href}
+                                    className={cn(
+                                        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
+                                        pathname.startsWith(item.href) && "bg-muted text-primary font-semibold"
+                                    )}
+                                    >
+                                    <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                    {item.label}
+                                    </Link>
+                                </TooltipTrigger>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ))}
+                </nav>
             </div>
+          </ScrollArea>
+           <div className="mt-auto p-4 border-t">
+              <Link href="/dashboard/settings">
+                <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
+                    <Settings className="h-5 w-5" />
+                    <div className="flex-1">
+                       <p className="font-semibold">Settings</p>
+                    </div>
+                     <ChevronRight className="h-4 w-4" />
+                </div>
+              </Link>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Briefcase, Building, LogOut, Settings, User as UserIcon, Check, PlusCircle, CreditCard, LifeBuoy, PenSquare, BookLock } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,20 +38,7 @@ export function UserNav() {
         await signOut();
     }
   };
-
-  const handleCompanyChange = (companyId: string) => {
-    if (userProfile && companyId !== userProfile.activeCompanyId) {
-      const activeCompany = userProfile.companies.find(c => c.id === companyId);
-      updateUserProfile({ activeCompanyId: companyId }).then(() => {
-        toast({
-            title: "Company Switched",
-            description: `Dashboard updated to ${activeCompany?.name}.`,
-        });
-        window.location.reload();
-      });
-    }
-  };
-
+  
   const handleRoleChange = (role: UserRole) => {
     if (userProfile && role !== userProfile.role) {
       updateUserProfile({ role }).then(() => {
@@ -75,26 +62,14 @@ export function UserNav() {
   }
 
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-  const canShowActiveCompany = userProfile.role === 'Founder' || userProfile.role === 'Enterprise' || userProfile.role === 'CA' || userProfile.role === 'Legal Advisor';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 px-3 flex items-center gap-2 interactive-lift">
-          <Avatar className="h-8 w-8">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full interactive-lift p-0">
+          <Avatar className="h-9 w-9">
              <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
           </Avatar>
-          {canShowActiveCompany && activeCompany ? (
-            <div className="text-left hidden md:block">
-              <p className="text-sm font-medium leading-tight">{activeCompany.name}</p>
-              <p className="text-xs text-muted-foreground">{activeCompany.type}</p>
-            </div>
-          ) : (
-            <div className="text-left hidden md:block">
-              <p className="text-sm font-medium leading-tight">{userProfile.name}</p>
-              <p className="text-xs text-muted-foreground">{userProfile.role}</p>
-            </div>
-          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64" align="end" forceMount>
@@ -109,59 +84,15 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
-        
-        {canShowActiveCompany && userProfile.companies.length > 0 && (
+
+        {activeCompany && (
             <>
                 <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        <Building className="mr-2 h-4 w-4" />
-                        <span>Switch Company</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                            <DropdownMenuRadioGroup value={userProfile.activeCompanyId} onValueChange={handleCompanyChange}>
-                                {userProfile.companies.map(company => (
-                                    <DropdownMenuRadioItem key={company.id} value={company.id}>
-                                        {company.name}
-                                    </DropdownMenuRadioItem>
-                                ))}
-                            </DropdownMenuRadioGroup>
-                             <DropdownMenuSeparator />
-                             <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                <span>Manage Companies</span>
-                             </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                </DropdownMenuSub>
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Active Company: {activeCompany.name}
+                </div>
             </>
         )}
-        
-        <DropdownMenuSeparator />
-
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-          </DropdownMenuItem>
-           <DropdownMenuItem onClick={() => router.push('/dashboard/help')}>
-            <LifeBuoy className="mr-2 h-4 w-4" />
-            <span>Help & Support</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/feedback')}>
-            <PenSquare className="mr-2 h-4 w-4" />
-            <span>Feedback</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/legal-policies')}>
-            <BookLock className="mr-2 h-4 w-4" />
-            <span>Policies</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
         
         <DropdownMenuSeparator />
 
@@ -179,7 +110,6 @@ export function UserNav() {
           </DropdownMenuItem>
            <DropdownMenuSub>
             <DropdownMenuSubTrigger disabled={!isDevMode}>
-              <Briefcase className="mr-2 h-4 w-4" />
               <span>Switch Role</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
