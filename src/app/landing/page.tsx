@@ -93,8 +93,8 @@ export default function LandingPage() {
             <main className="flex-1">
                 {/* Hero Section */}
                 <section className="relative w-full py-24 md:py-32">
-                     <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,hsl(var(--primary-rgb)/0.05)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary-rgb)/0.05)_1px,transparent_1px)] bg-[size:6rem_4rem]">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,hsl(var(--primary-rgb)/0.15),transparent)]"></div>
+                     <div className="absolute inset-0 -z-10 h-full w-full bg-background">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
                     </div>
                     <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
                         <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
@@ -116,6 +116,7 @@ export default function LandingPage() {
                                 alt="Legalizd App Screenshot"
                                 className="rounded-xl border-2 border-muted shadow-2xl transition-transform duration-500 group-hover:scale-105"
                                 data-ai-hint="dashboard modern"
+                                priority
                             />
                         </div>
                     </div>
