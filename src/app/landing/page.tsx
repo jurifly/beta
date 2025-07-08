@@ -119,17 +119,17 @@ export default function LandingPage() {
                             One smart workspace to manage company setup, documents, compliance, and financial insights — all in plain English, powered by AI.
                         </p>
                         <div className="mt-8">
-                             <Button className="text-lg" size="lg" asChild>
+                             <Button className="text-lg interactive-lift" size="lg" asChild>
                                  <Link href="/register">Sign Up Free <ArrowRight className="ml-2"/></Link>
                             </Button>
                         </div>
-                        <div className="mt-16 group">
+                        <div className="mt-16 group interactive-lift">
                             <Image
                                 src="https://placehold.co/1200x600.png"
                                 width={1200}
                                 height={600}
                                 alt="Legalizd App Screenshot"
-                                className="rounded-xl border-2 border-muted shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                                className="rounded-xl border-2 border-muted shadow-2xl"
                                 data-ai-hint="dashboard modern"
                                 priority
                             />
@@ -170,7 +170,7 @@ export default function LandingPage() {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full h-12 w-12 hidden md:flex"
+                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full h-12 w-12 hidden md:flex interactive-lift"
                                 onClick={prevFeature}
                             >
                                 <ChevronLeft className="h-6 w-6" />
@@ -179,7 +179,7 @@ export default function LandingPage() {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rounded-full h-12 w-12 hidden md:flex"
+                                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rounded-full h-12 w-12 hidden md:flex interactive-lift"
                                 onClick={nextFeature}
                             >
                                 <ChevronRight className="h-6 w-6" />
@@ -189,6 +189,7 @@ export default function LandingPage() {
                          <div className="flex md:hidden items-center justify-center gap-4">
                             <Button
                                 variant="outline"
+                                className="interactive-lift"
                                 onClick={prevFeature}
                             >
                                 <ChevronLeft className="h-4 w-4 mr-2" />
@@ -196,6 +197,7 @@ export default function LandingPage() {
                             </Button>
                             <Button
                                 variant="outline"
+                                className="interactive-lift"
                                 onClick={nextFeature}
                             >
                                 Next
@@ -213,7 +215,7 @@ export default function LandingPage() {
                         </h2>
                         <div className="my-8 flex flex-wrap justify-center gap-4">
                             {globalFeatures.map(item => (
-                                <Card key={item} className="p-4 bg-muted/50">
+                                <Card key={item} className="p-4 bg-muted/50 interactive-lift">
                                     <p className="font-semibold text-lg flex items-center gap-2"><CheckCircle className="text-primary"/>{item}</p>
                                 </Card>
                             ))}
@@ -233,7 +235,7 @@ export default function LandingPage() {
                         <p className="text-xl text-muted-foreground mt-4 mb-8 max-w-2xl mx-auto">
                             Beta users get 5 free AI credits/day to generate docs, ask questions, and simulate scenarios.
                         </p>
-                         <Button className="w-full md:w-auto text-lg" size="lg" asChild>
+                         <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
                              <Link href="/register">Sign Up Free <ArrowRight className="ml-2"/></Link>
                         </Button>
                          <p className="text-sm text-muted-foreground mt-4">
