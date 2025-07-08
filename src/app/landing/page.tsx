@@ -218,7 +218,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 3. Product Visual Mockups */}
+        {/* 3. Product Visual Mockups Section */}
          <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

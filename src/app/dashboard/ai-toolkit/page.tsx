@@ -488,8 +488,8 @@ const DocumentIntelligenceTab = () => {
                     <FileScan className="w-16 h-16 text-primary/20" />
                     <p className="font-semibold text-lg text-foreground">Drop a document here</p>
                     <p className="text-sm max-w-xs">Or click the button below to select a file.</p>
-                    <p className="text-xs text-muted-foreground mt-2">(2 Credits per analysis)</p>
-                    <Button type="button" variant="outline" onClick={openFileDialog} className="mt-2 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
+                    <Button type="button" variant="outline" onClick={openFileDialog} className="mt-4 interactive-lift"><UploadCloud className="mr-2 h-4 w-4" />Select File</Button>
+                    <p className="text-xs text-muted-foreground mt-2">2 Credits per analysis</p>
                   </>
                 )}
             </div>
@@ -850,10 +850,11 @@ const DocumentGenerator = () => {
             )}
           </CardContent>
         </ScrollArea>
-        <CardFooter className="mt-auto pt-4 border-t">
+        <CardFooter className="mt-auto pt-4 border-t flex flex-col gap-2">
           <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document (3 Credits)</>}
+            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
           </Button>
+          <p className="text-xs text-muted-foreground">3 Credits per generation.</p>
         </CardFooter>
       </Card>
       <div className="lg:col-span-2 xl:col-span-3 space-y-4">
