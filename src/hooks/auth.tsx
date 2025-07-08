@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -180,11 +181,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setUserProfile(profile);
-    } else {
-      const newProfile = await createNewUserProfile(firebaseUser, 'India', 'Founder');
-      setUserProfile(newProfile);
     }
-  }, [createNewUserProfile]);
+  }, []);
 
   const fetchNotifications = useCallback(async (uid: string) => {
     if (!uid) return;
@@ -272,7 +270,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+        if (firebaseUser) {
+            const userDocRef = doc(db, "users", firebaseUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) {
+                // If user doesn't exist in Firestore, it's a first-time Google sign-in
+                await createNewUserProfile(firebaseUser, 'India', 'Founder');
+            }
+        }
     } catch(error) {
         console.error("Google Sign-In Error:", error);
         toast({

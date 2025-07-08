@@ -46,7 +46,6 @@ const betaRoles: { id: UserRole, label: string }[] = [
 
 export default function RegisterPage() {
   const { user, signUpWithEmailAndPassword, loading } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -74,7 +73,6 @@ export default function RegisterPage() {
       const refId = localStorage.getItem('referralId');
       await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, data.role, refId || undefined);
       localStorage.removeItem('referralId'); // Clear after use
-      router.push('/dashboard');
     } catch (error: any) {
         toast({
             variant: "destructive",
