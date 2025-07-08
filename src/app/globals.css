@@ -8,56 +8,58 @@ html {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light Theme - Clean and professional */
+    --background: 210 40% 98%; /* #F8FAFC - Almost white */
+    --foreground: 222 47% 11%; /* #1E293B - Dark slate gray */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221 83% 53%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 220 100% 60%; /* #3B82F6 - A slightly more accessible Electric Blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 45 93% 47%;
+    --accent: 32 100% 71%; /* #FFB56D - Warm Orange */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --ring: 220 100% 60%;
     --radius: 0.75rem;
-    --chart-1: 221 83% 53%;
+    --chart-1: 220 100% 60%;
     --chart-2: 160 60% 45%;
-    --chart-3: 45 93% 47%;
+    --chart-3: 32 100% 71%;
     --chart-4: 280 85% 60%;
     --chart-5: 0 84% 60%;
   }
  
   .dark {
-    --background: 222 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 6.9%;
+    /* Dark Theme - Confident and Modern */
+    --background: 222 47% 11%; /* #111827 - Dark Slate Blue */
+    --foreground: 210 40% 98%; /* #F8FAFC - Light Gray */
+    --card: 222 47% 15%; /* #1E293B - Slightly lighter card */
     --card-foreground: 210 40% 98%;
-    --popover: 222 84% 4.9%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 220 100% 65%; /* #4F8BFF - Electric Blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222 47% 15%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 222 47% 15%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 45 93% 55%;
+    --accent: 32 100% 71%; /* #FFB56D - Warm Orange */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
+    --ring: 220 100% 65%;
+    --chart-1: 220 100% 65%;
     --chart-2: 160 70% 50%;
-    --chart-3: 45 93% 55%;
+    --chart-3: 32 100% 71%;
     --chart-4: 280 90% 70%;
     --chart-5: 0 72% 50%;
   }
@@ -71,7 +73,7 @@ html {
     @apply bg-background text-foreground;
   }
    .dark body {
-    background-image: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(222, 74%, 2.9%) 100%);
+    background-image: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(222, 84%, 4.9%) 100%);
   }
 }
 
@@ -83,6 +85,6 @@ html {
     @apply shadow-xl -translate-y-1 scale-[1.02];
   }
   .dark .interactive-lift:hover {
-    box-shadow: 0 10px 15px -3px hsla(var(--accent) / 0.1), 0 4px 6px -4px hsla(var(--accent) / 0.1);
+    box-shadow: 0 10px 15px -3px hsla(var(--primary) / 0.1), 0 4px 6px -4px hsla(var(--primary) / 0.1);
   }
 }
