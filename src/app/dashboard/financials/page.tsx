@@ -4,18 +4,16 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef, useTransition, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
-import { getTaxAdviceAction, getFinancialReportAction } from "./actions";
 import type { TaxAdvisorOutput } from "@/ai/flows/tax-advisor-flow";
-import type { FinancialReportOutput } from "@/ai/flows/financial-report-flow";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart, FileText } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart, FileText, Calculator } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -47,7 +45,6 @@ type PersonalFormData = z.infer<typeof personalTaxCalculatorSchema>;
 const corporateTaxCalculatorSchema = z.object({
     revenue: z.coerce.number().min(0, "Revenue cannot be negative.").default(0),
     profit: z.coerce.number().min(0, "Profit cannot be negative.").default(0),
-    companyType: z.string({ required_error: "Please select a company type."}).min(1, "Please select a company type."),
 });
 type CorporateFormData = z.infer<typeof corporateTaxCalculatorSchema>;
 
@@ -58,10 +55,19 @@ const InfoCard = ({ title, value }: { title: string, value: string }) => (
     </div>
 )
 
+const formatCurrency = (num: number, region = 'India') => {
+  const options: Intl.NumberFormatOptions = {
+      maximumFractionDigits: 0,
+      style: 'currency',
+      currency: region === 'India' ? 'INR' : 'USD' // Simple region check
+  };
+  return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
+}
+
 const PersonalTaxCalculator = () => {
-  const { userProfile, deductCredits } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<TaxAdvisorOutput | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -72,25 +78,83 @@ const PersonalTaxCalculator = () => {
       deductions: { section80C: 0, section80D: 0, hra: 0, otherDeductions: 0 },
     },
   });
+  
+  const calculateIndianTax = (data: PersonalFormData): TaxAdvisorOutput => {
+      const grossIncome = data.income.salary + data.income.businessIncome + data.income.capitalGains + data.income.otherIncome;
 
-  const onSubmit = async (data: PersonalFormData) => {
-    if (!userProfile || !await deductCredits(3)) return;
+      // --- New Regime Calculation ---
+      const standardDeductionNew = data.income.salary > 0 ? 50000 : 0;
+      const taxableNew = Math.max(0, grossIncome - standardDeductionNew);
+      let taxNew = 0;
+      if (taxableNew <= 700000) {
+          taxNew = 0; // Full rebate
+      } else {
+          if (taxableNew > 1500000) taxNew += (taxableNew - 1500000) * 0.30;
+          if (taxableNew > 1200000) taxNew += (Math.min(taxableNew, 1500000) - 1200000) * 0.20;
+          if (taxableNew > 900000) taxNew += (Math.min(taxableNew, 1200000) - 900000) * 0.15;
+          if (taxableNew > 600000) taxNew += (Math.min(taxableNew, 900000) - 600000) * 0.10;
+          if (taxableNew > 300000) taxNew += (Math.min(taxableNew, 600000) - 300000) * 0.05;
+      }
+      const finalTaxNew = taxNew > 0 ? taxNew * 1.04 : 0; // 4% cess
 
-    startTransition(async () => {
-        setResult(null);
-        const response = await getTaxAdviceAction({ 
-            income: data.income,
-            deductions: data.deductions,
-            entityType: 'Individual',
-            legalRegion: userProfile.legalRegion
-        });
-        if (response.error) {
-            toast({ variant: 'destructive', title: "Calculation Failed", description: response.error });
-        } else {
-            setResult(response.data);
-            toast({ title: "Calculation Complete!", description: "Your tax summary is ready." });
+      // --- Old Regime Calculation ---
+      const standardDeductionOld = data.income.salary > 0 ? 50000 : 0;
+      const totalDeductionsOld = data.deductions.section80C + data.deductions.section80D + data.deductions.hra + data.deductions.otherDeductions + standardDeductionOld;
+      const taxableOld = Math.max(0, grossIncome - totalDeductionsOld);
+      let taxOld = 0;
+      if (taxableOld <= 500000) {
+        taxOld = 0; // Full rebate
+      } else {
+        if (taxableOld > 1000000) taxOld += (taxableOld - 1000000) * 0.30 + 112500;
+        else if (taxableOld > 500000) taxOld += (taxableOld - 500000) * 0.20 + 12500;
+        else if (taxableOld > 250000) taxOld += (taxableOld - 250000) * 0.05;
+      }
+      const finalTaxOld = taxOld > 0 ? taxOld * 1.04 : 0; // 4% cess
+
+      const recommended = finalTaxNew < finalTaxOld ? 'New' : 'Old';
+
+      return {
+          oldRegime: {
+              grossIncome: formatCurrency(grossIncome),
+              totalDeductions: formatCurrency(totalDeductionsOld),
+              taxableIncome: formatCurrency(taxableOld),
+              taxPayable: formatCurrency(finalTaxOld),
+              effectiveRate: grossIncome > 0 ? `${((finalTaxOld / grossIncome) * 100).toFixed(2)}%` : '0.00%',
+          },
+          newRegime: {
+              grossIncome: formatCurrency(grossIncome),
+              totalDeductions: formatCurrency(standardDeductionNew),
+              taxableIncome: formatCurrency(taxableNew),
+              taxPayable: formatCurrency(finalTaxNew),
+              effectiveRate: grossIncome > 0 ? `${((finalTaxNew / grossIncome) * 100).toFixed(2)}%` : '0.00%',
+          },
+          recommendedRegime: recommended,
+          recommendationReason: `The ${recommended} Regime results in lower tax liability for your income and deduction profile.`,
+          optimizationTips: [
+              'Maximize 80C deductions: PPF, ELSS, life insurance premiums, and home loan principal are common options.',
+              'Claim 80D for health insurance premiums for yourself, your family, and senior citizen parents.',
+              'If you live on rent and receive HRA, ensure you claim the full eligible exemption.',
+              'Contribute to the National Pension Scheme (NPS) for an additional deduction under Sec 80CCD(1B).'
+          ],
+          summary: `Based on your inputs, your estimated tax liability is ${formatCurrency(Math.min(finalTaxOld, finalTaxNew))}. The ${recommended} regime is recommended.`
+      };
+  }
+
+  const onSubmit = (data: PersonalFormData) => {
+    setIsCalculating(true);
+    setResult(null);
+    // Simulate calculation time
+    setTimeout(() => {
+        if (userProfile?.legalRegion !== 'India') {
+             toast({ variant: 'destructive', title: "Unsupported Region", description: "The tax calculator currently only supports tax laws for India." });
+             setIsCalculating(false);
+             return;
         }
-    });
+        const calculatedResult = calculateIndianTax(data);
+        setResult(calculatedResult);
+        toast({ title: "Calculation Complete!", description: "Your tax summary is ready." });
+        setIsCalculating(false);
+    }, 500);
   };
 
   const handleDownloadPdf = () => {
@@ -128,22 +192,22 @@ const PersonalTaxCalculator = () => {
               <div className="space-y-2"><Label htmlFor="otherDeductions">Other Deductions</Label><Controller name="deductions.otherDeductions" control={control} render={({ field }) => <Input type="number" id="otherDeductions" {...field} />} /></div>
             </CardContent>
           </Card>
-          <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}Calculate & Advise</Button>
+          <Button type="submit" className="w-full" disabled={isCalculating}>{isCalculating ? <Loader2 className="mr-2 animate-spin"/> : <Calculator className="mr-2"/>}Calculate Tax</Button>
         </form>
         <div className="lg:col-span-3 space-y-6">
             <Card className="min-h-[600px] sticky top-6 interactive-lift">
                 <CardHeader>
                     <div className="flex justify-between items-start">
-                        <div><CardTitle>Tax Report & AI Advice</CardTitle><CardDescription>Your personalized tax breakdown and recommendations.</CardDescription></div>
+                        <div><CardTitle>Tax Report</CardTitle><CardDescription>Your personalized tax breakdown.</CardDescription></div>
                         {result && <Button variant="outline" size="sm" onClick={handleDownloadPdf}><Download className="mr-2"/>Download PDF</Button>}
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {isPending && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">AI is crunching the numbers...</p></div>}
-                    {!isPending && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Sparkles className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your tax analysis will appear here.</p></div>}
-                    {!isPending && result && (
+                    {isCalculating && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Calculating your taxes...</p></div>}
+                    {!isCalculating && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Calculator className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your tax analysis will appear here.</p></div>}
+                    {!isCalculating && result && (
                         <div ref={resultRef} className="p-4 bg-background animate-in fade-in-50">
-                            <Alert className="mb-6 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-300"><AlertTriangle className="h-4 w-4 !text-amber-500"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is an AI-generated estimate for informational purposes only. Consult a professional for final tax advice.</AlertDescription></Alert>
+                            <Alert className="mb-6 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-300"><AlertTriangle className="h-4 w-4 !text-amber-500"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is an estimate for informational purposes only. Consult a professional for final tax advice.</AlertDescription></Alert>
                             <div className="p-4 text-center rounded-lg bg-primary/10 border border-primary/20 mb-6"><p className="text-sm font-semibold text-primary">Recommended Regime</p><p className="text-2xl font-bold">{result.recommendedRegime}</p><p className="text-xs text-muted-foreground">{result.recommendationReason}</p></div>
                              <p className="text-sm text-center text-muted-foreground mb-6">{result.summary}</p>
                             <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -151,7 +215,7 @@ const PersonalTaxCalculator = () => {
                                 <div className="p-4 border rounded-lg space-y-3"><h3 className="font-semibold flex items-center gap-2"><CheckCircle className="text-green-500"/> New Regime</h3><dl className="space-y-2"><InfoCard title="Gross Income" value={result.newRegime.grossIncome} /><InfoCard title="Deductions" value={result.newRegime.totalDeductions} /><InfoCard title="Taxable Income" value={result.newRegime.taxableIncome} /><InfoCard title="Tax Payable" value={result.newRegime.taxPayable} />{result.newRegime.effectiveRate && <InfoCard title="Effective Tax Rate" value={result.newRegime.effectiveRate} />}</dl></div>
                             </div>
                            <Separator className="my-6"/>
-                           <div><h3 className="font-semibold mb-3 flex items-center gap-2"><Lightbulb className="text-primary"/> AI Tax Saving Tips</h3><ul className="space-y-3">{result.optimizationTips.map((tip, index) => (<li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border"><TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/><span>{tip}</span></li>))}</ul></div>
+                           <div><h3 className="font-semibold mb-3 flex items-center gap-2"><Lightbulb className="text-primary"/> Tax Saving Tips</h3><ul className="space-y-3">{result.optimizationTips.map((tip, index) => (<li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border"><TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/><span>{tip}</span></li>))}</ul></div>
                         </div>
                     )}
                 </CardContent>
@@ -162,44 +226,75 @@ const PersonalTaxCalculator = () => {
 }
 
 const CorporateTaxCalculator = () => {
-    const { userProfile, deductCredits } = useAuth();
+    const { userProfile } = useAuth();
     const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
+    const [isCalculating, setIsCalculating] = useState(false);
     const [result, setResult] = useState<TaxAdvisorOutput | null>(null);
 
-    const { control, handleSubmit, formState: { errors } } = useForm<CorporateFormData>({
+    const { control, handleSubmit } = useForm<CorporateFormData>({
         resolver: zodResolver(corporateTaxCalculatorSchema),
-        defaultValues: { revenue: 0, profit: 0, companyType: "" },
+        defaultValues: { revenue: 0, profit: 0 },
     });
-
-    const onSubmit = async (data: CorporateFormData) => {
-        if (!userProfile || !await deductCredits(3)) return;
-        startTransition(async () => {
-            setResult(null);
-            const response = await getTaxAdviceAction({
-                income: { businessIncome: data.profit, salary: data.revenue }, // Use salary for revenue to fit schema
-                deductions: {},
-                entityType: 'Company',
-                legalRegion: userProfile.legalRegion
-            });
-            if (response.error) {
-                toast({ variant: 'destructive', title: "Calculation Failed", description: response.error });
-            } else {
-                setResult(response.data);
-                toast({ title: "Calculation Complete!", description: "Your corporate tax summary is ready." });
-            }
-        });
-    };
     
-    const companyTypesByRegion = useMemo(() => {
-        const types: Record<string, string[]> = {
-            'India': ['Private Limited Company', 'LLP'],
-            'USA': ['C Corporation', 'S Corporation', 'LLC'],
-            'UK': ['Limited Company'],
-            'Australia': ['Proprietary Limited Company'],
+    const calculateCorporateTaxes = (data: CorporateFormData, region: string): TaxAdvisorOutput => {
+        const { revenue, profit } = data;
+        let tax = 0;
+        let summary = "";
+        let tips: string[] = [];
+
+        if (region === 'India') {
+            const taxRate = revenue <= 4000000000 ? 0.25 : 0.30;
+            let baseTax = profit * taxRate;
+            let surcharge = 0;
+            if (profit > 100000000) { // 10 Cr
+                surcharge = baseTax * 0.12;
+            } else if (profit > 10000000) { // 1 Cr
+                surcharge = baseTax * 0.07;
+            }
+            tax = (baseTax + surcharge) * 1.04; // 4% cess
+            summary = `For a company with a profit of ${formatCurrency(profit)}, the estimated tax is ${formatCurrency(tax)} based on a ${taxRate*100}% rate plus applicable surcharge and cess.`;
+            tips = [
+                'Claim full depreciation on eligible assets as per the Companies Act and Income Tax Act.',
+                'Ensure accurate classification of capital vs. revenue expenditure to optimize tax outgo.',
+                'File Form 15CA/CB for foreign remittances to avoid penalties.'
+            ];
+        } else {
+            // Simplified USA C-Corp for demo
+            tax = profit * 0.21;
+            summary = `For a US C-Corporation, the estimated federal tax is ${formatCurrency(tax, 'USA')} based on a flat 21% rate. State taxes are not included.`;
+            tips = ['Explore R&D tax credits for eligible technology-related expenses.', 'Structure employee benefits in a tax-efficient manner.', 'Consult with a CPA for state-specific tax planning opportunities.'];
+        }
+
+        const calculation = {
+            grossIncome: formatCurrency(revenue, region),
+            totalDeductions: "N/A",
+            taxableIncome: formatCurrency(profit, region),
+            taxPayable: formatCurrency(tax, region),
+            effectiveRate: revenue > 0 ? `${((tax / revenue) * 100).toFixed(2)}%` : '0.00%',
         };
-        return types[userProfile?.legalRegion || 'India'] || [];
-    }, [userProfile?.legalRegion]);
+        
+        return {
+            oldRegime: calculation,
+            newRegime: calculation,
+            recommendedRegime: 'N/A',
+            recommendationReason: 'Only one tax regime applies for corporate entities.',
+            optimizationTips: tips,
+            summary: summary,
+        };
+    };
+
+    const onSubmit = (data: CorporateFormData) => {
+        if (!userProfile) return;
+        setIsCalculating(true);
+        setResult(null);
+
+        setTimeout(() => {
+            const calculatedResult = calculateCorporateTaxes(data, userProfile.legalRegion);
+            setResult(calculatedResult);
+            toast({ title: "Calculation Complete!" });
+            setIsCalculating(false);
+        }, 500);
+    };
 
     return (
         <div className="grid lg:grid-cols-5 gap-6 items-start">
@@ -207,22 +302,19 @@ const CorporateTaxCalculator = () => {
                 <Card className="interactive-lift">
                     <CardHeader><CardTitle>Corporate Financials</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2"><Label>Company Type</Label><Controller name="companyType" control={control} render={({ field }) => ( <Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger><SelectContent>{companyTypesByRegion.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select> )} />
-                         {errors.companyType && <p className="text-sm text-destructive">{errors.companyType.message}</p>}
-                        </div>
                         <div className="space-y-2"><Label>Annual Revenue</Label><Controller name="revenue" control={control} render={({ field }) => <Input type="number" {...field} />} /></div>
                         <div className="space-y-2"><Label>Profit Before Tax (PBT)</Label><Controller name="profit" control={control} render={({ field }) => <Input type="number" {...field} />} /></div>
                     </CardContent>
                 </Card>
-                <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}Calculate Corporate Tax</Button>
+                <Button type="submit" className="w-full" disabled={isCalculating}>{isCalculating ? <Loader2 className="mr-2 animate-spin"/> : <Calculator className="mr-2"/>}Calculate Corporate Tax</Button>
             </form>
             <div className="lg:col-span-3 space-y-6">
                 <Card className="min-h-[400px] interactive-lift">
-                    <CardHeader><CardTitle>Corporate Tax Report</CardTitle><CardDescription>AI-powered corporate tax estimation.</CardDescription></CardHeader>
+                    <CardHeader><CardTitle>Corporate Tax Report</CardTitle><CardDescription>A simplified corporate tax estimation.</CardDescription></CardHeader>
                     <CardContent>
-                        {isPending && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Calculating...</p></div>}
-                        {!isPending && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Sparkles className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your corporate tax report will appear here.</p></div>}
-                        {!isPending && result && (
+                        {isCalculating && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Calculating...</p></div>}
+                        {!isCalculating && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Calculator className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your corporate tax report will appear here.</p></div>}
+                        {!isCalculating && result && (
                             <div className="animate-in fade-in-50">
                                 <Alert className="mb-6"><AlertTriangle className="h-4 w-4"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is a simplified estimate. Consult a professional for accurate tax filing.</AlertDescription></Alert>
                                 <p className="text-sm text-center text-muted-foreground mb-6">{result.summary}</p>
@@ -235,7 +327,7 @@ const CorporateTaxCalculator = () => {
                                     </dl>
                                 </div>
                                 <Separator className="my-6"/>
-                                <div><h3 className="font-semibold mb-3 flex items-center gap-2"><Lightbulb className="text-primary"/> AI Optimization Tips</h3><ul className="space-y-3">{result.optimizationTips.map((tip, index) => (<li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border"><TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/><span>{tip}</span></li>))}</ul></div>
+                                <div><h3 className="font-semibold mb-3 flex items-center gap-2"><Lightbulb className="text-primary"/> Tax Optimization Tips</h3><ul className="space-y-3">{result.optimizationTips.map((tip, index) => (<li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border"><TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/><span>{tip}</span></li>))}</ul></div>
                             </div>
                         )}
                     </CardContent>
@@ -246,10 +338,8 @@ const CorporateTaxCalculator = () => {
 };
 
 const FinancialSnapshot = () => {
-    const { userProfile, updateUserProfile, deductCredits } = useAuth();
+    const { userProfile, updateUserProfile } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
-    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-    const [report, setReport] = useState<string | null>(null);
     const { toast } = useToast();
 
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
@@ -282,26 +372,6 @@ const FinancialSnapshot = () => {
             toast({ variant: 'destructive', title: "Save Failed", description: "Could not save financial data."});
         } finally {
             setIsSaving(false);
-        }
-    };
-
-    const handleGenerateReport = async () => {
-        if (!userProfile) return;
-        if (!await deductCredits(5)) return;
-        setIsGeneratingReport(true);
-        setReport(null);
-        try {
-            const response = await getFinancialReportAction({ monthlyRevenue: revenue, monthlyExpenses: expenses, cashBalance, legalRegion: userProfile.legalRegion });
-            if (response.error) {
-                toast({ variant: 'destructive', title: "Report Generation Failed", description: response.error });
-            } else {
-                setReport(response.data?.report || null);
-                toast({ title: "Report Generated!", description: "Your financial health summary is ready." });
-            }
-        } catch(e) {
-            toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred." });
-        } finally {
-            setIsGeneratingReport(false);
         }
     };
     
@@ -341,10 +411,6 @@ const FinancialSnapshot = () => {
                                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
                                 Save & Recalculate
                             </Button>
-                             <Button onClick={handleGenerateReport} disabled={isGeneratingReport || !revenue || !expenses} className="w-full sm:w-auto">
-                                {isGeneratingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
-                                Generate AI Report
-                            </Button>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -359,17 +425,6 @@ const FinancialSnapshot = () => {
                     </div>
                 </CardContent>
             </Card>
-            {isGeneratingReport && <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Generating Financial Report...</p></div>}
-            {report && (
-                <Card className="interactive-lift animate-in fade-in-50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><FileText/> AI Financial Health Report</CardTitle>
-                    </CardHeader>
-                    <CardContent className="prose dark:prose-invert max-w-none">
-                        <ReactMarkdown>{report}</ReactMarkdown>
-                    </CardContent>
-                </Card>
-            )}
         </div>
     )
 }
