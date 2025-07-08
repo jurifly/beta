@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   ArrowRight,
   Calendar,
@@ -31,7 +32,8 @@ import {
   BarChart,
   CalendarClock,
   CheckCircle,
-  FileUp
+  FileUp,
+  LineChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,14 +55,21 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
+import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell } from "recharts";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
 import { addDays, format, startOfToday, differenceInDays } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { ComplianceActivityChart } from "@/components/dashboard/compliance-activity-chart";
+
+const ComplianceActivityChart = dynamic(
+  () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
+  { 
+    ssr: false,
+    loading: () => <Skeleton className="h-[350px] w-full rounded-lg" />
+  }
+);
 
 
 // --- Helper Components ---
@@ -740,7 +749,7 @@ function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                         <RechartsPieChart>
                             <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
                             <Pie data={riskDistribution} dataKey="clients" nameKey="name" innerRadius={60} strokeWidth={5} />
-                            <Legend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
+                            <ChartLegend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
                         </RechartsPieChart>
                         </ChartContainer>
                     </CardContent>
@@ -902,7 +911,7 @@ export default function Dashboard() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight font-headline">
+            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
               Welcome, {userProfile?.name.split(" ")[0]}!
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base">

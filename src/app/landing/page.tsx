@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 const LandingHeader = () => (
   <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -130,6 +131,8 @@ const AnimatedCounter = ({ end }: { end: number }) => {
 };
 
 export default function LandingPage() {
+  const [currentFeature, setCurrentFeature] = useState(0);
+
   const promiseFeatures = [
     { text: "Auto-generate legal documents", icon: FileText },
     { text: "Visualize runway & tax risks", icon: GanttChartSquare },
@@ -138,9 +141,9 @@ export default function LandingPage() {
   ];
   
   const productMockups = [
-    { title: "Compliance Hub", image: "https://placehold.co/1200x750.png", hint: "dashboard compliance" },
-    { title: "Document Generator", image: "https://placehold.co/1200x750.png", hint: "document generation" },
-    { title: "Cap Table Modeling", image: "https://placehold.co/1200x750.png", hint: "financial chart" },
+    { title: "Company Overview", image: "https://placehold.co/1200x750.png", hint: "dashboard compliance" },
+    { title: "LaunchPad", image: "https://placehold.co/1200x750.png", hint: "startup checklist" },
+    { title: "AI Document Generator", image: "https://placehold.co/1200x750.png", hint: "document generation" },
   ];
   
   const howItWorksSteps = [
@@ -154,6 +157,9 @@ export default function LandingPage() {
     { name: "Product Hunt", component: <p className="font-bold tracking-wider text-muted-foreground/60">PRODUCT HUNT</p> },
     { name: "BetaList", component: <p className="font-bold text-muted-foreground/60">BetaList</p> },
   ];
+
+  const nextFeature = () => setCurrentFeature((prev) => (prev + 1) % productMockups.length);
+  const prevFeature = () => setCurrentFeature((prev) => (prev - 1 + productMockups.length) % productMockups.length);
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-body">
@@ -171,11 +177,11 @@ export default function LandingPage() {
               compliance — all in one dashboard.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button className="text-lg w-full sm:w-auto" size="lg" asChild>
+              <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" asChild>
                 <Link href="/register">Join Beta Now</Link>
               </Button>
               <Button
-                className="text-lg w-full sm:w-auto"
+                className="text-lg w-full sm:w-auto interactive-lift"
                 size="lg"
                 variant="outline"
               >
@@ -220,22 +226,34 @@ export default function LandingPage() {
         {/* 3. Product Visual Mockups Section */}
          <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {productMockups.map((mockup, index) => (
-                        <Card key={index} className="bg-muted/50 overflow-hidden interactive-lift animate-in fade-in-25 slide-in-from-bottom-8 duration-700" style={{'--index': index} as React.CSSProperties}>
-                             <CardContent className="p-0">
-                                <Image
-                                    src={mockup.image}
-                                    width={1200}
-                                    height={750}
-                                    alt={mockup.title}
-                                    className="border-b"
-                                    data-ai-hint={mockup.hint}
-                                />
-                            </CardContent>
-                            <div className="p-4"><p className="font-medium text-center">{mockup.title}</p></div>
-                        </Card>
-                    ))}
+                 <div className="relative mx-auto max-w-4xl">
+                    <div className="relative w-full overflow-hidden">
+                      <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentFeature * 100}%)` }}>
+                        {productMockups.map((mockup, index) => (
+                          <div key={index} className="w-full flex-shrink-0">
+                             <Card className="bg-muted/50 overflow-hidden interactive-lift">
+                                <CardContent className="p-0">
+                                    <Image
+                                        src={mockup.image}
+                                        width={1200}
+                                        height={750}
+                                        alt={mockup.title}
+                                        className="border-b"
+                                        data-ai-hint={mockup.hint}
+                                    />
+                                </CardContent>
+                                <div className="p-4"><p className="font-medium text-center">{mockup.title}</p></div>
+                            </Card>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <Button onClick={prevFeature} variant="outline" size="icon" className="absolute top-1/2 -left-4 md:-left-12 -translate-y-1/2 rounded-full h-10 w-10">
+                      <ArrowRight className="h-4 w-4 transform rotate-180" />
+                    </Button>
+                    <Button onClick={nextFeature} variant="outline" size="icon" className="absolute top-1/2 -right-4 md:-right-12 -translate-y-1/2 rounded-full h-10 w-10">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
                  </div>
             </div>
         </section>
@@ -267,7 +285,7 @@ export default function LandingPage() {
                 <div className="my-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
                    {brandLogos.map(logo => <div key={logo.name}>{logo.component}</div>)}
                 </div>
-                <Button className="w-full md:w-auto text-lg" size="lg" asChild>
+                <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
                     <Link href="/register">Join Founders in Beta</Link>
                 </Button>
                 <p className="text-sm text-muted-foreground mt-4">

@@ -47,8 +47,8 @@ export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartP
   const [selectedYear, setSelectedYear] = React.useState(years[0] || new Date().getFullYear().toString());
   
   React.useEffect(() => {
-    if (!years.includes(selectedYear)) {
-      setSelectedYear(years[0] || new Date().getFullYear().toString());
+    if (years.length > 0 && !years.includes(selectedYear)) {
+      setSelectedYear(years[0]);
     }
   }, [years, selectedYear]);
 

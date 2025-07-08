@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/auth';
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { Inter, Source_Code_Pro, Playfair_Display } from 'next/font/google'
+import { Inter, Source_Code_Pro } from 'next/font/google'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,12 +18,6 @@ const sourceCodePro = Source_Code_Pro({
   weight: ['400', '500'],
   display: 'swap',
   variable: '--font-source-code-pro',
-});
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-playfair-display',
 });
 
 
@@ -42,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${sourceCodePro.variable} ${playfairDisplay.variable} font-body antialiased`}>
+      <body className={`${inter.variable} ${sourceCodePro.variable} font-body antialiased`}>
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <ThemeProvider
             attribute="class"

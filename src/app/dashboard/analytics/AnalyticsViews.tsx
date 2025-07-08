@@ -142,7 +142,7 @@ export function FounderAnalytics() {
     <div className="space-y-6">
       <Card className="interactive-lift">
           <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline"><ShieldCheck className="w-6 h-6 text-primary"/> Legal Hygiene Score</CardTitle>
+              <CardTitle className="flex items-center gap-2"><ShieldCheck className="w-6 h-6 text-primary"/> Legal Hygiene Score</CardTitle>
               <CardDescription>An AI-generated score based on your company's legal preparedness and compliance health.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">

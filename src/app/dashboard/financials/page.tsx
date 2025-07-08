@@ -19,8 +19,8 @@ import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ReactMarkdown from "react-markdown";
-
+import { Bar, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
@@ -348,16 +348,19 @@ const FinancialSnapshot = () => {
     const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
     const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
 
-    const { burnRate, runway, runwayLabel } = useMemo(() => {
+    const { burnRate, runway, runwayLabel, chartData } = useMemo(() => {
         const burn = expenses - revenue;
-        if (burn <= 0) {
-            return { burnRate: burn, runway: "Profitable", runwayLabel: "Financial Status" };
+        let runwayMonthsText = "Profitable";
+        if (burn > 0) {
+            runwayMonthsText = cashBalance > 0 ? `${Math.floor(cashBalance / burn)} months` : "0 months";
         }
-        if (cashBalance <= 0) {
-            return { burnRate: burn, runway: "0 months", runwayLabel: "Estimated Runway" };
-        }
-        const runwayMonths = Math.floor(cashBalance / burn);
-        return { burnRate: burn, runway: `${runwayMonths} months`, runwayLabel: "Estimated Runway" };
+        
+        return {
+            burnRate: burn,
+            runway: runwayMonthsText,
+            runwayLabel: burn > 0 ? "Estimated Runway" : "Financial Status",
+            chartData: [ { name: 'Revenue', value: revenue, fill: 'hsl(var(--chart-2))' }, { name: 'Expenses', value: expenses, fill: 'hsl(var(--chart-5))' } ]
+        };
     }, [revenue, expenses, cashBalance]);
 
     const handleSaveFinancials = async () => {
@@ -414,7 +417,7 @@ const FinancialSnapshot = () => {
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-muted border text-center">
+                         <div className="p-4 rounded-lg bg-muted border text-center">
                             <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
                             <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
                         </div>
@@ -422,6 +425,25 @@ const FinancialSnapshot = () => {
                             <p className="text-sm text-muted-foreground">{runwayLabel}</p>
                             <p className="text-2xl font-bold">{runway}</p>
                         </div>
+                         <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Revenue vs. Expenses</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ChartContainer config={{}} className="h-48 w-full">
+                                    <RechartsBarChart layout="vertical" data={chartData} margin={{ left: 10 }}>
+                                        <XAxis type="number" hide />
+                                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
+                                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                                        <Bar dataKey="value" radius={5} >
+                                             {chartData.map((entry) => (
+                                                <Cell key={entry.name} fill={entry.fill} />
+                                             ))}
+                                        </Bar>
+                                    </RechartsBarChart>
+                                </ChartContainer>
+                            </CardContent>
+                        </Card>
                     </div>
                 </CardContent>
             </Card>
@@ -436,7 +458,7 @@ export default function FinancialsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Financials</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Financials</h1>
                 <p className="text-muted-foreground">Tools to help you calculate taxes and manage your startup's financial health.</p>
             </div>
             <Tabs defaultValue="snapshot" className="w-full">
