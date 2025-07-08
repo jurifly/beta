@@ -1,10 +1,12 @@
+
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, ShieldCheck, Users, Zap } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowRight, ShieldCheck, Users, Zap, Briefcase, PieChart, BookUser, Archive, Network } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 
 
@@ -44,6 +46,14 @@ const LandingFooter = () => (
 
 
 export default function LandingPage() {
+    const features = [
+        { icon: Network, title: "Launch Pad", description: "Choose the right structure. Generate docs. Kickstart your company setup." },
+        { icon: PieChart, title: "Cap Table & Runway", description: "Visualize ownership, dilution, burn rate & runway — without spreadsheets." },
+        { icon: Zap, title: "AI Legal Toolkit", description: "Draft contracts. Analyze clauses. Ask legal/tax questions — all via AI." },
+        { icon: Archive, title: "Document Vault", description: "Store & manage your company’s critical documents, securely and globally." },
+        { icon: Users, title: "Advisor Connect", description: "Add your legal/finance advisor. Sync updates, filings, and requests in real time." },
+    ];
+    
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <LandingHeader />
@@ -55,20 +65,15 @@ export default function LandingPage() {
                     </div>
                     <div className="container mx-auto grid max-w-screen-lg lg:grid-cols-2 place-items-center gap-10 px-4 sm:px-6 lg:px-8">
                         <div className="text-center lg:text-start space-y-6">
-                            <div className="text-4xl md:text-6xl font-bold">
-                                <h1 className="inline">
-                                    <span className="inline text-primary">
-                                        Your AI Co-Pilot
-                                    </span>{" "}
-                                    for Startup Compliance & Docs
-                                </h1>
-                            </div>
+                            <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
+                                Built for Founders. Trusted by Professionals.
+                            </h1>
                             <p className="text-lg md:text-xl text-muted-foreground mx-auto lg:mx-0 max-w-2xl">
-                                Organize legal tasks, track compliance, and collaborate with your CA in one place.
+                                Incorporate smarter, manage equity, track compliance, and generate legal docs — all in one intelligent workspace.
                             </p>
                             <div className="space-y-4 md:space-y-0 md:space-x-4">
                                  <Button className="w-full md:w-auto text-lg" size="lg" asChild>
-                                     <Link href="/register">Join Free Beta</Link>
+                                     <Link href="/register">Join Beta – It’s Free</Link>
                                 </Button>
                             </div>
                         </div>
@@ -79,113 +84,101 @@ export default function LandingPage() {
                                 height={480}
                                 alt="Legalizd Dashboard Screenshot"
                                 className="rounded-lg border-2 border-muted shadow-2xl transition-transform duration-500 group-hover:scale-105"
-                                data-ai-hint="dashboard laptop"
+                                data-ai-hint="dashboard modern"
                             />
                         </div>
                     </div>
                 </section>
                 
-                {/* Key Benefits Section */}
+                {/* Features Section */}
                 <section id="features" className="w-full py-20 md:py-32 bg-muted/50">
-                    <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8">
+                    <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                         <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                                    Key <span className="text-primary">Benefits</span>
-                                </h2>
-                                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                                    Everything you need to stay compliant and scale your business, all in one place.
-                                </p>
-                            </div>
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
+                                Your Command Center for Company Ops
+                            </h2>
                         </div>
-                        <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:grid-cols-3 lg:gap-12 justify-center">
-                             <div className="grid gap-1 text-left">
-                                <h3 className="text-lg font-bold flex items-center gap-2"><ShieldCheck className="text-primary"/>Compliance Dashboard</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    See your company's legal hygiene score, track filing deadlines, and get automated reminders so nothing falls through the cracks.
-                                </p>
-                             </div>
-                             <div className="grid gap-1 text-left">
-                                <h3 className="text-lg font-bold flex items-center gap-2"><Zap className="text-primary"/>AI Document Tools</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Instantly generate NDAs, employment letters, and other legal docs. Analyze incoming contracts for risks and get AI-powered insights.
-                                </p>
-                             </div>
-                             <div className="grid gap-1 text-left">
-                                <h3 className="text-lg font-bold flex items-center gap-2"><Users className="text-primary"/>Collaboration Hub</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Securely invite your CA or lawyer to your workspace. Request and share documents, and manage compliance tasks together seamlessly.
-                                </p>
-                             </div>
+                        <div className="mx-auto">
+                            <Card>
+                                <Table>
+                                    <TableBody>
+                                        {features.map(feature => (
+                                            <TableRow key={feature.title}>
+                                                <TableCell className="w-12 p-4 align-top"><feature.icon className="w-6 h-6 text-primary"/></TableCell>
+                                                <TableCell className="p-4"><h3 className="font-semibold">{feature.title}</h3></TableCell>
+                                                <TableCell className="p-4 text-muted-foreground">{feature.description}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Who is this for? */}
+                 <section id="who-is-this-for" className="w-full py-20 md:py-32">
+                    <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+                        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Who is this for?</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <Card className="p-6 text-center md:text-left">
+                                <h3 className="text-2xl font-bold mb-4">🧑‍🚀 Startup Founders</h3>
+                                <ul className="space-y-2 list-inside list-disc text-muted-foreground">
+                                    <li>Incorporate with clarity</li>
+                                    <li>Track legal health in real-time</li>
+                                    <li>Centralize all compliance workflows</li>
+                                </ul>
+                            </Card>
+                             <Card className="p-6 text-center md:text-left">
+                                <h3 className="text-2xl font-bold mb-4">👨‍💼 Finance & Legal Pros</h3>
+                                <ul className="space-y-2 list-inside list-disc text-muted-foreground">
+                                    <li>Manage multiple clients or ventures</li>
+                                    <li>Automate reporting & compliance tracking</li>
+                                    <li>Collaborate securely with founders & teams</li>
+                                </ul>
+                            </Card>
                         </div>
                     </div>
                 </section>
                 
-                {/* Screenshots Section */}
-                 <section id="demo" className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 space-y-8 text-center">
-                    <h2 className="text-3xl lg:text-4xl font-bold">Product Demo</h2>
-                    <p className="text-muted-foreground md:w-1/2 mx-auto">
-                        A glimpse into the powerful features that make compliance management effortless.
-                    </p>
-                    <div className="group mt-8">
-                        <Image
-                            src="https://placehold.co/1200x600.png"
-                            width={1200}
-                            height={600}
-                            alt="Product Demo Screenshot"
-                            className="rounded-lg border shadow-lg mx-auto transition-transform duration-500 group-hover:scale-105"
-                            data-ai-hint="app screenshot"
-                        />
-                    </div>
-                 </section>
-
-                {/* Testimonials Section */}
-                <section id="testimonials" className="w-full py-20 md:py-32 bg-muted/50">
+                {/* Why Legalizd? */}
+                <section id="why" className="w-full py-20 md:py-32 bg-muted/50">
                     <div className="container mx-auto grid items-center justify-center gap-4 px-4 text-center md:px-6 lg:gap-10">
                         <div className="space-y-3">
-                            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">What Early Adopters Say</h2>
+                            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">Why Legalizd?</h2>
                         </div>
-                        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <Card className="text-left">
+                        <div className="mx-auto max-w-3xl text-muted-foreground text-left space-y-2">
+                           <p className="flex items-center gap-2"><ShieldCheck className="text-primary"/> Globally adaptable legal infrastructure</p>
+                           <p className="flex items-center gap-2"><Zap className="text-primary"/> AI-powered automation across workflows</p>
+                           <p className="flex items-center gap-2"><Users className="text-primary"/> Designed by founders for founders</p>
+                           <p className="flex items-center gap-2"><Briefcase className="text-primary"/> Future-ready for remote-first companies</p>
+                        </div>
+                    </div>
+                </section>
+                
+                {/* Testimonials Section */}
+                <section id="testimonials" className="w-full py-20 md:py-32">
+                    <div className="container mx-auto grid items-center justify-center gap-4 px-4 text-center md:px-6 lg:gap-10">
+                        <div className="space-y-3">
+                            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">What Early Users Are Saying</h2>
+                        </div>
+                        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
+                            <Card className="text-left bg-muted/50">
                                 <CardContent className="pt-6">
-                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"Legalizd has been a game-changer for us. The automated compliance calendar saved us from missing critical deadlines."</blockquote>
+                                    <blockquote className="text-lg">“It’s like Notion + Stripe Atlas + ChatGPT had a baby — I can launch, manage, and stay compliant with less stress.”</blockquote>
                                 </CardContent>
                                 <CardHeader>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center font-bold">AN</div>
-                                        <div>
-                                            <CardTitle className="text-base">Ananya Sharma</CardTitle>
-                                            <p className="text-sm text-muted-foreground">Founder, TechVerse</p>
-                                        </div>
-                                    </div>
+                                    <p className="font-semibold">Ava M., Founder, NYC</p>
                                 </CardHeader>
                             </Card>
-                            <Card className="text-left">
+                             <Card className="text-left bg-muted/50">
                                 <CardContent className="pt-6">
-                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"The AI contract analyzer is like having a lawyer on call 24/7. It identified a risky clause in a vendor agreement that we had completely missed."</blockquote>
+                                    <blockquote className="text-lg">“Finally a dashboard that speaks founder.”</blockquote>
                                 </CardContent>
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center font-bold">RV</div>
-                                        <div>
-                                            <CardTitle className="text-base">Rohan Verma</CardTitle>
-                                            <p className="text-sm text-muted-foreground">CEO, Finova</p>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                            </Card>
-                            <Card className="text-left">
-                                <CardContent className="pt-6">
-                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"As a CA, managing multiple clients' compliance is a challenge. Legalizd's portfolio dashboard gives me a bird's-eye view of everything."</blockquote>
-                                </CardContent>
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center font-bold">SK</div>
-                                        <div>
-                                            <CardTitle className="text-base">Suresh Kumar</CardTitle>
-                                            <p className="text-sm text-muted-foreground">Chartered Accountant</p>
-                                        </div>
-                                    </div>
+                                <CardHeader>
+                                    <p className="font-semibold">Liam S., YC-backed CEO</p>
                                 </CardHeader>
                             </Card>
                         </div>
@@ -196,14 +189,14 @@ export default function LandingPage() {
                 <section id="cta" className="relative overflow-hidden py-24 sm:py-32">
                      <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
                     <div className="container mx-auto text-center relative px-4 sm:px-6 lg:px-8">
-                         <h2 className="text-3xl md:text-4xl font-bold">
-                            Ready to Automate Your Compliance?
+                         <h2 className="text-3xl md:text-4xl font-bold font-headline">
+                            Beta Access – Now Rolling Out
                         </h2>
                         <p className="text-xl text-muted-foreground mt-4 mb-8 max-w-2xl mx-auto">
-                            Join our free beta and take control of your startup's legal health today.
+                            Get early access. Earn bonus credits. Help shape the future of founder ops.
                         </p>
                          <Button className="w-full md:w-auto text-lg" size="lg" asChild>
-                             <Link href="/register">Sign Up Free <ArrowRight className="ml-2"/></Link>
+                             <Link href="/register">Join the Waitlist <ArrowRight className="ml-2"/></Link>
                         </Button>
                     </div>
                 </section>

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company } from '@/lib/types';
 import { useToast } from './use-toast';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, where, deleteDoc } from 'firebase/firestore';
 import { add, type Duration } from 'date-fns';
@@ -26,6 +26,7 @@ export interface AuthContextType {
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
   signUpWithEmailAndPassword: (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  sendPasswordResetLink: (email: string) => Promise<void>;
   saveChatHistory: (chat: ChatMessage[]) => Promise<void>;
   getChatHistory: () => Promise<ChatMessage[][]>;
   addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => Promise<void>;
@@ -267,6 +268,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await signInWithEmail(auth, email, pass);
   };
 
+  const sendPasswordResetLink = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -474,7 +479,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetchUserProfile(user); // Refresh CA's profile
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, inviteCA, revokeCA, getPendingInvites, acceptInvite };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, inviteCA, revokeCA, getPendingInvites, acceptInvite };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
