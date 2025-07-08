@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/auth';
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { Inter, Source_Code_Pro } from 'next/font/google'
+import { Inter } from 'next/font/google'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -13,13 +13,6 @@ const inter = Inter({
   variable: '--font-inter',
 })
  
-const sourceCodePro = Source_Code_Pro({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  display: 'swap',
-  variable: '--font-source-code-pro',
-});
-
 
 export const metadata: Metadata = {
   title: 'Legalizd - AI Co-Pilot for Startup Compliance',
@@ -36,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${sourceCodePro.variable} font-body antialiased`} suppressHydrationWarning={true}>
+      <body className={`${inter.variable} font-body antialiased`} suppressHydrationWarning={true}>
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <ThemeProvider
             attribute="class"
