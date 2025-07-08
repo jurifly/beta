@@ -113,10 +113,10 @@ export default function LandingPage() {
                      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
                     <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
                         <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
-                            Your Startup’s Legal & Compliance Copilot
+                           Your Startup’s Legal & Compliance Copilot
                         </h1>
                         <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-                            One smart workspace to manage company setup, documents, compliance, and financial insights — all in plain English, powered by AI.
+                           One smart workspace to manage company setup, documents, compliance, and financial insights — all in plain English, powered by AI.
                         </p>
                         <div className="mt-8">
                              <Button className="text-lg interactive-lift" size="lg" asChild>
