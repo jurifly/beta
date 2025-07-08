@@ -172,7 +172,7 @@ const PersonalTaxCalculator = () => {
   };
 
   return (
-    <div className="grid lg:grid-cols-5 gap-6 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
           <Card className="interactive-lift">
             <CardHeader><CardTitle>Income Details</CardTitle></CardHeader>
@@ -297,7 +297,7 @@ const CorporateTaxCalculator = () => {
     };
 
     return (
-        <div className="grid lg:grid-cols-5 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
             <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader><CardTitle>Corporate Financials</CardTitle></CardHeader>

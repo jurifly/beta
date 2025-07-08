@@ -468,7 +468,7 @@ const DocumentIntelligenceTab = () => {
   }
 
   return (
-    <div className="grid lg:grid-cols-3 gap-6 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       <div className="lg:col-span-1 space-y-4">
         <Card {...getRootProps()} className="interactive-lift">
           <input {...getInputProps()} />
@@ -925,7 +925,7 @@ const WikiGenerator = () => {
     };
 
     return (
-      <div className="grid lg:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <div className="space-y-4">
             <Card {...getRootProps()} className="interactive-lift">
                 <input {...getInputProps()} />
@@ -1149,7 +1149,7 @@ const WorkflowTab = () => {
     const handleDeleteWorkflow = (id: string) => { const workflowToDelete = workflows.find(w => w.id === id); if (workflowToDelete) { const newActivity: ActivityLogItem = { id: `act_${Date.now()}`, timestamp: new Date(), icon: Trash2, title: `Workflow Deleted: "${getLabel(workflowToDelete.action, workflowActions)}"`, description: "The automation rule has been removed.", }; setActivityLog(prev => [newActivity, ...prev]); } setWorkflows(wfs => wfs.filter(w => w.id !== id)); toast({ title: "Workflow Deleted", description: "The automation has been removed." }); }
     const handleRunWorkflow = (workflow: WorkflowType) => { const newActivity: ActivityLogItem = { id: `act_${Date.now()}`, timestamp: new Date(), icon: Play, title: `Workflow Run: "${getLabel(workflow.action, workflowActions)}"`, description: `Triggered manually.`, }; setActivityLog(prev => [newActivity, ...prev]); toast({ title: "Workflow Running", description: "The workflow has been manually triggered." }); };
     return (
-        <div className="grid lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader><CardTitle className="flex items-center gap-2"><Workflow /> Workflow Builder</CardTitle><CardDescription>Create powerful automations to streamline your compliance processes.</CardDescription></CardHeader>
@@ -1280,7 +1280,7 @@ const LegalResearchTab = () => {
     };
     
     return (
-        <div className="grid lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-1 space-y-4">
                 <Card className="interactive-lift">
                     <CardHeader>

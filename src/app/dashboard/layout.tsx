@@ -41,6 +41,7 @@ import {
   BookLock,
   BookOpenCheck,
   User,
+  MoreHorizontal,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -61,7 +62,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetHeader } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
@@ -208,40 +209,88 @@ const getBottomNavItems = (role: UserRole): (NavItem | { href: string; label: st
         { ...navItemConfig.financials, label: "Financials" },
         { ...navItemConfig.aiToolkit, label: "AI Toolkit" },
         { ...navItemConfig.capTable, label: "Cap Table" },
-        { ...navItemConfig.caConnect, label: "CA Connect" },
+        { ...navItemConfig.settings, label: "More" },
       ];
   }
 };
 
-const BottomNavBar = ({ userProfile }: { userProfile: UserProfile }) => {
+const BottomNavBar = ({ userProfile, moreNavItems }: { userProfile: UserProfile, moreNavItems: NavItem[] }) => {
     const pathname = usePathname();
+    const router = useRouter();
     const bottomNavItems = getBottomNavItems(userProfile.role);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (href === '/dashboard/community') {
+            e.preventDefault();
+            toast({
+                title: "Coming Soon!",
+                description: "The community forum is under development and will be launched soon.",
+            });
+            return;
+        }
+        setIsSheetOpen(false);
+    };
 
     return (
-        <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
-            <div className="grid h-full grid-cols-5 mx-auto">
-                {bottomNavItems.map(item => {
-                    const isActive = (item.href === '/dashboard' && pathname === item.href) ||
-                                     (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                    
-                    return (
-                        <Link
-                            key={item.label}
-                            href={item.href}
-                            className={cn(
-                                "inline-flex flex-col items-center justify-center px-1 text-center group",
-                                isActive ? "text-primary" : "text-muted-foreground"
-                            )}
-                        >
-                            <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                            <span className="text-[10px] font-medium">{item.label}</span>
-                        </Link>
-                    )
-                })}
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
+                <div className="grid h-full grid-cols-5 mx-auto">
+                    {bottomNavItems.slice(0, 4).map(item => {
+                        const isActive = (item.href === '/dashboard' && pathname === item.href) ||
+                                         (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                        
+                        return (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className={cn(
+                                    "inline-flex flex-col items-center justify-center px-1 text-center group",
+                                    isActive ? "text-primary" : "text-muted-foreground"
+                                )}
+                            >
+                                <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
+                                <span className="text-[10px] font-medium">{item.label}</span>
+                            </Link>
+                        )
+                    })}
+                    <SheetTrigger asChild>
+                        <button className="inline-flex flex-col items-center justify-center px-1 text-center group text-muted-foreground">
+                            <MoreHorizontal className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
+                            <span className="text-[10px] font-medium">More</span>
+                        </button>
+                    </SheetTrigger>
+                </div>
             </div>
-        </div>
-    )
-}
+            <SheetContent side="bottom" className="h-auto rounded-t-lg">
+                <SheetHeader>
+                    <SheetTitle>More Options</SheetTitle>
+                </SheetHeader>
+                <nav className="grid gap-1 py-4">
+                    {moreNavItems.map(item => {
+                        const isActive = (item.href === '/dashboard' && pathname === item.href) ||
+                                         (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                        return (
+                             <Link
+                                key={item.label}
+                                href={item.href}
+                                onClick={(e) => handleLinkClick(e, item.href)}
+                                className={cn(
+                                    "group flex items-center gap-4 rounded-lg px-3 py-3 text-card-foreground/80 hover:text-primary hover:bg-muted transition-transform active:scale-95",
+                                    isActive && "bg-muted text-primary font-semibold"
+                                )}
+                            >
+                                <item.icon className="h-5 w-5" />
+                                <span className="flex-1">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+            </SheetContent>
+        </Sheet>
+    );
+};
 
 
 function DashboardApp({ children }: { children: React.ReactNode }) {
@@ -292,7 +341,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <MobileSheetNav navItems={sheetNavItems} userProfile={userProfile} />
                 <div className="flex-1">
                 <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Link href="/dashboard" className="flex items-center gap-2">
@@ -379,7 +427,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <BetaBanner />
                 {children}
             </main>
-            <BottomNavBar userProfile={userProfile} />
+            <BottomNavBar userProfile={userProfile} moreNavItems={sheetNavItems} />
             </div>
         </div>
     </>
@@ -498,89 +546,3 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
       </div>
     );
 };
-
-const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userProfile: UserProfile }) => {
-    const pathname = usePathname();
-    const [isOpen, setIsOpen] = useState(false);
-    const { toast } = useToast();
-    
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-      if (href === '/dashboard/community') {
-            e.preventDefault();
-            toast({
-                title: "Coming Soon!",
-                description: "The community forum is under development and will be launched soon.",
-            });
-            return;
-      }
-      setIsOpen(false);
-    }
-    
-    const bottomNavItems = [navItemConfig.settings, navItemConfig.billing, navItemConfig.help, navItemConfig.feedback, navItemConfig.policies];
-    const isPro = planHierarchy[userProfile.plan] > 0;
-
-    return (
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle navigation menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col p-0 w-full max-w-[300px]">
-           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-           <div className="flex h-14 items-center border-b px-4">
-            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary" onClick={(e) => handleLinkClick(e, '/dashboard')}>
-                {isPro && <Flame className="h-6 w-6 text-accent" />}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                <span className="flex items-center">
-                  Legalizd
-                  <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
-                </span>
-            </Link>
-          </div>
-          <ScrollArea className="flex-1">
-            <nav className="grid gap-1 text-sm font-medium p-4">
-              {navItems.map(item => {
-                const isActive = item.href === '/dashboard' 
-                  ? pathname === item.href 
-                  : pathname.startsWith(item.href);
-                return (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn("group flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
-                            isActive && "bg-muted text-primary"
-                        )}
-                        onClick={(e) => handleLinkClick(e, item.href)}
-                    >
-                        <item.icon className="h-5 w-5 transition-transform" />
-                        <span className="flex-1">{item.label}</span>
-                    </Link>
-                )
-              })}
-              <div className="pt-4 mt-4 border-t">
-                {bottomNavItems.map(item => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn("group flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted transition-transform active:scale-95 interactive-lift",
-                            pathname.startsWith(item.href) && "bg-muted text-primary"
-                        )}
-                        onClick={(e) => handleLinkClick(e, item.href)}
-                    >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                    </Link>
-                ))}
-              </div>
-            </nav>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    )
-}
