@@ -13,7 +13,7 @@ const LandingHeader = () => (
         <div className="container mx-auto flex h-16 max-w-screen-lg items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/landing" className="flex items-center gap-2 font-bold text-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                <span>Taxxmo</span>
+                <span>Legalizd</span>
             </Link>
             <nav className="flex items-center gap-4">
                  <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
@@ -31,7 +31,7 @@ const LandingFooter = () => (
             <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
                 <p className="text-center text-sm leading-loose md:text-left">
-                    © {new Date().getFullYear()} Taxxmo. All Rights Reserved.
+                    © {new Date().getFullYear()} Legalizd. All Rights Reserved.
                 </p>
             </div>
              <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -77,7 +77,7 @@ export default function LandingPage() {
                                 src="https://placehold.co/720x480.png"
                                 width={720}
                                 height={480}
-                                alt="Taxxmo Dashboard Screenshot"
+                                alt="Legalizd Dashboard Screenshot"
                                 className="rounded-lg border-2 border-muted shadow-2xl transition-transform duration-500 group-hover:scale-105"
                                 data-ai-hint="dashboard laptop"
                             />
@@ -148,7 +148,7 @@ export default function LandingPage() {
                         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             <Card className="text-left">
                                 <CardContent className="pt-6">
-                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"Taxxmo has been a game-changer for us. The automated compliance calendar saved us from missing critical deadlines."</blockquote>
+                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"Legalizd has been a game-changer for us. The automated compliance calendar saved us from missing critical deadlines."</blockquote>
                                 </CardContent>
                                 <CardHeader>
                                     <div className="flex items-center gap-4">
@@ -176,7 +176,7 @@ export default function LandingPage() {
                             </Card>
                             <Card className="text-left">
                                 <CardContent className="pt-6">
-                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"As a CA, managing multiple clients' compliance is a challenge. Taxxmo's portfolio dashboard gives me a bird's-eye view of everything."</blockquote>
+                                    <blockquote className="italic border-l-4 border-primary/50 pl-4">"As a CA, managing multiple clients' compliance is a challenge. Legalizd's portfolio dashboard gives me a bird's-eye view of everything."</blockquote>
                                 </CardContent>
                             <CardHeader>
                                 <div className="flex items-center gap-4">

@@ -18,8 +18,8 @@ import { LifeBuoy, Mail } from "lucide-react"
 
 const faqs = [
   {
-    question: "What is Taxxmo?",
-    answer: "Taxxmo is an AI-powered platform designed to help startups, CAs, and legal professionals manage their legal and compliance needs efficiently. From document generation to compliance tracking, Taxxmo is your AI legal co-pilot.",
+    question: "What is Legalizd?",
+    answer: "Legalizd is an AI-powered platform designed to help startups, CAs, and legal professionals manage their legal and compliance needs efficiently. From document generation to compliance tracking, Legalizd is your AI legal co-pilot.",
   },
   {
     question: "How do AI credits work?",
@@ -38,7 +38,7 @@ const faqs = [
     answer: "Our AI can analyze various legal and financial documents, including contracts, agreements, government notices, and policy documents. It can identify risks, extract key details, and even suggest replies.",
   },
   {
-    question: "Can I use Taxxmo for multiple companies or clients?",
+    question: "Can I use Legalizd for multiple companies or clients?",
     answer: "Yes. You can add and manage multiple companies from the Settings page. This is ideal for founders with multiple ventures or professionals (CAs, Lawyers) managing a portfolio of clients.",
   },
   {

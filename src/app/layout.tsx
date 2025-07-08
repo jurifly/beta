@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export const metadata: Metadata = {
-  title: 'Taxxmo - AI Co-Pilot for Startup Compliance',
+  title: 'Legalizd - AI Co-Pilot for Startup Compliance',
   description: 'Organize legal tasks, track compliance, and collaborate with your CA in one place. Your AI assistant for startup compliance and legal docs.',
   keywords: ['startup compliance', 'AI assistant', 'founders', 'CA tools', 'legal tech', 'document generation', 'cap table'],
 };
