@@ -12,7 +12,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
-        headline: ['var(--font-inter)', 'sans-serif'],
+        headline: ['var(--font-playfair-display)', 'serif'],
         code: ['var(--font-source-code-pro)', 'monospace'],
       },
       colors: {

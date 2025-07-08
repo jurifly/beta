@@ -1,250 +1,287 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Inter } from "next/font/google";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ArrowRight, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  ArrowRight,
+  ChevronDown,
+  FileText,
+  GanttChartSquare,
+  GitCompareArrows,
+  HeartHandshake,
+  KeyRound,
+  Library,
+  PieChart,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 const LandingHeader = () => (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
-            <Link href="/landing" className="flex items-center gap-2 font-bold text-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                <span>Legalizd</span>
-            </Link>
-            <nav className="flex items-center gap-4">
-                 <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-                    Sign In
-                </Link>
-                <Button asChild>
-                   <Link href="/register">Get Started Free</Link>
-                </Button>
-                <ThemeToggle />
-            </nav>
-        </div>
-    </header>
+  <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <Link
+        href="/landing"
+        className="flex items-center gap-2 font-bold text-primary font-headline text-xl"
+      >
+        <ShieldCheck className="h-6 w-6" />
+        <span>Legalizd</span>
+      </Link>
+      <nav className="flex items-center gap-2 sm:gap-4">
+        <Link
+          href="/login"
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+          Sign In
+        </Link>
+        <Button asChild>
+          <Link href="/register">Join Beta Now</Link>
+        </Button>
+        <ThemeToggle />
+      </nav>
+    </div>
+  </header>
 );
 
 const LandingFooter = () => (
-     <footer className="border-t">
-        <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:h-24 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                <p className="text-center text-sm leading-loose md:text-left">
-                    © {new Date().getFullYear()} Legalizd. All Rights Reserved.
-                </p>
-            </div>
-             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <Link href="/dashboard/legal-policies?tab=terms" className="hover:text-primary">Terms of Service</Link>
-                <Link href="/dashboard/legal-policies?tab=privacy" className="hover:text-primary">Privacy Policy</Link>
-            </div>
-        </div>
-    </footer>
+  <footer className="border-t">
+    <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:h-24 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+        <ShieldCheck className="h-6 w-6 text-primary" />
+        <p className="text-center text-sm leading-loose md:text-left">
+          © {new Date().getFullYear()} Legalizd. All Rights Reserved.
+        </p>
+      </div>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-1">
+              📜 Policies <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/legal-policies?tab=terms">
+                Terms of Service
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/legal-policies?tab=privacy">
+                Privacy Policy
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/legal-policies?tab=disclaimer">
+                AI Disclaimer
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  </footer>
 );
 
+const StickyFooter = () => (
+  <div className="fixed bottom-0 z-40 w-full animate-in slide-in-from-bottom-12 duration-500">
+    <div className="container mx-auto p-4">
+        <div className="rounded-lg bg-background/80 p-3 shadow-2xl ring-1 ring-border backdrop-blur-md">
+            <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <p className="text-center text-sm font-medium">
+                    <span className="hidden sm:inline">✨ </span>Early founders get 5 free AI credits/day. No credit card required.
+                </p>
+                <Button asChild className="w-full sm:w-auto">
+                    <Link href="/register">Join Beta Now</Link>
+                </Button>
+            </div>
+        </div>
+    </div>
+  </div>
+);
+
+const AnimatedCounter = ({ end }: { end: number }) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        let start = 0;
+        const duration = 2000;
+        const increment = end / (duration / 10);
+        const timer = setInterval(() => {
+            start += increment;
+            if (start >= end) {
+                setCount(end);
+                clearInterval(timer);
+            } else {
+                setCount(Math.ceil(start));
+            }
+        }, 10);
+        return () => clearInterval(timer);
+    }, [end]);
+
+    return <span>{count.toLocaleString()}</span>;
+};
 
 export default function LandingPage() {
-    const features = [
-        { 
-            title: "Company Overview", 
-            description: "Stay on top of your compliance health, alerts, and key filings.", 
-            image: { src: "https://placehold.co/1200x675.png", hint: "dashboard compliance" }
-        },
-        { 
-            title: "LaunchPad", 
-            description: "AI-guided company formation. Choose the right structure, NIC code, and generate setup docs in minutes.",
-            image: { src: "https://placehold.co/1200x675.png", hint: "business setup" }
-        },
-        { 
-            title: "AI Document Generator", 
-            description: "From NDAs to board resolutions — just describe, and generate.", 
-            image: { src: "https://placehold.co/1200x675.png", hint: "document generation" }
-        },
-        { 
-            title: "Document Vault", 
-            description: "Secure your compliance files. Integrated with your Google Drive.",
-            image: { src: "https://placehold.co/1200x675.png", hint: "cloud storage" }
-        },
-        { 
-            title: "Cap Table & Equity Modeling", 
-            description: "See founder holdings, simulate dilution, plan fundraising.",
-            image: { src: "https://placehold.co/1200x675.png", hint: "financial chart" }
-        },
-        { 
-            title: "Financials", 
-            description: "Track burn rate, runway, and calculate taxes (personal + corporate). Global support.",
-            image: { src: "https://placehold.co/1200x675.png", hint: "tax calculator" }
-        },
-    ];
+  const promiseFeatures = [
+    { text: "Auto-generate legal documents", icon: FileText },
+    { text: "Visualize runway & tax risks", icon: GanttChartSquare },
+    { text: "One-click share with advisors", icon: HeartHandshake },
+    { text: "Sync with Google Drive", icon: GitCompareArrows },
+  ];
+  
+  const productMockups = [
+    { title: "Compliance Hub", image: "https://placehold.co/1200x750.png", hint: "dashboard compliance" },
+    { title: "Document Generator", image: "https://placehold.co/1200x750.png", hint: "document generation" },
+    { title: "Cap Table Modeling", image: "https://placehold.co/1200x750.png", hint: "financial chart" },
+  ];
+  
+  const howItWorksSteps = [
+    { icon: KeyRound, text: "Sign up as a founder" },
+    { icon: Library, text: "Add company details (CIN, PAN, etc.)" },
+    { icon: Zap, text: "Start tracking, generating, sharing" },
+  ];
 
-    const globalFeatures = [
-        "No legal jargon",
-        "No missed filings",
-        "No chaos",
-    ];
+  const brandLogos = [
+    { name: "Medial", component: <p className="font-bold tracking-widest text-muted-foreground/60">MEDIAL</p> },
+    { name: "Product Hunt", component: <p className="font-bold tracking-wider text-muted-foreground/60">PRODUCT HUNT</p> },
+    { name: "BetaList", component: <p className="font-bold text-muted-foreground/60">BetaList</p> },
+  ];
 
-    const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+  return (
+    <div className="flex min-h-screen flex-col bg-background font-body">
+      <LandingHeader />
+      <main className="flex-1 pb-24 sm:pb-16">
+        {/* 1. Hero Section */}
+        <section className="relative w-full py-20 md:py-32">
+          <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
+          <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
+              Founders, You Deserve Better Than Chaos.
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
+              Get instant clarity on your company’s legal docs, finances, and
+              compliance — all in one dashboard.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button className="text-lg w-full sm:w-auto" size="lg" asChild>
+                <Link href="/register">Join Beta Now</Link>
+              </Button>
+              <Button
+                className="text-lg w-full sm:w-auto"
+                size="lg"
+                variant="outline"
+              >
+                See a 30-sec Preview
+              </Button>
+            </div>
+            <div className="mt-16 group interactive-lift">
+              <Image
+                src="https://placehold.co/800x400.png"
+                width={800}
+                height={400}
+                alt="Abstract hero visual"
+                className="rounded-xl border-2 border-muted shadow-2xl"
+                data-ai-hint="abstract 3d stack"
+                priority
+              />
+            </div>
+          </section>
 
-    const nextFeature = () => {
-        setCurrentFeatureIndex((prevIndex) => (prevIndex + 1) % features.length);
-    };
-
-    const prevFeature = () => {
-        setCurrentFeatureIndex((prevIndex) => (prevIndex - 1 + features.length) % features.length);
-    };
-    
-    return (
-        <div className={`flex min-h-screen flex-col bg-background ${inter.variable} font-body`}>
-            <LandingHeader />
-            <main className="flex-1">
-                {/* Hero Section */}
-                <section className="relative w-full py-24 md:py-32">
-                     <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary-rgb)/0.1),transparent)]"></div>
-                    <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
-                        <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
-                           Your Startup’s Legal & Compliance Copilot
-                        </h1>
-                        <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-                           One smart workspace to manage company setup, documents, compliance, and financial insights — all in plain English, powered by AI.
-                        </p>
-                        <div className="mt-8">
-                             <Button className="text-lg interactive-lift" size="lg" asChild>
-                                 <Link href="/register">Sign Up Free <ArrowRight className="ml-2"/></Link>
-                            </Button>
+        {/* 2. Promise Section */}
+        <section className="w-full py-20 md:py-32 bg-muted/50">
+          <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+            <div className="text-center">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
+                    We’re not a CA. We’re your clarity engine.
+                </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {promiseFeatures.map((feature, index) => (
+                    <Card key={index} className="p-6 text-center interactive-lift animate-in fade-in-25 slide-in-from-bottom-8 duration-500" style={{'--index': index} as React.CSSProperties}>
+                        <div className="flex justify-center items-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto mb-4">
+                            <feature.icon className="h-8 w-8"/>
                         </div>
-                        <div className="mt-16 group interactive-lift">
-                            <Image
-                                src="https://placehold.co/1200x600.png"
-                                width={1200}
-                                height={600}
-                                alt="Legalizd App Screenshot"
-                                className="rounded-xl border-2 border-muted shadow-2xl"
-                                data-ai-hint="dashboard modern"
-                                priority
-                            />
-                        </div>
-                    </div>
-                </section>
-                
-                {/* Features Section */}
-                <section id="features" className="w-full py-20 md:py-32 bg-muted/50">
-                    <div className="container mx-auto space-y-16 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-                        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                                Smarter Dashboard for Founders
-                            </h2>
-                            <p className="text-xl text-muted-foreground">
-                                Everything your startup needs, one clean interface.
-                            </p>
-                        </div>
-                        
-                        <div className="relative max-w-4xl mx-auto">
-                            <Card key={features[currentFeatureIndex].title} className="bg-card/80 backdrop-blur-sm overflow-hidden interactive-lift animate-in fade-in-50 duration-500">
-                                <CardHeader className="p-0">
-                                    <Image
-                                        src={features[currentFeatureIndex].image.src}
-                                        width={1200}
-                                        height={675}
-                                        alt={features[currentFeatureIndex].title}
-                                        className="border-b"
-                                        data-ai-hint={features[currentFeatureIndex].image.hint}
-                                    />
-                                </CardHeader>
-                                <CardContent className="p-6">
-                                    <h3 className="text-xl font-bold mb-2">{features[currentFeatureIndex].title}</h3>
-                                    <p className="text-muted-foreground">{features[currentFeatureIndex].description}</p>
-                                </CardContent>
-                            </Card>
+                        <p className="font-medium">{feature.text}</p>
+                    </Card>
+                ))}
+            </div>
+          </div>
+        </section>
 
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full h-12 w-12 hidden md:flex interactive-lift"
-                                onClick={prevFeature}
-                            >
-                                <ChevronLeft className="h-6 w-6" />
-                                <span className="sr-only">Previous feature</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rounded-full h-12 w-12 hidden md:flex interactive-lift"
-                                onClick={nextFeature}
-                            >
-                                <ChevronRight className="h-6 w-6" />
-                                <span className="sr-only">Next feature</span>
-                            </Button>
-                        </div>
-                         <div className="flex md:hidden items-center justify-center gap-4">
-                            <Button
-                                variant="outline"
-                                className="interactive-lift"
-                                onClick={prevFeature}
-                            >
-                                <ChevronLeft className="h-4 w-4 mr-2" />
-                                Previous
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="interactive-lift"
-                                onClick={nextFeature}
-                            >
-                                Next
-                                <ChevronRight className="h-4 w-4 ml-2" />
-                            </Button>
-                        </div>
-                    </div>
-                </section>
+        {/* 3. Product Visual Mockups */}
+         <section className="w-full py-20 md:py-32">
+            <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {productMockups.map((mockup, index) => (
+                        <Card key={index} className="bg-muted/50 overflow-hidden interactive-lift animate-in fade-in-25 slide-in-from-bottom-8 duration-700" style={{'--index': index} as React.CSSProperties}>
+                             <CardContent className="p-0">
+                                <Image
+                                    src={mockup.image}
+                                    width={1200}
+                                    height={750}
+                                    alt={mockup.title}
+                                    className="border-b"
+                                    data-ai-hint={mockup.hint}
+                                />
+                            </CardContent>
+                            <div className="p-4"><p className="font-medium text-center">{mockup.title}</p></div>
+                        </Card>
+                    ))}
+                 </div>
+            </div>
+        </section>
 
-                 {/* Global Entrepreneurs Section */}
-                 <section id="global-features" className="w-full py-20 md:py-32">
-                    <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
-                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                            Made for Global Entrepreneurs
-                        </h2>
-                        <div className="my-8 flex flex-wrap justify-center gap-4">
-                            {globalFeatures.map(item => (
-                                <Card key={item} className="p-4 bg-muted/50 interactive-lift">
-                                    <p className="font-semibold text-lg flex items-center gap-2"><CheckCircle className="text-primary"/>{item}</p>
-                                </Card>
-                            ))}
+        {/* 4. How It Works Section */}
+        <section className="w-full py-20 md:py-32 bg-muted/50">
+            <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
+                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-12">
+                    How It Works
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                    {howItWorksSteps.map((step, index) => (
+                        <div key={index} className="flex flex-col items-center gap-4">
+                             <div className="flex justify-center items-center h-16 w-16 rounded-full bg-primary/10 text-primary border-2 border-primary/20">
+                                <step.icon className="h-8 w-8"/>
+                            </div>
+                            <p className="font-semibold text-lg">{step.text}</p>
                         </div>
-                        <p className="text-xl text-muted-foreground">
-                            Just clarity, AI guidance, and founder-first design.
-                        </p>
-                    </div>
-                </section>
+                    ))}
+                </div>
+                 <p className="text-xl text-muted-foreground mt-12">Takes 3 mins. Saves you weeks.</p>
+            </div>
+        </section>
 
-                {/* Final CTA Section */}
-                <section id="cta" className="relative overflow-hidden py-24 sm:py-32 bg-muted/50">
-                    <div className="container mx-auto text-center relative px-4 sm:px-6 lg:px-8">
-                         <h2 className="text-3xl md:text-4xl font-bold font-headline">
-                            Get Early Access — 5 AI Credits Daily
-                        </h2>
-                        <p className="text-xl text-muted-foreground mt-4 mb-8 max-w-2xl mx-auto">
-                            Beta users get 5 free AI credits/day to generate docs, ask questions, and simulate scenarios.
-                        </p>
-                         <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
-                             <Link href="/register">Sign Up Free <ArrowRight className="ml-2"/></Link>
-                        </Button>
-                         <p className="text-sm text-muted-foreground mt-4">
-                            No card. No spam. Just tools that work.
-                        </p>
-                    </div>
-                </section>
-            </main>
-            <LandingFooter />
-        </div>
-    );
+        {/* 5. Community-Beta CTA Section */}
+        <section className="w-full py-20 md:py-32">
+            <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
+                <p className="font-semibold text-primary mb-4">“Built with feedback from real founders.”</p>
+                <div className="my-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+                   {brandLogos.map(logo => <div key={logo.name}>{logo.component}</div>)}
+                </div>
+                <Button className="w-full md:w-auto text-lg" size="lg" asChild>
+                    <Link href="/register">Join Founders in Beta</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground mt-4">
+                    Get 5 free AI credits/day – no card needed.
+                </p>
+                <p className="text-lg font-bold mt-6">
+                    <AnimatedCounter end={813}/> founders already joined
+                </p>
+            </div>
+        </section>
+      </main>
+      <StickyFooter />
+      <LandingFooter />
+    </div>
+  );
 }
