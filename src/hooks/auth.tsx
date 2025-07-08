@@ -280,11 +280,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 await createNewUserProfile(firebaseUser, 'India', 'Founder');
             }
         }
-    } catch(error) {
+    } catch(error: any) {
         console.error("Google Sign-In Error:", error);
+        
+        let description = "Could not sign in with Google. Please try again.";
+        if (error.code) {
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    description = "The sign-in window was closed before completing. Please try again.";
+                    break;
+                case 'auth/popup-blocked':
+                    description = "The sign-in pop-up was blocked by your browser. Please allow pop-ups for this site.";
+                    break;
+                case 'auth/account-exists-with-different-credential':
+                    description = "An account already exists with this email address. Please sign in using the method you originally used.";
+                    break;
+                case 'permission-denied':
+                    description = "There was a problem setting up your profile due to database permissions. Please contact support.";
+                    break;
+                default:
+                    description = `An error occurred (${error.code}). Please try again or contact support.`;
+            }
+        }
+
         toast({
             title: "Sign-In Failed",
-            description: "Could not sign in with Google. Please try again.",
+            description: description,
             variant: "destructive"
         });
     }
