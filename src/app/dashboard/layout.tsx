@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -495,8 +496,8 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
           </div>
         </div>
       </div>
-    )
-}
+    );
+};
 
 const MobileSheetNav = ({ navItems, userProfile }: { navItems: NavItem[], userProfile: UserProfile }) => {
     const pathname = usePathname();

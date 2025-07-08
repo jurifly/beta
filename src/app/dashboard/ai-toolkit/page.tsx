@@ -1335,6 +1335,7 @@ export default function AiToolkitPage() {
     
     const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
+    const showWorkflows = userProfile?.role !== 'Founder';
 
     const pageTitle = useMemo(() => {
         if (!userProfile) return "AI Toolkit";
@@ -1364,7 +1365,7 @@ export default function AiToolkitPage() {
         { value: 'analyzer', label: 'Intelligence', icon: FileScan },
         ...(showReconciliation ? [{ value: 'reconciliation', label: 'Reconciliation', icon: Scale }] : []),
         { value: 'watcher', label: 'Watcher', icon: RadioTower },
-        { value: 'workflows', label: 'Workflows', icon: Zap },
+        ...(showWorkflows ? [{ value: 'workflows', label: 'Workflows', icon: Zap }] : []),
         ...(showLegalResearch ? [{ value: 'research', label: 'Research', icon: Gavel }] : []),
     ];
 
@@ -1391,7 +1392,7 @@ export default function AiToolkitPage() {
                     <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
                     {showReconciliation && <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>}
                     <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
-                    <TabsContent value="workflows"><WorkflowTab /></TabsContent>
+                    {showWorkflows && <TabsContent value="workflows"><WorkflowTab /></TabsContent>}
                     {showLegalResearch && <TabsContent value="research"><LegalResearchTab/></TabsContent>}
                 </div>
             </Tabs>
