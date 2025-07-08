@@ -15,7 +15,6 @@ import {
   HeartHandshake,
   KeyRound,
   Library,
-  PieChart,
   ShieldCheck,
   Zap,
 } from "lucide-react";
@@ -26,7 +25,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 
 const LandingHeader = () => (
   <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -195,7 +193,8 @@ export default function LandingPage() {
                 priority
               />
             </div>
-          </section>
+          </div>
+        </section>
 
         {/* 2. Promise Section */}
         <section className="w-full py-20 md:py-32 bg-muted/50">
