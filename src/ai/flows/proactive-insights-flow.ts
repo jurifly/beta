@@ -101,10 +101,16 @@ const proactiveInsightsFlow = ai.defineFlow(
     outputSchema: ProactiveInsightsOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
+        console.log("Proactive Insights: AI returned no output, returning empty array.");
+        return { insights: [] };
+      }
+      return output;
+    } catch (error) {
+        console.error("Proactive Insights: AI call failed. Gracefully returning empty insights.", error);
         return { insights: [] };
     }
-    return output;
   }
 );
