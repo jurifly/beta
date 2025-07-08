@@ -335,9 +335,9 @@ const LandingFooter = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem asChild><button onClick={(e) => { e.preventDefault(); router.push('/dashboard/legal-policies?tab=terms'); }} className="w-full text-left">Terms of Service</button></DropdownMenuItem>
-                <DropdownMenuItem asChild><button onClick={(e) => { e.preventDefault(); router.push('/dashboard/legal-policies?tab=privacy'); }} className="w-full text-left">Privacy Policy</button></DropdownMenuItem>
-                <DropdownMenuItem asChild><button onClick={(e) => { e.preventDefault(); router.push('/dashboard/legal-policies?tab=disclaimer'); }} className="w-full text-left">AI Disclaimer</button></DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/dashboard/legal-policies?tab=terms')}>Terms of Service</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/dashboard/legal-policies?tab=privacy')}>Privacy Policy</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/dashboard/legal-policies?tab=disclaimer')}>AI Disclaimer</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
              <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Legalizd</p>
