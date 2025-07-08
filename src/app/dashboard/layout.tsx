@@ -62,7 +62,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetHeader } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
@@ -176,119 +175,70 @@ const getIcon = (iconName: string) => {
     return icons[iconName] || icons.Default;
 }
 
-const getBottomNavItems = (role: UserRole): (NavItem | { href: string; label: string; icon: React.ElementType })[] => {
+const getBottomNavItems = (role: UserRole): NavItem[] => {
   switch (role) {
     case 'CA':
       return [
-        { ...navItemConfig.dashboard, label: "Dashboard" },
-        { ...navItemConfig.clients, label: "Clients" },
+        navItemConfig.dashboard,
+        navItemConfig.clients,
         { ...navItemConfig.aiToolkit, label: "AI Suite" },
-        { ...navItemConfig.caConnect, label: "Compliance" },
-        { ...navItemConfig.settings, label: "Settings" },
+        navItemConfig.caConnect,
       ];
     case 'Legal Advisor':
       return [
-        { ...navItemConfig.dashboard, label: "Dashboard" },
-        { ...navItemConfig.clients, label: "Clients" },
+        navItemConfig.dashboard,
+        navItemConfig.clients,
         { ...navItemConfig.aiToolkit, label: "AI Tools" },
-        { ...navItemConfig.documents, label: "Docs" },
-        { ...navItemConfig.settings, label: "Settings" },
+        navItemConfig.documents,
       ];
     case 'Enterprise':
       return [
-        { ...navItemConfig.dashboard, label: "Dashboard" },
-        { ...navItemConfig.team, label: "Team" },
-        { ...navItemConfig.caConnect, label: "Compliance" },
-        { ...navItemConfig.analytics, label: "Analytics" },
-        { ...navItemConfig.documents, label: "Docs" },
+        navItemConfig.dashboard,
+        navItemConfig.team,
+        navItemConfig.caConnect,
+        navItemConfig.analytics,
       ];
     case 'Founder':
     default:
       return [
-        { ...navItemConfig.dashboard, label: "Dashboard" },
-        { ...navItemConfig.financials, label: "Financials" },
-        { ...navItemConfig.aiToolkit, label: "AI Toolkit" },
-        { ...navItemConfig.capTable, label: "Cap Table" },
-        { ...navItemConfig.settings, label: "More" },
+        navItemConfig.dashboard,
+        navItemConfig.financials,
+        navItemConfig.aiToolkit,
+        navItemConfig.capTable,
       ];
   }
 };
 
-const BottomNavBar = ({ userProfile, moreNavItems }: { userProfile: UserProfile, moreNavItems: NavItem[] }) => {
+const BottomNavBar = () => {
     const pathname = usePathname();
-    const router = useRouter();
-    const bottomNavItems = getBottomNavItems(userProfile.role);
-    const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const { toast } = useToast();
+    const { userProfile } = useAuth();
+    if (!userProfile) return null;
 
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-        if (href === '/dashboard/community') {
-            e.preventDefault();
-            toast({
-                title: "Coming Soon!",
-                description: "The community forum is under development and will be launched soon.",
-            });
-            return;
-        }
-        setIsSheetOpen(false);
-    };
+    const bottomNavItems = getBottomNavItems(userProfile.role);
 
     return (
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
-                <div className="grid h-full grid-cols-5 mx-auto">
-                    {bottomNavItems.slice(0, 4).map(item => {
-                        const isActive = (item.href === '/dashboard' && pathname === item.href) ||
-                                         (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                        
-                        return (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className={cn(
-                                    "inline-flex flex-col items-center justify-center px-1 text-center group",
-                                    isActive ? "text-primary" : "text-muted-foreground"
-                                )}
-                            >
-                                <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                                <span className="text-[10px] font-medium">{item.label}</span>
-                            </Link>
-                        )
-                    })}
-                    <SheetTrigger asChild>
-                        <button className="inline-flex flex-col items-center justify-center px-1 text-center group text-muted-foreground">
-                            <MoreHorizontal className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                            <span className="text-[10px] font-medium">More</span>
-                        </button>
-                    </SheetTrigger>
-                </div>
+        <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
+            <div className="grid h-full grid-cols-4 mx-auto">
+                {bottomNavItems.map(item => {
+                    const isActive = (item.href === '/dashboard' && pathname === item.href) ||
+                                     (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                    
+                    return (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            className={cn(
+                                "inline-flex flex-col items-center justify-center px-1 text-center group",
+                                isActive ? "text-primary" : "text-muted-foreground"
+                            )}
+                        >
+                            <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
+                            <span className="text-[10px] font-medium">{item.label}</span>
+                        </Link>
+                    )
+                })}
             </div>
-            <SheetContent side="bottom" className="h-auto rounded-t-lg">
-                <SheetHeader>
-                    <SheetTitle>More Options</SheetTitle>
-                </SheetHeader>
-                <nav className="grid gap-1 py-4">
-                    {moreNavItems.map(item => {
-                        const isActive = (item.href === '/dashboard' && pathname === item.href) ||
-                                         (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                        return (
-                             <Link
-                                key={item.label}
-                                href={item.href}
-                                onClick={(e) => handleLinkClick(e, item.href)}
-                                className={cn(
-                                    "group flex items-center gap-4 rounded-lg px-3 py-3 text-card-foreground/80 hover:text-primary hover:bg-muted transition-transform active:scale-95",
-                                    isActive && "bg-muted text-primary font-semibold"
-                                )}
-                            >
-                                <item.icon className="h-5 w-5" />
-                                <span className="flex-1">{item.label}</span>
-                            </Link>
-                        );
-                    })}
-                </nav>
-            </SheetContent>
-        </Sheet>
+        </div>
     );
 };
 
@@ -315,10 +265,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   }
   
   const navItems = getNavItems(userProfile.role);
-  const bottomNavItems = getBottomNavItems(userProfile.role);
-  const bottomNavHrefs = bottomNavItems.map(item => item.href);
-  const sheetNavItems = navItems.filter(item => !bottomNavHrefs.includes(item.href));
-
   const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
   const bonusCredits = userProfile.creditBalance ?? 0;
@@ -427,7 +373,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <BetaBanner />
                 {children}
             </main>
-            <BottomNavBar userProfile={userProfile} moreNavItems={sheetNavItems} />
+            <BottomNavBar />
             </div>
         </div>
     </>

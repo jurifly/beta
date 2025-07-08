@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Briefcase, Building, LogOut, Settings, User as UserIcon, Check, PlusCircle } from "lucide-react";
+import { Briefcase, Building, LogOut, Settings, User as UserIcon, Check, PlusCircle, CreditCard, LifeBuoy, PenSquare, BookLock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -113,21 +113,55 @@ export function UserNav() {
         {canShowActiveCompany && userProfile.companies.length > 0 && (
             <>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={userProfile.activeCompanyId} onValueChange={handleCompanyChange}>
-                    {userProfile.companies.map(company => (
-                        <DropdownMenuRadioItem key={company.id} value={company.id}>
-                            {company.name}
-                        </DropdownMenuRadioItem>
-                    ))}
-                </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    <span>Add/Edit Companies</span>
-                 </DropdownMenuItem>
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Building className="mr-2 h-4 w-4" />
+                        <span>Switch Company</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuRadioGroup value={userProfile.activeCompanyId} onValueChange={handleCompanyChange}>
+                                {userProfile.companies.map(company => (
+                                    <DropdownMenuRadioItem key={company.id} value={company.id}>
+                                        {company.name}
+                                    </DropdownMenuRadioItem>
+                                ))}
+                            </DropdownMenuRadioGroup>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                <span>Manage Companies</span>
+                             </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
             </>
         )}
+        
+        <DropdownMenuSeparator />
+
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
+            <CreditCard className="mr-2 h-4 w-4" />
+            <span>Billing</span>
+          </DropdownMenuItem>
+           <DropdownMenuItem onClick={() => router.push('/dashboard/help')}>
+            <LifeBuoy className="mr-2 h-4 w-4" />
+            <span>Help & Support</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/feedback')}>
+            <PenSquare className="mr-2 h-4 w-4" />
+            <span>Feedback</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/legal-policies')}>
+            <BookLock className="mr-2 h-4 w-4" />
+            <span>Policies</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         
         <DropdownMenuSeparator />
 
