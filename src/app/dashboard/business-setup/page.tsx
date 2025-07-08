@@ -46,6 +46,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { UserProfile } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
+import ReactMarkdown from "react-markdown";
 
 
 const STEPS = [
@@ -307,7 +308,9 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                                     <CardTitle className="text-2xl text-primary">{result.recommendedType}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-muted-foreground">{result.reasoning}</p>
+                                    <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground text-left">
+                                        <ReactMarkdown>{result.reasoning}</ReactMarkdown>
+                                    </div>
                                 </CardContent>
                             </Card>
                             

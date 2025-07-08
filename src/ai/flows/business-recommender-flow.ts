@@ -18,7 +18,7 @@ export type BusinessRecommenderInput = z.infer<typeof BusinessRecommenderInputSc
 
 const BusinessRecommenderOutputSchema = z.object({
   recommendedType: z.string().describe('The recommended business structure (e.g., "Private Limited Company", "LLC", "One Person Company").'),
-  reasoning: z.string().describe('A detailed explanation for why this structure is recommended, referencing the user\'s inputs.'),
+  reasoning: z.string().describe('A detailed explanation for why this structure is recommended, referencing the user\'s inputs. This should be formatted in Markdown.'),
   pros: z.array(z.string()).describe('A list of advantages for the recommended structure.'),
   cons: z.array(z.string()).describe('A list of disadvantages for the recommended structure.'),
   alternativeOption: z.string().optional().describe('An alternative business structure to consider.'),
@@ -46,7 +46,7 @@ User's Business Details:
 
 Based on these details:
 1.  **Recommended Type**: State the single best business structure.
-2.  **Reasoning**: Provide a clear explanation for your recommendation, explicitly linking it to the user's details and the regulatory environment of {{legalRegion}}. (e.g., "Given your plan to seek VC funding in the {{legalRegion}}, an C-Corp/Private Limited Company is the most suitable structure...").
+2.  **Reasoning**: Provide a clear explanation for your recommendation using **Markdown**. Use short paragraphs and bold text to emphasize key points. Explicitly link your reasoning to the user's details (e.g., number of founders, investment plans) and the regulatory environment of {{legalRegion}}. For example: "Given that you have **{{founderCount}} founders** and plan to seek **{{investmentPlan}}**, a **Private Limited Company** is the most suitable structure. This is because..."
 3.  **Pros**: List 3-4 key advantages of the recommended structure based on their situation.
 4.  **Cons**: List 2-3 key disadvantages or considerations.
 5.  **Alternative Option**: If there's another close option, suggest it.
