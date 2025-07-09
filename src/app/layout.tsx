@@ -15,8 +15,8 @@ const inter = Inter({
  
 
 export const metadata: Metadata = {
-  title: 'Legalizd - AI Co-Pilot for Startup Compliance',
-  description: 'Organize legal tasks, track compliance, and collaborate with your CA in one place. Your AI assistant for startup compliance and legal docs.',
+  title: 'Claari - Your AI Co-pilot for Startup Compliance',
+  description: 'Claari is your AI co-pilot for startup compliance. Organize legal tasks, track compliance, and collaborate with your CA in one place.',
   keywords: ['startup compliance', 'AI assistant', 'founders', 'CA tools', 'legal tech', 'document generation', 'cap table'],
 };
 

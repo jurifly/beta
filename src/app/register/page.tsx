@@ -44,6 +44,25 @@ const betaRoles: { id: UserRole, label: string }[] = [
     { id: "CA", label: "Chartered Accountant" },
 ];
 
+const Logo = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-8 w-8 mx-auto text-primary mb-2"
+  >
+    <path
+      d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+
 export default function RegisterPage() {
   const { user, signUpWithEmailAndPassword, loading } = useAuth();
   const searchParams = useSearchParams();
@@ -94,9 +113,9 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 mx-auto text-primary mb-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <Logo />
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Get started with Legalizd today.</CardDescription>
+          <CardDescription>Get started with Claari today.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -158,9 +177,9 @@ export default function RegisterPage() {
                 <div className="grid gap-1.5 leading-none">
                   <label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     I agree to the 
-                    <Link href="/dashboard/legal-policies?tab=terms" target="_blank" className="underline text-primary"> Terms of Service </Link> 
+                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Terms of Service </Link> 
                     and 
-                    <Link href="/dashboard/legal-policies?tab=privacy" target="_blank" className="underline text-primary"> Privacy Policy</Link>.
+                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Privacy Policy</Link>.
                   </label>
                 </div>
             </div>

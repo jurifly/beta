@@ -28,6 +28,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
+
+const Logo = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-6 w-6"
+  >
+    <path
+      d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+
 // Header Component
 const LandingHeader = () => {
   const router = useRouter();
@@ -35,8 +55,8 @@ const LandingHeader = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <button onClick={() => router.push('/landing')} className="flex items-center gap-2 font-bold text-primary font-headline text-xl">
-          <ShieldCheck className="h-6 w-6" suppressHydrationWarning />
-          <span>Legalizd</span>
+          <Logo />
+          <span>Claari</span>
         </button>
         <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="link" onClick={() => router.push('/login')} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
@@ -58,11 +78,10 @@ const HeroSection = () => {
             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary)/0.05),transparent)]"></div>
             <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
-                Finally. A Workspace That Understands Founders.
+                Clarity for Founders. Finally.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-                Not your CA. Not another cluttered dashboard.
-                Just the clarity you need — for your company’s documents, taxes, and compliance — in one clean space.
+                Not another cluttered dashboard. Just the clarity you need — for your company’s documents, taxes, and compliance — in one clean space.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" onClick={() => router.push('/register')}>
@@ -235,9 +254,9 @@ const LandingFooter = () => {
             </p>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/legal-policies?tab=terms')} className="text-muted-foreground">Terms of Use</Button>
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/legal-policies?tab=privacy')} className="text-muted-foreground">Privacy Policy</Button>
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/legal-policies?tab=disclaimer')} className="text-muted-foreground">AI Disclaimer</Button>
+             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">Terms of Use</Button>
+             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">Privacy Policy</Button>
+             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">AI Disclaimer</Button>
           </div>
         </div>
       </footer>
