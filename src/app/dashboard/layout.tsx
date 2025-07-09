@@ -551,43 +551,6 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                 )
               })}
             </nav>
-            <div className="px-2 lg:px-4">
-                <DropdownMenuSeparator />
-                <nav className="grid items-start text-sm font-medium py-4">
-                   <TooltipProvider delayDuration={0}>
-                       <Tooltip>
-                           <TooltipTrigger asChild>
-                           <Link
-                                href="/dashboard/settings"
-                                className={cn(
-                                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                                    pathname.startsWith("/dashboard/settings") && "bg-muted text-primary font-semibold"
-                                )}
-                                >
-                                <Settings className="h-4 w-4 transition-transform group-hover:scale-110" />
-                                Settings
-                                </Link>
-                           </TooltipTrigger>
-                       </Tooltip>
-                   </TooltipProvider>
-                    <TooltipProvider delayDuration={0}>
-                       <Tooltip>
-                           <TooltipTrigger asChild>
-                           <Link
-                                href="/dashboard/help"
-                                className={cn(
-                                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                                    pathname.startsWith("/dashboard/help") && "bg-muted text-primary font-semibold"
-                                )}
-                                >
-                                <LifeBuoy className="h-4 w-4 transition-transform group-hover:scale-110" />
-                                Help & FAQ
-                                </Link>
-                           </TooltipTrigger>
-                       </Tooltip>
-                   </TooltipProvider>
-                </nav>
-            </div>
           </ScrollArea>
            <div className="mt-auto p-4 border-t">
               <Link href="/dashboard/settings">
