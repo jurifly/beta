@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useEffect } from "react"
-import { useFormStatus, useFormState } from "react-dom"
+import { useEffect, useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import { handleNotificationSettings } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,7 +28,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
 }
 
 export default function NotificationsForm() {
-  const [state, formAction] = useFormState(handleNotificationSettings, initialState);
+  const [state, formAction] = useActionState(handleNotificationSettings, initialState);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
