@@ -124,6 +124,11 @@ const founderNavItems: NavItem[] = [
   { ...navItemConfig.aiToolkit },
   navItemConfig.capTable,
   navItemConfig.financials,
+  navItemConfig.launchPad,
+  navItemConfig.documents,
+  navItemConfig.learn,
+  { ...navItemConfig.analytics, label: "Analytics" },
+  navItemConfig.community,
 ];
 
 const caNavItems: NavItem[] = [
@@ -132,6 +137,8 @@ const caNavItems: NavItem[] = [
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.reportCenter,
+  navItemConfig.learn,
+  navItemConfig.documents,
 ];
 
 const legalAdvisorNavItems: NavItem[] = [
@@ -140,6 +147,7 @@ const legalAdvisorNavItems: NavItem[] = [
   { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
+  navItemConfig.learn,
 ];
 
 const enterpriseNavItems: NavItem[] = [
@@ -148,6 +156,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.caConnect, label: "Compliance Hub" },
   navItemConfig.analytics,
+  navItemConfig.documents,
 ];
 
 const getSidebarNavItems = (role: UserRole) => {
@@ -158,38 +167,6 @@ const getSidebarNavItems = (role: UserRole) => {
         case 'Founder': default: return founderNavItems;
     }
 }
-
-const getMoreMenuItems = (role: UserRole): NavItem[] => {
-    const allItems = { ...navItemConfig };
-    const baseItems = getSidebarNavItems(role).map(item => item.href);
-    const bottomItems = [navItemConfig.settings.href];
-
-    const moreItemsMap: Record<string, NavItem> = {};
-
-    if(role === 'Founder') {
-        Object.assign(moreItemsMap, {
-            launchPad: allItems.launchPad,
-            documents: allItems.documents,
-            learn: allItems.learn,
-            analytics: { ...allItems.analytics, label: "Analytics" },
-            community: allItems.community,
-        })
-    }
-    if (role === 'CA') {
-        Object.assign(moreItemsMap, {
-            learn: allItems.learn,
-            financials: allItems.financials,
-            documents: allItems.documents,
-            caConnect: allItems.caConnect,
-            team: allItems.team,
-            clauseLibrary: allItems.clauseLibrary,
-        })
-    }
-    // Add other roles as needed
-    
-    return Object.values(moreItemsMap);
-}
-
 
 const getIcon = (iconName: string) => {
     const icons: { [key: string]: React.ReactNode } = {
@@ -241,7 +218,26 @@ const MoreMenuSheet = () => {
     const { toast } = useToast();
     if (!userProfile) return null;
 
-    const menuItems = getMoreMenuItems(userProfile.role);
+    const mainItemsHrefs = getSidebarNavItems(userProfile.role).map(item => item.href);
+    const bottomItemsHrefs = getBottomNavItems(userProfile.role).map(item => item.href);
+
+    const allNavItems = { ...navItemConfig };
+    const menuItems = Object.values(allNavItems).filter(item => 
+        !mainItemsHrefs.includes(item.href) && 
+        !bottomItemsHrefs.includes(item.href) &&
+        item.href !== '/dashboard/settings' &&
+        item.href !== '/dashboard/help'
+    );
+    
+    // Custom logic to add analytics for founder
+    if (userProfile.role === 'Founder' && !menuItems.some(i => i.href === '/dashboard/analytics')) {
+        menuItems.push({ ...navItemConfig.analytics, label: 'Analytics' });
+    }
+     // Custom logic to add docs for CA
+    if (userProfile.role === 'CA' && !menuItems.some(i => i.href === '/dashboard/documents')) {
+        menuItems.push(navItemConfig.documents);
+    }
+    
 
     const handleItemClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
         if ('locked' in item && item.locked) {
@@ -499,7 +495,6 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
     const pathname = usePathname();
     const { toast } = useToast();
 
-    const bottomNavItems = getMoreMenuItems(userProfile.role);
     const isPro = planHierarchy[userProfile.plan] > 0;
     const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
@@ -559,29 +554,38 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
             <div className="px-2 lg:px-4">
                 <DropdownMenuSeparator />
                 <nav className="grid items-start text-sm font-medium py-4">
-                    <p className="px-3 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">More</p>
-                    {bottomNavItems.map((item) => (
-                        <TooltipProvider key={item.href} delayDuration={0}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                <Link
-                                    href={item.href}
-                                    onClick={(e) => handleLinkClick(e, item)}
-                                    className={cn(
-                                        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                                        pathname.startsWith(item.href) && "bg-muted text-primary font-semibold"
-                                    )}
-                                    >
-                                    <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
-                                    {item.label}
-                                    {'locked' in item && item.locked && (
-                                      <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
-                                    )}
-                                    </Link>
-                                </TooltipTrigger>
-                            </Tooltip>
-                        </TooltipProvider>
-                    ))}
+                   <TooltipProvider delayDuration={0}>
+                       <Tooltip>
+                           <TooltipTrigger asChild>
+                           <Link
+                                href="/dashboard/settings"
+                                className={cn(
+                                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
+                                    pathname.startsWith("/dashboard/settings") && "bg-muted text-primary font-semibold"
+                                )}
+                                >
+                                <Settings className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                Settings
+                                </Link>
+                           </TooltipTrigger>
+                       </Tooltip>
+                   </TooltipProvider>
+                    <TooltipProvider delayDuration={0}>
+                       <Tooltip>
+                           <TooltipTrigger asChild>
+                           <Link
+                                href="/dashboard/help"
+                                className={cn(
+                                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
+                                    pathname.startsWith("/dashboard/help") && "bg-muted text-primary font-semibold"
+                                )}
+                                >
+                                <LifeBuoy className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                Help & FAQ
+                                </Link>
+                           </TooltipTrigger>
+                       </Tooltip>
+                   </TooltipProvider>
                 </nav>
             </div>
           </ScrollArea>
