@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -237,9 +238,20 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
 const MoreMenuSheet = () => {
     const { userProfile } = useAuth();
     const router = useRouter();
+    const { toast } = useToast();
     if (!userProfile) return null;
 
     const menuItems = getMoreMenuItems(userProfile.role);
+
+    const handleItemClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
+        if ('locked' in item && item.locked) {
+            e.preventDefault();
+            toast({
+                title: "Coming Soon!",
+                description: `The "${item.label}" feature is under development and will be launched soon.`,
+            });
+        }
+    };
     
     return (
         <Sheet>
@@ -257,10 +269,17 @@ const MoreMenuSheet = () => {
                     <nav className="flex flex-col gap-1 p-4">
                         {menuItems.map(item => (
                              <SheetTrigger asChild key={item.label}>
-                                <Link href={item.href} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <Link
+                                    href={item.href}
+                                    onClick={(e) => handleItemClick(e, item)}
+                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted"
+                                >
                                     <div className="flex items-center gap-4">
                                         <item.icon className="h-5 w-5 text-muted-foreground" />
                                         <span className="font-medium">{item.label}</span>
+                                        {'locked' in item && item.locked && (
+                                            <Lock className="ml-2 h-3.5 w-3.5 text-muted-foreground/70" />
+                                        )}
                                     </div>
                                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                 </Link>
