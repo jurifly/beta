@@ -44,22 +44,24 @@ const formatCurrency = (value: number) => {
     }).format(value);
 };
 
-const MetricDisplay = ({ title, value, icon, tooltipText }: { title: string, value: string | number, icon: React.ReactNode, tooltipText: string }) => (
-    <Card className="p-4 bg-muted/50 interactive-lift">
-        <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
-             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button type="button"><Info className="h-4 w-4 text-muted-foreground/70" /></button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">{tooltipText}</p>
-                </TooltipContent>
-              </Tooltip>
+const MetricDisplay = ({ title, value, tooltipText }: { title: string, value: string | number, tooltipText: string }) => (
+    <Card className="p-4 bg-muted/50">
+        <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+            {title}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button type="button" className="text-left">
+                            <Info className="h-4 w-4" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p className="max-w-xs">{tooltipText}</p>
+                    </TooltipContent>
+                </Tooltip>
             </TooltipProvider>
         </div>
-        <p className="text-2xl font-bold truncate" title={String(value)}>{value}</p>
+        <p className="text-2xl font-bold mt-1">{value}</p>
     </Card>
 );
 
@@ -222,25 +224,21 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                             <MetricDisplay 
                                 title="Pre-Money Valuation" 
                                 value={formatCurrency(result.preMoneyValuation)} 
-                                icon={<Landmark className="h-4 w-4 text-muted-foreground"/>}
                                 tooltipText="The company's value before the new investment. Calculated as: Post-Money Valuation - Investment Amount."
                             />
                             <MetricDisplay 
                                 title="Post-Money Valuation" 
                                 value={formatCurrency(result.postMoneyValuation)} 
-                                icon={<Banknote className="h-4 w-4 text-muted-foreground"/>}
                                 tooltipText="The company's value after the investment. Calculated as: Investment Amount / (Investor's Stake / 100)."
                             />
                             <MetricDisplay 
                                 title="New Share Price" 
                                 value={formatCurrency(result.sharePrice)} 
-                                icon={<Calculator className="h-4 w-4 text-muted-foreground"/>}
                                 tooltipText="The price per share for the new round. Calculated as: Investment Amount / New Investor Shares."
                              />
                             <MetricDisplay 
                                 title="Investor's Stake" 
                                 value={`${result.investorStake.toFixed(2)}%`}
-                                icon={<Percent className="h-4 w-4 text-muted-foreground"/>}
                                 tooltipText="The percentage of the company the new investor will own post-investment."
                             />
                         </div>
