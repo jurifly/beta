@@ -35,7 +35,7 @@ const LandingHeader = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <button onClick={() => router.push('/landing')} className="flex items-center gap-2 font-bold text-primary font-headline text-xl">
-          <ShieldCheck className="h-6 w-6" />
+          <ShieldCheck className="h-6 w-6" suppressHydrationWarning />
           <span>Legalizd</span>
         </button>
         <nav className="flex items-center gap-2 sm:gap-4">
@@ -109,7 +109,7 @@ const ValueSection = () => {
                 {valueProps.map((feature, index) => (
                     <Card key={index} className="p-6 text-left interactive-lift bg-background/50 animate-in fade-in-25 slide-in-from-bottom-8 duration-500" style={{'animationDelay': `${index * 100}ms`} as React.CSSProperties}>
                         <div className="flex justify-start items-center h-12 w-12 rounded-lg bg-primary/10 text-primary mb-4">
-                            <feature.icon className="h-6 w-6 m-3"/>
+                            <feature.icon className="h-6 w-6 m-3" suppressHydrationWarning />
                         </div>
                         <p className="font-semibold text-lg">{feature.text}</p>
                         <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
@@ -256,7 +256,7 @@ export default function LandingPage() {
   if (!isMounted) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" suppressHydrationWarning />
         </div>
     );
   }
