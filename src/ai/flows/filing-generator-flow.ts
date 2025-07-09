@@ -51,7 +51,7 @@ const complianceRules: Record<string, Record<string, FilingRule[]>> = {
     'Private Limited Company': [
       { task: "INC-20A – Commencement", dueDateRule: "180 days from incorporation", frequency: "One-time", type: "Corporate Filing", description: "A mandatory filing to declare that the company has received its subscription money and is ready to commence business.", penalty: "Penalty of ₹50,000 on the company, ₹1,000 per day on officers, and potential for the company to be struck off." },
       { task: "Auditor Appointment (ADT-1)", dueDateRule: "30 days from incorporation", frequency: "One-time", type: "Corporate Filing", description: "Filing Form ADT-1 to appoint the first statutory auditor of the company.", penalty: "Penalty on the company and every officer in default, which can extend up to ₹300 per day." },
-      { task: "First Board Meeting", dueDateRule: "30 days from incorporation", frequency: "One-time", type: "Other Task", description: "The first meeting of the Board of Directors must be held to discuss initial business matters.", penalty: "Penalty of ₹25,000 on the company and every officer in default." },
+      { task: "First Board Meeting", dueDateRule: "30 days from incorporation", frequency: "One-time", type: "Other Task", description: "The first meeting of the Board of Directors must be held to initial business matters.", penalty: "Penalty of ₹25,000 on the company and every officer in default." },
       { task: "PAN, TAN, Bank A/C", dueDateRule: "15 days from incorporation", frequency: "One-time", type: "Other Task", description: "Obtaining Permanent Account Number (PAN), Tax Deduction and Collection Account Number (TAN), and opening a corporate bank account.", penalty: "Essential for all financial transactions and tax filings. Delays will halt business operations." },
       { task: "Share Certificate Issuance", dueDateRule: "60 days from incorporation", frequency: "One-time", type: "Corporate Filing", description: "Issuing formal share certificates to all shareholders as proof of ownership.", penalty: "Penalty on the company and defaulting officers, which can be significant." },
       { task: "Stamp Duty on Certificates", dueDateRule: "30 days from issuance", frequency: "One-time", type: "Other Task", description: "Paying the applicable stamp duty on the share certificates as per the state's stamp act.", penalty: "Unstamped certificates are not valid evidence in court. Penalties can be up to 10 times the duty." },
@@ -89,93 +89,90 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
     const endYear = getYear(currDate);
 
     for (const rule of rules) {
+        const filingData = {
+            title: rule.task,
+            type: rule.type,
+            description: rule.description,
+            penalty: rule.penalty,
+        };
+
         if (rule.frequency === 'One-time') {
+            let dueDate: Date | null = null;
             if (rule.dueDateRule.includes('days from incorporation')) {
                 const days = parseInt(rule.dueDateRule.split(' ')[0]);
-                const dueDate = addDays(incDate, days);
-                allFilings.push({
-                    date: format(dueDate, 'yyyy-MM-dd'),
-                    title: rule.task,
-                    type: rule.type,
-                    description: rule.description,
-                    penalty: rule.penalty,
-                });
+                dueDate = addDays(incDate, days);
             } else if (rule.dueDateRule.includes('days from issuance')) {
-                 // Assuming issuance is 60 days from incDate for simplicity
-                const issuanceDate = addDays(incDate, 60);
+                const issuanceDate = addDays(incDate, 60); // Assuming issuance is 60 days from incDate
                 const days = parseInt(rule.dueDateRule.split(' ')[0]);
-                const dueDate = addDays(issuanceDate, days);
-                 allFilings.push({
-                    date: format(dueDate, 'yyyy-MM-dd'),
-                    title: rule.task,
-                    type: rule.type,
-                    description: rule.description,
-                    penalty: rule.penalty,
-                });
+                dueDate = addDays(issuanceDate, days);
+            }
+            if (dueDate) {
+                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
             }
         } else {
-            const filingData = {
-                title: rule.task,
-                type: rule.type,
-                description: rule.description,
-                penalty: rule.penalty,
-            };
-            
-            for (let year = startYear; year <= endYear; year++) {
-                const agmDate = new Date(year, 8, 30); // Assume Sep 30 for AGM
+            // Generate for start year up to 1 year in the future from current date
+            for (let year = startYear; year <= endYear + 1; year++) {
+                const generateAndPush = (dueDate: Date) => {
+                    // Central check: only add if due date is on or after incorporation
+                    if (dueDate >= incDate) {
+                        allFilings.push({
+                            date: format(dueDate, 'yyyy-MM-dd'),
+                            ...filingData
+                        });
+                    }
+                };
 
-                switch(rule.frequency) {
+                switch (rule.frequency) {
                     case 'Annual':
+                        let annualDueDate: Date | null = null;
                         if (rule.dueDateRule.includes('from AGM')) {
+                            const agmDate = new Date(year, 8, 30); // Assume Sep 30 for AGM
                             const days = parseInt(rule.dueDateRule.split(' ')[0]);
-                            const dueDate = addDays(agmDate, days);
-                            allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
+                            annualDueDate = addDays(agmDate, days);
                         } else if (rule.dueDateRule === 'First board meeting of FY') {
-                            // Approximating as April 15th of the financial year
-                            allFilings.push({ date: format(new Date(year, 3, 15), 'yyyy-MM-dd'), ...filingData });
+                            annualDueDate = new Date(year, 3, 15); // April 15
                         } else {
-                            // Fixed date like "30 Sep"
                             try {
-                                const dueDate = setYear(parse(rule.dueDateRule, 'dd MMM', new Date()), year);
-                                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
-                            } catch (e) {
-                                console.error(`Error parsing date rule: ${rule.dueDateRule}`)
-                            }
+                                annualDueDate = setYear(parse(rule.dueDateRule, 'dd MMM', new Date()), year);
+                            } catch (e) { console.error(`Error parsing date rule: ${rule.dueDateRule}`) }
                         }
+                        if (annualDueDate) generateAndPush(annualDueDate);
                         break;
+
                     case 'Half-yearly':
                     case 'Quarterly':
                         const dates = rule.dueDateRule.split(', ');
                         for (const dateStr of dates) {
                             try {
-                                // For quarterlies, the year might be next year (e.g., Jan, May for a financial year)
                                 const parsedDate = parse(dateStr, 'dd MMM', new Date());
-                                const dueMonth = parsedDate.getMonth();
-                                // A simple way to handle FY year wrap-around for quarterly filings
-                                const filingYear = (dueMonth < 3) ? year + 1 : year;
-                                if (filingYear > endYear + 1) continue;
-                                const dueDate = setYear(parsedDate, filingYear);
-                                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
-                            } catch (e) {
-                                console.error(`Error parsing date rule: ${rule.dueDateRule}`)
-                            }
+                                // Simply set the year from the loop. The filter will handle incDate.
+                                const quarterlyDueDate = setYear(parsedDate, year);
+                                generateAndPush(quarterlyDueDate);
+                            } catch (e) { console.error(`Error parsing date rule: ${rule.dueDateRule}`) }
                         }
                         break;
+                        
                     case 'Monthly':
-                         for (let month = 0; month < 12; month++) {
-                             if (year === startYear && month < incDate.getMonth()) continue;
-                             if (year === endYear && month > currDate.getMonth()) continue;
-                             const day = parseInt(rule.dueDateRule.split('th')[0]);
-                             const dueDate = new Date(year, month, day);
-                             allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
-                         }
+                        const dayOfMonth = parseInt(rule.dueDateRule.match(/\d+/)?.[0] || '1', 10);
+                        for (let month = 0; month < 12; month++) {
+                            const monthlyDueDate = new Date(year, month, dayOfMonth);
+                            generateAndPush(monthlyDueDate);
+                        }
                         break;
                 }
             }
         }
     }
+    
+    // Filter out duplicates and sort
+    const uniqueFilings = Array.from(new Map(allFilings.map(item => [`${item.title}-${item.date}`, item])).values());
+    uniqueFilings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Only return filings up to 1 year from the current date
+    const futureLimit = addMonths(currDate, 12);
+    const finalFilings = uniqueFilings.filter(f => new Date(f.date) <= futureLimit);
 
-    return { filings: allFilings };
+    return { filings: finalFilings };
 }
 
 
