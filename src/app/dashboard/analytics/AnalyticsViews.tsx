@@ -10,10 +10,10 @@ import { useAuth } from "@/hooks/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { generateFilings } from "@/ai/flows/filing-generator-flow"
-import { format } from "date-fns"
+import { format, formatDistanceToNowStrict } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart } from "lucide-react"
+import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -101,28 +101,42 @@ export function FounderAnalytics() {
 
   }, [activeCompany, toast]);
 
-  const { completedCount, totalCount, progress: dataroomProgress, pendingItems } = useMemo(() => {
-    if (!checklistState?.data) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
-    
-    const allItems = checklistState.data.checklist.flatMap(c => c.items);
-    const completedItems = allItems.filter(i => i.status === 'Completed');
-    const pending = allItems.filter(i => i.status !== 'Completed').slice(0, 3);
-    const totalItems = allItems.length;
+    const { categoryProgress, overallProgress } = useMemo(() => {
+        if (!checklistState?.data) return { categoryProgress: [], overallProgress: 0 };
+        
+        const overall = { completed: 0, total: 0 };
+        const categories = checklistState.data.checklist.map(cat => {
+            const total = cat.items.length;
+            const completed = cat.items.filter(i => i.status === 'Completed').length;
+            overall.completed += completed;
+            overall.total += total;
+            return {
+                name: cat.category,
+                progress: total > 0 ? Math.round((completed / total) * 100) : 0
+            };
+        });
+        
+        return {
+          categoryProgress: categories.filter(c => checklistState.data.checklist.find(cat => cat.category === c.name)?.items.length ?? 0 > 0),
+          overallProgress: overall.total > 0 ? Math.round((overall.completed / overall.total) * 100) : 0,
+        };
+    }, [checklistState]);
 
-    if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
-    
-    return {
-      completedCount: completedItems.length,
-      totalCount: totalItems,
-      progress: Math.round((completedItems.length / totalItems) * 100),
-      pendingItems: pending,
-    };
-  }, [checklistState]);
-
-  const { hygieneScore, filingPerformance, profileCompleteness } = useMemo(() => {
+  const { hygieneScore, filingPerformance, profileCompleteness, upcomingFilings } = useMemo(() => {
     const totalFilings = deadlines.length;
     const overdueFilings = deadlines.filter(d => d.overdue).length;
     const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
+
+    const today = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+    const upcoming = deadlines
+        .filter(d => {
+            const dueDate = new Date(d.date + 'T00:00:00');
+            return dueDate >= today && dueDate <= thirtyDaysFromNow;
+        })
+        .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 4);
 
     let profileScore = 0;
     if (activeCompany) {
@@ -140,6 +154,7 @@ export function FounderAnalytics() {
         hygieneScore: score || 0,
         filingPerformance: Math.round(filingPerf),
         profileCompleteness: Math.round(profileScore),
+        upcomingFilings: upcoming,
     };
   }, [deadlines, activeCompany]);
   
@@ -230,34 +245,30 @@ export function FounderAnalytics() {
                 <CardDescription>A dynamic checklist to prepare your company for due diligence.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1">
-                  {checklistState?.data ? (
+                  {checklistState?.data && categoryProgress.length > 0 ? (
                       <div className="space-y-4">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center text-sm font-medium">
-                                <Label>{checklistState.data.reportTitle} ({completedCount}/{totalCount})</Label>
-                                <span className="font-bold text-primary">{dataroomProgress}%</span>
+                                <Label>{checklistState.data.reportTitle} (Overall)</Label>
+                                <span className="font-bold text-primary">{overallProgress}%</span>
                             </div>
-                            <Progress value={dataroomProgress} />
+                            <Progress value={overallProgress} />
                         </div>
-                        <div>
-                            <h4 className="font-medium text-sm mb-2">Pending Items:</h4>
-                            <div className="space-y-2">
-                                {pendingItems.length > 0 ? (
-                                    pendingItems.map(item => (
-                                        <div key={item.id} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"/>
-                                            <span>{item.task}</span>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">All items completed!</p>
-                                )}
-                            </div>
+                        <div className="space-y-3 pt-2">
+                           {categoryProgress.map(cat => (
+                             <div key={cat.name}>
+                               <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                                   <span>{cat.name}</span>
+                                   <span>{cat.progress}%</span>
+                               </div>
+                               <Progress value={cat.progress} className="h-2 mt-1"/>
+                             </div>
+                           ))}
                         </div>
                       </div>
                   ) : (
                     <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                        <p>Generate a due diligence list to see your readiness.</p>
+                        <p>Generate a due diligence list in the AI Toolkit to see your readiness.</p>
                     </div>
                   )}
             </CardContent>
@@ -270,6 +281,69 @@ export function FounderAnalytics() {
             </CardFooter>
         </Card>
         <Card className="interactive-lift flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CalendarClock className="w-6 h-6 text-primary"/> Upcoming Deadlines</CardTitle>
+                <CardDescription>Your next four most critical compliance due dates.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1">
+                {isLoading ? <Skeleton className="h-full w-full"/> : upcomingFilings.length > 0 ? (
+                    <div className="space-y-3">
+                        {upcomingFilings.map(d => (
+                            <div key={d.title} className="flex items-center justify-between p-3 bg-muted/50 border rounded-lg">
+                                <p className="font-medium text-sm">{d.title}</p>
+                                <Badge variant="outline" className="font-mono">{formatDistanceToNowStrict(new Date(d.date + 'T00:00:00'))}</Badge>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                       <p>No upcoming filings in the next 30 days. You're all clear!</p>
+                    </div>
+                )}
+            </CardContent>
+             <CardFooter>
+                <Button asChild variant="link" className="p-0 h-auto">
+                    <Link href="/dashboard/ca-connect">
+                        View Full Calendar <ArrowRight className="ml-2 h-4 w-4"/>
+                    </Link>
+                </Button>
+            </CardFooter>
+        </Card>
+      </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         <Card className="interactive-lift flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
+                <CardDescription>A high-level view of your startup's financial health.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 flex-1">
+                {activeCompany?.financials ? (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg bg-muted border text-center">
+                            <p className="text-sm text-muted-foreground">{burnRate >= 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                            <p className={`text-2xl font-bold ${burnRate >= 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted border text-center">
+                            <p className="text-sm text-muted-foreground">{runway.includes('Profitable') ? 'Status' : 'Runway'}</p>
+                            <p className="text-2xl font-bold">{runway}</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                        <p>No financial data. <Link href="/dashboard/financials" className="text-primary underline">Add financials</Link> to see this snapshot.</p>
+                    </div>
+                )}
+            </CardContent>
+            <CardFooter>
+                <Button asChild variant="link" className="p-0 h-auto">
+                    <Link href="/dashboard/financials">
+                        Go to Financials <ArrowRight className="ml-2 h-4 w-4"/>
+                    </Link>
+                </Button>
+            </CardFooter>
+        </Card>
+         <Card className="interactive-lift flex flex-col">
           <CardHeader>
               <CardTitle className="flex items-center gap-2"><PieChart className="w-6 h-6 text-primary"/> Ownership Structure</CardTitle>
               <CardDescription>A summary of your company's equity distribution.</CardDescription>
@@ -304,33 +378,20 @@ export function FounderAnalytics() {
       </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         <Card className="interactive-lift flex flex-col">
+        <Card className="interactive-lift flex flex-col">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
-                <CardDescription>A high-level view of your startup's financial health.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Scenario Modeling</CardTitle>
+                <CardDescription>Understand how a new investment could impact your ownership.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 flex-1">
-                {activeCompany?.financials ? (
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-lg bg-muted border text-center">
-                            <p className="text-sm text-muted-foreground">{burnRate >= 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                            <p className={`text-2xl font-bold ${burnRate >= 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
-                        </div>
-                        <div className="p-4 rounded-lg bg-muted border text-center">
-                            <p className="text-sm text-muted-foreground">{runway.includes('Profitable') ? 'Status' : 'Runway'}</p>
-                            <p className="text-2xl font-bold">{runway}</p>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                        <p>No financial data. <Link href="/dashboard/financials" className="text-primary underline">Add financials</Link> to see this snapshot.</p>
-                    </div>
-                )}
+            <CardContent className="flex-1">
+                <p className="text-sm text-muted-foreground">
+                    Use our powerful round modeling tool to simulate new investments, adjust valuations, and visualize dilution before it happens. Make informed decisions about your equity.
+                </p>
             </CardContent>
             <CardFooter>
                 <Button asChild variant="link" className="p-0 h-auto">
-                    <Link href="/dashboard/financials">
-                        Go to Financials <ArrowRight className="ml-2 h-4 w-4"/>
+                    <Link href="/dashboard/cap-table">
+                        Model a Funding Round <ArrowRight className="ml-2 h-4 w-4"/>
                     </Link>
                 </Button>
             </CardFooter>
