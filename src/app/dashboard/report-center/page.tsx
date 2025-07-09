@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -27,8 +28,9 @@ type ReportData = {
 };
 
 const ReportTemplate = ({ data }: { data: ReportData }) => {
-    const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
+    const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
+    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
+    const totalShares = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
 
     return (
         <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Manrope, sans-serif' }}>
@@ -87,7 +89,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                             <h3 className="text-base font-semibold text-gray-700 mb-2">Ownership Structure</h3>
                             <ResponsiveContainer width="100%" height={150}>
                                 <RechartsPieChart>
-                                    <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
+                                    <RechartsTooltip formatter={(value: number, name: string) => [`${totalShares > 0 ? (value / totalShares * 100).toFixed(1) : 0}%`, name]} />
                                     <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                         {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                     </Pie>
@@ -168,7 +170,7 @@ export default function ReportCenterPage() {
                 id: `${filing.title}-${filing.date}`,
                 text: filing.title,
                 dueDate: filing.date,
-                completed: filing.status === 'completed'
+                completed: filing.type === 'completed' // Assuming the flow returns a status
             }));
             
             const upcomingFilings = checklistItems.filter(item => {
