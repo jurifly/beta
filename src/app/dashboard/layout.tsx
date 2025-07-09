@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -77,7 +76,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", label: "Compliance Hub", icon: ClipboardCheck },
+  caConnect: { href: "/dashboard/ca-connect", label: "Compliance Hub", icon: ClipboardCheck, locked: true },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
   learn: { href: "/dashboard/learn", label: "Learn Hub", icon: BookOpenCheck },
@@ -90,9 +89,10 @@ const navItemConfig = {
   team: { href: "/dashboard/team", label: "Team", icon: Users },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
-  invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail },
+  invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail, locked: true },
   reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  help: { href: "/dashboard/help", label: "Help & FAQ", icon: LifeBuoy },
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
@@ -119,7 +119,7 @@ const Logo = () => (
 
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.caConnect, label: "CA Connect" },
+  { ...navItemConfig.caConnect, label: "CA Connect", locked: true },
   { ...navItemConfig.aiToolkit },
   navItemConfig.capTable,
   navItemConfig.financials,
@@ -271,6 +271,15 @@ const MoreMenuSheet = () => {
                                 <div className="flex items-center gap-4">
                                     <Settings className="h-5 w-5 text-muted-foreground" />
                                     <span className="font-medium">Settings</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                        </SheetTrigger>
+                         <SheetTrigger asChild>
+                            <Link href="/dashboard/help" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <div className="flex items-center gap-4">
+                                    <LifeBuoy className="h-5 w-5 text-muted-foreground" />
+                                    <span className="font-medium">Help &amp; FAQ</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -475,12 +484,12 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
     const isPro = planHierarchy[userProfile.plan] > 0;
     const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
 
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-        if (href === '/dashboard/community') {
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
+        if ('locked' in item && item.locked) {
             e.preventDefault();
             toast({
                 title: "Coming Soon!",
-                description: "The community forum is under development and will be launched soon.",
+                description: `The "${item.label}" feature is under development and will be launched soon.`,
             });
         }
     };
@@ -510,7 +519,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                       <TooltipTrigger asChild>
                         <Link
                           href={item.href}
-                          onClick={(e) => handleLinkClick(e, item.href)}
+                          onClick={(e) => handleLinkClick(e, item)}
                           className={cn(
                               "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
                               isActive && "bg-muted text-primary font-semibold"
@@ -538,7 +547,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                                 <TooltipTrigger asChild>
                                 <Link
                                     href={item.href}
-                                    onClick={(e) => handleLinkClick(e, item.href)}
+                                    onClick={(e) => handleLinkClick(e, item)}
                                     className={cn(
                                         "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
                                         pathname.startsWith(item.href) && "bg-muted text-primary font-semibold"
@@ -563,6 +572,15 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                     <Settings className="h-5 w-5" />
                     <div className="flex-1">
                        <p className="font-semibold">Settings</p>
+                    </div>
+                     <ChevronRight className="h-4 w-4" />
+                </div>
+              </Link>
+               <Link href="/dashboard/help">
+                <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
+                    <LifeBuoy className="h-5 w-5" />
+                    <div className="flex-1">
+                       <p className="font-semibold">Help &amp; FAQ</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
