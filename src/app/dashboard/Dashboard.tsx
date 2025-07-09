@@ -64,7 +64,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const ComplianceActivityChart = dynamic(
-  () => import('@/components/dashboard/compliance-activity-chart').then(mod => mod.ComplianceActivityChart),
+  () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
   { 
     ssr: false,
     loading: () => <Skeleton className="h-[350px] w-full rounded-lg" />
