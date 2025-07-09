@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Bug, Lightbulb, Palette, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { auth } from "@/lib/firebase/config";
 
 // --- Policies Tab Content ---
 const policies = {
@@ -72,15 +73,56 @@ const FeedbackTab = () => {
 };
 
 // --- Security Tab ---
-const SecurityTab = () => (
-    <Card className="interactive-lift">
-        <CardHeader><CardTitle>Security</CardTitle><CardDescription>Manage your workspace security settings.</CardDescription></CardHeader>
-        <CardContent className="space-y-4">
-          <Card><CardHeader><CardTitle className="text-base">Change Password</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">Password management is handled by your login provider (e.g., Google or Email). Use their password recovery tools if needed.</p></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-base flex items-center justify-between">Single Sign-On (SSO)<Lock className="w-4 h-4 text-muted-foreground"/></CardTitle><CardDescription>Allow your team to sign in with your corporate identity provider.</CardDescription></CardHeader><CardFooter className="border-t pt-4"><p className="text-sm text-muted-foreground">SSO is an enterprise feature. Please contact sales to enable it.</p></CardFooter></Card>
-        </CardContent>
-    </Card>
-);
+const SecurityTab = () => {
+    const { user, sendPasswordResetLink } = useAuth();
+    const { toast } = useToast();
+    const [isSending, setIsSending] = useState(false);
+
+    const handlePasswordReset = async () => {
+        if (!user?.email) {
+            toast({ variant: 'destructive', title: 'Error', description: 'No email address found for your account.' });
+            return;
+        }
+        setIsSending(true);
+        try {
+            await sendPasswordResetLink(user.email);
+            toast({ title: 'Password Reset Email Sent', description: 'Please check your inbox for instructions to reset your password.' });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        } finally {
+            setIsSending(false);
+        }
+    };
+    
+    const isEmailProvider = auth.currentUser?.providerData.some(p => p.providerId === 'password');
+
+    return (
+        <Card className="interactive-lift">
+            <CardHeader><CardTitle>Security</CardTitle><CardDescription>Manage your workspace security settings.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <Card>
+                  <CardHeader><CardTitle className="text-base">Change Password</CardTitle></CardHeader>
+                  <CardContent>
+                    {isEmailProvider ? (
+                      <p className="text-sm text-muted-foreground mb-4">Click the button below to send a password reset link to your email address.</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">You signed in with a social provider (e.g., Google). You can change your password through them.</p>
+                    )}
+                  </CardContent>
+                  {isEmailProvider && (
+                    <CardFooter>
+                      <Button onClick={handlePasswordReset} disabled={isSending}>
+                          {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                          Send Reset Link
+                      </Button>
+                    </CardFooter>
+                  )}
+              </Card>
+              <Card><CardHeader><CardTitle className="text-base flex items-center justify-between">Single Sign-On (SSO)<Lock className="w-4 h-4 text-muted-foreground"/></CardTitle><CardDescription>Allow your team to sign in with your corporate identity provider.</CardDescription></CardHeader><CardFooter className="border-t pt-4"><p className="text-sm text-muted-foreground">SSO is an enterprise feature. Please contact sales to enable it.</p></CardFooter></Card>
+            </CardContent>
+        </Card>
+    );
+};
 
 export default function SettingsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
