@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight, Info } from "lucide-react";
+import { Calculator, Sparkles, TrendingUp, Info } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ const formatCurrency = (value: number) => {
 };
 
 const MetricDisplay = ({ title, value, tooltipText }: { title: string, value: string | number, tooltipText: string }) => (
-    <Card className="p-4 bg-muted/50">
+    <div className="p-4 bg-muted/50 rounded-lg border">
         <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
             {title}
             <TooltipProvider>
@@ -62,7 +62,7 @@ const MetricDisplay = ({ title, value, tooltipText }: { title: string, value: st
             </TooltipProvider>
         </div>
         <p className="text-2xl font-bold mt-1">{value}</p>
-    </Card>
+    </div>
 );
 
 const renderTable = (title: string, data: any[]) => (
@@ -148,68 +148,68 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+      <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-headline text-2xl"><TrendingUp/> Cap Table Modeling</DialogTitle>
           <DialogDescription>
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 min-h-0">
-            <Card className="interactive-lift flex flex-col">
-                <CardHeader>
-                    <CardTitle>Scenario Inputs</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-8 flex-1">
-                     <div className="space-y-3">
-                        <Label htmlFor="investment-slider">New Investment (₹)</Label>
-                        <Input
-                            id="investment"
-                            type="number"
-                            value={investment}
-                            onChange={(e) => setInvestment(Number(e.target.value))}
-                            className="w-full text-lg font-mono"
-                        />
-                        <Slider
-                            id="investment-slider"
-                            min={100000}
-                            max={100000000}
-                            step={100000}
-                            value={[investment]}
-                            onValueChange={(value) => setInvestment(value[0])}
-                        />
-                    </div>
-                     <div className="space-y-3">
-                        <Label htmlFor="stake-slider">Investor's Stake (%)</Label>
-                        <div className="relative">
+        <ScrollArea className="flex-1 -mx-6">
+            <div className="space-y-6 px-6 pb-6">
+                <Card className="interactive-lift sticky top-0 z-10 bg-card/80 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle>Scenario Inputs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <Label htmlFor="investment-slider">New Investment (₹)</Label>
                             <Input
-                                id="stake"
+                                id="investment"
                                 type="number"
-                                value={investorStake}
-                                onChange={(e) => setInvestorStake(Number(e.target.value))}
-                                className="w-full text-lg font-mono pr-8"
+                                value={investment}
+                                onChange={(e) => setInvestment(Number(e.target.value))}
+                                className="w-full text-lg font-mono"
                             />
-                            <span className="absolute inset-y-0 right-3 flex items-center text-lg text-muted-foreground">%</span>
+                            <Slider
+                                id="investment-slider"
+                                min={100000}
+                                max={100000000}
+                                step={100000}
+                                value={[investment]}
+                                onValueChange={(value) => setInvestment(value[0])}
+                            />
                         </div>
-                         <Slider
-                            id="stake-slider"
-                            min={1}
-                            max={50}
-                            step={1}
-                            value={[investorStake]}
-                            onValueChange={(value) => setInvestorStake(value[0])}
-                        />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button onClick={calculateScenario} className="w-full">
-                        <Sparkles className="mr-2 h-4 w-4"/>
-                        Calculate Scenario
-                    </Button>
-                </CardFooter>
-            </Card>
+                        <div className="space-y-3">
+                            <Label htmlFor="stake-slider">Investor's Stake (%)</Label>
+                            <div className="relative">
+                                <Input
+                                    id="stake"
+                                    type="number"
+                                    value={investorStake}
+                                    onChange={(e) => setInvestorStake(Number(e.target.value))}
+                                    className="w-full text-lg font-mono pr-8"
+                                />
+                                <span className="absolute inset-y-0 right-3 flex items-center text-lg text-muted-foreground">%</span>
+                            </div>
+                            <Slider
+                                id="stake-slider"
+                                min={1}
+                                max={50}
+                                step={1}
+                                value={[investorStake]}
+                                onValueChange={(value) => setInvestorStake(value[0])}
+                            />
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={calculateScenario} className="w-full sm:w-auto mx-auto">
+                            <Sparkles className="mr-2 h-4 w-4"/>
+                            Calculate Scenario
+                        </Button>
+                    </CardFooter>
+                </Card>
 
-            <ScrollArea className="flex-1 -mx-4 px-4">
                 {!result ? (
                     <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
                         <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
@@ -220,40 +220,42 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                     </div>
                 ) : (
                     <div className="space-y-6 animate-in fade-in-50 duration-500">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <MetricDisplay 
-                                title="Pre-Money Valuation" 
-                                value={formatCurrency(result.preMoneyValuation)} 
-                                tooltipText="The company's value before the new investment. Calculated as: Post-Money Valuation - Investment Amount."
-                            />
-                            <MetricDisplay 
-                                title="Post-Money Valuation" 
-                                value={formatCurrency(result.postMoneyValuation)} 
-                                tooltipText="The company's value after the investment. Calculated as: Investment Amount / (Investor's Stake / 100)."
-                            />
-                            <MetricDisplay 
-                                title="New Share Price" 
-                                value={formatCurrency(result.sharePrice)} 
-                                tooltipText="The price per share for the new round. Calculated as: Investment Amount / New Investor Shares."
-                             />
-                            <MetricDisplay 
-                                title="Investor's Stake" 
-                                value={`${result.investorStake.toFixed(2)}%`}
-                                tooltipText="The percentage of the company the new investor will own post-investment."
-                            />
-                        </div>
+                        <Card>
+                             <CardHeader>
+                                <CardTitle>Scenario Summary</CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <MetricDisplay 
+                                    title="Pre-Money Valuation" 
+                                    value={formatCurrency(result.preMoneyValuation)} 
+                                    tooltipText="The company's value before the new investment. Calculated as: Post-Money Valuation - Investment Amount."
+                                />
+                                <MetricDisplay 
+                                    title="Post-Money Valuation" 
+                                    value={formatCurrency(result.postMoneyValuation)} 
+                                    tooltipText="The company's value after the investment. Calculated as: Investment Amount / (Investor's Stake / 100)."
+                                />
+                                <MetricDisplay 
+                                    title="New Share Price" 
+                                    value={formatCurrency(result.sharePrice)} 
+                                    tooltipText="The price per share for the new round. Calculated as: Investment Amount / New Investor Shares."
+                                />
+                                <MetricDisplay 
+                                    title="Investor's Stake" 
+                                    value={`${result.investorStake.toFixed(2)}%`}
+                                    tooltipText="The percentage of the company the new investor will own post-investment."
+                                />
+                            </CardContent>
+                        </Card>
 
-                        <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] items-start gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                             {renderTable("Pre-Financing", result.preMoney)}
-                            <div className="hidden xl:flex justify-center items-center h-full">
-                                <ArrowRight className="w-8 h-8 text-muted-foreground mt-8"/>
-                            </div>
                             {renderTable("Post-Financing", result.postMoney)}
                         </div>
                     </div>
                 )}
-            </ScrollArea>
-        </div>
+            </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
