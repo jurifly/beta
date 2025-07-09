@@ -117,6 +117,7 @@ export function FounderAnalytics() {
             incorporationDate: activeCompany.incorporationDate,
             currentDate: currentDate,
             legalRegion: activeCompany.legalRegion,
+            gstin: activeCompany.gstin,
           });
 
           const generatedEvents = response.filings.map(filing => ({

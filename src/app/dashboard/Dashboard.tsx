@@ -213,6 +213,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                     incorporationDate: activeCompany.incorporationDate,
                     currentDate: currentDate,
                     legalRegion: activeCompany.legalRegion,
+                    gstin: activeCompany.gstin,
                 });
                 
                 const processedFilings = response.filings.filter(f => f.date && !isNaN(new Date(f.date).getTime()));

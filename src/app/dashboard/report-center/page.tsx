@@ -161,6 +161,7 @@ export default function ReportCenterPage() {
                 incorporationDate: client.incorporationDate,
                 currentDate: currentDate,
                 legalRegion: client.legalRegion,
+                gstin: client.gstin,
             });
 
             // 2. Process data for the report
@@ -172,7 +173,7 @@ export default function ReportCenterPage() {
                 id: `${filing.title}-${filing.date}`,
                 text: filing.title,
                 dueDate: filing.date,
-                completed: filing.type === 'completed' // Assuming the flow returns a status
+                completed: false // Assuming the flow returns a status
             }));
             
             const upcomingFilings = checklistItems.filter(item => {

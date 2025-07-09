@@ -14,6 +14,7 @@ const FilingGeneratorInputSchema = z.object({
   incorporationDate: z.string().describe("The company's date of incorporation in YYYY-MM-DD format."),
   currentDate: z.string().describe("The current date in YYYY-MM-DD format, to be used as a reference for generating deadlines."),
   legalRegion: z.string().describe('The country/legal region for the company, e.g., "India", "USA".'),
+  gstin: z.string().optional().describe('The GST Identification Number of the company. If not provided, GST-related filings will be omitted.'),
 });
 export type FilingGeneratorInput = z.infer<typeof FilingGeneratorInputSchema>;
 
@@ -74,7 +75,7 @@ const complianceRules: Record<string, Record<string, FilingRule[]>> = {
 
 
 function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorOutput {
-    const { companyType, incorporationDate, currentDate, legalRegion } = input;
+    const { companyType, incorporationDate, currentDate, legalRegion, gstin } = input;
     const rules = complianceRules[legalRegion]?.[companyType];
 
     if (!rules) {
@@ -89,6 +90,13 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
     const endYear = getYear(currDate);
 
     for (const rule of rules) {
+        // Check for GSTIN for GST-related tasks
+        if (rule.type === 'Tax Filing' && rule.task.includes('GSTR')) {
+            if (!gstin) {
+                continue; // Skip GST filings if no GSTIN is provided
+            }
+        }
+
         const filingData = {
             title: rule.task,
             type: rule.type,
@@ -106,7 +114,7 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
                 const days = parseInt(rule.dueDateRule.split(' ')[0]);
                 dueDate = addDays(issuanceDate, days);
             }
-            if (dueDate) {
+            if (dueDate && dueDate >= incDate) { // Final check for one-time events
                 allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
             }
         } else {
