@@ -143,7 +143,7 @@ const ValueSection = () => {
 // Product Glimpse Section
 const ProductGlimpseSection = () => {
     const glimpses = [
-        { title: "Launchpad", description: "Start your company in 5 clicks.", image: "https://placehold.co/600x400.png", hint: "startup checklist" },
+        { title: "Launchpad", description: "Start your company in 5 clicks.", image: "https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724398188339.png?alt=media&token=487d7b30-e889-4074-b773-fcb33b8a3e77", hint: "company setup" },
         { title: "Cap Table Preview", description: "See your dilution before it happens.", image: "https://placehold.co/600x400.png", hint: "cap table graph" },
         { title: "Compliance Status", description: "Legal hygiene score: 93/100 ✅", image: "https://placehold.co/600x400.png", hint: "compliance dashboard" },
         { title: "Document Vault", description: "Board Resolution.pdf uploaded via AI", image: "https://placehold.co/600x400.png", hint: "document list" },
