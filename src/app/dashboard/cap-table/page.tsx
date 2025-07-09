@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight, FileText } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,14 @@ import { useToast } from '@/hooks/use-toast';
 import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling-modal';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+    }).format(value);
+};
 
 export default function CapTablePage() {
     const { userProfile, updateUserProfile } = useAuth();
@@ -202,7 +210,7 @@ export default function CapTablePage() {
                                         <TableRow>
                                             <TableHead>Shareholder</TableHead>
                                             <TableHead>Type</TableHead>
-                                            <TableHead>Grant Date</TableHead>
+                                            <TableHead>Valuation</TableHead>
                                             <TableHead>Shares</TableHead>
                                             <TableHead className="text-right">Ownership</TableHead>
                                             <TableHead className="text-right w-[100px]">Actions</TableHead>
@@ -214,7 +222,7 @@ export default function CapTablePage() {
                                                 <TableRow key={entry.id}>
                                                     <TableCell className="font-medium">{entry.holder}</TableCell>
                                                     <TableCell><Badge variant="outline">{entry.type}</Badge></TableCell>
-                                                    <TableCell>{entry.grantDate}</TableCell>
+                                                    <TableCell className="font-mono">{entry.type === 'Investor' && entry.valuation ? formatCurrency(entry.valuation) : 'N/A'}</TableCell>
                                                     <TableCell>{entry.shares.toLocaleString()}</TableCell>
                                                     <TableCell className="text-right font-mono">
                                                         {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
@@ -259,6 +267,10 @@ export default function CapTablePage() {
                                                     <p className="font-medium font-mono">
                                                         {totalShares > 0 ? ((entry.shares / totalShares) * 100).toFixed(2) : 0}%
                                                     </p>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <p className="text-muted-foreground">Valuation (at time of investment)</p>
+                                                    <p className="font-medium font-mono">{entry.type === 'Investor' && entry.valuation ? formatCurrency(entry.valuation) : 'N/A'}</p>
                                                 </div>
                                                 <div className="col-span-2">
                                                     <p className="text-muted-foreground">Grant Date</p>

@@ -17,6 +17,8 @@ export interface CapTableEntry {
   shares: number;
   grantDate: string;
   vesting: string;
+  investmentAmount?: number;
+  valuation?: number;
 }
 
 export interface ClientMatter {

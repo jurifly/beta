@@ -31,6 +31,8 @@ const entrySchema = z.object({
   vesting: z.string().min(3, "Vesting details are required."),
   value: z.coerce.number().min(0.0001, "Value must be greater than zero."),
   inputType: z.enum(['shares', 'percentage']).default('shares'),
+  investmentAmount: z.coerce.number().optional(),
+  valuation: z.coerce.number().optional(),
 });
 
 type FormData = z.infer<typeof entrySchema>;
@@ -56,17 +58,26 @@ export function CapTableModal({ isOpen, onOpenChange, onSave, entryToEdit, total
       vesting: "",
       value: 0,
       inputType: 'shares',
+      investmentAmount: 0,
+      valuation: 0,
     }
   });
 
   const inputType = watch("inputType");
+  const type = watch("type");
 
   useEffect(() => {
     if (isOpen) {
       if (isEditMode && entryToEdit) {
         // When editing, lock to "shares" mode and pre-fill the value.
         // It's ambiguous to edit by percentage after issuance.
-        reset({ ...entryToEdit, value: entryToEdit.shares, inputType: 'shares' });
+        reset({ 
+            ...entryToEdit, 
+            value: entryToEdit.shares, 
+            inputType: 'shares',
+            investmentAmount: entryToEdit.investmentAmount || 0,
+            valuation: entryToEdit.valuation || 0,
+        });
       } else {
         reset({
             holder: "",
@@ -75,6 +86,8 @@ export function CapTableModal({ isOpen, onOpenChange, onSave, entryToEdit, total
             vesting: "",
             value: 0,
             inputType: 'shares',
+            investmentAmount: 0,
+            valuation: 0,
         });
       }
     }
@@ -175,6 +188,22 @@ export function CapTableModal({ isOpen, onOpenChange, onSave, entryToEdit, total
                 <Controller name="vesting" control={control} render={({ field }) => <Textarea id="vesting" placeholder="e.g., 4-year vest, 1-year cliff" {...field} />} />
                 {errors.vesting && <p className="text-sm text-destructive">{errors.vesting.message}</p>}
             </div>
+             {type === 'Investor' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="investmentAmount">Investment Amount</Label>
+                        <Controller name="investmentAmount" control={control} render={({ field }) => <Input id="investmentAmount" type="number" placeholder="e.g. 5000000" {...field} />} />
+                        {errors.investmentAmount && <p className="text-sm text-destructive">{errors.investmentAmount.message}</p>}
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="valuation">Post-Money Valuation</Label>
+                        <Controller name="valuation" control={control} render={({ field }) => <Input id="valuation" type="number" placeholder="e.g. 100000000" {...field} />} />
+                        {errors.valuation && <p className="text-sm text-destructive">{errors.valuation.message}</p>}
+                    </div>
+                </div>
+              </>
+            )}
           <DialogFooter className="pt-4">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>
