@@ -13,7 +13,7 @@ import { generateFilings } from "@/ai/flows/filing-generator-flow"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CheckSquare, ShieldCheck, ArrowRight, Briefcase, ListTodo, CalendarClock, Users, GanttChartSquare, LineChart, FileText, PieChart, FileWarning } from "lucide-react"
+import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,6 +24,17 @@ type Deadline = {
     title: string;
     overdue: boolean;
 };
+
+const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+
+const formatCurrency = (num: number, region = 'India') => {
+  const options: Intl.NumberFormatOptions = {
+      maximumFractionDigits: 0,
+      style: 'currency',
+      currency: region === 'India' ? 'INR' : 'USD'
+  };
+  return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
+}
 
 // --- Founder Analytics ---
 export function FounderAnalytics() {
@@ -95,7 +106,7 @@ export function FounderAnalytics() {
     
     const allItems = checklistState.data.checklist.flatMap(c => c.items);
     const completedItems = allItems.filter(i => i.status === 'Completed');
-    const pending = allItems.filter(i => i.status !== 'Completed').slice(0, 3); // Take top 3 pending
+    const pending = allItems.filter(i => i.status !== 'Completed').slice(0, 3);
     const totalItems = allItems.length;
 
     if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0, pendingItems: [] };
@@ -132,7 +143,38 @@ export function FounderAnalytics() {
     };
   }, [deadlines, activeCompany]);
   
-   if (!activeCompany) {
+  const { burnRate, runway } = useMemo(() => {
+    if (!activeCompany?.financials) return { burnRate: 0, runway: "N/A" };
+    const { cashBalance, monthlyRevenue, monthlyExpenses } = activeCompany.financials;
+    const burn = monthlyExpenses - monthlyRevenue;
+    let runwayMonths = "Profitable";
+    if (burn > 0) {
+        runwayMonths = cashBalance > 0 && burn > 0 ? `${Math.floor(cashBalance / burn)} months` : "0 months";
+    }
+    return { burnRate: burn, runway: runwayMonths };
+  }, [activeCompany?.financials]);
+  
+  const { ownershipData } = useMemo(() => {
+    const capTable = activeCompany?.capTable || [];
+    if (capTable.length === 0) return { ownershipData: [] };
+
+    const { founderShares, investorShares, esopPool } = capTable.reduce((acc, entry) => {
+        if (entry.type === 'Founder') acc.founderShares += entry.shares;
+        else if (entry.type === 'Investor') acc.investorShares += entry.shares;
+        else if (entry.type === 'ESOP') acc.esopPool += entry.shares;
+        return acc;
+    }, { founderShares: 0, investorShares: 0, esopPool: 0 });
+
+    const data = [
+        { name: 'Founders', value: founderShares },
+        { name: 'Investors', value: investorShares },
+        { name: 'ESOP Pool', value: esopPool },
+    ].filter(d => d.value > 0);
+
+    return { ownershipData: data };
+  }, [activeCompany?.capTable]);
+
+  if (!activeCompany) {
     return (
       <Card className="lg:col-span-3">
         <CardContent className="p-8 text-center text-muted-foreground">
@@ -181,51 +223,119 @@ export function FounderAnalytics() {
           </CardContent>
       </Card>
 
-      <Card className="interactive-lift flex flex-col">
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2"><CheckSquare className="w-6 h-6 text-primary"/> Fundraising Readiness</CardTitle>
-              <CardDescription>A dynamic checklist to prepare your company for due diligence.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 flex-1">
-                {checklistState?.data ? (
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                          <div className="flex justify-between items-center text-sm font-medium">
-                              <Label>{checklistState.data.reportTitle} ({completedCount}/{totalCount})</Label>
-                              <span className="font-bold text-primary">{dataroomProgress}%</span>
-                          </div>
-                          <Progress value={dataroomProgress} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="interactive-lift flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CheckSquare className="w-6 h-6 text-primary"/> Fundraising Readiness</CardTitle>
+                <CardDescription>A dynamic checklist to prepare your company for due diligence.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 flex-1">
+                  {checklistState?.data ? (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-sm font-medium">
+                                <Label>{checklistState.data.reportTitle} ({completedCount}/{totalCount})</Label>
+                                <span className="font-bold text-primary">{dataroomProgress}%</span>
+                            </div>
+                            <Progress value={dataroomProgress} />
+                        </div>
+                        <div>
+                            <h4 className="font-medium text-sm mb-2">Pending Items:</h4>
+                            <div className="space-y-2">
+                                {pendingItems.length > 0 ? (
+                                    pendingItems.map(item => (
+                                        <div key={item.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"/>
+                                            <span>{item.task}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">All items completed!</p>
+                                )}
+                            </div>
+                        </div>
                       </div>
-                      <div>
-                          <h4 className="font-medium text-sm mb-2">Pending Items:</h4>
-                          <div className="space-y-2">
-                              {pendingItems.length > 0 ? (
-                                  pendingItems.map(item => (
-                                      <div key={item.id} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                          <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"/>
-                                          <span>{item.task}</span>
-                                      </div>
-                                  ))
-                              ) : (
-                                  <p className="text-sm text-muted-foreground">All items completed!</p>
-                              )}
-                          </div>
-                      </div>
+                  ) : (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                        <p>Generate a due diligence list to see your readiness.</p>
                     </div>
-                ) : (
+                  )}
+            </CardContent>
+            <CardFooter>
+                <Button asChild variant="link" className="p-0 h-auto">
+                    <Link href="/dashboard/ai-toolkit?tab=audit">
+                        Go to Audit Hub <ArrowRight className="ml-2 h-4 w-4"/>
+                    </Link>
+                </Button>
+            </CardFooter>
+        </Card>
+        <Card className="interactive-lift flex flex-col">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2"><PieChart className="w-6 h-6 text-primary"/> Ownership Structure</CardTitle>
+              <CardDescription>A summary of your company's equity distribution.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex items-center justify-center">
+              {ownershipData.length > 0 ? (
+                  <ChartContainer config={{}} className="mx-auto aspect-square h-52">
+                      <RechartsPieChart>
+                          <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
+                          <Pie data={ownershipData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
+                              {ownershipData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                          </Pie>
+                          <ChartLegend content={<ChartTooltipContent nameKey="value" hideLabel hideIndicator />} />
+                      </RechartsPieChart>
+                  </ChartContainer>
+              ) : (
                   <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                      <p>Generate a due diligence list to see your readiness.</p>
+                      <p>No cap table data found. <Link href="/dashboard/cap-table" className="text-primary underline">Add share issuances</Link> to see this chart.</p>
                   </div>
-                )}
+              )}
           </CardContent>
           <CardFooter>
               <Button asChild variant="link" className="p-0 h-auto">
-                  <Link href="/dashboard/ai-toolkit?tab=audit">
-                      Go to Audit Hub <ArrowRight className="ml-2 h-4 w-4"/>
+                  <Link href="/dashboard/cap-table">
+                      Go to Cap Table <ArrowRight className="ml-2 h-4 w-4"/>
                   </Link>
               </Button>
           </CardFooter>
-      </Card>
+        </Card>
+      </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         <Card className="interactive-lift flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
+                <CardDescription>A high-level view of your startup's financial health.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 flex-1">
+                {activeCompany?.financials ? (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg bg-muted border text-center">
+                            <p className="text-sm text-muted-foreground">{burnRate >= 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                            <p className={`text-2xl font-bold ${burnRate >= 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted border text-center">
+                            <p className="text-sm text-muted-foreground">{runway.includes('Profitable') ? 'Status' : 'Runway'}</p>
+                            <p className="text-2xl font-bold">{runway}</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                        <p>No financial data. <Link href="/dashboard/financials" className="text-primary underline">Add financials</Link> to see this snapshot.</p>
+                    </div>
+                )}
+            </CardContent>
+            <CardFooter>
+                <Button asChild variant="link" className="p-0 h-auto">
+                    <Link href="/dashboard/financials">
+                        Go to Financials <ArrowRight className="ml-2 h-4 w-4"/>
+                    </Link>
+                </Button>
+            </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }
