@@ -93,7 +93,7 @@ const HeroSection = () => {
             </div>
              <div className="mt-16 group interactive-lift">
                 <Image
-                    src="https://placehold.co/1200x600.png"
+                    src="https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724397753696.png?alt=media&token=489c0b2b-65c1-4e42-be89-72f8837e3d09"
                     width={1200}
                     height={600}
                     alt="Dashboard Preview"
