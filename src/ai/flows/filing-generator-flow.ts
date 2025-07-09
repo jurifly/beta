@@ -20,7 +20,6 @@ const FilingItemSchema = z.object({
     date: z.string().describe("The due date of the filing in YYYY-MM-DD format."),
     title: z.string().describe("The name of the compliance filing (e.g., 'GSTR-3B Filing', 'Annual Report Filing')."),
     type: z.enum(["Corporate Filing", "Tax Filing", "Other Task"]).describe("The category of the filing."),
-    status: z.enum(["overdue", "upcoming", "completed"]).describe("The status of the filing based on the provided current date."),
     description: z.string().describe("A brief explanation of what this filing or task is about."),
     penalty: z.string().describe("The penalty or consequence for non-compliance."),
 });
@@ -48,10 +47,15 @@ const prompt = ai.definePrompt({
 **CRITICAL INSTRUCTIONS**:
 1.  **Strictly Adhere to Datasets**: Use the following compliance datasets as your **only source of truth**. You MUST find the section that perfectly matches the user's \`legalRegion\` and \`companyType\`. Do not invent filings or use external knowledge.
 2.  **Generate Comprehensive Annual Calendar**: Based on the matched dataset, generate a complete and accurate list of compliance tasks for a full year.
-3.  **Include All One-Time Filings**: You MUST include all one-time initial filings (e.g., "Open bank account", "Commencement of Business") for every company, regardless of its age. Their due dates are calculated from the \`incorporationDate\`. For a company incorporated in the past, these will likely be 'overdue'.
-4.  **Include Recurring Filings**: For recurring tasks (annual, quarterly), generate the NEXT upcoming instance. Calculate the due date based on the \`currentDate\`. For example, if the \`currentDate\` is in 2024 and a task is due "By 30 September every year", the due date should be in 2024.
-5.  **Determine Accurate Status**: Compare the calculated due date of EACH task with the \`currentDate\` to set its status to "overdue" or "upcoming". Do not use a "completed" status. A task is overdue if its due date is before the \`currentDate\`.
-6.  **CRITICAL QUALITY CONTROL**: For each task, you MUST provide a 'title', 'date', 'type', 'status', 'description', and 'penalty'. Do not leave any fields blank. Ensure all text is spelled perfectly and all data is accurate.
+3.  **Strict Date Calculations**: You MUST calculate precise due dates in "YYYY-MM-DD" format based on these rules:
+    *   **From Incorporation Date**: For tasks like "within 30 days of incorporation", calculate the due date by adding exactly 30 days to the \`incorporationDate\`.
+    *   **Annual Fixed Date**: For tasks due on a specific day (e.g., "By 30 September every year"), use the year from the \`currentDate\` to form the due date (e.g., if \`currentDate\` is in 2024, the due date is "2024-09-30").
+    *   **AGM Dependent**: For tasks dependent on the Annual General Meeting (AGM), assume the AGM is held on the last possible day as per law (e.g., within 6 months from the financial year-end of March 31st). For a \`currentDate\` in 2024, the FY ends March 31, 2024, so the AGM is assumed to be September 30, 2024. Calculate deadlines from this date.
+    *   **Quarterly**: For quarterly tasks, generate the NEXT upcoming due date after the \`currentDate\`. For example, if due dates are on the 15th of Apr, Jul, Oct, Jan, and \`currentDate\` is May 1st, 2024, the next due date is July 15th, 2024.
+4.  **Include All One-Time Filings**: You MUST include all one-time initial filings (e.g., "Open bank account", "Commencement of Business") for every company, regardless of its age.
+5.  **Conditional Tasks**: For tasks that are conditional (e.g., based on turnover like GST registration), you MUST still include them. The description should clearly state the condition.
+6.  **Ongoing Tasks**: For tasks marked as "Ongoing", set the due date to the end of the current financial year (March 31st).
+7.  **CRITICAL QUALITY CONTROL**: For each task, you MUST provide a 'title', 'date', 'type', 'description', and 'penalty'. Do not leave any fields blank. Ensure all text is spelled perfectly and all data is accurate.
 
 **Compliance Datasets**:
 
@@ -169,7 +173,6 @@ const filingGeneratorFlow = ai.defineFlow(
         return {
           filings: fallbackFilings.map(f => ({
             ...f,
-            status: new Date(f.date + 'T00:00:00') < currDate ? 'overdue' : 'upcoming'
           }))
         };
     };

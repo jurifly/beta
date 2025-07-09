@@ -69,7 +69,7 @@ export function FounderAnalytics() {
           const generatedEvents = response.filings.map(filing => ({
             date: filing.date,
             title: filing.title,
-            overdue: filing.status === 'overdue'
+            overdue: new Date(filing.date + 'T00:00:00') < new Date(currentDate + 'T00:00:00'),
           }));
           
           setDeadlines(generatedEvents);
