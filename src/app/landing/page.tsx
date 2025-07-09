@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Building2,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import {
@@ -246,6 +247,20 @@ const LandingFooter = () => {
 
 // Main Page Component
 export default function LandingPage() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+  }
+  
   return (
     <div className="flex min-h-screen flex-col bg-background font-body">
       <LandingHeader />
