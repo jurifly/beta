@@ -85,7 +85,7 @@ const navItemConfig = {
   financials: { href: "/dashboard/financials", label: "Financials", icon: Receipt },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
   analytics: { href: "/dashboard/analytics", label: "Portfolio Analytics", icon: LineChart },
-  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare },
+  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
@@ -499,6 +499,9 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                         >
                           <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                           {item.label}
+                           {'locked' in item && item.locked && (
+                            <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
+                          )}
                         </Link>
                       </TooltipTrigger>
                     </Tooltip>
@@ -516,6 +519,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                                 <TooltipTrigger asChild>
                                 <Link
                                     href={item.href}
+                                    onClick={(e) => handleLinkClick(e, item.href)}
                                     className={cn(
                                         "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
                                         pathname.startsWith(item.href) && "bg-muted text-primary font-semibold"
@@ -523,6 +527,9 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                                     >
                                     <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                                     {item.label}
+                                    {'locked' in item && item.locked && (
+                                      <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
+                                    )}
                                     </Link>
                                 </TooltipTrigger>
                             </Tooltip>
