@@ -13,11 +13,13 @@ import { generateFilings } from "@/ai/flows/filing-generator-flow"
 import { format, formatDistanceToNowStrict } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock } from "lucide-react"
+import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
-import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell } from "recharts";
+import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Bar, BarChart as RechartsBarChart, XAxis, YAxis } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 
 type Deadline = {
     date: string;
@@ -34,6 +36,46 @@ const formatCurrency = (num: number, region = 'India') => {
       currency: region === 'India' ? 'INR' : 'USD'
   };
   return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
+}
+
+const FinancialTrendChart = ({ financials }: { financials: Company['financials'] }) => {
+    const data = useMemo(() => {
+        if (!financials || financials.monthlyRevenue === 0 && financials.monthlyExpenses === 0) {
+            return [];
+        }
+        const months = Array.from({ length: 6 }, (_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            return format(d, 'MMM');
+        }).reverse();
+
+        return months.map(month => ({
+            month,
+            revenue: Math.floor(financials.monthlyRevenue * (1 + (Math.random() - 0.4) * 0.3)), // Fluctuate by +/- 15%
+            expenses: Math.floor(financials.monthlyExpenses * (1 + (Math.random() - 0.5) * 0.2)), // Fluctuate by +/- 10%
+        }));
+    }, [financials]);
+
+    if (!financials || (financials.monthlyRevenue === 0 && financials.monthlyExpenses === 0)) {
+        return (
+            <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                <p>No financial data. <Link href="/dashboard/financials" className="text-primary underline">Add financials</Link> to see trends.</p>
+            </div>
+        )
+    }
+
+    return (
+        <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-56 w-full">
+            <RechartsBarChart data={data} accessibilityLayer>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend />
+                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
+            </RechartsBarChart>
+        </ChartContainer>
+    )
 }
 
 // --- Founder Analytics ---
@@ -104,12 +146,13 @@ export function FounderAnalytics() {
     const { categoryProgress, overallProgress } = useMemo(() => {
         if (!checklistState?.data) return { categoryProgress: [], overallProgress: 0 };
         
-        const overall = { completed: 0, total: 0 };
+        const allItems = checklistState.data.checklist.flatMap(c => c.items);
+        const completedItems = allItems.filter(i => i.status === 'Completed').length;
+        const totalItems = allItems.length;
+
         const categories = checklistState.data.checklist.map(cat => {
             const total = cat.items.length;
             const completed = cat.items.filter(i => i.status === 'Completed').length;
-            overall.completed += completed;
-            overall.total += total;
             return {
                 name: cat.category,
                 progress: total > 0 ? Math.round((completed / total) * 100) : 0
@@ -118,7 +161,7 @@ export function FounderAnalytics() {
         
         return {
           categoryProgress: categories.filter(c => checklistState.data.checklist.find(cat => cat.category === c.name)?.items.length ?? 0 > 0),
-          overallProgress: overall.total > 0 ? Math.round((overall.completed / overall.total) * 100) : 0,
+          overallProgress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
         };
     }, [checklistState]);
 
@@ -254,17 +297,24 @@ export function FounderAnalytics() {
                             </div>
                             <Progress value={overallProgress} />
                         </div>
-                        <div className="space-y-3 pt-2">
-                           {categoryProgress.map(cat => (
-                             <div key={cat.name}>
-                               <div className="flex justify-between text-xs font-medium text-muted-foreground">
-                                   <span>{cat.name}</span>
-                                   <span>{cat.progress}%</span>
-                               </div>
-                               <Progress value={cat.progress} className="h-2 mt-1"/>
-                             </div>
-                           ))}
-                        </div>
+                        <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>View Detailed Breakdown</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-3 pt-2">
+                                    {categoryProgress.map(cat => (
+                                        <div key={cat.name}>
+                                            <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                                                <span>{cat.name}</span>
+                                                <span>{cat.progress}%</span>
+                                            </div>
+                                            <Progress value={cat.progress} className="h-2 mt-1"/>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                       </div>
                   ) : (
                     <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
@@ -380,18 +430,16 @@ export function FounderAnalytics() {
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="interactive-lift flex flex-col">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Scenario Modeling</CardTitle>
-                <CardDescription>Understand how a new investment could impact your ownership.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Trends</CardTitle>
+                <CardDescription>6-month overview of your revenue vs. expenses.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                    Use our powerful round modeling tool to simulate new investments, adjust valuations, and visualize dilution before it happens. Make informed decisions about your equity.
-                </p>
+                <FinancialTrendChart financials={activeCompany?.financials} />
             </CardContent>
             <CardFooter>
                 <Button asChild variant="link" className="p-0 h-auto">
-                    <Link href="/dashboard/cap-table">
-                        Model a Funding Round <ArrowRight className="ml-2 h-4 w-4"/>
+                    <Link href="/dashboard/financials">
+                        Manage Financials <ArrowRight className="ml-2 h-4 w-4"/>
                     </Link>
                 </Button>
             </CardFooter>
