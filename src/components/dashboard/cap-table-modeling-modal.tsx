@@ -3,10 +3,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
+import { Banknote, Calculator, Landmark, Percent, Sparkles, TrendingUp, ArrowRight, Info } from "lucide-react";
 import type { CapTableEntry } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,12 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CapTableModelingModalProps {
   isOpen: boolean;
@@ -30,14 +36,31 @@ interface ScenarioResult {
   investorStake: number;
 }
 
-const MetricDisplay = ({ title, value, icon }: { title: string, value: string | number, icon: React.ReactNode }) => (
-    <div className="p-3 border rounded-lg bg-muted/50 text-center">
-        <div className="flex items-center justify-center gap-2 mb-1">
-            {icon}
-            <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+    }).format(value);
+};
+
+const MetricDisplay = ({ title, value, icon, tooltipText }: { title: string, value: string | number, icon: React.ReactNode, tooltipText: string }) => (
+    <Card className="p-4 bg-muted/50 interactive-lift">
+        <div className="flex items-center justify-between mb-1">
+            <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button"><Info className="h-4 w-4 text-muted-foreground/70" /></button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">{tooltipText}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
         </div>
-        <p className="text-lg font-bold truncate" title={String(value)}>{value}</p>
-    </div>
+        <p className="text-2xl font-bold truncate" title={String(value)}>{value}</p>
+    </Card>
 );
 
 const renderTable = (title: string, data: any[]) => (
@@ -130,7 +153,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 min-h-0">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 min-h-0">
             <Card className="interactive-lift flex flex-col">
                 <CardHeader>
                     <CardTitle>Scenario Inputs</CardTitle>
@@ -196,10 +219,30 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                 ) : (
                     <div className="space-y-6 animate-in fade-in-50 duration-500">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <MetricDisplay title="Pre-Money Valuation" value={`₹${result.preMoneyValuation.toLocaleString()}`} icon={<Landmark className="h-4 w-4"/>} />
-                            <MetricDisplay title="Post-Money Valuation" value={`₹${result.postMoneyValuation.toLocaleString()}`} icon={<Banknote className="h-4 w-4"/>} />
-                            <MetricDisplay title="New Share Price" value={`₹${result.sharePrice.toFixed(2)}`} icon={<Calculator className="h-4 w-4"/>} />
-                            <MetricDisplay title="Investor's Stake" value={`${result.investorStake}%`} icon={<Percent className="h-4 w-4"/>} />
+                            <MetricDisplay 
+                                title="Pre-Money Valuation" 
+                                value={formatCurrency(result.preMoneyValuation)} 
+                                icon={<Landmark className="h-4 w-4 text-muted-foreground"/>}
+                                tooltipText="The company's value before the new investment. Calculated as: Post-Money Valuation - Investment Amount."
+                            />
+                            <MetricDisplay 
+                                title="Post-Money Valuation" 
+                                value={formatCurrency(result.postMoneyValuation)} 
+                                icon={<Banknote className="h-4 w-4 text-muted-foreground"/>}
+                                tooltipText="The company's value after the investment. Calculated as: Investment Amount / (Investor's Stake / 100)."
+                            />
+                            <MetricDisplay 
+                                title="New Share Price" 
+                                value={formatCurrency(result.sharePrice)} 
+                                icon={<Calculator className="h-4 w-4 text-muted-foreground"/>}
+                                tooltipText="The price per share for the new round. Calculated as: Investment Amount / New Investor Shares."
+                             />
+                            <MetricDisplay 
+                                title="Investor's Stake" 
+                                value={`${result.investorStake.toFixed(2)}%`}
+                                icon={<Percent className="h-4 w-4 text-muted-foreground"/>}
+                                tooltipText="The percentage of the company the new investor will own post-investment."
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] items-start gap-6">
