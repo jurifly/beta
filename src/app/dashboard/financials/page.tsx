@@ -547,35 +547,49 @@ const FinancialForecaster = () => {
 
                         <Separator/>
                         
-                        <div>
-                            <Label>Planned Hires</Label>
-                            {hires.map((field, index) => (
-                                <div key={field.id} className="grid grid-cols-3 gap-2 items-end p-2 border rounded-md my-2">
-                                    <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="Role" {...field} />} />
-                                    <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="Salary" {...field} />} />
-                                    <div className="flex items-end gap-1">
-                                        <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month" min="1" max="12" {...field} />} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                        <div className="space-y-2">
+                            <Label className="font-semibold">Planned Hires</Label>
+                            <div className="grid grid-cols-3 gap-2 px-1 text-xs text-muted-foreground">
+                                <span>Role</span>
+                                <span>Monthly Salary</span>
+                                <span>Start Month</span>
+                            </div>
+                            <div className="space-y-2">
+                                {hires.map((field, index) => (
+                                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                                        <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="e.g. Engineer" {...field} />} />
+                                        <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} />} />
+                                        <div className="flex items-center gap-1">
+                                            <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="1-12" min="1" max="12" {...field} />} />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                             <Button type="button" variant="outline" size="sm" onClick={() => appendHire({ role: '', monthlySalary: 0, startMonth: 1 })}><PlusCircle className="mr-2"/>Add Hire</Button>
                         </div>
                         
                         <Separator/>
                         
-                        <div>
-                            <Label>One-Time Expenses</Label>
-                             {expenses.map((field, index) => (
-                                <div key={field.id} className="grid grid-cols-3 gap-2 items-end p-2 border rounded-md my-2">
-                                    <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="Item" {...field} />} />
-                                    <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="Amount" {...field} />} />
-                                    <div className="flex items-end gap-1">
-                                        <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month" min="1" max="12" {...field} />} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                        <div className="space-y-2">
+                            <Label className="font-semibold">One-Time Expenses</Label>
+                             <div className="grid grid-cols-3 gap-2 px-1 text-xs text-muted-foreground">
+                                <span>Item / Description</span>
+                                <span>Amount (₹)</span>
+                                <span>Month</span>
+                            </div>
+                            <div className="space-y-2">
+                                {expenses.map((field, index) => (
+                                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                                        <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="e.g. Laptops" {...field} />} />
+                                        <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} />} />
+                                        <div className="flex items-center gap-1">
+                                            <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="1-12" min="1" max="12" {...field} />} />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                             <Button type="button" variant="outline" size="sm" onClick={() => appendExpense({ item: '', amount: 0, month: 1 })}><PlusCircle className="mr-2"/>Add Expense</Button>
                         </div>
                     </CardContent>
