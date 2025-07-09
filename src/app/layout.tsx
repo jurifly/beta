@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   keywords: ['startup compliance', 'AI assistant', 'founders', 'CA tools', 'legal tech', 'document generation', 'cap table'],
 };
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID = "532549254703-3n55saddi2f1vpoa1mis3nlecpcc4c1o.apps.googleusercontent.com";
 
 export default function RootLayout({
   children,
