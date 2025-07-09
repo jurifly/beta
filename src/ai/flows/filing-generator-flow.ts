@@ -114,6 +114,13 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
                 });
             }
         } else {
+            const filingData = {
+                title: rule.task,
+                type: rule.type,
+                description: rule.description,
+                penalty: rule.penalty,
+            };
+            
             for (let year = startYear; year <= endYear; year++) {
                 const agmDate = new Date(year, 8, 30); // Assume Sep 30 for AGM
 
@@ -122,15 +129,15 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
                         if (rule.dueDateRule.includes('from AGM')) {
                             const days = parseInt(rule.dueDateRule.split(' ')[0]);
                             const dueDate = addDays(agmDate, days);
-                            allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...rule });
+                            allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
                         } else if (rule.dueDateRule === 'First board meeting of FY') {
                             // Approximating as April 15th of the financial year
-                            allFilings.push({ date: format(new Date(year, 3, 15), 'yyyy-MM-dd'), ...rule });
+                            allFilings.push({ date: format(new Date(year, 3, 15), 'yyyy-MM-dd'), ...filingData });
                         } else {
                             // Fixed date like "30 Sep"
                             try {
                                 const dueDate = setYear(parse(rule.dueDateRule, 'dd MMM', new Date()), year);
-                                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...rule });
+                                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
                             } catch (e) {
                                 console.error(`Error parsing date rule: ${rule.dueDateRule}`)
                             }
@@ -148,7 +155,7 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
                                 const filingYear = (dueMonth < 3) ? year + 1 : year;
                                 if (filingYear > endYear + 1) continue;
                                 const dueDate = setYear(parsedDate, filingYear);
-                                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...rule });
+                                allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
                             } catch (e) {
                                 console.error(`Error parsing date rule: ${rule.dueDateRule}`)
                             }
@@ -160,7 +167,7 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
                              if (year === endYear && month > currDate.getMonth()) continue;
                              const day = parseInt(rule.dueDateRule.split('th')[0]);
                              const dueDate = new Date(year, month, day);
-                             allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...rule });
+                             allFilings.push({ date: format(dueDate, 'yyyy-MM-dd'), ...filingData });
                          }
                         break;
                 }
