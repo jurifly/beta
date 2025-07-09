@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useRef, useMemo } from "react";
@@ -13,14 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart, FileText, Calculator } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bar, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Cell } from 'recharts';
+import { Bar, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Cell, Line, CartesianGrid, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { generateFinancialForecastAction, type FinancialForecasterOutput } from "@/app/dashboard/ai-toolkit/actions";
 
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
@@ -451,6 +452,191 @@ const FinancialSnapshot = () => {
     )
 }
 
+const forecastSchema = z.object({
+  revenueGrowthRate: z.coerce.number().min(0).max(100).default(5),
+  newHires: z.array(z.object({
+    role: z.string().min(1, 'Role is required'),
+    monthlySalary: z.coerce.number().min(1, 'Salary is required'),
+    startMonth: z.coerce.number().min(1).max(12),
+  })).default([]),
+  oneTimeExpenses: z.array(z.object({
+    item: z.string().min(1, 'Item name is required'),
+    amount: z.coerce.number().min(1, 'Amount is required'),
+    month: z.coerce.number().min(1).max(12),
+  })).default([]),
+});
+type ForecastFormData = z.infer<typeof forecastSchema>;
+
+
+const FinancialForecaster = () => {
+    const { userProfile, deductCredits } = useAuth();
+    const { toast } = useToast();
+    const [isForecasting, setIsForecasting] = useState(false);
+    const [result, setResult] = useState<FinancialForecasterOutput | null>(null);
+
+    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+
+    const { control, handleSubmit, formState: { errors } } = useForm<ForecastFormData>({
+        resolver: zodResolver(forecastSchema),
+        defaultValues: {
+            revenueGrowthRate: 5,
+            newHires: [],
+            oneTimeExpenses: [],
+        },
+    });
+
+    const { fields: hires, append: appendHire, remove: removeHire } = useFieldArray({ control, name: "newHires" });
+    const { fields: expenses, append: appendExpense, remove: removeExpense } = useFieldArray({ control, name: "oneTimeExpenses" });
+    
+    const onSubmit = async (data: ForecastFormData) => {
+        if (!activeCompany?.financials || !userProfile) {
+            toast({ variant: 'destructive', title: 'Missing Data', description: 'Please fill out your financial snapshot before generating a forecast.' });
+            return;
+        }
+        if (!await deductCredits(3)) return;
+
+        setIsForecasting(true);
+        setResult(null);
+
+        try {
+            const response = await generateFinancialForecastAction({
+                cashBalance: activeCompany.financials.cashBalance,
+                monthlyRevenue: activeCompany.financials.monthlyRevenue,
+                monthlyExpenses: activeCompany.financials.monthlyExpenses,
+                revenueGrowthRate: data.revenueGrowthRate,
+                newHires: data.newHires,
+                oneTimeExpenses: data.oneTimeExpenses,
+                forecastPeriodInMonths: 12,
+                legalRegion: userProfile.legalRegion,
+            });
+            setResult(response);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Forecast Failed', description: error.message });
+        } finally {
+            setIsForecasting(false);
+        }
+    };
+    
+    if (!activeCompany?.financials) {
+        return (
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> AI Financial Forecaster</CardTitle>
+                    <CardDescription>Project your financial future based on growth assumptions.</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40">
+                    <p>Please complete your financial snapshot first to enable forecasting.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Forecast Assumptions</CardTitle>
+                        <CardDescription>Set your growth and spending assumptions for the next 12 months.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="revenueGrowthRate">Monthly Revenue Growth Rate (%)</Label>
+                            <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} />} />
+                        </div>
+
+                        <Separator/>
+                        
+                        <div>
+                            <Label>Planned Hires</Label>
+                            {hires.map((field, index) => (
+                                <div key={field.id} className="grid grid-cols-3 gap-2 items-end p-2 border rounded-md my-2">
+                                    <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="Role" {...field} />} />
+                                    <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="Salary" {...field} />} />
+                                    <div className="flex items-end gap-1">
+                                        <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month" min="1" max="12" {...field} />} />
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                    </div>
+                                </div>
+                            ))}
+                            <Button type="button" variant="outline" size="sm" onClick={() => appendHire({ role: '', monthlySalary: 0, startMonth: 1 })}><PlusCircle className="mr-2"/>Add Hire</Button>
+                        </div>
+                        
+                        <Separator/>
+                        
+                        <div>
+                            <Label>One-Time Expenses</Label>
+                             {expenses.map((field, index) => (
+                                <div key={field.id} className="grid grid-cols-3 gap-2 items-end p-2 border rounded-md my-2">
+                                    <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="Item" {...field} />} />
+                                    <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="Amount" {...field} />} />
+                                    <div className="flex items-end gap-1">
+                                        <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month" min="1" max="12" {...field} />} />
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                    </div>
+                                </div>
+                            ))}
+                            <Button type="button" variant="outline" size="sm" onClick={() => appendExpense({ item: '', amount: 0, month: 1 })}><PlusCircle className="mr-2"/>Add Expense</Button>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" disabled={isForecasting} className="w-full">
+                            {isForecasting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
+                            Generate Forecast (3 Credits)
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </form>
+             <div className="lg:col-span-3 space-y-6">
+                <Card className="min-h-[600px] interactive-lift">
+                     <CardHeader>
+                        <CardTitle>AI Forecast Report</CardTitle>
+                        <CardDescription>Your 12-month financial projection.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isForecasting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Forecasting the future...</p></div>}
+                        {!isForecasting && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><TrendingUp className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your forecast will appear here.</p></div>}
+                        {!isForecasting && result && (
+                            <div className="space-y-6 animate-in fade-in-50">
+                                <Alert>
+                                    <Sparkles className="h-4 w-4"/>
+                                    <AlertTitle>AI Summary</AlertTitle>
+                                    <AlertDescription>{result.summary}</AlertDescription>
+                                </Alert>
+
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-sm text-muted-foreground">Projected Runway</p>
+                                    <p className={`text-2xl font-bold ${result.runwayInMonths && result.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
+                                        {result.runwayInMonths ? `${result.runwayInMonths} Months` : '12+ Months / Profitable'}
+                                    </p>
+                                </div>
+
+                                <Card>
+                                    <CardHeader><CardTitle className="text-base">Cash Flow Projection</CardTitle></CardHeader>
+                                    <CardContent>
+                                        <ChartContainer config={{}} className="h-64 w-full">
+                                            <ResponsiveContainer>
+                                                <RechartsBarChart data={result.forecast}>
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="month" fontSize={12} />
+                                                    <YAxis fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                                                    <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                                                    <Legend />
+                                                    <Bar dataKey="closingBalance" name="Cash Balance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}/>
+                                                </RechartsBarChart>
+                                            </ResponsiveContainer>
+                                        </ChartContainer>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}
+
 export default function FinancialsPage() {
     const { userProfile } = useAuth();
     if (!userProfile) return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -462,12 +648,14 @@ export default function FinancialsPage() {
                 <p className="text-muted-foreground">Tools to help you calculate taxes and manage your startup's financial health.</p>
             </div>
             <Tabs defaultValue="snapshot" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="snapshot"><BarChart className="mr-2"/>Snapshot</TabsTrigger>
+                    <TabsTrigger value="forecast"><TrendingUp className="mr-2"/>AI Forecast</TabsTrigger>
                     <TabsTrigger value="personal"><User className="mr-2"/>Personal Tax</TabsTrigger>
                     <TabsTrigger value="corporate"><Building className="mr-2"/>Corporate Tax</TabsTrigger>
                 </TabsList>
                 <TabsContent value="snapshot" className="mt-6"><FinancialSnapshot /></TabsContent>
+                <TabsContent value="forecast" className="mt-6"><FinancialForecaster /></TabsContent>
                 <TabsContent value="personal" className="mt-6"><PersonalTaxCalculator /></TabsContent>
                 <TabsContent value="corporate" className="mt-6"><CorporateTaxCalculator /></TabsContent>
             </Tabs>

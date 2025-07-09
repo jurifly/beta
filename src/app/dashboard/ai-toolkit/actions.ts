@@ -10,6 +10,7 @@ import { generateWiki, type WikiGeneratorInput, type WikiGeneratorOutput } from 
 import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
 import { performLegalResearch, type LegalResearchInput, type LegalResearchOutput } from '@/ai/flows/legal-research-flow';
+import { generateFinancialForecast, type FinancialForecasterInput, type FinancialForecasterOutput } from '@/ai/flows/financial-forecaster-flow';
 
 
 // --- AI Assistant Actions ---
@@ -116,5 +117,15 @@ export async function performLegalResearchAction(input: LegalResearchInput): Pro
   } catch (e: any) {
     console.error('AI Flow Error:', e);
     throw new Error(e.message || 'Could not perform legal research.');
+  }
+}
+
+// --- Financial Forecaster Action ---
+export async function generateFinancialForecastAction(input: FinancialForecasterInput): Promise<FinancialForecasterOutput> {
+  try {
+    return await generateFinancialForecast(input);
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    throw new Error(e.message || 'Could not generate financial forecast.');
   }
 }
