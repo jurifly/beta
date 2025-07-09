@@ -220,17 +220,15 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 const storageKey = `dashboard-checklist-${activeCompany.id}`;
                 const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 
-                const today = startOfToday();
                 const checklistItems = processedFilings.map((filing) => {
                     const uniqueId = `${filing.title}-${filing.date}`;
                     const isCompleted = savedStatuses[uniqueId] ?? false;
-                    const dueDate = new Date(filing.date + 'T00:00:00');
-
+                    
                     return {
                         id: uniqueId,
                         text: filing.title,
                         dueDate: filing.date,
-                        completed: (isCompleted && dueDate < today) ? true : false,
+                        completed: isCompleted,
                         description: filing.description,
                         penalty: filing.penalty,
                     };
