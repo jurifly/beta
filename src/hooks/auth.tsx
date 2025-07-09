@@ -340,7 +340,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const totalAvailable = bonusCredits + dailyRemaining;
 
         if (totalAvailable < amount) {
-          setTimeout(() => toast({ variant: "destructive", title: "Credits Exhausted", description: "You've used up your bonus and daily credits. Upgrade for more.", action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/billing">Upgrade Plan</Link></ToastAction> }), 0);
+          setTimeout(() => toast({ variant: "destructive", title: "Credits Exhausted", description: "You've used up your bonus and daily credits. Upgrade for more.", action: <ToastAction altText="Upgrade Now"><Link href="/dashboard/settings?tab=subscription">Upgrade Plan</Link></ToastAction> }), 0);
           success = false;
           resolve();
           return currentProfile;

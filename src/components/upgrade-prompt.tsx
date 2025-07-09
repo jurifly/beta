@@ -23,7 +23,7 @@ export function UpgradePrompt({
       <h2 className="text-2xl font-bold mb-2">{title}</h2>
       <p className="text-muted-foreground mb-6 max-w-md">{description}</p>
       <Button asChild size="lg" className="interactive-lift">
-        <Link href="/dashboard/billing">
+        <Link href="/dashboard/settings?tab=subscription">
           Upgrade Now <ArrowRight className="ml-2 h-4 w-4" />
         </Link>
       </Button>
