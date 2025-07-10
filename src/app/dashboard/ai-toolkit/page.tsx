@@ -1360,15 +1360,15 @@ export default function AiToolkitPage() {
     
 
     const tabs = [
-        { value: 'assistant', label: 'Assistant', icon: MessageSquare },
-        { value: 'studio', label: 'Doc Studio', icon: FilePenLine },
-        { value: 'audit', label: 'Audit', icon: GanttChartSquare },
-        { value: 'analyzer', label: 'Intelligence', icon: FileScan },
-        ...(showReconciliation ? [{ value: 'reconciliation', label: 'Reconciliation', icon: Scale }] : []),
-        { value: 'watcher', label: 'Watcher', icon: RadioTower },
-        ...(showWorkflows ? [{ value: 'workflows', label: 'Workflows', icon: Zap }] : []),
-        ...(showLegalResearch ? [{ value: 'research', label: 'Research', icon: Gavel }] : []),
-    ];
+        { value: 'assistant', label: 'Assistant', icon: MessageSquare, shown: true },
+        { value: 'studio', label: 'Doc Studio', icon: FilePenLine, shown: true },
+        { value: 'audit', label: 'Audit', icon: GanttChartSquare, shown: true },
+        { value: 'analyzer', label: 'Intelligence', icon: FileScan, shown: true },
+        { value: 'reconciliation', label: 'Reconciliation', icon: Scale, shown: false },
+        { value: 'watcher', label: 'Watcher', icon: RadioTower, shown: true },
+        { value: 'workflows', label: 'Workflows', icon: Zap, shown: false },
+        { value: 'research', label: 'Research', icon: Gavel, shown: showLegalResearch },
+    ].filter(t => t.shown);
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1391,10 +1391,10 @@ export default function AiToolkitPage() {
                     <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
                     <TabsContent value="audit"><DataroomAudit /></TabsContent>
                     <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
-                    {showReconciliation && <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>}
+                    <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>
                     <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
-                    {showWorkflows && <TabsContent value="workflows"><WorkflowTab /></TabsContent>}
-                    {showLegalResearch && <TabsContent value="research"><LegalResearchTab/></TabsContent>}
+                    <TabsContent value="workflows"><WorkflowTab /></TabsContent>
+                    <TabsContent value="research"><LegalResearchTab/></TabsContent>
                 </div>
             </Tabs>
         </div>
