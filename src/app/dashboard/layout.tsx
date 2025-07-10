@@ -90,7 +90,7 @@ const navItemConfig = {
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
   team: { href: "/dashboard/team", label: "Team", icon: Users },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
-  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow, locked: true },
   invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail, locked: true },
   reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText },
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", icon: Scale },
@@ -161,7 +161,7 @@ const enterpriseNavItems: NavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.team,
   navItemConfig.clients,
-  { ...navItemConfig.caConnect, label: "Compliance Hub" },
+  navItemConfig.caConnect,
   navItemConfig.analytics,
   navItemConfig.documents,
 ];
