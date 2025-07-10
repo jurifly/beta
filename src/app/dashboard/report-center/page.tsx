@@ -13,7 +13,7 @@ import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import type { Company } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, addDays } from 'date-fns';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
 
 type ReportData = {
@@ -95,8 +95,8 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                                <div>
                                     <p className="text-sm font-semibold mb-2">Key Holders:</p>
                                     <ul className="text-xs space-y-1">
-                                        {data.ownershipData.map(d => (
-                                            <li key={d.name} className="flex justify-between">
+                                        {data.ownershipData.map((d, index) => (
+                                            <li key={`${d.name}-${index}`} className="flex justify-between">
                                                 <span>{d.name}</span>
                                                 <span className="font-mono">{totalShares > 0 ? (d.value / totalShares * 100).toFixed(1) : 0}%</span>
                                             </li>
@@ -192,8 +192,7 @@ export default function ReportCenterPage() {
 
             // 2. Process data for the report
             const today = startOfToday();
-            const thirtyDaysFromNow = new Date();
-            thirtyDaysFromNow.setDate(today.getDate() + 30);
+            const thirtyDaysFromNow = addDays(today, 30);
             
             const checklistItems = response.filings.map((filing) => ({
                 id: `${filing.title}-${filing.date}`,
