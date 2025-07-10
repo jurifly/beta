@@ -12,47 +12,43 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { UserPlan } from "@/lib/types"
 
-const plans: { name: UserPlan, price: { monthly: number, yearly: number }, features: string[], popular?: boolean }[] = [
+const founderPlans = [
     {
-        name: 'Founder',
-        price: { monthly: 1999, yearly: 19990 },
-        features: [
-            '1 Company',
-            '50 daily AI credits',
-            'All Core AI Tools',
-            'Founder-CA Connect',
-            'Email Support',
-        ],
+        name: 'Free',
+        price: { monthly: 0, yearly: 0 },
+        benefits: ['5 daily credits', 'Core features'],
+        isCurrent: (currentPlan: UserPlan) => currentPlan === 'Starter',
     },
     {
-        name: 'Professional',
-        price: { monthly: 4999, yearly: 49990 },
-        features: [
-            '5 Companies/Clients',
-            '150 daily AI credits',
-            'Advanced AI Tools (Workflows)',
-            'Client Management Suite',
-            'Priority Support',
-        ],
+        name: 'Pro',
+        price: { monthly: 199, yearly: 1990 }, // Assuming 2 months free for yearly
+        benefits: ['299 monthly credits', 'Unlock premium features'],
+        isCurrent: (currentPlan: UserPlan) => currentPlan === 'Founder',
         popular: true,
+    }
+];
+
+const caPlans = [
+    {
+        name: 'Free',
+        price: { monthly: 0, yearly: 0 },
+        benefits: ['5 daily credits', 'Client dashboard'],
+        isCurrent: (currentPlan: UserPlan) => currentPlan === 'Starter',
     },
     {
-        name: 'Enterprise',
-        price: { monthly: 0, yearly: 0 }, // Custom pricing
-        features: [
-            'Unlimited Companies',
-            'Unlimited AI credits',
-            'Single Sign-On (SSO)',
-            'Team & Role Management',
-            'Dedicated Account Manager',
-        ],
-    },
+        name: 'Pro',
+        price: { monthly: 499, yearly: 4990 }, // Assuming 2 months free for yearly
+        benefits: ['499 monthly credits', 'Unlock analyzer, clause lib, PDF tools'],
+        isCurrent: (currentPlan: UserPlan) => currentPlan === 'Professional',
+        popular: true,
+    }
 ];
 
 const creditPacks = [
-  { name: '50 Credits', price: 499, credits: 50, popular: false },
-  { name: '150 Credits', price: 1299, credits: 150, popular: true },
-  { name: '500 Credits', price: 3999, credits: 500, popular: false },
+  { name: 'Small Pack', price: 99, credits: 50, popular: false },
+  { name: 'Medium Pack', price: 199, credits: 150, popular: true },
+  { name: 'Big Pack', price: 349, credits: 300, popular: false },
+  { name: 'Boss Mode', price: 599, credits: 600, popular: false },
 ];
 
 
@@ -79,6 +75,12 @@ export default function BillingForm() {
   }
   
   const currentPlan = userProfile.plan;
+  const plans = userProfile.role === 'CA' ? caPlans : founderPlans;
+  const planTypeMapping = {
+    'Free': 'Starter',
+    'Pro': userProfile.role === 'CA' ? 'Professional' : 'Founder',
+  };
+
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
@@ -96,48 +98,41 @@ export default function BillingForm() {
                         onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
                     />
                     <Label htmlFor="billing-cycle" className={cn(billingCycle === 'yearly' && "text-primary")}>
-                        Yearly <span className="text-green-600 font-semibold">(Save 15%)</span>
+                        Yearly <span className="text-green-600 font-semibold">(Save ~17%)</span>
                     </Label>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {plans.map(plan => {
-                        const isCurrent = plan.name === currentPlan;
+                        const isCurrent = plan.isCurrent(currentPlan);
                         const price = billingCycle === 'monthly' ? plan.price.monthly : plan.price.yearly;
+                        const finalPlanName = planTypeMapping[plan.name as keyof typeof planTypeMapping] as UserPlan;
                         
                         return (
                             <Card key={plan.name} className={cn("flex flex-col", isCurrent && "border-primary ring-2 ring-primary/50", plan.popular && !isCurrent && "border-violet-500")}>
                                 {plan.popular && <div className="text-center py-1 px-3 bg-violet-500 text-white text-xs font-bold rounded-t-lg">Most Popular</div>}
                                 <CardHeader>
                                     <CardTitle>{plan.name}</CardTitle>
-                                    {plan.name === 'Enterprise' ? (
-                                        <p className="text-2xl font-bold">Custom</p>
-                                    ) : (
-                                        <p className="text-2xl font-bold">₹{price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span></p>
-                                    )}
+                                    <p className="text-2xl font-bold">₹{price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span></p>
                                 </CardHeader>
                                 <CardContent className="flex-1 space-y-4">
                                     <ul className="space-y-2 text-sm text-muted-foreground">
-                                        {plan.features.map(feature => (
-                                            <li key={feature} className="flex items-start gap-2">
+                                        {plan.benefits.map(benefit => (
+                                            <li key={benefit} className="flex items-start gap-2">
                                                 <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0"/>
-                                                <span>{feature}</span>
+                                                <span>{benefit}</span>
                                             </li>
                                         ))}
                                     </ul>
                                 </CardContent>
                                 <CardFooter>
-                                    {plan.name === 'Enterprise' ? (
-                                        <Button className="w-full" variant="outline">Contact Sales</Button>
-                                    ) : (
-                                        <Button 
-                                            className="w-full"
-                                            variant={isCurrent ? "secondary" : "default"}
-                                            onClick={() => handlePurchase({ type: 'plan', name: plan.name, amount: price, plan: plan.name, cycle: billingCycle })}
-                                            disabled={isCurrent}
-                                        >
-                                            {isCurrent ? "Current Plan" : "Upgrade"}
-                                        </Button>
-                                    )}
+                                    <Button 
+                                        className="w-full"
+                                        variant={isCurrent ? "secondary" : "default"}
+                                        onClick={() => handlePurchase({ type: 'plan', name: plan.name, amount: price, plan: finalPlanName, cycle: billingCycle })}
+                                        disabled={isCurrent}
+                                    >
+                                        {isCurrent ? "Current Plan" : "Upgrade"}
+                                    </Button>
                                 </CardFooter>
                             </Card>
                         )
@@ -151,7 +146,7 @@ export default function BillingForm() {
                 <CardTitle>Purchase AI Credits</CardTitle>
                 <CardDescription>Need more power? Top up your account with a one-time credit pack. Credits never expire.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {creditPacks.map(pack => (
                     <Card key={pack.name} className={cn("text-center", pack.popular && "border-violet-500")}>
                         {pack.popular && <div className="text-center py-1 px-3 bg-violet-500 text-white text-xs font-bold rounded-t-lg">Best Value</div>}
@@ -159,6 +154,9 @@ export default function BillingForm() {
                             <CardTitle className="flex items-center justify-center gap-2"><Sparkles className="text-primary"/>{pack.name}</CardTitle>
                             <p className="text-2xl font-bold">₹{pack.price.toLocaleString()}</p>
                         </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{pack.credits} Credits</p>
+                        </CardContent>
                         <CardFooter>
                             <Button className="w-full" variant="outline" onClick={() => handlePurchase({type: 'credit_pack', name: pack.name, amount: pack.price, credits: pack.credits})}>Purchase Now</Button>
                         </CardFooter>
