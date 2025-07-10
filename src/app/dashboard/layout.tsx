@@ -138,6 +138,9 @@ const caNavItems: NavItem[] = [
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.reportCenter,
+  navItemConfig.launchPad,
+  navItemConfig.capTable,
+  navItemConfig.financials,
   navItemConfig.playbook,
   navItemConfig.documents,
 ];
