@@ -31,6 +31,7 @@ export default function NotificationsForm() {
   const [state, formAction] = useActionState(handleNotificationSettings, initialState);
   const { toast } = useToast();
   const { userProfile } = useAuth();
+  const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
 
   useEffect(() => {
     if (state.success) {
@@ -46,6 +47,16 @@ export default function NotificationsForm() {
                 <CardDescription>Choose how and where you receive alerts and reports.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+                 {!isPro && (
+                    <Alert>
+                        <Lock className="h-4 w-4" />
+                        <AlertTitle>Pro Feature</AlertTitle>
+                        <AlertDescription>
+                            Custom notifications are available on Pro plans.
+                            <Link href="/dashboard/settings?tab=subscription" className="font-bold underline ml-2">Upgrade now</Link>
+                        </AlertDescription>
+                    </Alert>
+                )}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
                         <Bell className="w-5 h-5 text-primary mt-1 shrink-0"/>
@@ -54,7 +65,7 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">For deadlines and regulation updates.</p>
                         </div>
                     </div>
-                    <Switch id="email_notifications" name="email_notifications" defaultChecked />
+                    <Switch id="email_notifications" name="email_notifications" defaultChecked disabled={!isPro} />
                 </div>
                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
@@ -64,7 +75,7 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">AI-generated PDF summary of compliance.</p>
                         </div>
                     </div>
-                    <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked />
+                    <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked disabled={!isPro} />
                 </div>
                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
@@ -74,11 +85,11 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">Interact with your AI assistant on WhatsApp.</p>
                         </div>
                     </div>
-                    <Switch id="whatsapp_bot" name="whatsapp_bot" />
+                    <Switch id="whatsapp_bot" name="whatsapp_bot" disabled={!isPro} />
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-                <SubmitButton disabled={false} />
+                <SubmitButton disabled={!isPro} />
             </CardFooter>
         </Card>
     </form>

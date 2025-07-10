@@ -1334,9 +1334,13 @@ export default function AiToolkitPage() {
     const searchParams = useSearchParams();
     const tab = searchParams.get('tab') || 'assistant';
     
-    const showLegalResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
-    const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise';
+    const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
+    
+    const showAnalyzer = (userProfile?.role === 'Founder' && isPro) || (userProfile?.role === 'CA' && isPro) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
+    const showReconciliation = (userProfile?.role === 'CA' && isPro) || userProfile?.role === 'Enterprise';
+    const showWatcher = (userProfile?.role === 'Founder' && isPro) || (userProfile?.role === 'CA' && isPro) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showWorkflows = userProfile?.role !== 'Founder';
+    const showResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
 
     const pageTitle = useMemo(() => {
         if (!userProfile) return "AI Toolkit";
@@ -1358,17 +1362,20 @@ export default function AiToolkitPage() {
         }
     }, [userProfile]);
     
+    if (!userProfile) {
+        return <Loader2 className="animate-spin" />;
+    }
 
     const tabs = [
-        { value: 'assistant', label: 'Assistant', icon: MessageSquare, shown: true },
-        { value: 'studio', label: 'Doc Studio', icon: FilePenLine, shown: true },
-        { value: 'audit', label: 'Audit', icon: GanttChartSquare, shown: true },
-        { value: 'analyzer', label: 'Intelligence', icon: FileScan, shown: true },
-        { value: 'reconciliation', label: 'Reconciliation', icon: Scale, shown: false },
-        { value: 'watcher', label: 'Watcher', icon: RadioTower, shown: true },
-        { value: 'workflows', label: 'Workflows', icon: Zap, shown: false },
-        { value: 'research', label: 'Research', icon: Gavel, shown: showLegalResearch },
-    ].filter(t => t.shown);
+        { value: 'assistant', label: 'Assistant', icon: MessageSquare, content: <ChatAssistant /> },
+        { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
+        { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
+        { value: 'analyzer', label: 'Intelligence', icon: FileScan, content: showAnalyzer ? <DocumentIntelligenceTab /> : <UpgradePrompt /> },
+        { value: 'reconciliation', label: 'Reconciliation', icon: Scale, content: showReconciliation ? <ReconciliationTab /> : <UpgradePrompt /> },
+        { value: 'watcher', label: 'Watcher', icon: RadioTower, content: showWatcher ? <RegulationWatcherTab /> : <UpgradePrompt /> },
+        { value: 'workflows', label: 'Workflows', icon: Zap, content: showWorkflows ? <WorkflowTab /> : null, hidden: !showWorkflows },
+        { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
+    ].filter(t => !t.hidden);
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1387,14 +1394,11 @@ export default function AiToolkitPage() {
                     </TabsList>
                 </ScrollArea>
                 <div className="mt-6 md:flex-1 md:min-h-0 md:overflow-y-auto">
-                    <TabsContent value="assistant" className="h-full mt-0 md:mt-0"><ChatAssistant /></TabsContent>
-                    <TabsContent value="studio"><DocumentStudioTab /></TabsContent>
-                    <TabsContent value="audit"><DataroomAudit /></TabsContent>
-                    <TabsContent value="analyzer"><DocumentIntelligenceTab /></TabsContent>
-                    <TabsContent value="reconciliation"><ReconciliationTab /></TabsContent>
-                    <TabsContent value="watcher"><RegulationWatcherTab /></TabsContent>
-                    <TabsContent value="workflows"><WorkflowTab /></TabsContent>
-                    <TabsContent value="research"><LegalResearchTab/></TabsContent>
+                    {tabs.map(t => (
+                        <TabsContent key={t.value} value={t.value} className="h-full mt-0 md:mt-0">
+                            {t.content}
+                        </TabsContent>
+                    ))}
                 </div>
             </Tabs>
         </div>

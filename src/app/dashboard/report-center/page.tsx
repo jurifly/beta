@@ -32,7 +32,7 @@ type ReportData = {
 
 const ReportTemplate = ({ data }: { data: ReportData }) => {
     const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
-    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
+    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     const totalShares = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
 
     return (

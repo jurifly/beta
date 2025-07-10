@@ -92,8 +92,8 @@ const navItemConfig = {
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow, locked: true },
   invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail, locked: true },
-  reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText },
-  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", icon: Scale },
+  reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText, locked: true },
+  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
   help: { href: "/dashboard/help", label: "Help & FAQ", icon: LifeBuoy },
 } as const;
@@ -127,7 +127,7 @@ const founderNavItems: NavItem[] = [
   navItemConfig.capTable,
   navItemConfig.financials,
   navItemConfig.launchPad,
-  navItemConfig.reportCenter,
+  { ...navItemConfig.reportCenter, locked: true},
   navItemConfig.documents,
   navItemConfig.playbook,
   { ...navItemConfig.analytics, label: "Analytics" },
@@ -140,14 +140,15 @@ const caNavItems: NavItem[] = [
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.analytics,
-  navItemConfig.reportCenter,
-  {...navItemConfig.workflows, locked: true },
+  { ...navItemConfig.reportCenter, locked: true},
+  {...navItemConfig.workflows, label: "Workflows", locked: true },
   {...navItemConfig.reconciliation, locked: true },
   navItemConfig.launchPad,
   navItemConfig.capTable,
   navItemConfig.financials,
   navItemConfig.playbook,
   navItemConfig.documents,
+  {...navItemConfig.clauseLibrary, locked: true},
 ];
 
 const legalAdvisorNavItems: NavItem[] = [
@@ -497,7 +498,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
-        if (item.locked) {
+        if (item.locked && !isPro) {
             e.preventDefault();
             onLockedFeatureClick(item.label);
         }
@@ -522,6 +523,8 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 const isActive = item.href === '/dashboard' 
                   ? pathname === item.href 
                   : pathname.startsWith(item.href);
+                const isLocked = item.locked && !isPro;
+
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
                     <Tooltip>
@@ -531,12 +534,13 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                           onClick={(e) => handleLinkClick(e, item)}
                           className={cn(
                               "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                              isActive && "bg-muted text-primary font-semibold"
+                              isActive && "bg-muted text-primary font-semibold",
+                              isLocked && "cursor-not-allowed"
                           )}
                         >
                           <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                           {item.label}
-                           {item.locked && (
+                           {isLocked && (
                             <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                           )}
                         </Link>

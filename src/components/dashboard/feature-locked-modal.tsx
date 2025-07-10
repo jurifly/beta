@@ -58,6 +58,30 @@ const wittyMessages: Record<string, { title: string, lines: string[], eta: strin
         ],
         eta: "Neither is happening. Stay tuned. 😴"
     },
+    "Report Center": {
+        title: "Upgrade to Pro to Generate Reports",
+        lines: [
+            "Unlock professional, investor-ready reports.",
+            "Impress your stakeholders with a single click."
+        ],
+        eta: "This is a premium feature available on our Pro plans."
+    },
+    "Reconciliation": {
+        title: "Upgrade to Pro for AI Reconciliation",
+        lines: [
+            "Automate the painful task of reconciling financials.",
+            "Let our AI find discrepancies for you."
+        ],
+        eta: "This is a premium feature available on our Pro plans."
+    },
+    "Clause Library": {
+        title: "Upgrade to Pro for Clause Library",
+        lines: [
+            "Build a library of your firm's standard legal clauses.",
+            "Ensure consistency and speed up document drafting."
+        ],
+        eta: "This is a premium feature available on our Pro plans."
+    },
     "default": {
         title: "Feature Coming Soon!",
         lines: [
