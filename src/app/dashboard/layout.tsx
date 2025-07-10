@@ -93,6 +93,7 @@ const navItemConfig = {
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow },
   invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail, locked: true },
   reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText },
+  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", icon: Scale },
   settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
   help: { href: "/dashboard/help", label: "Help & FAQ", icon: LifeBuoy },
 } as const;
@@ -138,6 +139,8 @@ const caNavItems: NavItem[] = [
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.reportCenter,
+  navItemConfig.workflows,
+  navItemConfig.reconciliation,
   navItemConfig.launchPad,
   navItemConfig.capTable,
   navItemConfig.financials,

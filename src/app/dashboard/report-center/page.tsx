@@ -103,7 +103,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
 
                     {/* Right Column */}
                      <div className="col-span-3 space-y-6">
-                        <div className="p-4 border border-red-300 bg-red-50 rounded-xl h-full">
+                        <div className="p-4 border border-red-300 bg-red-50 rounded-xl h-full min-h-[140px]">
                             <h3 className="text-base font-semibold text-red-700 mb-2">Overdue Filings ({data.overdueFilings.length})</h3>
                             {data.overdueFilings.length > 0 ? (
                                 <ul className="text-sm list-disc pl-5 space-y-1.5 text-red-900">
@@ -111,7 +111,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                                 </ul>
                             ) : <p className="text-sm text-gray-600">None. All caught up!</p>}
                         </div>
-                        <div className="p-4 border border-gray-200 rounded-xl bg-white h-full">
+                        <div className="p-4 border border-gray-200 rounded-xl bg-white h-full min-h-[140px]">
                             <h3 className="text-base font-semibold text-gray-700 mb-2">Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})</h3>
                             {data.upcomingFilings.length > 0 ? (
                                 <ul className="text-sm list-disc pl-5 space-y-1.5 text-gray-700">
