@@ -1330,15 +1330,19 @@ const LegalResearchTab = () => {
 
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
-    const { userProfile } = useAuth();
+    const { userProfile, isDevMode } = useAuth();
     const searchParams = useSearchParams();
     const tab = searchParams.get('tab') || 'assistant';
     
-    const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
+    if (!userProfile) {
+        return <Loader2 className="animate-spin" />;
+    }
     
-    const showAnalyzer = (userProfile?.role === 'Founder' && isPro) || (userProfile?.role === 'CA' && isPro) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
-    const showReconciliation = (userProfile?.role === 'CA' && isPro) || userProfile?.role === 'Enterprise';
-    const showWatcher = (userProfile?.role === 'Founder' && isPro) || (userProfile?.role === 'CA' && isPro) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
+    const isPro = planHierarchy[userProfile.plan] > 0;
+    
+    const showAnalyzer = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
+    const showReconciliation = (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Enterprise';
+    const showWatcher = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showWorkflows = userProfile?.role !== 'Founder';
     const showResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
 
@@ -1362,10 +1366,6 @@ export default function AiToolkitPage() {
         }
     }, [userProfile]);
     
-    if (!userProfile) {
-        return <Loader2 className="animate-spin" />;
-    }
-
     const tabs = [
         { value: 'assistant', label: 'Assistant', icon: MessageSquare, content: <ChatAssistant /> },
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },

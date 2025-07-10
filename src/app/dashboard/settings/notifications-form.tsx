@@ -30,8 +30,10 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
 export default function NotificationsForm() {
   const [state, formAction] = useActionState(handleNotificationSettings, initialState);
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { userProfile, isDevMode } = useAuth();
   const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
+  const isEnabled = isPro || isDevMode;
+
 
   useEffect(() => {
     if (state.success) {
@@ -47,7 +49,7 @@ export default function NotificationsForm() {
                 <CardDescription>Choose how and where you receive alerts and reports.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                 {!isPro && (
+                 {!isEnabled && (
                     <Alert>
                         <Lock className="h-4 w-4" />
                         <AlertTitle>Pro Feature</AlertTitle>
@@ -65,7 +67,7 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">For deadlines and regulation updates.</p>
                         </div>
                     </div>
-                    <Switch id="email_notifications" name="email_notifications" defaultChecked disabled={!isPro} />
+                    <Switch id="email_notifications" name="email_notifications" defaultChecked disabled={!isEnabled} />
                 </div>
                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
@@ -75,7 +77,7 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">AI-generated PDF summary of compliance.</p>
                         </div>
                     </div>
-                    <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked disabled={!isPro} />
+                    <Switch id="quarterly_snapshot" name="quarterly_snapshot" defaultChecked disabled={!isEnabled} />
                 </div>
                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3 sm:gap-0 interactive-lift">
                     <div className="flex items-start gap-4">
@@ -85,11 +87,11 @@ export default function NotificationsForm() {
                             <p className="text-xs text-muted-foreground">Interact with your AI assistant on WhatsApp.</p>
                         </div>
                     </div>
-                    <Switch id="whatsapp_bot" name="whatsapp_bot" disabled={!isPro} />
+                    <Switch id="whatsapp_bot" name="whatsapp_bot" disabled={!isEnabled} />
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-                <SubmitButton disabled={!isPro} />
+                <SubmitButton disabled={!isEnabled} />
             </CardFooter>
         </Card>
     </form>

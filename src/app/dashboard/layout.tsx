@@ -493,12 +493,12 @@ export default function DashboardLayout({
 
 const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navItems: NavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void }) => {
     const pathname = usePathname();
-    const { toast } = useToast();
+    const { isDevMode } = useAuth();
 
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
-        if (item.locked && !isPro) {
+        if (item.locked && !isPro && !isDevMode) {
             e.preventDefault();
             onLockedFeatureClick(item.label);
         }
@@ -523,7 +523,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 const isActive = item.href === '/dashboard' 
                   ? pathname === item.href 
                   : pathname.startsWith(item.href);
-                const isLocked = item.locked && !isPro;
+                const isLocked = item.locked && !isPro && !isDevMode;
 
                 return (
                   <TooltipProvider key={item.href} delayDuration={0}>
