@@ -82,7 +82,7 @@ export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedM
           <DialogTitle className="font-headline text-2xl">{content.title}</DialogTitle>
           <DialogDescription asChild>
             <div className="space-y-4 pt-4 text-center">
-                <div className="space-y-1 text-foreground">
+                <div className="space-y-1 text-foreground text-center">
                     {content.lines.map((line, index) => <p key={index}>{line}</p>)}
                 </div>
                 <p className="text-muted-foreground/80 font-medium">{content.eta}</p>
