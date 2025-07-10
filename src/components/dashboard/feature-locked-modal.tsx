@@ -18,44 +18,52 @@ interface FeatureLockedModalProps {
 }
 
 const wittyMessages: Record<string, { title: string, lines: string[] }> = {
-    "Community": {
-        title: "This Feature is Locked",
+    "Invitations": {
+        title: "Invite System Under Construction",
         lines: [
-            "Our intern said: 'I’ll handle it.'",
-            "That was 42 days ago.",
-            "No sightings since."
+            "We were going to build an invite system.",
+            "Then we accidentally invited burnout instead.",
+            "Coming soon… once coffee works again. ☕"
+        ]
+    },
+    "Workflows": {
+        title: "Workflow Engine is... Napping",
+        lines: [
+            "The workflow is currently... not working.",
+            "We tried building it on a weekend. Big mistake.",
+            "ETA: After 7 cups of chai and one long nap. 💤"
+        ]
+    },
+    "Community": {
+        title: "Community Feature Missing",
+        lines: [
+            "Our intern said: 'I'll build the community feature.'",
+            "That was 49 days ago. No updates since.",
+            "We’re filing a missing feature report. 🕵️‍♂️"
         ]
     },
     "CA Connect": {
         title: "Connection Timed Out",
         lines: [
-            "You wanted to connect with your CA.",
+            "You wanted to connect with your CA?",
             "We wanted to connect with our sleep cycle.",
-            "Neither is happening right now."
-        ]
-    },
-    "Invitations": {
-        title: "Access Denied",
-        lines: [
-            "You can't see invites yet.",
-            "But we're sure you're very popular.",
-            "Probably."
+            "Neither is happening. Stay tuned. 😴"
         ]
     },
     "Compliance Hub": {
-        title: "Compliance Machine is... Complaining",
+        title: "Connection Timed Out",
         lines: [
-            "It seems our compliance engine needs its own compliance check.",
-            "The irony is not lost on us.",
-            "Check back soon."
+            "You wanted to connect with your CA?",
+            "We wanted to connect with our sleep cycle.",
+            "Neither is happening. Stay tuned. 😴"
         ]
     },
     "default": {
-        title: "Feature Locked",
+        title: "Feature Coming Soon!",
         lines: [
-            "This feature is part of our Pro plan.",
-            "It's so good, we had to put a lock on it.",
-            "Upgrade to unlock the magic."
+            "This feature is still under development.",
+            "Our team is working hard to bring it to you.",
+            "Check back soon for updates."
         ]
     }
 }
@@ -78,11 +86,6 @@ export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedM
             </div>
           </DialogDescription>
         </DialogHeader>
-        <div className="pt-4">
-          <Button asChild className="w-full">
-            <Link href="/dashboard/settings?tab=subscription">View Plans</Link>
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
