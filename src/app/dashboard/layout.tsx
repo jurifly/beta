@@ -74,13 +74,14 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "@/components/dashboard/beta-banner";
 import { useToast } from "@/hooks/use-toast";
+import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   caConnect: { href: "/dashboard/ca-connect", label: "Compliance Hub", icon: ClipboardCheck, locked: true },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
-  learn: { href: "/dashboard/learn", label: "Learn Hub", icon: BookOpenCheck },
+  playbook: { href: "/dashboard/learn", label: "The Playbook", icon: BookOpenCheck },
   capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
   financials: { href: "/dashboard/financials", label: "Financials", icon: Receipt },
   documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
@@ -97,7 +98,7 @@ const navItemConfig = {
 } as const;
 
 type NavItemKey = keyof typeof navItemConfig;
-type NavItem = (typeof navItemConfig)[NavItemKey];
+type NavItem = (typeof navItemConfig)[NavItemKey] & { locked?: boolean };
 
 const Logo = () => (
   <svg
@@ -126,7 +127,7 @@ const founderNavItems: NavItem[] = [
   navItemConfig.financials,
   navItemConfig.launchPad,
   navItemConfig.documents,
-  navItemConfig.learn,
+  navItemConfig.playbook,
   { ...navItemConfig.analytics, label: "Analytics" },
   navItemConfig.community,
 ];
@@ -137,7 +138,7 @@ const caNavItems: NavItem[] = [
   navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.reportCenter,
-  navItemConfig.learn,
+  navItemConfig.playbook,
   navItemConfig.documents,
 ];
 
@@ -147,7 +148,7 @@ const legalAdvisorNavItems: NavItem[] = [
   { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
-  navItemConfig.learn,
+  navItemConfig.playbook,
 ];
 
 const enterpriseNavItems: NavItem[] = [
@@ -214,8 +215,6 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
 
 const MoreMenuSheet = () => {
     const { userProfile } = useAuth();
-    const router = useRouter();
-    const { toast } = useToast();
     if (!userProfile) return null;
 
     const mainItemsHrefs = getSidebarNavItems(userProfile.role).map(item => item.href);
@@ -238,17 +237,6 @@ const MoreMenuSheet = () => {
         menuItems.push(navItemConfig.documents);
     }
     
-
-    const handleItemClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
-        if ('locked' in item && item.locked) {
-            e.preventDefault();
-            toast({
-                title: "Coming Soon!",
-                description: `The "${item.label}" feature is under development and will be launched soon.`,
-            });
-        }
-    };
-    
     return (
         <Sheet>
             <SheetTrigger asChild>
@@ -267,13 +255,12 @@ const MoreMenuSheet = () => {
                              <SheetTrigger asChild key={item.label}>
                                 <Link
                                     href={item.href}
-                                    onClick={(e) => handleItemClick(e, item)}
                                     className="flex items-center justify-between p-3 rounded-lg hover:bg-muted"
                                 >
                                     <div className="flex items-center gap-4">
                                         <item.icon className="h-5 w-5 text-muted-foreground" />
                                         <span className="font-medium">{item.label}</span>
-                                        {'locked' in item && item.locked && (
+                                        {item.locked && (
                                             <Lock className="ml-2 h-3.5 w-3.5 text-muted-foreground/70" />
                                         )}
                                     </div>
@@ -345,6 +332,7 @@ const BottomNavBar = () => {
 function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
+  const [lockedFeature, setLockedFeature] = useState<string | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -364,8 +352,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   }
   
   const navItems = getSidebarNavItems(userProfile.role);
-  const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-
+  
   const bonusCredits = userProfile.creditBalance ?? 0;
   const creditsUsed = userProfile.dailyCreditsUsed ?? 0;
   const creditLimit = userProfile.dailyCreditLimit ?? 0;
@@ -376,13 +363,17 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
 
   return (
       <>
+        <FeatureLockedModal
+            featureName={lockedFeature}
+            onOpenChange={() => setLockedFeature(null)}
+        />
         <NotificationModal 
             isOpen={!!selectedNotification} 
             onOpenChange={() => setSelectedNotification(null)}
             notification={selectedNotification}
         />
         <div className="flex h-screen w-full">
-            <DesktopSidebar navItems={navItems} userProfile={userProfile} />
+            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <div className="flex-1">
@@ -491,20 +482,16 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
-const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userProfile: UserProfile }) => {
+const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navItems: NavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void }) => {
     const pathname = usePathname();
     const { toast } = useToast();
 
     const isPro = planHierarchy[userProfile.plan] > 0;
-    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-
+    
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
-        if ('locked' in item && item.locked) {
+        if (item.locked) {
             e.preventDefault();
-            toast({
-                title: "Coming Soon!",
-                description: `The "${item.label}" feature is under development and will be launched soon.`,
-            });
+            onLockedFeatureClick(item.label);
         }
     };
 
@@ -541,7 +528,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                         >
                           <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
                           {item.label}
-                           {'locked' in item && item.locked && (
+                           {item.locked && (
                             <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                           )}
                         </Link>
@@ -566,7 +553,7 @@ const DesktopSidebar = ({ navItems, userProfile }: { navItems: NavItem[], userPr
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <LifeBuoy className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">Help &amp; FAQ</p>
+                       <p className="font-semibold">Help & FAQ</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
