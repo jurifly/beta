@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -55,7 +56,13 @@ const FeedbackTab = () => {
     const { toast } = useToast();
     const { control, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm<FeedbackFormData>({ resolver: zodResolver(feedbackSchema), defaultValues: { category: "", sentiment: undefined, message: "" } });
     const selectedCategory = watch("category");
-    const onSubmit = async (data: FeedbackFormData) => { await new Promise(resolve => setTimeout(resolve, 1000)); toast({ title: "Feedback Submitted!", description: "Thank you for helping us improve." }); reset(); };
+    const onSubmit = async (data: FeedbackFormData) => { 
+        // In a real app, this would send data to a backend (e.g., Firestore).
+        console.log("Feedback submitted:", data);
+        await new Promise(resolve => setTimeout(resolve, 1000)); 
+        toast({ title: "Feedback Submitted!", description: "Thank you for helping us improve." }); 
+        reset(); 
+    };
 
     return (
         <Card className="interactive-lift">

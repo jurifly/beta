@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, type MouseEvent } from 'react';
@@ -6,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight, FileText } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight, FileText, Lock } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { CapTableModal } from '@/components/dashboard/cap-table-modal';
 import { useToast } from '@/hooks/use-toast';
 import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling-modal';
+import { planHierarchy } from '@/lib/types';
+import Link from 'next/link';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -25,7 +28,7 @@ const formatCurrency = (value: number) => {
 };
 
 export default function CapTablePage() {
-    const { userProfile, updateUserProfile } = useAuth();
+    const { userProfile, updateUserProfile, isDevMode } = useAuth();
     const { toast } = useToast();
     
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
@@ -142,6 +145,9 @@ export default function CapTablePage() {
           </Card>
         );
     }
+    
+    const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
+    const canModel = isPro || isDevMode;
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -196,10 +202,18 @@ export default function CapTablePage() {
                                 <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
                             </div>
                              <div className="flex w-full sm:w-auto gap-2">
-                                <Button variant="outline" onClick={() => setIsModelingModalOpen(true)} className="flex-1 sm:flex-initial">
-                                    <TrendingUp className="mr-2"/>
-                                    Model Round
-                                </Button>
+                                {canModel ? (
+                                    <Button variant="outline" onClick={() => setIsModelingModalOpen(true)} className="flex-1 sm:flex-initial">
+                                        <TrendingUp className="mr-2"/>
+                                        Model Round
+                                    </Button>
+                                ) : (
+                                    <Button variant="outline" className="flex-1 sm:flex-initial" asChild>
+                                        <Link href="/dashboard/settings?tab=subscription">
+                                            <Lock className="mr-2 h-4 w-4"/> Model Round
+                                        </Link>
+                                    </Button>
+                                )}
                                 <Button onClick={() => handleOpenModal()} className="flex-1 sm:flex-initial"><PlusCircle className="mr-2"/>Add Issuance</Button>
                             </div>
                         </CardHeader>

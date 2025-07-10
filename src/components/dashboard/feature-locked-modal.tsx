@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import {
@@ -17,7 +18,22 @@ interface FeatureLockedModalProps {
   onOpenChange: (isOpen: boolean) => void;
 }
 
-const wittyMessages: Record<string, { title: string, lines: string[], eta: string }> = {
+const wittyMessages: Record<string, { title: string; lines: string[]; eta: string }> = {
+    "Analyzer": {
+        title: "AI Document Analyzer",
+        lines: ["Unlock the ability to analyze contracts in seconds.", "Identify risks, get summaries, and find critical clauses instantly."],
+        eta: "This is a premium feature available on Pro plans."
+    },
+    "Watcher": {
+        title: "Regulation Watcher",
+        lines: ["Stay ahead of regulatory changes with AI-powered summaries.", "Monitor government portals for updates relevant to you."],
+        eta: "This is a premium feature available on Pro plans."
+    },
+    "Reconciliation": {
+        title: "AI Reconciliation Tool",
+        lines: ["Automate the comparison of financial documents.", "Let AI find discrepancies between your GST, ROC, and ITR filings."],
+        eta: "This is a premium feature available on our Pro plans."
+    },
     "Invitations": {
         title: "Invite System Under Construction",
         lines: [
@@ -63,14 +79,6 @@ const wittyMessages: Record<string, { title: string, lines: string[], eta: strin
         lines: [
             "Unlock professional, investor-ready reports.",
             "Impress your stakeholders with a single click."
-        ],
-        eta: "This is a premium feature available on our Pro plans."
-    },
-    "Reconciliation": {
-        title: "Upgrade to Pro for AI Reconciliation",
-        lines: [
-            "Automate the painful task of reconciling financials.",
-            "Let our AI find discrepancies for you."
         ],
         eta: "This is a premium feature available on our Pro plans."
     },

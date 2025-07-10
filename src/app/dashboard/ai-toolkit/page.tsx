@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
@@ -377,7 +378,7 @@ const DataroomAudit = () => {
 
 
 // --- Tab: Document Intelligence ---
-const DocumentIntelligenceTab = () => {
+const DocumentAnalyzerTab = () => {
   const { userProfile, deductCredits } = useAuth();
   const { toast } = useToast();
   const [analyzedDocs, setAnalyzedDocs] = useState<DocumentAnalysis[]>([]);
@@ -473,7 +474,7 @@ const DocumentIntelligenceTab = () => {
         <Card {...getRootProps()} className="interactive-lift">
           <input {...getInputProps()} />
           <CardHeader>
-            <CardTitle>Document Intelligence</CardTitle>
+            <CardTitle>Document Analyzer</CardTitle>
             <CardDescription>Upload a document for AI analysis.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -1370,7 +1371,7 @@ export default function AiToolkitPage() {
         { value: 'assistant', label: 'Assistant', icon: MessageSquare, content: <ChatAssistant /> },
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
-        { value: 'analyzer', label: 'Intelligence', icon: FileScan, content: showAnalyzer ? <DocumentIntelligenceTab /> : <UpgradePrompt /> },
+        { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
         { value: 'reconciliation', label: 'Reconciliation', icon: Scale, content: showReconciliation ? <ReconciliationTab /> : <UpgradePrompt /> },
         { value: 'watcher', label: 'Watcher', icon: RadioTower, content: showWatcher ? <RegulationWatcherTab /> : <UpgradePrompt /> },
         { value: 'workflows', label: 'Workflows', icon: Zap, content: showWorkflows ? <WorkflowTab /> : null, hidden: !showWorkflows },

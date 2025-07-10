@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useForm, Controller, useFieldArray } from "react-hook-form";
@@ -338,9 +339,27 @@ const CorporateTaxCalculator = () => {
     );
 };
 
-const FinancialSnapshot = () => {
-    const { userProfile, updateUserProfile } = useAuth();
+const forecastSchema = z.object({
+  revenueGrowthRate: z.coerce.number().min(0).max(100).default(5),
+  newHires: z.array(z.object({
+    role: z.string().min(1, 'Role is required'),
+    monthlySalary: z.coerce.number().min(1, 'Salary is required'),
+    startMonth: z.coerce.number().min(1).max(12),
+  })).default([]),
+  oneTimeExpenses: z.array(z.object({
+    item: z.string().min(1, 'Item name is required'),
+    amount: z.coerce.number().min(1, 'Amount is required'),
+    month: z.coerce.number().min(1).max(12),
+  })).default([]),
+});
+type ForecastFormData = z.infer<typeof forecastSchema>;
+
+
+const FinancialsTab = () => {
+    const { userProfile, updateUserProfile, deductCredits } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
+    const [isForecasting, setIsForecasting] = useState(false);
+    const [forecastResult, setForecastResult] = useState<FinancialForecasterOutput | null>(null);
     const { toast } = useToast();
 
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
@@ -348,6 +367,14 @@ const FinancialSnapshot = () => {
     const [cashBalance, setCashBalance] = useState(activeCompany?.financials?.cashBalance || 0);
     const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
     const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
+
+    const { control, handleSubmit, formState: { errors } } = useForm<ForecastFormData>({
+        resolver: zodResolver(forecastSchema),
+        defaultValues: { revenueGrowthRate: 5, newHires: [], oneTimeExpenses: [] },
+    });
+    
+    const { fields: hires, append: appendHire, remove: removeHire } = useFieldArray({ control, name: "newHires" });
+    const { fields: oneTimeExpenses, append: appendExpense, remove: removeExpense } = useFieldArray({ control, name: "oneTimeExpenses" });
 
     const { burnRate, runway, runwayLabel, chartData } = useMemo(() => {
         const burn = expenses - revenue;
@@ -379,124 +406,15 @@ const FinancialSnapshot = () => {
         }
     };
     
-    if (!activeCompany) {
-      return (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            Please add or select a company to view its financial snapshot.
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-        <div className="space-y-6">
-            <Card className="interactive-lift">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Burn Rate & Runway Calculator</CardTitle>
-                    <CardDescription>Input your monthly financials to get a snapshot of your startup's health.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
-                            <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
-                            <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
-                            <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
-                        </div>
-                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <Button onClick={handleSaveFinancials} disabled={isSaving} className="w-full sm:w-auto">
-                                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
-                                Save & Recalculate
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                         <div className="p-4 rounded-lg bg-muted border text-center">
-                            <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                            <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>₹{Math.abs(burnRate).toLocaleString()}</p>
-                        </div>
-                        <div className="p-4 rounded-lg bg-muted border text-center">
-                            <p className="text-sm text-muted-foreground">{runwayLabel}</p>
-                            <p className="text-2xl font-bold">{runway}</p>
-                        </div>
-                         <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Revenue vs. Expenses</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ChartContainer config={{}} className="h-48 w-full">
-                                    <RechartsBarChart layout="vertical" data={chartData} margin={{ left: 10 }}>
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
-                                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                                        <Bar dataKey="value" radius={5} >
-                                             {chartData.map((entry) => (
-                                                <Cell key={entry.name} fill={entry.fill} />
-                                             ))}
-                                        </Bar>
-                                    </RechartsBarChart>
-                                </ChartContainer>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
-
-const forecastSchema = z.object({
-  revenueGrowthRate: z.coerce.number().min(0).max(100).default(5),
-  newHires: z.array(z.object({
-    role: z.string().min(1, 'Role is required'),
-    monthlySalary: z.coerce.number().min(1, 'Salary is required'),
-    startMonth: z.coerce.number().min(1).max(12),
-  })).default([]),
-  oneTimeExpenses: z.array(z.object({
-    item: z.string().min(1, 'Item name is required'),
-    amount: z.coerce.number().min(1, 'Amount is required'),
-    month: z.coerce.number().min(1).max(12),
-  })).default([]),
-});
-type ForecastFormData = z.infer<typeof forecastSchema>;
-
-
-const FinancialForecaster = () => {
-    const { userProfile, deductCredits } = useAuth();
-    const { toast } = useToast();
-    const [isForecasting, setIsForecasting] = useState(false);
-    const [result, setResult] = useState<FinancialForecasterOutput | null>(null);
-
-    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
-
-    const { control, handleSubmit, formState: { errors } } = useForm<ForecastFormData>({
-        resolver: zodResolver(forecastSchema),
-        defaultValues: {
-            revenueGrowthRate: 5,
-            newHires: [],
-            oneTimeExpenses: [],
-        },
-    });
-
-    const { fields: hires, append: appendHire, remove: removeHire } = useFieldArray({ control, name: "newHires" });
-    const { fields: expenses, append: appendExpense, remove: removeExpense } = useFieldArray({ control, name: "oneTimeExpenses" });
-    
-    const onSubmit = async (data: ForecastFormData) => {
+    const onForecastSubmit = async (data: ForecastFormData) => {
         if (!activeCompany?.financials || !userProfile) {
-            toast({ variant: 'destructive', title: 'Missing Data', description: 'Please fill out your financial snapshot before generating a forecast.' });
+            toast({ variant: 'destructive', title: 'Missing Data', description: 'Please fill out and save your financial snapshot before generating a forecast.' });
             return;
         }
         if (!await deductCredits(3)) return;
 
         setIsForecasting(true);
-        setResult(null);
+        setForecastResult(null);
 
         try {
             const response = await generateFinancialForecastAction({
@@ -509,143 +427,173 @@ const FinancialForecaster = () => {
                 forecastPeriodInMonths: 12,
                 legalRegion: userProfile.legalRegion,
             });
-            setResult(response);
+            setForecastResult(response);
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Forecast Failed', description: error.message });
         } finally {
             setIsForecasting(false);
         }
     };
-    
-    if (!activeCompany?.financials) {
-        return (
-            <Card className="interactive-lift">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> AI Financial Forecaster</CardTitle>
-                    <CardDescription>Project your financial future based on growth assumptions.</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md bg-muted/40">
-                    <p>Please complete your financial snapshot first to enable forecasting.</p>
-                </CardContent>
-            </Card>
-        )
+
+    if (!activeCompany) {
+      return (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            Please add or select a company to view its financials.
+          </CardContent>
+        </Card>
+      );
     }
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-            <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle>Forecast Assumptions</CardTitle>
-                        <CardDescription>Set your growth and spending assumptions for the next 12 months.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
+                        <CardDescription>Input your key monthly financials.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="revenueGrowthRate">Monthly Revenue Growth Rate (%)</Label>
-                            <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} />} />
+                            <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
+                            <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
                         </div>
-
-                        <Separator/>
-                        
                         <div className="space-y-2">
-                            <Label className="font-semibold">Planned Hires</Label>
-                            <div className="grid grid-cols-3 gap-2 px-1 text-xs text-muted-foreground">
-                                <span>Role</span>
-                                <span>Monthly Salary</span>
-                                <span>Start Month</span>
-                            </div>
-                            <div className="space-y-2">
-                                {hires.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
-                                        <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="e.g. Engineer" {...field} />} />
-                                        <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} />} />
-                                        <div className="flex items-center gap-1">
-                                            <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="1-12" min="1" max="12" {...field} />} />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => appendHire({ role: '', monthlySalary: 0, startMonth: 1 })}><PlusCircle className="mr-2"/>Add Hire</Button>
+                            <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
+                            <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
                         </div>
-                        
-                        <Separator/>
-                        
                         <div className="space-y-2">
-                            <Label className="font-semibold">One-Time Expenses</Label>
-                             <div className="grid grid-cols-3 gap-2 px-1 text-xs text-muted-foreground">
-                                <span>Item / Description</span>
-                                <span>Amount (₹)</span>
-                                <span>Month</span>
-                            </div>
-                            <div className="space-y-2">
-                                {expenses.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
-                                        <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="e.g. Laptops" {...field} />} />
-                                        <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} />} />
-                                        <div className="flex items-center gap-1">
-                                            <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="1-12" min="1" max="12" {...field} />} />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => appendExpense({ item: '', amount: 0, month: 1 })}><PlusCircle className="mr-2"/>Add Expense</Button>
+                            <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
+                            <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" disabled={isForecasting} className="w-full">
-                            {isForecasting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
-                            Generate Forecast (3 Credits)
+                         <Button onClick={handleSaveFinancials} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
+                            Save & Recalculate
                         </Button>
                     </CardFooter>
                 </Card>
-            </form>
-             <div className="lg:col-span-3 space-y-6">
-                <Card className="min-h-[600px] interactive-lift">
-                     <CardHeader>
-                        <CardTitle>AI Forecast Report</CardTitle>
-                        <CardDescription>Your 12-month financial projection.</CardDescription>
+            </div>
+            <div className="lg:col-span-3 space-y-6">
+                 <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Health Overview</CardTitle>
+                        <CardDescription>Your startup's key financial health indicators.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        {isForecasting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Forecasting the future...</p></div>}
-                        {!isForecasting && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><TrendingUp className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your forecast will appear here.</p></div>}
-                        {!isForecasting && result && (
-                            <div className="space-y-6 animate-in fade-in-50">
-                                <Alert>
-                                    <Sparkles className="h-4 w-4"/>
-                                    <AlertTitle>AI Summary</AlertTitle>
-                                    <AlertDescription>{result.summary}</AlertDescription>
-                                </Alert>
-
-                                <div className="p-4 border rounded-lg text-center">
-                                    <p className="text-sm text-muted-foreground">Projected Runway</p>
-                                    <p className={`text-2xl font-bold ${result.runwayInMonths && result.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
-                                        {result.runwayInMonths ? `${result.runwayInMonths} Months` : '12+ Months / Profitable'}
-                                    </p>
-                                </div>
-
-                                <Card>
-                                    <CardHeader><CardTitle className="text-base">Cash Flow Projection</CardTitle></CardHeader>
-                                    <CardContent>
-                                        <ChartContainer config={{}} className="h-64 w-full">
-                                            <ResponsiveContainer>
-                                                <RechartsBarChart data={result.forecast}>
-                                                    <CartesianGrid strokeDasharray="3 3" />
-                                                    <XAxis dataKey="month" fontSize={12} />
-                                                    <YAxis fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                                                    <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
-                                                    <Legend />
-                                                    <Bar dataKey="closingBalance" name="Cash Balance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}/>
-                                                </RechartsBarChart>
-                                            </ResponsiveContainer>
-                                        </ChartContainer>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        )}
+                     <CardContent className="grid sm:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg bg-muted border text-center">
+                            <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                            <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted border text-center">
+                            <p className="text-sm text-muted-foreground">{runwayLabel}</p>
+                            <p className="text-2xl font-bold">{runway}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                             <ChartContainer config={{}} className="h-48 w-full">
+                                <RechartsBarChart layout="vertical" data={chartData} margin={{ left: 10 }}>
+                                    <XAxis type="number" hide />
+                                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                    <Bar dataKey="value" radius={5} >
+                                         {chartData.map((entry) => (
+                                            <Cell key={entry.name} fill={entry.fill} />
+                                         ))}
+                                    </Bar>
+                                </RechartsBarChart>
+                            </ChartContainer>
+                        </div>
                     </CardContent>
-                </Card>
+                 </Card>
+                 <form onSubmit={handleSubmit(onForecastSubmit)}>
+                    <Card className="interactive-lift">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> AI Financial Forecaster</CardTitle>
+                            <CardDescription>Add assumptions to project your financial future. Results appear below.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="revenueGrowthRate">Monthly Revenue Growth Rate (%)</Label>
+                                <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} />} />
+                            </div>
+                            <Separator/>
+                            <div className="space-y-2">
+                                <Label className="font-semibold">Planned Hires</Label>
+                                <div className="space-y-2">
+                                    {hires.map((field, index) => (
+                                        <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                                            <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="e.g. Engineer" {...field} />} />
+                                            <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} />} />
+                                            <div className="flex items-center gap-1">
+                                                <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendHire({ role: '', monthlySalary: 0, startMonth: 1 })}><PlusCircle className="mr-2"/>Add Hire</Button>
+                            </div>
+                            <Separator/>
+                            <div className="space-y-2">
+                                <Label className="font-semibold">One-Time Expenses</Label>
+                                <div className="space-y-2">
+                                    {oneTimeExpenses.map((field, index) => (
+                                        <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                                            <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="e.g. Laptops" {...field} />} />
+                                            <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} />} />
+                                            <div className="flex items-center gap-1">
+                                                <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendExpense({ item: '', amount: 0, month: 1 })}><PlusCircle className="mr-2"/>Add Expense</Button>
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button type="submit" disabled={isForecasting} className="w-full">
+                                {isForecasting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
+                                Generate Forecast (3 Credits)
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                 </form>
+                 {isForecasting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Forecasting the future...</p></div>}
+                 {forecastResult && (
+                    <Card className="interactive-lift animate-in fade-in-50">
+                        <CardHeader>
+                            <CardTitle>AI Forecast Report</CardTitle>
+                            <CardDescription>Your 12-month financial projection.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Alert>
+                                <Sparkles className="h-4 w-4"/>
+                                <AlertTitle>AI Summary</AlertTitle>
+                                <AlertDescription>{forecastResult.summary}</AlertDescription>
+                            </Alert>
+                             <div className="p-4 border rounded-lg text-center">
+                                <p className="text-sm text-muted-foreground">Projected Runway</p>
+                                <p className={`text-2xl font-bold ${forecastResult.runwayInMonths && forecastResult.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
+                                    {forecastResult.runwayInMonths ? `${forecastResult.runwayInMonths} Months` : '12+ Months / Profitable'}
+                                </p>
+                            </div>
+                            <ChartContainer config={{}} className="h-64 w-full">
+                                <ResponsiveContainer>
+                                    <RechartsBarChart data={forecastResult.forecast}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="month" fontSize={12} />
+                                        <YAxis fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                                        <Legend />
+                                        <Bar dataKey="closingBalance" name="Cash Balance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}/>
+                                    </RechartsBarChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                 )}
             </div>
         </div>
     )
@@ -661,15 +609,13 @@ export default function FinancialsPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Financials</h1>
                 <p className="text-muted-foreground">Tools to help you calculate taxes and manage your startup's financial health.</p>
             </div>
-            <Tabs defaultValue="snapshot" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="snapshot"><BarChart className="mr-2"/>Snapshot</TabsTrigger>
-                    <TabsTrigger value="forecast"><TrendingUp className="mr-2"/>AI Forecast</TabsTrigger>
+            <Tabs defaultValue="financials" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="financials"><BarChart className="mr-2"/>Financials</TabsTrigger>
                     <TabsTrigger value="personal"><User className="mr-2"/>Personal Tax</TabsTrigger>
                     <TabsTrigger value="corporate"><Building className="mr-2"/>Corporate Tax</TabsTrigger>
                 </TabsList>
-                <TabsContent value="snapshot" className="mt-6"><FinancialSnapshot /></TabsContent>
-                <TabsContent value="forecast" className="mt-6"><FinancialForecaster /></TabsContent>
+                <TabsContent value="financials" className="mt-6"><FinancialsTab /></TabsContent>
                 <TabsContent value="personal" className="mt-6"><PersonalTaxCalculator /></TabsContent>
                 <TabsContent value="corporate" className="mt-6"><CorporateTaxCalculator /></TabsContent>
             </Tabs>
