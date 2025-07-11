@@ -22,7 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bar, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Cell, Line, CartesianGrid, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { generateFinancialForecastAction, type FinancialForecasterOutput } from "@/app/dashboard/ai-toolkit/actions";
+import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
+import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
 
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
@@ -356,7 +357,7 @@ type ForecastFormData = z.infer<typeof forecastSchema>;
 
 
 const FinancialsTab = () => {
-    const { userProfile, updateUserProfile, deductCredits } = useAuth();
+    const { userProfile, updateUserProfile } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
     const [isForecasting, setIsForecasting] = useState(false);
     const [forecastResult, setForecastResult] = useState<FinancialForecasterOutput | null>(null);
@@ -411,13 +412,12 @@ const FinancialsTab = () => {
             toast({ variant: 'destructive', title: 'Missing Data', description: 'Please fill out and save your financial snapshot before generating a forecast.' });
             return;
         }
-        if (!await deductCredits(3)) return;
 
         setIsForecasting(true);
         setForecastResult(null);
 
         try {
-            const response = await generateFinancialForecastAction({
+            const response = await generateFinancialForecast({
                 cashBalance: activeCompany.financials.cashBalance,
                 monthlyRevenue: activeCompany.financials.monthlyRevenue,
                 monthlyExpenses: activeCompany.financials.monthlyExpenses,
@@ -474,8 +474,6 @@ const FinancialsTab = () => {
                         </Button>
                     </CardFooter>
                 </Card>
-            </div>
-            <div className="lg:col-span-3 space-y-6">
                  <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle>Health Overview</CardTitle>
@@ -492,7 +490,7 @@ const FinancialsTab = () => {
                         </div>
                         <div className="sm:col-span-2">
                              <ChartContainer config={{}} className="h-48 w-full">
-                                <RechartsBarChart layout="vertical" data={chartData} margin={{ left: 10 }}>
+                                <RechartsBarChart layout="vertical" data={chartData} margin={{ left: 10, right: 10 }}>
                                     <XAxis type="number" hide />
                                     <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
                                     <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
@@ -506,10 +504,12 @@ const FinancialsTab = () => {
                         </div>
                     </CardContent>
                  </Card>
+            </div>
+            <div className="lg:col-span-3 space-y-6">
                  <form onSubmit={handleSubmit(onForecastSubmit)}>
                     <Card className="interactive-lift">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> AI Financial Forecaster</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Forecaster</CardTitle>
                             <CardDescription>Add assumptions to project your financial future. Results appear below.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -555,7 +555,7 @@ const FinancialsTab = () => {
                         <CardFooter>
                             <Button type="submit" disabled={isForecasting} className="w-full">
                                 {isForecasting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
-                                Generate Forecast (3 Credits)
+                                Generate Forecast
                             </Button>
                         </CardFooter>
                     </Card>
@@ -564,13 +564,13 @@ const FinancialsTab = () => {
                  {forecastResult && (
                     <Card className="interactive-lift animate-in fade-in-50">
                         <CardHeader>
-                            <CardTitle>AI Forecast Report</CardTitle>
+                            <CardTitle>Forecast Report</CardTitle>
                             <CardDescription>Your 12-month financial projection.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <Alert>
                                 <Sparkles className="h-4 w-4"/>
-                                <AlertTitle>AI Summary</AlertTitle>
+                                <AlertTitle>Summary</AlertTitle>
                                 <AlertDescription>{forecastResult.summary}</AlertDescription>
                             </Alert>
                              <div className="p-4 border rounded-lg text-center">

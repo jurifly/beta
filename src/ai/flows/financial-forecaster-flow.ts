@@ -50,8 +50,6 @@ export async function generateFinancialForecast(input: FinancialForecasterInput)
   return financialForecasterFlow(input);
 }
 
-// NOTE: This flow will perform the calculations directly and then use the LLM for the summary.
-// This is more reliable and efficient than asking the LLM to do complex math.
 
 const financialForecasterFlow = ai.defineFlow(
   {
@@ -65,6 +63,7 @@ const financialForecasterFlow = ai.defineFlow(
     let currentRevenue = input.monthlyRevenue;
     let currentCash = input.cashBalance;
     let runwayInMonths: number | null = null;
+    let profitableMonth: number | null = null;
     
     for (let i = 1; i <= input.forecastPeriodInMonths; i++) {
         // Calculate revenue for the month
@@ -96,45 +95,31 @@ const financialForecasterFlow = ai.defineFlow(
         if (runwayInMonths === null && currentCash < 0) {
             runwayInMonths = i;
         }
+
+        if (profitableMonth === null && profit > 0) {
+            profitableMonth = i;
+        }
     }
 
-    // 2. Generate summary with LLM
-    const summaryPrompt = ai.definePrompt({
-        name: 'financialForecastSummaryPrompt',
-        input: { schema: z.object({
-            forecastData: z.string().describe("The 12-month forecast data in JSON format."),
-            initialInput: FinancialForecasterInputSchema,
-        })},
-        output: { schema: z.object({ summary: z.string() }) },
-        prompt: `You are a startup CFO AI. Analyze the following 12-month financial forecast data and the initial assumptions. Provide a concise, insightful summary (2-3 sentences) for the founder.
-
-Highlight key events like:
-- The month the company is projected to run out of cash (if applicable).
-- The month the company becomes profitable (if applicable).
-- The impact of revenue growth vs. new expenses.
-
-Initial Assumptions:
-- Starting Cash: {{initialInput.cashBalance}}
-- Starting Monthly Revenue: {{initialInput.monthlyRevenue}}
-- Revenue Growth: {{initialInput.revenueGrowthRate}}%
-- New Hires: {{#each initialInput.newHires}} {{role}} starting in Month {{startMonth}}; {{/each}}
-
-Forecast Data (JSON):
-\`\`\`json
-{{{forecastData}}}
-\`\`\`
-`,
-    });
-
-    const { output } = await summaryPrompt({
-        forecastData: JSON.stringify(forecast, null, 2),
-        initialInput: input
-    });
+    // 2. Generate summary without LLM
+    let summary = "";
+    if (runwayInMonths !== null) {
+      summary = `Based on your assumptions, the company is projected to run out of cash in approximately ${runwayInMonths} months.`;
+      if (profitableMonth) {
+        summary += ` However, profitability is expected around month ${profitableMonth}, which could alter this outlook.`;
+      } else {
+        summary += " Immediate focus on revenue growth or cost management is critical.";
+      }
+    } else if (profitableMonth !== null) {
+      summary = `The company is projected to become profitable in month ${profitableMonth}. The cash runway appears stable for the forecast period.`;
+    } else {
+      summary = `The forecast shows the company remains profitable throughout the 12-month period, with a consistently positive cash balance.`;
+    }
     
     return {
       forecast: forecast,
       runwayInMonths: runwayInMonths,
-      summary: output!.summary,
+      summary: summary,
     };
   }
 );

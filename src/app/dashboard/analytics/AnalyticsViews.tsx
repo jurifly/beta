@@ -428,8 +428,8 @@ export function FounderAnalytics() {
         </Card>
       </div>
 
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="interactive-lift flex flex-col md:col-span-2">
+       <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+        <Card className="interactive-lift flex flex-col">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Trends</CardTitle>
                 <CardDescription>6-month overview of your revenue vs. expenses.</CardDescription>
