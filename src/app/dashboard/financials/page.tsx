@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -179,19 +179,19 @@ const PersonalTaxCalculator = () => {
           <Card className="interactive-lift">
             <CardHeader><CardTitle>Income Details</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="salary">Annual Salary (Gross)</Label><Controller name="income.salary" control={control} render={({ field }) => <Input type="number" id="salary" {...field} />} /></div>
-              <div className="space-y-2"><Label htmlFor="businessIncome">Business/Professional Income</Label><Controller name="income.businessIncome" control={control} render={({ field }) => <Input type="number" id="businessIncome" {...field} />} /></div>
-              <div className="space-y-2"><Label htmlFor="capitalGains">Capital Gains</Label><Controller name="income.capitalGains" control={control} render={({ field }) => <Input type="number" id="capitalGains" {...field} />} /></div>
-              <div className="space-y-2"><Label htmlFor="otherIncome">Other Income</Label><Controller name="income.otherIncome" control={control} render={({ field }) => <Input type="number" id="otherIncome" {...field} />} /></div>
+              <div className="space-y-2"><Label htmlFor="salary">Annual Salary (Gross)</Label><Controller name="income.salary" control={control} render={({ field }) => <Input type="number" id="salary" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />} /></div>
+              <div className="space-y-2"><Label htmlFor="businessIncome">Business/Professional Income</Label><Controller name="income.businessIncome" control={control} render={({ field }) => <Input type="number" id="businessIncome" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
+              <div className="space-y-2"><Label htmlFor="capitalGains">Capital Gains</Label><Controller name="income.capitalGains" control={control} render={({ field }) => <Input type="number" id="capitalGains" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
+              <div className="space-y-2"><Label htmlFor="otherIncome">Other Income</Label><Controller name="income.otherIncome" control={control} render={({ field }) => <Input type="number" id="otherIncome" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
             </CardContent>
           </Card>
           <Card className="interactive-lift">
             <CardHeader><CardTitle>Deductions & Exemptions</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="section80C">Section 80C Investments</Label><Controller name="deductions.section80C" control={control} render={({ field }) => <Input type="number" id="section80C" {...field} />} /></div>
-              <div className="space-y-2"><Label htmlFor="section80D">Section 80D (Health Insurance)</Label><Controller name="deductions.section80D" control={control} render={({ field }) => <Input type="number" id="section80D" {...field} />} /></div>
-              <div className="space-y-2"><Label htmlFor="hra">House Rent Allowance (HRA)</Label><Controller name="deductions.hra" control={control} render={({ field }) => <Input type="number" id="hra" {...field} />} /></div>
-              <div className="space-y-2"><Label htmlFor="otherDeductions">Other Deductions</Label><Controller name="deductions.otherDeductions" control={control} render={({ field }) => <Input type="number" id="otherDeductions" {...field} />} /></div>
+              <div className="space-y-2"><Label htmlFor="section80C">Section 80C Investments</Label><Controller name="deductions.section80C" control={control} render={({ field }) => <Input type="number" id="section80C" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
+              <div className="space-y-2"><Label htmlFor="section80D">Section 80D (Health Insurance)</Label><Controller name="deductions.section80D" control={control} render={({ field }) => <Input type="number" id="section80D" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
+              <div className="space-y-2"><Label htmlFor="hra">House Rent Allowance (HRA)</Label><Controller name="deductions.hra" control={control} render={({ field }) => <Input type="number" id="hra" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
+              <div className="space-y-2"><Label htmlFor="otherDeductions">Other Deductions</Label><Controller name="deductions.otherDeductions" control={control} render={({ field }) => <Input type="number" id="otherDeductions" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
             </CardContent>
           </Card>
           <Button type="submit" className="w-full" disabled={isCalculating}>{isCalculating ? <Loader2 className="mr-2 animate-spin"/> : <Calculator className="mr-2"/>}Calculate Tax</Button>
@@ -304,8 +304,8 @@ const CorporateTaxCalculator = () => {
                 <Card className="interactive-lift">
                     <CardHeader><CardTitle>Corporate Financials</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2"><Label>Annual Revenue</Label><Controller name="revenue" control={control} render={({ field }) => <Input type="number" {...field} />} /></div>
-                        <div className="space-y-2"><Label>Profit Before Tax (PBT)</Label><Controller name="profit" control={control} render={({ field }) => <Input type="number" {...field} />} /></div>
+                        <div className="space-y-2"><Label>Annual Revenue</Label><Controller name="revenue" control={control} render={({ field }) => <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
+                        <div className="space-y-2"><Label>Profit Before Tax (PBT)</Label><Controller name="profit" control={control} render={({ field }) => <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} /></div>
                     </CardContent>
                 </Card>
                 <Button type="submit" className="w-full" disabled={isCalculating}>{isCalculating ? <Loader2 className="mr-2 animate-spin"/> : <Calculator className="mr-2"/>}Calculate Corporate Tax</Button>
@@ -387,7 +387,10 @@ const FinancialsTab = () => {
             burnRate: burn,
             runway: runwayMonthsText,
             runwayLabel: burn > 0 ? "Estimated Runway" : "Financial Status",
-            chartData: [ { name: 'Revenue', value: revenue }, { name: 'Expenses', value: expenses } ],
+            chartData: [ 
+                { name: 'Revenue', value: revenue, color: 'hsl(var(--chart-2))' }, 
+                { name: 'Expenses', value: expenses, color: 'hsl(var(--chart-5))' } 
+            ],
         };
     }, [revenue, expenses, cashBalance]);
 
@@ -407,7 +410,7 @@ const FinancialsTab = () => {
     };
     
     const onForecastSubmit = async (data: ForecastFormData) => {
-        if (!activeCompany?.financials || !userProfile) {
+        if (!activeCompany || !userProfile) {
             toast({ variant: 'destructive', title: 'Missing Data', description: 'Please fill out and save your financial snapshot before generating a forecast.' });
             return;
         }
@@ -417,9 +420,9 @@ const FinancialsTab = () => {
 
         try {
             const response = await generateFinancialForecast({
-                cashBalance: activeCompany.financials.cashBalance,
-                monthlyRevenue: activeCompany.financials.monthlyRevenue,
-                monthlyExpenses: activeCompany.financials.monthlyExpenses,
+                cashBalance: cashBalance,
+                monthlyRevenue: revenue,
+                monthlyExpenses: expenses,
                 revenueGrowthRate: data.revenueGrowthRate,
                 newHires: data.newHires,
                 oneTimeExpenses: data.oneTimeExpenses,
@@ -445,11 +448,11 @@ const FinancialsTab = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><BarChartIcon className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
                         <CardDescription>Input your key monthly financials.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -490,15 +493,17 @@ const FinancialsTab = () => {
                             </div>
                         </div>
                         <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-48 w-full">
-                            <AreaChart data={[{name: 'Metrics', revenue, expenses}]} margin={{ left: 12, right: 12 }}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis dataKey="name" tickLine={false} axisLine={false} hide />
-                                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
-                                <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                                <Area dataKey="revenue" type="monotone" fill="var(--color-revenue)" stroke="var(--color-revenue)" name="Revenue" />
-                                <Area dataKey="expenses" type="monotone" fill="var(--color-expenses)" stroke="var(--color-expenses)" name="Expenses" />
-                                <Legend />
-                            </AreaChart>
+                             <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={[{ name: 'Metrics', revenue, expenses }]} layout="vertical" margin={{ left: 12 }}>
+                                    <CartesianGrid horizontal={false} />
+                                    <YAxis type="category" dataKey="name" hide />
+                                    <XAxis type="number" hide />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                    <Legend />
+                                    <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4}/>
+                                    <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4}/>
+                                </BarChart>
+                            </ResponsiveContainer>
                         </ChartContainer>
                     </CardContent>
                  </Card>
@@ -513,7 +518,7 @@ const FinancialsTab = () => {
                     <CardContent className="space-y-4">
                          <div className="space-y-2">
                             <Label htmlFor="revenueGrowthRate">Monthly Revenue Growth Rate (%)</Label>
-                            <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} />} />
+                            <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />} />
                         </div>
                         <Separator/>
                         <div className="space-y-2">
@@ -522,9 +527,9 @@ const FinancialsTab = () => {
                                 {hires.map((field, index) => (
                                     <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
                                         <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="e.g. Engineer" {...field} />} />
-                                        <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} />} />
+                                        <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} />
                                         <div className="flex items-center gap-1">
-                                            <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
+                                            <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} />
                                             <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
                                         </div>
                                     </div>
@@ -539,9 +544,9 @@ const FinancialsTab = () => {
                                 {oneTimeExpenses.map((field, index) => (
                                     <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
                                         <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="e.g. Laptops" {...field} />} />
-                                        <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} />} />
+                                        <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} />
                                         <div className="flex items-center gap-1">
-                                            <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
+                                            <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} onChange={(e) => field.onChange(Number(e.target.value))}/>} />
                                             <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
                                         </div>
                                     </div>
@@ -615,7 +620,7 @@ export default function FinancialsPage() {
             </div>
             <Tabs defaultValue="financials" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="financials"><BarChart className="mr-2"/>Financials</TabsTrigger>
+                    <TabsTrigger value="financials"><BarChartIcon className="mr-2"/>Financials</TabsTrigger>
                     <TabsTrigger value="personal"><User className="mr-2"/>Personal Tax</TabsTrigger>
                     <TabsTrigger value="corporate"><Building className="mr-2"/>Corporate Tax</TabsTrigger>
                 </TabsList>
@@ -626,3 +631,4 @@ export default function FinancialsPage() {
         </div>
     );
 }
+
