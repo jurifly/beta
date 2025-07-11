@@ -43,12 +43,19 @@ import {
   User,
   MoreHorizontal,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,12 +77,18 @@ import { useAuth } from "@/hooks/auth";
 import type { UserProfile, UserPlan, AppNotification, UserRole } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "@/components/dashboard/beta-banner";
 import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -120,37 +133,38 @@ const Logo = () => (
   </svg>
 );
 
-
+// --- START: Reordered Nav Items ---
 const founderNavItems: NavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.caConnect, label: "CA Connect", locked: true },
   { ...navItemConfig.aiToolkit },
   navItemConfig.capTable,
   navItemConfig.financials,
   navItemConfig.launchPad,
   { ...navItemConfig.reportCenter, locked: true},
-  navItemConfig.documents,
-  navItemConfig.playbook,
   { ...navItemConfig.analytics, label: "Analytics" },
+  navItemConfig.playbook,
+  { ...navItemConfig.caConnect, label: "CA Connect", locked: true },
+  navItemConfig.documents,
   navItemConfig.community,
 ];
 
 const caNavItems: NavItem[] = [
   navItemConfig.dashboard,
   { ...navItemConfig.clients, label: "Client Management" },
-  navItemConfig.invitations,
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.analytics,
+  navItemConfig.capTable,
+  navItemConfig.financials,
+  navItemConfig.launchPad,
   { ...navItemConfig.reportCenter, locked: true},
   {...navItemConfig.workflows, label: "Workflows", locked: true },
   {...navItemConfig.reconciliation, locked: true },
-  navItemConfig.launchPad,
-  navItemConfig.capTable,
-  navItemConfig.financials,
-  navItemConfig.playbook,
   navItemConfig.documents,
   {...navItemConfig.clauseLibrary, locked: true},
+  navItemConfig.playbook,
+  navItemConfig.invitations,
 ];
+// --- END: Reordered Nav Items ---
 
 const legalAdvisorNavItems: NavItem[] = [
   navItemConfig.dashboard,
