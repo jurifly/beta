@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
@@ -176,7 +176,7 @@ export default function SettingsPage() {
             <p className="text-muted-foreground">Manage your personal, billing, and company information.</p>
         </div>
         <Tabs defaultValue={tab} className="space-y-6">
-          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <ScrollArea className="w-full sm:w-auto -mx-4 px-4 sm:mx-0 sm:px-0" orientation="horizontal">
               <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
                 <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
                 <TabsTrigger value="subscription"><CreditCard className="mr-2 h-4 w-4"/>Subscription</TabsTrigger>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
                 <TabsTrigger value="policies"><BookLock className="mr-2 h-4 w-4"/>Policies</TabsTrigger>
                 <TabsTrigger value="feedback"><MessageCircle className="mr-2 h-4 w-4"/>Feedback</TabsTrigger>
               </TabsList>
-          </div>
+          </ScrollArea>
           <TabsContent value="profile" className="space-y-6">
             <SettingsForm 
               onAddCompanyClick={handleAddCompanyClick}

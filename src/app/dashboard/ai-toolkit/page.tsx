@@ -1385,7 +1385,7 @@ export default function AiToolkitPage() {
                 <p className="text-muted-foreground">{pageDescription}</p>
             </div>
             <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
-                <ScrollArea className="w-full -mx-4 px-4 sm:mx-0 sm:px-0">
+                <ScrollArea className="w-full sm:w-auto -mx-4 px-4 sm:mx-0 sm:px-0" orientation="horizontal">
                     <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
                         {tabs.map(t => (
                             <TabsTrigger key={t.value} value={t.value} className="interactive-lift">
