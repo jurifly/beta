@@ -11,6 +11,7 @@ import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/fl
 import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
 import { performLegalResearch, type LegalResearchInput, type LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 import { generateFinancialForecast, type FinancialForecasterInput, type FinancialForecasterOutput } from '@/ai/flows/financial-forecaster-flow';
+import { predictPenalty, type PenaltyPredictorInput, type PenaltyPredictorOutput } from '@/ai/flows/penalty-predictor-flow';
 
 
 // --- AI Assistant Actions ---
@@ -127,5 +128,15 @@ export async function generateFinancialForecastAction(input: FinancialForecaster
   } catch (e: any) {
     console.error('AI Flow Error:', e);
     throw new Error(e.message || 'Could not generate financial forecast.');
+  }
+}
+
+// --- Penalty Predictor Action ---
+export async function predictPenaltyAction(input: PenaltyPredictorInput): Promise<PenaltyPredictorOutput> {
+  try {
+    return await predictPenalty(input);
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    throw new Error(e.message || 'Could not predict the penalty.');
   }
 }

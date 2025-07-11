@@ -44,6 +44,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradePrompt } from '@/components/upgrade-prompt';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { PenaltyPredictorOutput } from '@/ai/flows/penalty-predictor-flow';
 
 // --- Tab: AI Legal Assistant ---
 
@@ -1331,6 +1332,115 @@ const LegalResearchTab = () => {
     );
 };
 
+// --- Tab: Penalty Predictor ---
+const PenaltyPredictorTab = () => {
+    const { userProfile, deductCredits } = useAuth();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [result, setResult] = useState<PenaltyPredictorOutput | null>(null);
+    const [defaultDescription, setDefaultDescription] = useState("");
+    const { toast } = useToast();
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!defaultDescription.trim() || !userProfile) return;
+        if (!await deductCredits(2)) return;
+        setIsProcessing(true);
+        setResult(null);
+
+        try {
+            const response = await AiActions.predictPenaltyAction({
+                complianceDefault: defaultDescription,
+                legalRegion: userProfile.legalRegion,
+            });
+            setResult(response);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Prediction Failed', description: error.message });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+    
+    const getRiskColorClasses = (level: 'High' | 'Medium' | 'Low') => {
+        switch (level) {
+            case 'High': return 'bg-destructive/10 border-destructive/20 text-destructive';
+            case 'Medium': return 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400';
+            case 'Low': return 'bg-primary/10 border-primary/20 text-primary';
+            default: return 'bg-muted';
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>AI Penalty Predictor</CardTitle>
+                        <CardDescription>Describe a compliance default to get an AI-powered risk assessment.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <Label htmlFor="default-description">Describe the Compliance Default</Label>
+                            <Textarea
+                                id="default-description"
+                                value={defaultDescription}
+                                onChange={(e) => setDefaultDescription(e.target.value)}
+                                placeholder="e.g., 'We missed filing our GSTR-3B for the month of July. Our turnover is around 2 Cr.'"
+                                className="min-h-[150px]"
+                                disabled={isProcessing}
+                            />
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" className="w-full" disabled={isProcessing || !defaultDescription.trim()}>
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Predict Penalty (2 Credits)
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </form>
+            <div className="lg:col-span-3">
+                 <Card className="min-h-[400px] interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Risk Analysis Report</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {isProcessing && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Analyzing potential consequences...</p></div>}
+                        {!result && !isProcessing && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gavel className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your penalty analysis will appear here.</p></div>}
+                        {result && (
+                            <div className="space-y-6 animate-in fade-in-50">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                                        <p className="text-sm text-muted-foreground">Estimated Penalty</p>
+                                        <p className="text-2xl font-bold">{result.penaltyAmount}</p>
+                                    </div>
+                                    <div className={cn("p-4 rounded-lg border text-center", getRiskColorClasses(result.riskLevel))}>
+                                        <p className="text-sm font-medium">Risk Level</p>
+                                        <p className="text-2xl font-bold">{result.riskLevel}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2">Reasoning</h4>
+                                    <p className="text-sm text-muted-foreground p-3 bg-muted/50 border rounded-md">{result.reasoning}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2">Mitigation Steps</h4>
+                                    <ul className="space-y-2">
+                                        {result.mitigationSteps.map((step, i) => (
+                                            <li key={i} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
+                                                <CheckCircle className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                                                <span>{step}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}
 
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
@@ -1347,6 +1457,7 @@ export default function AiToolkitPage() {
     const showAnalyzer = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showWatcher = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
+    const showPenaltyPredictor = showWatcher; // Same logic as watcher
 
     const pageTitle = useMemo(() => {
         if (!userProfile) return "AI Toolkit";
@@ -1373,6 +1484,7 @@ export default function AiToolkitPage() {
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
+        { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: showPenaltyPredictor ? <PenaltyPredictorTab /> : <UpgradePrompt />, hidden: !showPenaltyPredictor },
         { value: 'watcher', label: 'Watcher', icon: RadioTower, content: showWatcher ? <RegulationWatcherTab /> : <UpgradePrompt /> },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);
@@ -1404,7 +1516,3 @@ export default function AiToolkitPage() {
         </div>
     );
 }
-
-    
-
-    

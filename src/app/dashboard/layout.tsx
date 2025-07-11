@@ -410,6 +410,62 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0 md:hidden"
+                        >
+                            <Menu className="h-5 w-5" />
+                            <span className="sr-only">Toggle navigation menu</span>
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="flex flex-col p-0">
+                         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
+                            {isPro && <Flame className="h-6 w-6 text-accent" />}
+                            <Logo />
+                            <span className="flex items-center">
+                                Claari
+                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
+                            </span>
+                            </Link>
+                        </div>
+                        <ScrollArea className="flex-1">
+                            <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
+                            {navItems.map((item) => {
+                                const isActive = item.href === '/dashboard' 
+                                ? pathname === item.href 
+                                : pathname.startsWith(item.href);
+                                const isLocked = item.locked && !isPro && !isDevMode;
+
+                                return (
+                                <Link
+                                    key={item.label}
+                                    href={item.href}
+                                    onClick={(e) => {
+                                        if (isLocked) {
+                                            e.preventDefault();
+                                            onLockedFeatureClick(item.label);
+                                        }
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                        isActive && "bg-muted text-primary",
+                                        isLocked && "cursor-not-allowed"
+                                    )}
+                                >
+                                    <item.icon className="h-4 w-4" />
+                                    {item.label}
+                                    {isLocked && <Lock className="ml-auto h-4 w-4 opacity-50" />}
+                                </Link>
+                                )
+                            })}
+                            </nav>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
                 <div className="flex-1">
                 <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Link href="/dashboard" className="flex items-center gap-2">
@@ -421,6 +477,21 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-4">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+                            <Globe className="mr-2 h-4 w-4" />
+                            English
+                            <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuRadioGroup value="en">
+                            <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="hi" disabled>Hindi (coming soon)</DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
                 <Link href="/dashboard/settings?tab=subscription" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
                     <span className="text-muted-foreground">{isDevMode ? 'Unlimited Credits' : `${totalCreditsRemaining} Credits Left`}</span>
@@ -584,7 +655,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                                background-color: var(--item-hover-bg);
                             }
                            `}</style>
-                           <div data-active={isActive}></div>
+                           <div data-active={isActive ? 'true' : 'false'}></div>
                         </Link>
                       </TooltipTrigger>
                        <TooltipContent side="right">
