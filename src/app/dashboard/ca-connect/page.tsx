@@ -216,8 +216,8 @@ export default function CaConnectPage() {
                 </CardHeader>
                 <CardContent>
                     {allRequests.length > 0 ? (
-                        <Tabs defaultValue="pending">
-                            <TabsList className="grid w-full sm:w-auto grid-cols-3">
+                        <Tabs defaultValue="pending" className="w-full">
+                            <TabsList className="grid w-full sm:w-auto grid-cols-2">
                                 <TabsTrigger value="pending">Pending ({pendingRequests.length + overdueRequests.length})</TabsTrigger>
                                 <TabsTrigger value="completed">Completed ({completedRequests.length})</TabsTrigger>
                             </TabsList>
