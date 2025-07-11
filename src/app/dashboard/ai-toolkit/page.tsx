@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
@@ -1373,7 +1372,6 @@ export default function AiToolkitPage() {
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
         { value: 'watcher', label: 'Watcher', icon: RadioTower, content: showWatcher ? <RegulationWatcherTab /> : <UpgradePrompt /> },
-        { value: 'workflows', label: 'Workflows', icon: Zap, content: showWorkflows ? <WorkflowTab /> : null, hidden: !showWorkflows },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);
 
@@ -1404,3 +1402,5 @@ export default function AiToolkitPage() {
         </div>
     );
 }
+
+    
