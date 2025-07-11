@@ -44,6 +44,8 @@ import {
   MoreHorizontal,
   ChevronRight,
   ChevronDown,
+  Briefcase,
+  BookUser,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -88,9 +90,17 @@ import { BetaBanner } from "@/components/dashboard/beta-banner";
 import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
-const navItemConfig = {
+type NavItemConfig = {
+    [key: string]: {
+        href: string;
+        label: string;
+        icon: React.ElementType;
+        locked?: boolean;
+    }
+}
+
+const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   caConnect: { href: "/dashboard/ca-connect", label: "Advisor Hub", icon: Users, locked: true },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
@@ -112,8 +122,67 @@ const navItemConfig = {
   help: { href: "/dashboard/help", label: "Help & FAQ", icon: LifeBuoy },
 } as const;
 
-type NavItemKey = keyof typeof navItemConfig;
-type NavItem = (typeof navItemConfig)[NavItemKey] & { locked?: boolean };
+
+type ThemedNavItem = (typeof navItemConfig)[keyof typeof navItemConfig] & {
+    color?: string;
+}
+
+const founderNavItems: ThemedNavItem[] = [
+  { ...navItemConfig.dashboard, color: "#4F46E5" },
+  { ...navItemConfig.aiToolkit, color: "#4F46E5" },
+  { ...navItemConfig.capTable, color: "#7C3AED" },
+  { ...navItemConfig.financials, color: "#1D4ED8" },
+  { ...navItemConfig.launchPad, color: "#F97316" },
+  { ...navItemConfig.reportCenter, color: "#10B981", locked: true },
+  { ...navItemConfig.analytics, label: "Analytics", color: "#06B6D4" },
+  { ...navItemConfig.playbook, color: "#EAB308" },
+  { ...navItemConfig.caConnect, color: "#F43F5E", locked: true },
+  { ...navItemConfig.documents, color: "#64748B" },
+  { ...navItemConfig.community, color: "#A855F7" },
+];
+
+const caNavItems: ThemedNavItem[] = [
+  { ...navItemConfig.dashboard, color: "#0F766E" },
+  { ...navItemConfig.clients, label: "Client Management", color: "#2563EB", icon: Briefcase },
+  { ...navItemConfig.aiToolkit, label: "AI Practice Suite", color: "#8B5CF6" },
+  { ...navItemConfig.analytics, color: "#14B8A6" },
+  { ...navItemConfig.caConnect, label: 'Compliance Hub', color: "#EC4899", icon: Users },
+  { ...navItemConfig.launchPad, color: "#F97316" },
+  { ...navItemConfig.reportCenter, color: "#10B981", locked: true },
+  { ...navItemConfig.workflows, label: "Workflows", color: "#22D3EE", locked: true },
+  { ...navItemConfig.reconciliation, color: "#A3E635", locked: true },
+  { ...navItemConfig.documents, color: "#6B7280" },
+  { ...navItemConfig.clauseLibrary, color: "#9333EA", locked: true },
+  { ...navItemConfig.playbook, color: "#FACC15" },
+  { ...navItemConfig.invitations, color: "#EC4899" },
+];
+
+const legalAdvisorNavItems: ThemedNavItem[] = [
+  navItemConfig.dashboard,
+  navItemConfig.clients,
+  { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
+  navItemConfig.clauseLibrary,
+  navItemConfig.analytics,
+  navItemConfig.playbook,
+];
+
+const enterpriseNavItems: ThemedNavItem[] = [
+  navItemConfig.dashboard,
+  { ...navItemConfig.team, locked: false }, // Unlocked for Enterprise
+  navItemConfig.clients,
+  navItemConfig.caConnect,
+  navItemConfig.analytics,
+  navItemConfig.documents,
+];
+
+const getSidebarNavItems = (role: UserRole) => {
+    switch (role) {
+        case 'CA': return caNavItems;
+        case 'Legal Advisor': return legalAdvisorNavItems;
+        case 'Enterprise': return enterpriseNavItems;
+        case 'Founder': default: return founderNavItems;
+    }
+}
 
 const Logo = () => (
   <svg
@@ -133,64 +202,6 @@ const Logo = () => (
   </svg>
 );
 
-// --- START: Reordered Nav Items ---
-const founderNavItems: NavItem[] = [
-  navItemConfig.dashboard,
-  { ...navItemConfig.aiToolkit },
-  navItemConfig.capTable,
-  navItemConfig.financials,
-  navItemConfig.launchPad,
-  { ...navItemConfig.reportCenter, locked: true},
-  { ...navItemConfig.analytics, label: "Analytics" },
-  navItemConfig.playbook,
-  { ...navItemConfig.caConnect, locked: true },
-  navItemConfig.documents,
-  navItemConfig.community,
-];
-
-const caNavItems: NavItem[] = [
-  navItemConfig.dashboard,
-  { ...navItemConfig.clients, label: "Client Management" },
-  { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
-  navItemConfig.analytics,
-  { ...navItemConfig.caConnect, label: 'Compliance Hub' },
-  navItemConfig.launchPad,
-  { ...navItemConfig.reportCenter, locked: true},
-  {...navItemConfig.workflows, label: "Workflows", locked: true },
-  {...navItemConfig.reconciliation, locked: true },
-  navItemConfig.documents,
-  {...navItemConfig.clauseLibrary, locked: true},
-  navItemConfig.playbook,
-  navItemConfig.invitations,
-];
-// --- END: Reordered Nav Items ---
-
-const legalAdvisorNavItems: NavItem[] = [
-  navItemConfig.dashboard,
-  navItemConfig.clients,
-  { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
-  navItemConfig.clauseLibrary,
-  navItemConfig.analytics,
-  navItemConfig.playbook,
-];
-
-const enterpriseNavItems: NavItem[] = [
-  navItemConfig.dashboard,
-  { ...navItemConfig.team, locked: false }, // Unlocked for Enterprise
-  navItemConfig.clients,
-  navItemConfig.caConnect,
-  navItemConfig.analytics,
-  navItemConfig.documents,
-];
-
-const getSidebarNavItems = (role: UserRole) => {
-    switch (role) {
-        case 'CA': return caNavItems;
-        case 'Legal Advisor': return legalAdvisorNavItems;
-        case 'Enterprise': return enterpriseNavItems;
-        case 'Founder': default: return founderNavItems;
-    }
-}
 
 const getIcon = (iconName?: string) => {
     const icons: { [key: string]: React.ReactNode } = {
@@ -202,7 +213,7 @@ const getIcon = (iconName?: string) => {
     return icons[iconName || 'Default'] || icons.Default;
 }
 
-const getBottomNavItems = (role: UserRole): NavItem[] => {
+const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
   switch (role) {
     case 'CA':
       return [
@@ -504,13 +515,12 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
-const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navItems: NavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void }) => {
+const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void }) => {
     const pathname = usePathname();
     const { isDevMode } = useAuth();
-
     const isPro = planHierarchy[userProfile.plan] > 0;
     
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: NavItem) => {
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
         if (item.locked && !isPro && !isDevMode) {
             e.preventDefault();
             onLockedFeatureClick(item.label);
@@ -546,18 +556,40 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                           href={item.href}
                           onClick={(e) => handleLinkClick(e, item)}
                           className={cn(
-                              "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all hover:text-primary hover:bg-muted interactive-lift",
-                              isActive && "bg-muted text-primary font-semibold",
+                              "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all relative",
+                              "hover:text-primary",
+                              isActive && "text-primary font-semibold",
                               isLocked && "cursor-not-allowed"
                           )}
+                           style={{
+                                '--item-color': item.color || 'transparent',
+                                '--item-hover-bg': item.color ? `${item.color}1A` : 'hsl(var(--muted))'
+                            } as React.CSSProperties}
                         >
-                          <item.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                          <div className={cn(
+                              "absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-[var(--item-color)] transition-all",
+                              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
+                          )}></div>
+
+                          <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-[var(--item-color)]")} />
                           {item.label}
-                           {isLocked && (
+                          {isLocked && (
                             <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                           )}
+                           <style jsx>{`
+                            a:hover {
+                                background-color: var(--item-hover-bg);
+                            }
+                            a[data-active="true"] {
+                               background-color: var(--item-hover-bg);
+                            }
+                           `}</style>
+                           <div data-active={isActive}></div>
                         </Link>
                       </TooltipTrigger>
+                       <TooltipContent side="right">
+                          <p>{item.label}</p>
+                        </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )

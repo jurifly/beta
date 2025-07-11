@@ -82,8 +82,8 @@ export function InviteMemberModal({ isOpen, onOpenChange }: InviteMemberModalPro
             Enter the email address and assign a role to the new team member.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2 pt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
