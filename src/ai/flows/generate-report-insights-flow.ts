@@ -7,7 +7,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-const ReportInsightsInputSchema = z.object({
+export const ReportInsightsInputSchema = z.object({
   hygieneScore: z.number().describe("The company's Legal Hygiene Score (0-100)."),
   overdueCount: z.number().describe("Number of overdue compliance tasks."),
   burnRate: z.number().describe("The company's net monthly cash burn. Positive number indicates a loss."),
@@ -18,7 +18,7 @@ const ReportInsightsInputSchema = z.object({
 export type ReportInsightsInput = z.infer<typeof ReportInsightsInputSchema>;
 
 
-const ReportInsightsOutputSchema = z.object({
+export const ReportInsightsOutputSchema = z.object({
     insights: z.array(z.string()).describe("A list of 2-3 concise, actionable insights or red flags based on the provided company data."),
 });
 export type ReportInsightsOutput = z.infer<typeof ReportInsightsOutputSchema>;

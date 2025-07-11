@@ -77,6 +77,18 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                     </div>
                 </section>
                 
+                <section className="mb-8">
+                    <h2 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">AI-Powered Insights & Red Flags</h2>
+                     <div className="space-y-3">
+                        {data.insights.map((insight, index) => (
+                            <div key={index} className="flex items-start gap-3 p-3 text-sm rounded-lg bg-blue-50 border border-blue-200">
+                                <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                                <span>{insight}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
                 <div className="grid grid-cols-5 gap-6 mb-8">
                     <div className="col-span-3 space-y-6">
                         <div className="p-4 border border-gray-200 rounded-xl bg-white">
@@ -139,17 +151,6 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                         </div>
                     </div>
                 </div>
-                 <section className="mt-8">
-                    <h2 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">AI-Powered Insights & Red Flags</h2>
-                     <div className="space-y-3">
-                        {data.insights.map((insight, index) => (
-                            <div key={index} className="flex items-start gap-3 p-3 text-sm rounded-lg bg-blue-50 border border-blue-200">
-                                <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                                <span>{insight}</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
             </main>
 
             <footer className="text-center text-xs text-gray-400 mt-12 border-t border-gray-100 pt-4 flex flex-col items-center gap-2">
@@ -165,7 +166,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
 
 
 export default function ReportCenterPage() {
-    const { userProfile } = useAuth();
+    const { userProfile, deductCredits } = useAuth();
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [reportData, setReportData] = useState<ReportData | null>(null);
@@ -176,6 +177,8 @@ export default function ReportCenterPage() {
         if (!selectedClientId || !userProfile) return;
         const client = userProfile.companies.find(c => c.id === selectedClientId);
         if (!client) return;
+
+        if (!await deductCredits(3)) return;
         
         setIsLoading(true);
         setReportData(null);
@@ -224,6 +227,8 @@ export default function ReportCenterPage() {
             // 4. Process Cap Table data
             const capTable = client.capTable || [];
             const ownershipData = capTable.map(e => ({ name: e.holder, value: e.shares, type: e.type }));
+            const totalShares = capTable.reduce((acc, e) => acc + e.shares, 1);
+            const founderShares = capTable.reduce((acc, e) => acc + (e.type === 'Founder' ? e.shares : 0), 0);
 
             // 5. Financials
             const financials = client.financials || { monthlyRevenue: 0, monthlyExpenses: 0, cashBalance: 0 };
@@ -240,7 +245,7 @@ export default function ReportCenterPage() {
                 burnRate,
                 runway,
                 hasEsop: capTable.some(e => e.type === 'ESOP'),
-                founderOwnershipPercentage: capTable.reduce((acc, e) => acc + (e.type === 'Founder' ? e.shares : 0), 0) / capTable.reduce((acc, e) => acc + e.shares, 1),
+                founderOwnershipPercentage: (founderShares / totalShares) * 100,
             });
             const insights = insightsResponse.insights;
 
@@ -315,7 +320,7 @@ export default function ReportCenterPage() {
                 <CardFooter>
                      <Button onClick={handleGenerateReport} disabled={!selectedClientId || isLoading}>
                         {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <FileText className="mr-2"/>}
-                        Generate Report
+                        Generate Report (3 Credits)
                     </Button>
                 </CardFooter>
             </Card>

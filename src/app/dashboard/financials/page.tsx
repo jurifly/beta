@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, ChevronsDown, ChevronsUp, ChevronsLeftRight } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -49,6 +49,13 @@ const corporateTaxCalculatorSchema = z.object({
     profit: z.coerce.number().min(0, "Profit cannot be negative.").default(0),
 });
 type CorporateFormData = z.infer<typeof corporateTaxCalculatorSchema>;
+
+const payrollSchema = z.object({
+    ctc: z.coerce.number().min(1, "CTC must be greater than zero."),
+    employeeName: z.string().optional(),
+});
+type PayrollFormData = z.infer<typeof payrollSchema>;
+
 
 const InfoCard = ({ title, value }: { title: string, value: string }) => (
     <div className="flex justify-between items-center text-sm p-3 border rounded-md bg-muted/30">
@@ -339,6 +346,130 @@ const CorporateTaxCalculator = () => {
     );
 };
 
+const PayrollCalculator = () => {
+    const { toast } = useToast();
+    const [result, setResult] = useState<any | null>(null);
+
+    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<PayrollFormData>({
+        resolver: zodResolver(payrollSchema),
+    });
+
+    const calculatePayroll = (data: PayrollFormData) => {
+        const ctc = data.ctc;
+        const basic = ctc * 0.40;
+        const hra = basic * 0.50;
+        const specialAllowance = ctc - basic - hra;
+
+        const grossMonthly = (basic + hra + specialAllowance) / 12;
+
+        const pfEmployee = Math.min(basic, 15000) * 0.12;
+        const pfEmployer = Math.min(basic, 15000) * 0.12;
+        const esiEmployee = grossMonthly <= 21000 ? grossMonthly * 0.0075 : 0;
+        const esiEmployer = grossMonthly <= 21000 ? grossMonthly * 0.0325 : 0;
+        const totalDeductions = pfEmployee + esiEmployee;
+
+        const netSalary = grossMonthly - totalDeductions;
+        const employerCost = grossMonthly + pfEmployer + esiEmployer;
+
+        setResult({
+            name: data.employeeName || 'Employee',
+            breakdown: [
+                { item: 'Basic Salary', amount: basic / 12, type: 'earning' },
+                { item: 'House Rent Allowance (HRA)', amount: hra / 12, type: 'earning' },
+                { item: 'Special Allowance', amount: specialAllowance / 12, type: 'earning' },
+            ],
+            deductions: [
+                { item: 'EPF (Employee)', amount: pfEmployee, type: 'deduction' },
+                { item: 'ESI (Employee)', amount: esiEmployee, type: 'deduction' },
+            ],
+            employerContributions: [
+                { item: 'EPF (Employer)', amount: pfEmployer, type: 'contribution' },
+                { item: 'ESI (Employer)', amount: esiEmployer, type: 'contribution' },
+            ],
+            summary: {
+                ctc: ctc,
+                grossMonthly: grossMonthly,
+                totalDeductions: totalDeductions,
+                netSalary: netSalary,
+                employerCost: employerCost,
+            }
+        });
+        toast({ title: "Payroll Calculated!" });
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <form onSubmit={handleSubmit(calculatePayroll)} className="lg:col-span-2 space-y-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Payroll Calculator</CardTitle>
+                        <CardDescription>Estimate monthly take-home salary from CTC.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="ctc">Annual CTC (Cost to Company)</Label>
+                            <Controller name="ctc" control={control} render={({ field }) => <Input id="ctc" type="number" placeholder="e.g. 1200000" {...field} onChange={e => field.onChange(Number(e.target.value))}/>} />
+                             {errors.ctc && <p className="text-sm text-destructive">{errors.ctc.message}</p>}
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="employeeName">Employee Name (Optional)</Label>
+                            <Controller name="employeeName" control={control} render={({ field }) => <Input id="employeeName" placeholder="e.g. Ramesh Kumar" {...field} />} />
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                         <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Calculator className="mr-2"/>}
+                            Calculate Payroll
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </form>
+            <div className="lg:col-span-3">
+                <Card className="min-h-[400px] interactive-lift">
+                     <CardHeader>
+                        <CardTitle>Salary Breakdown</CardTitle>
+                        <CardDescription>An estimated monthly salary structure.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {!result ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+                                <Calculator className="w-12 h-12 text-primary/20 mb-4" />
+                                <p className="font-medium">Your payroll calculation will appear here.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 animate-in fade-in-50">
+                                <Alert><AlertTriangle className="h-4 w-4"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is an estimate. TDS and other statutory deductions may vary.</AlertDescription></Alert>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                    <div className="p-2 border rounded-md bg-muted/50"><p className="text-xs text-muted-foreground">Gross Monthly</p><p className="font-bold text-lg">{formatCurrency(result.summary.grossMonthly)}</p></div>
+                                    <div className="p-2 border rounded-md bg-muted/50"><p className="text-xs text-muted-foreground">Deductions</p><p className="font-bold text-lg text-red-600">{formatCurrency(result.summary.totalDeductions)}</p></div>
+                                    <div className="p-2 border rounded-md bg-muted/50"><p className="text-xs text-muted-foreground">Take-Home</p><p className="font-bold text-lg text-green-600">{formatCurrency(result.summary.netSalary)}</p></div>
+                                    <div className="p-2 border rounded-md bg-muted/50"><p className="text-xs text-muted-foreground">Cost to Employer</p><p className="font-bold text-lg">{formatCurrency(result.summary.employerCost)}</p></div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsDown className="text-green-500"/>Earnings</h4>
+                                        <dl className="space-y-2">{result.breakdown.map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsUp className="text-red-500"/>Deductions</h4>
+                                        <dl className="space-y-2">{result.deductions.map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsLeftRight className="text-blue-500"/>Employer Contributions</h4>
+                                        <dl className="space-y-2">{result.employerContributions.map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+};
+
+
 const forecastSchema = z.object({
   revenueGrowthRate: z.coerce.number().min(0).max(100).default(5),
   newHires: z.array(z.object({
@@ -613,20 +744,21 @@ export default function FinancialsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Financials</h1>
-                <p className="text-muted-foreground">Tools to help you calculate taxes and manage your startup's financial health.</p>
+                <h1 className="text-3xl font-bold tracking-tight">Financials & Tax</h1>
+                <p className="text-muted-foreground">Tools to calculate taxes and manage your startup's financial health.</p>
             </div>
             <Tabs defaultValue="financials" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="financials"><BarChartIcon className="mr-2"/>Financials</TabsTrigger>
+                    <TabsTrigger value="payroll"><User className="mr-2"/>Payroll Calculator</TabsTrigger>
                     <TabsTrigger value="personal"><User className="mr-2"/>Personal Tax</TabsTrigger>
                     <TabsTrigger value="corporate"><Building className="mr-2"/>Corporate Tax</TabsTrigger>
                 </TabsList>
                 <TabsContent value="financials" className="mt-6"><FinancialsTab /></TabsContent>
+                <TabsContent value="payroll" className="mt-6"><PayrollCalculator /></TabsContent>
                 <TabsContent value="personal" className="mt-6"><PersonalTaxCalculator /></TabsContent>
                 <TabsContent value="corporate" className="mt-6"><CorporateTaxCalculator /></TabsContent>
             </Tabs>
         </div>
     );
 }
-
