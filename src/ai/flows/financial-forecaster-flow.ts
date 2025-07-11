@@ -67,7 +67,8 @@ const financialForecasterFlow = ai.defineFlow(
     
     for (let i = 1; i <= input.forecastPeriodInMonths; i++) {
         // Calculate revenue for the month
-        currentRevenue *= (1 + input.revenueGrowthRate / 100);
+        // The revenue for the current month `i` is `currentRevenue`.
+        // The growth is applied *after* this month's calculations for the *next* month.
 
         // Calculate expenses for the month
         const newHireSalaries = input.newHires
@@ -90,7 +91,9 @@ const financialForecasterFlow = ai.defineFlow(
             closingBalance: Math.round(closingBalance),
         });
 
+        // Update values for the *next* iteration
         currentCash = closingBalance;
+        currentRevenue *= (1 + input.revenueGrowthRate / 100);
         
         if (runwayInMonths === null && currentCash < 0) {
             runwayInMonths = i;
@@ -123,3 +126,4 @@ const financialForecasterFlow = ai.defineFlow(
     };
   }
 );
+

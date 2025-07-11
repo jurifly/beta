@@ -448,7 +448,7 @@ const FinancialsTab = () => {
     }
 
     return (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 <Card className="interactive-lift">
                     <CardHeader>
@@ -509,8 +509,8 @@ const FinancialsTab = () => {
                  </Card>
             </div>
             
-            <form onSubmit={handleSubmit(onForecastSubmit)} className="col-span-full">
-                <Card className="interactive-lift">
+            <Card className="col-span-full interactive-lift">
+                <form onSubmit={handleSubmit(onForecastSubmit)}>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Forecaster</CardTitle>
                         <CardDescription>Add assumptions to project your financial future. Results appear below.</CardDescription>
@@ -561,48 +561,46 @@ const FinancialsTab = () => {
                             Generate Forecast
                         </Button>
                     </CardFooter>
-                </Card>
-             </form>
+                </form>
+             </Card>
              
              {isForecasting && <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1 col-span-full"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Forecasting the future...</p></div>}
              
              {forecastResult && (
-                <div className="col-span-full">
-                    <Card className="interactive-lift animate-in fade-in-50">
-                        <CardHeader>
-                            <CardTitle>Forecast Report</CardTitle>
-                            <CardDescription>Your 12-month financial projection.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Alert>
-                                <Sparkles className="h-4 w-4"/>
-                                <AlertTitle>Summary</AlertTitle>
-                                <AlertDescription>{forecastResult.summary}</AlertDescription>
-                            </Alert>
-                             <div className="p-4 border rounded-lg text-center">
-                                <p className="text-sm text-muted-foreground">Projected Runway</p>
-                                <p className={`text-2xl font-bold ${forecastResult.runwayInMonths && forecastResult.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
-                                    {forecastResult.runwayInMonths ? `${forecastResult.runwayInMonths} Months` : '12+ Months / Profitable'}
-                                </p>
-                            </div>
-                            <ChartContainer config={{ closingBalance: { label: "Cash Balance", color: "hsl(var(--primary))" } }} className="h-64 w-full">
-                                <AreaChart data={forecastResult.forecast} margin={{ left: 12, right: 12 }}>
-                                     <defs>
-                                        <linearGradient id="fillBalance" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="var(--color-closingBalance)" stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor="var(--color-closingBalance)" stopOpacity={0.1} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
-                                    <YAxis tickLine={false} axisLine={false} tickMargin={10} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                                    <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="dot" />} />
-                                    <Area dataKey="closingBalance" type="natural" fill="url(#fillBalance)" stroke="var(--color-closingBalance)" stackId="a" />
-                                </AreaChart>
-                            </ChartContainer>
-                        </CardContent>
-                    </Card>
-                </div>
+                <Card className="col-span-full interactive-lift animate-in fade-in-50">
+                    <CardHeader>
+                        <CardTitle>Forecast Report</CardTitle>
+                        <CardDescription>Your 12-month financial projection.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Alert>
+                            <Sparkles className="h-4 w-4"/>
+                            <AlertTitle>Summary</AlertTitle>
+                            <AlertDescription>{forecastResult.summary}</AlertDescription>
+                        </Alert>
+                         <div className="p-4 border rounded-lg text-center">
+                            <p className="text-sm text-muted-foreground">Projected Runway</p>
+                            <p className={`text-2xl font-bold ${forecastResult.runwayInMonths && forecastResult.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
+                                {forecastResult.runwayInMonths ? `${forecastResult.runwayInMonths} Months` : '12+ Months / Profitable'}
+                            </p>
+                        </div>
+                        <ChartContainer config={{ closingBalance: { label: "Cash Balance", color: "hsl(var(--primary))" } }} className="h-64 w-full">
+                            <AreaChart data={forecastResult.forecast} margin={{ left: 12, right: 12 }}>
+                                 <defs>
+                                    <linearGradient id="fillBalance" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="var(--color-closingBalance)" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="var(--color-closingBalance)" stopOpacity={0.1} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
+                                <YAxis tickLine={false} axisLine={false} tickMargin={10} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                                <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="dot" />} />
+                                <Area dataKey="closingBalance" type="natural" fill="url(#fillBalance)" stroke="var(--color-closingBalance)" stackId="a" />
+                            </AreaChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
              )}
         </div>
     )
