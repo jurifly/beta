@@ -37,23 +37,21 @@ export function NotificationModal({ isOpen, onOpenChange, notification }: Notifi
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="flex flex-row items-center gap-4">
-          <div className="p-3 bg-muted rounded-full">
-            {getIcon(notification.icon)}
-          </div>
-          <div>
+        <DialogHeader className="text-center">
+            <div className="mx-auto w-fit rounded-full bg-muted p-3 mb-4">
+                {getIcon(notification.icon)}
+            </div>
             <DialogTitle>{notification.title}</DialogTitle>
             <DialogDescription>
                 Received {format(new Date(notification.createdAt), "do MMM, yyyy 'at' hh:mm a")}
             </DialogDescription>
-          </div>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-4 text-center">
             <p className="text-sm text-foreground">
                 {notification.description}
             </p>
         </div>
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="sm:justify-center">
            {notification.link ? (
                <Button asChild>
                    <Link href={notification.link}>Take Action</Link>

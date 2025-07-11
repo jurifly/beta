@@ -75,6 +75,7 @@ import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "@/components/dashboard/beta-banner";
 import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
+import { formatDistanceToNow } from "date-fns";
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -178,14 +179,14 @@ const getSidebarNavItems = (role: UserRole) => {
     }
 }
 
-const getIcon = (iconName: string) => {
+const getIcon = (iconName?: string) => {
     const icons: { [key: string]: React.ReactNode } = {
         AlertTriangle: <AlertTriangle className="h-5 w-5 text-destructive" />,
         RadioTower: <RadioTower className="h-5 w-5 text-primary" />,
         FileClock: <FileClock className="h-5 w-5 text-green-500" />,
         Default: <Bell className="h-5 w-5 text-muted-foreground" />,
     };
-    return icons[iconName] || icons.Default;
+    return icons[iconName || 'Default'] || icons.Default;
 }
 
 const getBottomNavItems = (role: UserRole): NavItem[] => {
@@ -427,19 +428,18 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             {notifications.length > 0 ? (
                             notifications.map(notification => (
                                 <DropdownMenuItem
-                                key={notification.id}
-                                className={cn(
-                                    "flex items-start gap-3 p-3 cursor-pointer rounded-none border-b",
-                                    !notification.read && "bg-primary/5"
-                                )}
-                                onClick={() => handleNotificationClick(notification)}
+                                    key={notification.id}
+                                    className="flex items-start gap-3 p-3 cursor-pointer rounded-none border-b"
+                                    onClick={() => handleNotificationClick(notification)}
                                 >
-                                {getIcon(notification.icon)}
-                                <div className="flex-1">
-                                    <p className={cn("font-medium leading-tight", !notification.read ? "text-primary" : "text-card-foreground")}>{notification.title}</p>
-                                    <p className={cn("text-xs font-normal", !notification.read ? "text-foreground/80" : "text-muted-foreground")}>{notification.description}</p>
-                                </div>
-                                {!notification.read && <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0 self-start"></div>}
+                                    <div className="p-2 bg-muted rounded-full">
+                                        {getIcon(notification.icon)}
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <p className="font-medium text-sm leading-tight text-foreground">{notification.title}</p>
+                                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</p>
+                                    </div>
+                                    {!notification.read && <div className="w-2 h-2 rounded-full bg-primary mt-1 shrink-0 self-start"></div>}
                                 </DropdownMenuItem>
                             ))
                             ) : (
