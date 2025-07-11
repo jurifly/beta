@@ -155,8 +155,9 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <div className="px-6 pb-6 border-b">
-            <Card className="interactive-lift bg-card/80 backdrop-blur-sm border-none shadow-none">
+        <ScrollArea className="flex-1">
+            <div className="p-6 pt-0 space-y-6">
+                <Card className="interactive-lift bg-card/80 backdrop-blur-sm shadow-none border">
                     <CardHeader>
                         <CardTitle>Scenario Inputs</CardTitle>
                     </CardHeader>
@@ -208,9 +209,7 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                         </Button>
                     </CardFooter>
                 </Card>
-        </div>
-        <ScrollArea className="flex-1">
-            <div className="px-6 pb-6">
+
                 {!result ? (
                     <div className="flex flex-col items-center justify-center text-center p-8 min-h-[300px] border-2 border-dashed rounded-md bg-muted/40 h-full">
                         <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
@@ -220,40 +219,37 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-6 animate-in fade-in-50 duration-500">
-                        <Card>
-                             <CardHeader>
-                                <CardTitle>Scenario Summary</CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <MetricDisplay 
-                                    title="Pre-Money Valuation" 
-                                    value={formatCurrency(result.preMoneyValuation)} 
-                                    tooltipText="The company's value before the new investment. Calculated as: Post-Money Valuation - Investment Amount."
-                                />
-                                <MetricDisplay 
-                                    title="Post-Money Valuation" 
-                                    value={formatCurrency(result.postMoneyValuation)} 
-                                    tooltipText="The company's value after the investment. Calculated as: Investment Amount / (Investor's Stake / 100)."
-                                />
-                                <MetricDisplay 
-                                    title="New Share Price" 
-                                    value={formatCurrency(result.sharePrice)} 
-                                    tooltipText="The price per share for the new round. Calculated as: Investment Amount / New Investor Shares."
-                                />
-                                <MetricDisplay 
-                                    title="Investor's Stake" 
-                                    value={`${result.investorStake.toFixed(2)}%`}
-                                    tooltipText="The percentage of the company the new investor will own post-investment."
-                                />
-                            </CardContent>
-                        </Card>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <Card className="space-y-6 animate-in fade-in-50 duration-500 interactive-lift">
+                         <CardHeader>
+                            <CardTitle>Scenario Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <MetricDisplay 
+                                title="Pre-Money Valuation" 
+                                value={formatCurrency(result.preMoneyValuation)} 
+                                tooltipText="The company's value before the new investment. Calculated as: Post-Money Valuation - Investment Amount."
+                            />
+                            <MetricDisplay 
+                                title="Post-Money Valuation" 
+                                value={formatCurrency(result.postMoneyValuation)} 
+                                tooltipText="The company's value after the investment. Calculated as: Investment Amount / (Investor's Stake / 100)."
+                            />
+                            <MetricDisplay 
+                                title="New Share Price" 
+                                value={formatCurrency(result.sharePrice)} 
+                                tooltipText="The price per share for the new round. Calculated as: Investment Amount / New Investor Shares."
+                            />
+                            <MetricDisplay 
+                                title="Investor's Stake" 
+                                value={`${result.investorStake.toFixed(2)}%`}
+                                tooltipText="The percentage of the company the new investor will own post-investment."
+                            />
+                        </CardContent>
+                        <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                             {renderTable("Pre-Financing", result.preMoney)}
                             {renderTable("Post-Financing", result.postMoney)}
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 )}
             </div>
         </ScrollArea>
