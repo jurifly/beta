@@ -15,6 +15,7 @@ import type { Company } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { format, startOfToday, addDays } from 'date-fns';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
+import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
 
 type ReportData = {
   client: Company;
@@ -182,7 +183,7 @@ export default function ReportCenterPage() {
         try {
             // 1. Fetch compliance checklist data
             const currentDate = format(new Date(), 'yyyy-MM-dd');
-            const response = await generateFilings({
+            const filingResponse = await generateFilings({
                 companyType: client.type,
                 incorporationDate: client.incorporationDate,
                 currentDate: currentDate,
@@ -194,7 +195,7 @@ export default function ReportCenterPage() {
             const today = startOfToday();
             const thirtyDaysFromNow = addDays(today, 30);
             
-            const checklistItems = response.filings.map((filing) => ({
+            const checklistItems = filingResponse.filings.map((filing) => ({
                 id: `${filing.title}-${filing.date}`,
                 text: filing.title,
                 dueDate: filing.date,
@@ -231,14 +232,18 @@ export default function ReportCenterPage() {
             if (burnRate > 0) {
                 runway = financials.cashBalance > 0 ? `${Math.floor(financials.cashBalance / burnRate)} months` : "0 months";
             }
+            
+            // 6. Generate AI Insights
+            const insightsResponse = await generateReportInsights({
+                hygieneScore,
+                overdueCount: overdueFilings.length,
+                burnRate,
+                runway,
+                hasEsop: capTable.some(e => e.type === 'ESOP'),
+                founderOwnershipPercentage: capTable.reduce((acc, e) => acc + (e.type === 'Founder' ? e.shares : 0), 0) / capTable.reduce((acc, e) => acc + e.shares, 1),
+            });
+            const insights = insightsResponse.insights;
 
-            // 6. Generate Insights (mocked for now)
-            const insights: string[] = [];
-            if (hygieneScore < 70) insights.push(`The company's Legal Hygiene Score of ${hygieneScore} is below the recommended 85. Focus on clearing overdue filings and completing the company profile.`);
-            if (burnRate > 0 && (financials.cashBalance / burnRate) < 6) insights.push(`Financial runway is critically low at ${runway}. Immediate action on fundraising or cost reduction is advised.`);
-            if (!capTable.some(e => e.type === 'ESOP')) insights.push("No ESOP pool has been created. This could be a risk for hiring and retaining top talent in the future.");
-            if (capTable.filter(e => e.type === 'Founder').length === 1 && capTable.reduce((acc, e) => e.type === 'Founder' ? acc + e.shares : acc, 0) / capTable.reduce((acc, e) => acc + e.shares, 1) > 0.75) insights.push("A single founder holds over 75% equity, which can be a potential risk for investors. Consider diversifying ownership or establishing a clear succession plan.");
-            if (insights.length === 0) insights.push("The company's core metrics appear healthy. Continue to monitor compliance and financial performance regularly.");
 
             setReportData({
                 client,

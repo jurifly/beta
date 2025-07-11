@@ -761,18 +761,22 @@ export default function Dashboard() {
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
   const renderDashboardByRole = () => {
-    if (!userProfile) return <div className="space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-        </div>
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton className="h-96 w-full" />
-            <Skeleton className="h-96 w-full" />
-        </div>
-    </div>;
+    if (!userProfile) {
+        return (
+            <div className="space-y-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Skeleton className="h-[450px] w-full rounded-lg" />
+                    <Skeleton className="h-[450px] w-full rounded-lg" />
+                </div>
+            </div>
+        );
+    }
     switch (userProfile.role) {
       case 'Founder':
         return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} />;

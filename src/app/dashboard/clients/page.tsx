@@ -96,7 +96,7 @@ export default function ClientsPage() {
                 </Table>
               ) : (
                 <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                    <Users className="w-16 h-16 text-primary/20"/><p className="font-semibold text-lg">No Clients Found</p><p className="text-sm max-w-sm">Add a new client to get started.</p>
+                    <Users className="w-16 h-16 text-primary/20"/><p className="font-semibold text-lg">No Clients Found</p><p className="text-sm max-w-sm">Add a new client to get started by clicking the button above.</p>
                 </div>
               )}
           </CardContent>

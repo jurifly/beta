@@ -227,11 +227,12 @@ export default function DocumentsPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
               ) : files.length === 0 ? (
-                <div className="h-64 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
-                  <p>This folder is empty.</p>
-                  <p className="text-sm">
-                    Drag & drop files here, or use the buttons above.
-                  </p>
+                <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                    <Folder className="w-16 h-16 text-primary/20"/>
+                    <p className="font-semibold text-lg">This Folder is Empty</p>
+                    <p className="text-sm max-w-sm">
+                      Drag and drop files here or use the upload button to add documents.
+                    </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">

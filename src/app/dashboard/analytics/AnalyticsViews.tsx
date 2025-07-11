@@ -40,7 +40,7 @@ const formatCurrency = (num: number, region = 'India') => {
 
 const FinancialTrendChart = ({ financials }: { financials: Company['financials'] }) => {
     const data = useMemo(() => {
-        if (!financials || financials.monthlyRevenue === 0 && financials.monthlyExpenses === 0) {
+        if (!financials || (financials.monthlyRevenue === 0 && financials.monthlyExpenses === 0)) {
             return [];
         }
         const months = Array.from({ length: 6 }, (_, i) => {
@@ -429,7 +429,7 @@ export function FounderAnalytics() {
       </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="interactive-lift flex flex-col">
+        <Card className="interactive-lift flex flex-col md:col-span-2">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Trends</CardTitle>
                 <CardDescription>6-month overview of your revenue vs. expenses.</CardDescription>
