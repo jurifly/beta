@@ -148,16 +148,15 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4">
           <DialogTitle className="flex items-center gap-2 font-headline text-2xl"><TrendingUp/> Cap Table Modeling</DialogTitle>
           <DialogDescription>
             Model a new financing round to understand its impact on your equity structure. Results are illustrative.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mx-6">
-            <div className="space-y-6 px-6 pb-6">
-                <Card className="interactive-lift sticky top-0 z-10 bg-card/80 backdrop-blur-sm">
+        <div className="px-6 pb-6 border-b">
+            <Card className="interactive-lift bg-card/80 backdrop-blur-sm border-none shadow-none">
                     <CardHeader>
                         <CardTitle>Scenario Inputs</CardTitle>
                     </CardHeader>
@@ -209,9 +208,11 @@ export function CapTableModelingModal({ isOpen, onOpenChange, currentCapTable }:
                         </Button>
                     </CardFooter>
                 </Card>
-
+        </div>
+        <ScrollArea className="flex-1">
+            <div className="px-6 pb-6">
                 {!result ? (
-                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
+                    <div className="flex flex-col items-center justify-center text-center p-8 min-h-[300px] border-2 border-dashed rounded-md bg-muted/40 h-full">
                         <Calculator className="w-16 h-16 text-primary/20 mb-4"/>
                         <p className="font-semibold text-lg">Scenario Results</p>
                         <p className="text-sm text-muted-foreground max-w-xs">
