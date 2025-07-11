@@ -102,7 +102,7 @@ const navItemConfig = {
   analytics: { href: "/dashboard/analytics", label: "Portfolio Analytics", icon: LineChart },
   community: { href: "/dashboard/community", label: "Community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
-  team: { href: "/dashboard/team", label: "Team", icon: Users },
+  team: { href: "/dashboard/team", label: "Team", icon: Users, locked: true },
   clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow, locked: true },
   invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail, locked: true },
@@ -176,7 +176,7 @@ const legalAdvisorNavItems: NavItem[] = [
 
 const enterpriseNavItems: NavItem[] = [
   navItemConfig.dashboard,
-  navItemConfig.team,
+  { ...navItemConfig.team, locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.caConnect,
   navItemConfig.analytics,
@@ -221,7 +221,7 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
     case 'Enterprise':
       return [
         navItemConfig.dashboard,
-        navItemConfig.team,
+        {...navItemConfig.team, locked: false},
         navItemConfig.caConnect,
         navItemConfig.analytics,
       ];
