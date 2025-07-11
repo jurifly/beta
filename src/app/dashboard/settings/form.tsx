@@ -46,6 +46,8 @@ type FormData = z.infer<typeof formSchema>;
 const roles: { id: UserRole, label: string, description: string }[] = [
     { id: "Founder", label: "Founder", description: "Startup/SMB owner handling their company’s compliance and legal obligations" },
     { id: "CA", label: "Chartered Accountant", description: "Financial or legal advisor helping multiple clients with filings" },
+    { id: "Legal Advisor", label: "Legal Advisor", description: "Lawyer or legal professional providing advisory services." },
+    { id: "Enterprise", label: "Enterprise", description: "Large organization managing multiple entities and complex compliance." },
 ];
 
 const legalRegions = [
@@ -162,21 +164,19 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
                     <RadioGroup 
                         onValueChange={field.onChange} 
                         defaultValue={field.value} 
-                        className="md:col-span-2 flex flex-wrap gap-4 pt-2"
+                        className="md:col-span-2 grid grid-cols-2 gap-4 pt-2"
                         disabled
                     >
                         {roles.map((role) => (
                           <TooltipProvider key={role.id}>
                               <Tooltip>
                                   <TooltipTrigger asChild>
-                                      <Label htmlFor={`role-${role.id}`} className="flex items-center space-x-2 cursor-pointer has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-70">
-                                          <RadioGroupItem value={role.id} id={`role-${role.id}`} disabled />
+                                      <Label htmlFor={`role-${role.id}`} className="flex items-start flex-col justify-center space-y-1 rounded-md border-2 border-muted bg-popover p-4 font-semibold hover:bg-accent hover:text-accent-foreground has-[input:checked]:border-primary has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-70">
+                                          <RadioGroupItem value={role.id} id={`role-${role.id}`} disabled className="sr-only"/>
                                           <span>{role.label}</span>
+                                           <span className="font-normal text-xs text-muted-foreground">{role.description}</span>
                                       </Label>
                                   </TooltipTrigger>
-                                  <TooltipContent>
-                                      <p className="max-w-xs">{role.description}</p>
-                                  </TooltipContent>
                               </Tooltip>
                           </TooltipProvider>
                         ))}

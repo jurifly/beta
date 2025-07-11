@@ -92,7 +92,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 
 const navItemConfig = {
   dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", label: "Compliance Hub", icon: ClipboardCheck, locked: true },
+  caConnect: { href: "/dashboard/ca-connect", label: "Advisor Hub", icon: Users, locked: true },
   aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
   playbook: { href: "/dashboard/learn", label: "The Playbook", icon: BookOpenCheck },
@@ -143,7 +143,7 @@ const founderNavItems: NavItem[] = [
   { ...navItemConfig.reportCenter, locked: true},
   { ...navItemConfig.analytics, label: "Analytics" },
   navItemConfig.playbook,
-  { ...navItemConfig.caConnect, label: "CA Connect", locked: true },
+  { ...navItemConfig.caConnect, locked: true },
   navItemConfig.documents,
   navItemConfig.community,
 ];
@@ -153,8 +153,7 @@ const caNavItems: NavItem[] = [
   { ...navItemConfig.clients, label: "Client Management" },
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   navItemConfig.analytics,
-  navItemConfig.capTable,
-  navItemConfig.financials,
+  { ...navItemConfig.caConnect, label: 'Compliance Hub' },
   navItemConfig.launchPad,
   { ...navItemConfig.reportCenter, locked: true},
   {...navItemConfig.workflows, label: "Workflows", locked: true },
@@ -210,7 +209,7 @@ const getBottomNavItems = (role: UserRole): NavItem[] => {
         navItemConfig.dashboard,
         navItemConfig.clients,
         { ...navItemConfig.aiToolkit, label: "AI Suite" },
-        navItemConfig.invitations,
+        navItemConfig.caConnect,
       ];
     case 'Legal Advisor':
       return [

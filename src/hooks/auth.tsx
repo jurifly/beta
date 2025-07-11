@@ -32,8 +32,7 @@ export interface AuthContextType {
   addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => Promise<void>;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
-  inviteCA: (email: string) => Promise<void>;
-  revokeCA: () => Promise<void>;
+  addFeedback: (category: string, message: string, sentiment?: 'positive' | 'negative') => Promise<void>;
   getPendingInvites: () => Promise<any[]>;
   acceptInvite: (inviteId: string) => Promise<void>;
 }
@@ -400,46 +399,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data().messages as ChatMessage[]);
   };
-  
-  const inviteCA = async (email: string) => {
-    if (!user || !userProfile || userProfile.role !== 'Founder') throw new Error("Only founders can send invites.");
-    if (userProfile.connectedCaUid) throw new Error("You already have a connected advisor.");
-    
-    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
-    if (!activeCompany) throw new Error("You must have an active company selected.");
 
-    const invitesRef = collection(db, 'invites');
-    await addDoc(invitesRef, {
-      caEmail: email,
-      founderId: user.uid,
-      founderName: userProfile.name,
-      companyName: activeCompany.name,
-      companyId: activeCompany.id,
-      status: 'pending',
+  const addFeedback = async (category: string, message: string, sentiment?: 'positive' | 'negative') => {
+    if (!user) {
+      throw new Error("User not logged in");
+    }
+    const feedbackRef = collection(db, 'feedback');
+    await addDoc(feedbackRef, {
+      userId: user.uid,
+      userEmail: userProfile?.email,
+      category,
+      message,
+      sentiment,
       createdAt: new Date().toISOString(),
     });
-
-    await updateUserProfile({ invitedCaEmail: email });
-  };
-  
-  const revokeCA = async () => {
-    if (!user || !userProfile || !userProfile.connectedCaUid) return;
-    
-    const caUid = userProfile.connectedCaUid;
-    const batch = writeBatch(db);
-
-    const founderRef = doc(db, "users", user.uid);
-    batch.update(founderRef, { connectedCaUid: null });
-
-    const caRef = doc(db, "users", caUid);
-    const caProfile = (await getDoc(caRef)).data() as UserProfile;
-    if (caProfile) {
-        const updatedCompanies = caProfile.companies.filter(c => c.founderUid !== user.uid);
-        batch.update(caRef, { companies: updatedCompanies });
-    }
-    
-    await batch.commit();
-    await fetchUserProfile(user); // Refresh user profile
   };
   
   const getPendingInvites = async () => {
@@ -479,7 +452,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetchUserProfile(user); // Refresh CA's profile
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, inviteCA, revokeCA, getPendingInvites, acceptInvite };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

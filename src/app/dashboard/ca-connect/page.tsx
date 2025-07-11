@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   AlertTriangle,
   CheckCircle,
@@ -13,19 +13,21 @@ import {
   Users,
   Sparkles,
   FileUp,
+  Briefcase,
+  Search,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/hooks/auth';
 import { cn } from '@/lib/utils';
 import { format, startOfToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { AddDocRequestModal } from '@/components/dashboard/add-doc-request-modal';
 import { ProvideDocumentModal } from '@/components/dashboard/provide-document-modal';
 import type { Company, DocumentRequest } from '@/lib/types';
+import Link from 'next/link';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 
 const statusConfig = {
@@ -51,11 +53,14 @@ const RequestItem = ({ request, onProvide }: { request: DocumentRequest; onProvi
           <div className="text-xs text-muted-foreground">Due {format(new Date(request.dueDate), 'do MMM, yyyy')}</div>
         </div>
         {isFounder && status !== 'Received' && (
-            <Button size="sm" onClick={() => onProvide(request)}><FileUp className="mr-2"/>Provide Document</Button>
+            <Button size="sm" onClick={() => onProvide(request)}><FileUp className="mr-2"/>Provide</Button>
+        )}
+        {!isFounder && (
+             <Button variant="outline" size="sm" disabled>Get Quote</Button>
         )}
         {request.status === 'Received' && request.providedFile?.url && (
             <Button size="sm" variant="outline" asChild>
-                <a href={request.providedFile.url} target="_blank" rel="noopener noreferrer">View Document</a>
+                <a href={request.providedFile.url} target="_blank" rel="noopener noreferrer">View</a>
             </Button>
         )}
       </CardContent>
@@ -78,85 +83,37 @@ const EmptyState = ({ onAddRequest }: { onAddRequest: () => void }) => {
 }
 
 const AdvisorConnectCard = () => {
-    const { userProfile, inviteCA, revokeCA } = useAuth();
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
+    const { userProfile } = useAuth();
 
     if (!userProfile || userProfile.role !== 'Founder') return null;
-
-    const handleInvite = async () => {
-        if (!email) return;
-        setLoading(true);
-        try {
-            await inviteCA(email);
-            toast({ title: "Invite Sent!", description: `An invitation has been sent to ${email}.`});
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
-        } finally {
-            setLoading(false);
-        }
-    }
-    
-    const handleRevoke = async () => {
-        if (!window.confirm("Are you sure you want to revoke access for your advisor?")) return;
-        setLoading(true);
-        try {
-            await revokeCA();
-            toast({ title: "Access Revoked" });
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
-        } finally {
-            setLoading(false);
-        }
-    }
 
     if (userProfile.connectedCaUid) {
         return (
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Users /> My Advisor</CardTitle>
-                    <CardDescription>Your connected compliance professional.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><CheckCircle className="text-green-500" /> My Advisor</CardTitle>
+                    <CardDescription>You are connected with your compliance professional.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <p className="font-semibold text-green-600">You are connected with your advisor.</p>
-                    <Button variant="destructive" onClick={handleRevoke} disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                        Revoke Access
+                <CardContent>
+                   <Button disabled>
+                        <Briefcase className="mr-2"/> View Workspace (Coming Soon)
                     </Button>
                 </CardContent>
             </Card>
         );
     }
-    
-    if (userProfile.invitedCaEmail) {
-        return (
-             <Card className="interactive-lift">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Users /> My Advisor</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="font-semibold text-yellow-600">Invitation Pending</p>
-                    <p className="text-sm text-muted-foreground">An invite has been sent to {userProfile.invitedCaEmail}. They need to accept it to connect.</p>
-                </CardContent>
-            </Card>
-        )
-    }
 
     return (
         <Card className="interactive-lift bg-muted/50">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Connect Your Advisor</CardTitle>
-                <CardDescription>Invite your CA or legal advisor to collaborate on your compliance.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Find a Professional</CardTitle>
+                <CardDescription>Need an expert? Browse our marketplace to find a verified CA or legal advisor.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="ca-email">Advisor's Email</Label>
-                    <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your CA's registered email"/>
-                </div>
-                <Button onClick={handleInvite} disabled={loading || !email}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    Send Invite
+            <CardContent>
+                <Button asChild>
+                    <Link href="/dashboard/ca-connect/marketplace">
+                       <Search className="mr-2"/> Find an Advisor <ArrowRight className="ml-2"/>
+                    </Link>
                 </Button>
             </CardContent>
         </Card>
@@ -225,7 +182,7 @@ export default function CaConnectPage() {
 
   const allRequests = [...overdueRequests, ...pendingRequests, ...completedRequests];
   const isFounder = userProfile?.role === 'Founder';
-  const pageTitle = userProfile?.role === 'Founder' ? "CA Connect" : "Compliance Hub";
+  const pageTitle = userProfile?.role === 'Founder' ? "Advisor Hub" : "Compliance Hub";
   const pageDescription = userProfile?.role === 'Founder'
     ? "The central hub for all advisor communication and document requests."
     : "Manage client filings, track deadlines, and handle document requests from one central place.";
@@ -259,26 +216,22 @@ export default function CaConnectPage() {
                 </CardHeader>
                 <CardContent>
                     {allRequests.length > 0 ? (
-                        <Accordion type="multiple" defaultValue={['overdue', 'pending']} className="w-full">
-                            <AccordionItem value="overdue">
-                                <AccordionTrigger>Overdue ({overdueRequests.length})</AccordionTrigger>
-                                <AccordionContent className="space-y-3 pt-4">
-                                    {overdueRequests.length > 0 ? overdueRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />) : <p className="text-sm text-muted-foreground">No overdue requests. Great work!</p>}
-                                </AccordionContent>
-                            </AccordionItem>
-                             <AccordionItem value="pending">
-                                <AccordionTrigger>Pending ({pendingRequests.length})</AccordionTrigger>
-                                <AccordionContent className="space-y-3 pt-4">
-                                    {pendingRequests.length > 0 ? pendingRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />) : <p className="text-sm text-muted-foreground">No pending requests.</p>}
-                                </AccordionContent>
-                            </AccordionItem>
-                             <AccordionItem value="completed">
-                                <AccordionTrigger>Completed ({completedRequests.length})</AccordionTrigger>
-                                <AccordionContent className="space-y-3 pt-4">
-                                     {completedRequests.length > 0 ? completedRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />) : <p className="text-sm text-muted-foreground">No completed requests yet.</p>}
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
+                        <Tabs defaultValue="pending">
+                            <TabsList className="grid w-full sm:w-auto grid-cols-3">
+                                <TabsTrigger value="pending">Pending ({pendingRequests.length + overdueRequests.length})</TabsTrigger>
+                                <TabsTrigger value="completed">Completed ({completedRequests.length})</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="pending" className="mt-4 space-y-3">
+                                {overdueRequests.length > 0 ? overdueRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />) : null}
+                                {pendingRequests.length > 0 ? pendingRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />) : null}
+                                {overdueRequests.length === 0 && pendingRequests.length === 0 && (
+                                    <p className="text-sm text-muted-foreground text-center p-4">No pending requests. Great work!</p>
+                                )}
+                            </TabsContent>
+                             <TabsContent value="completed" className="mt-4 space-y-3">
+                                 {completedRequests.length > 0 ? completedRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />) : <p className="text-sm text-muted-foreground text-center p-4">No completed requests yet.</p>}
+                            </TabsContent>
+                        </Tabs>
                     ) : (
                         <EmptyState onAddRequest={() => setAddRequestModalOpen(true)} />
                     )}
