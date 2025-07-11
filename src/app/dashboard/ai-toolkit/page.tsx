@@ -745,7 +745,7 @@ const DocumentGenerator = () => {
 
   const [context, setContext] = useState("");
   const [reason, setReason] = useState("");
-  const [placeholders, setPlaceholders] = useState({ context: "", reason: "" });
+  const [placeholders, setPlaceholders] = useState(templatePlaceholders.Default);
 
   useEffect(() => {
     if (selectedTemplate && templatePlaceholders[selectedTemplate]) {
