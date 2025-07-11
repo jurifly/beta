@@ -66,11 +66,6 @@ const financialForecasterFlow = ai.defineFlow(
     let profitableMonth: number | null = null;
     
     for (let i = 1; i <= input.forecastPeriodInMonths; i++) {
-        // Calculate revenue for the month
-        // The revenue for the current month `i` is `currentRevenue`.
-        // The growth is applied *after* this month's calculations for the *next* month.
-
-        // Calculate expenses for the month
         const newHireSalaries = input.newHires
             .filter(h => h.startMonth <= i)
             .reduce((sum, h) => sum + h.monthlySalary, 0);
@@ -91,7 +86,6 @@ const financialForecasterFlow = ai.defineFlow(
             closingBalance: Math.round(closingBalance),
         });
 
-        // Update values for the *next* iteration
         currentCash = closingBalance;
         currentRevenue *= (1 + input.revenueGrowthRate / 100);
         
@@ -104,14 +98,14 @@ const financialForecasterFlow = ai.defineFlow(
         }
     }
 
-    // 2. Generate summary without LLM
+    // 2. Generate summary with dynamic logic
     let summary = "";
-    if (runwayInMonths !== null) {
+    if (runwayInMonths !== null && runwayInMonths <= 12) {
       summary = `Based on your assumptions, the company is projected to run out of cash in approximately ${runwayInMonths} months.`;
-      if (profitableMonth) {
-        summary += ` However, profitability is expected around month ${profitableMonth}, which could alter this outlook.`;
+      if (profitableMonth && profitableMonth > runwayInMonths) {
+        summary += ` Profitability is expected around month ${profitableMonth}, but cost management is critical to reach that milestone.`;
       } else {
-        summary += " Immediate focus on revenue growth or cost management is critical.";
+        summary += " Immediate focus on revenue growth or cost reduction is critical to extend the runway.";
       }
     } else if (profitableMonth !== null) {
       summary = `The company is projected to become profitable in month ${profitableMonth}. The cash runway appears stable for the forecast period.`;
@@ -126,4 +120,3 @@ const financialForecasterFlow = ai.defineFlow(
     };
   }
 );
-
