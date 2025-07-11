@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
-import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Bar, BarChart as RechartsBarChart, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Bar, BarChart as RechartsBarChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -51,8 +51,8 @@ const FinancialTrendChart = ({ financials }: { financials: Company['financials']
 
         return months.map(month => ({
             month,
-            revenue: Math.floor(financials.monthlyRevenue * (1 + (Math.random() - 0.4) * 0.3)), // Fluctuate by +/- 15%
-            expenses: Math.floor(financials.monthlyExpenses * (1 + (Math.random() - 0.5) * 0.2)), // Fluctuate by +/- 10%
+            revenue: Math.floor(financials.monthlyRevenue * (1 + (Math.random() - 0.4) * 0.3)),
+            expenses: Math.floor(financials.monthlyExpenses * (1 + (Math.random() - 0.5) * 0.2)),
         }));
     }, [financials]);
 
@@ -66,14 +66,25 @@ const FinancialTrendChart = ({ financials }: { financials: Company['financials']
 
     return (
         <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-56 w-full">
-            <RechartsBarChart data={data} accessibilityLayer>
-                <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+            <AreaChart data={data} accessibilityLayer margin={{ left: 12, right: 12 }}>
+                <defs>
+                    <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0.1} />
+                    </linearGradient>
+                    <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-expenses)" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="var(--color-expenses)" stopOpacity={0.1} />
+                    </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
                 <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                <Area dataKey="revenue" type="natural" fill="url(#fillRevenue)" stroke="var(--color-revenue)" stackId="a" />
+                <Area dataKey="expenses" type="natural" fill="url(#fillExpenses)" stroke="var(--color-expenses)" stackId="a" />
                 <ChartLegend />
-                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
-            </RechartsBarChart>
+            </AreaChart>
         </ChartContainer>
     )
 }

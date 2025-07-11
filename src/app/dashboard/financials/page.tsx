@@ -20,7 +20,7 @@ import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bar, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Cell, Line, CartesianGrid, Legend } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -388,7 +388,7 @@ const FinancialsTab = () => {
             burnRate: burn,
             runway: runwayMonthsText,
             runwayLabel: burn > 0 ? "Estimated Runway" : "Financial Status",
-            chartData: [ { name: 'Revenue', value: revenue, fill: 'hsl(var(--chart-2))' }, { name: 'Expenses', value: expenses, fill: 'hsl(var(--chart-5))' } ]
+            chartData: [ { name: 'Revenue', value: revenue, color: 'hsl(var(--chart-2))' }, { name: 'Expenses', value: expenses, color: 'hsl(var(--chart-5))' } ].filter(d => d.value > 0),
         };
     }, [revenue, expenses, cashBalance]);
 
@@ -446,8 +446,8 @@ const FinancialsTab = () => {
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-            <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><BarChart className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
@@ -479,122 +479,125 @@ const FinancialsTab = () => {
                         <CardTitle>Health Overview</CardTitle>
                         <CardDescription>Your startup's key financial health indicators.</CardDescription>
                     </CardHeader>
-                     <CardContent className="grid sm:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-lg bg-muted border text-center">
-                            <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                            <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                     <CardContent className="space-y-4">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg bg-muted border text-center">
+                                <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-muted border text-center">
+                                <p className="text-sm text-muted-foreground">{runwayLabel}</p>
+                                <p className="text-2xl font-bold">{runway}</p>
+                            </div>
                         </div>
-                        <div className="p-4 rounded-lg bg-muted border text-center">
-                            <p className="text-sm text-muted-foreground">{runwayLabel}</p>
-                            <p className="text-2xl font-bold">{runway}</p>
-                        </div>
-                        <div className="sm:col-span-2">
-                             <ChartContainer config={{}} className="h-48 w-full">
-                                <RechartsBarChart layout="vertical" data={chartData} margin={{ left: 10, right: 10 }}>
-                                    <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
-                                    <Bar dataKey="value" radius={5} >
-                                         {chartData.map((entry) => (
-                                            <Cell key={entry.name} fill={entry.fill} />
-                                         ))}
-                                    </Bar>
-                                </RechartsBarChart>
-                            </ChartContainer>
-                        </div>
+                        <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-48 w-full">
+                            <AreaChart data={chartData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
+                                <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                <Area dataKey="value" type="monotone" fill="var(--color-value)" stroke="var(--color-value)" />
+                                {chartData.map(entry => (
+                                    <Area key={entry.name} dataKey="value" type="monotone" fill={entry.color} stroke={entry.color} name={entry.name} />
+                                ))}
+                            </AreaChart>
+                        </ChartContainer>
                     </CardContent>
                  </Card>
             </div>
-            <div className="lg:col-span-3 space-y-6">
-                 <form onSubmit={handleSubmit(onForecastSubmit)}>
-                    <Card className="interactive-lift">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Forecaster</CardTitle>
-                            <CardDescription>Add assumptions to project your financial future. Results appear below.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                             <div className="space-y-2">
-                                <Label htmlFor="revenueGrowthRate">Monthly Revenue Growth Rate (%)</Label>
-                                <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} />} />
-                            </div>
-                            <Separator/>
+            
+            <form onSubmit={handleSubmit(onForecastSubmit)}>
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Forecaster</CardTitle>
+                        <CardDescription>Add assumptions to project your financial future. Results appear below.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="revenueGrowthRate">Monthly Revenue Growth Rate (%)</Label>
+                            <Controller name="revenueGrowthRate" control={control} render={({ field }) => <Input id="revenueGrowthRate" type="number" {...field} />} />
+                        </div>
+                        <Separator/>
+                        <div className="space-y-2">
+                            <Label className="font-semibold">Planned Hires</Label>
                             <div className="space-y-2">
-                                <Label className="font-semibold">Planned Hires</Label>
-                                <div className="space-y-2">
-                                    {hires.map((field, index) => (
-                                        <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
-                                            <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="e.g. Engineer" {...field} />} />
-                                            <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} />} />
-                                            <div className="flex items-center gap-1">
-                                                <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
-                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
-                                            </div>
+                                {hires.map((field, index) => (
+                                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                                        <Controller name={`newHires.${index}.role`} control={control} render={({ field }) => <Input placeholder="e.g. Engineer" {...field} />} />
+                                        <Controller name={`newHires.${index}.monthlySalary`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 80000" {...field} />} />
+                                        <div className="flex items-center gap-1">
+                                            <Controller name={`newHires.${index}.startMonth`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeHire(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
                                         </div>
-                                    ))}
-                                </div>
-                                <Button type="button" variant="outline" size="sm" onClick={() => appendHire({ role: '', monthlySalary: 0, startMonth: 1 })}><PlusCircle className="mr-2"/>Add Hire</Button>
+                                    </div>
+                                ))}
                             </div>
-                            <Separator/>
+                            <Button type="button" variant="outline" size="sm" onClick={() => appendHire({ role: '', monthlySalary: 0, startMonth: 1 })}><PlusCircle className="mr-2"/>Add Hire</Button>
+                        </div>
+                        <Separator/>
+                        <div className="space-y-2">
+                            <Label className="font-semibold">One-Time Expenses</Label>
                             <div className="space-y-2">
-                                <Label className="font-semibold">One-Time Expenses</Label>
-                                <div className="space-y-2">
-                                    {oneTimeExpenses.map((field, index) => (
-                                        <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
-                                            <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="e.g. Laptops" {...field} />} />
-                                            <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} />} />
-                                            <div className="flex items-center gap-1">
-                                                <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
-                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
-                                            </div>
+                                {oneTimeExpenses.map((field, index) => (
+                                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                                        <Controller name={`oneTimeExpenses.${index}.item`} control={control} render={({ field }) => <Input placeholder="e.g. Laptops" {...field} />} />
+                                        <Controller name={`oneTimeExpenses.${index}.amount`} control={control} render={({ field }) => <Input type="number" placeholder="e.g. 150000" {...field} />} />
+                                        <div className="flex items-center gap-1">
+                                            <Controller name={`oneTimeExpenses.${index}.month`} control={control} render={({ field }) => <Input type="number" placeholder="Month (1-12)" min="1" max="12" {...field} />} />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeExpense(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
                                         </div>
-                                    ))}
-                                </div>
-                                <Button type="button" variant="outline" size="sm" onClick={() => appendExpense({ item: '', amount: 0, month: 1 })}><PlusCircle className="mr-2"/>Add Expense</Button>
+                                    </div>
+                                ))}
                             </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button type="submit" disabled={isForecasting} className="w-full">
-                                {isForecasting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
-                                Generate Forecast
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                 </form>
-                 {isForecasting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Forecasting the future...</p></div>}
-                 {forecastResult && (
-                    <Card className="interactive-lift animate-in fade-in-50">
-                        <CardHeader>
-                            <CardTitle>Forecast Report</CardTitle>
-                            <CardDescription>Your 12-month financial projection.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Alert>
-                                <Sparkles className="h-4 w-4"/>
-                                <AlertTitle>Summary</AlertTitle>
-                                <AlertDescription>{forecastResult.summary}</AlertDescription>
-                            </Alert>
-                             <div className="p-4 border rounded-lg text-center">
-                                <p className="text-sm text-muted-foreground">Projected Runway</p>
-                                <p className={`text-2xl font-bold ${forecastResult.runwayInMonths && forecastResult.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
-                                    {forecastResult.runwayInMonths ? `${forecastResult.runwayInMonths} Months` : '12+ Months / Profitable'}
-                                </p>
-                            </div>
-                            <ChartContainer config={{}} className="h-64 w-full">
-                                <ResponsiveContainer>
-                                    <RechartsBarChart data={forecastResult.forecast}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="month" fontSize={12} />
-                                        <YAxis fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
-                                        <Legend />
-                                        <Bar dataKey="closingBalance" name="Cash Balance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}/>
-                                    </RechartsBarChart>
-                                </ResponsiveContainer>
-                            </ChartContainer>
-                        </CardContent>
-                    </Card>
-                 )}
-            </div>
+                            <Button type="button" variant="outline" size="sm" onClick={() => appendExpense({ item: '', amount: 0, month: 1 })}><PlusCircle className="mr-2"/>Add Expense</Button>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" disabled={isForecasting} className="w-full">
+                            {isForecasting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
+                            Generate Forecast
+                        </Button>
+                    </CardFooter>
+                </Card>
+             </form>
+
+             {isForecasting && <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Forecasting the future...</p></div>}
+             
+             {forecastResult && (
+                <Card className="interactive-lift animate-in fade-in-50">
+                    <CardHeader>
+                        <CardTitle>Forecast Report</CardTitle>
+                        <CardDescription>Your 12-month financial projection.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Alert>
+                            <Sparkles className="h-4 w-4"/>
+                            <AlertTitle>Summary</AlertTitle>
+                            <AlertDescription>{forecastResult.summary}</AlertDescription>
+                        </Alert>
+                         <div className="p-4 border rounded-lg text-center">
+                            <p className="text-sm text-muted-foreground">Projected Runway</p>
+                            <p className={`text-2xl font-bold ${forecastResult.runwayInMonths && forecastResult.runwayInMonths <= 6 ? 'text-destructive' : 'text-foreground'}`}>
+                                {forecastResult.runwayInMonths ? `${forecastResult.runwayInMonths} Months` : '12+ Months / Profitable'}
+                            </p>
+                        </div>
+                        <ChartContainer config={{ closingBalance: { label: "Cash Balance", color: "hsl(var(--primary))" } }} className="h-64 w-full">
+                            <AreaChart data={forecastResult.forecast} margin={{ left: 12, right: 12 }}>
+                                 <defs>
+                                    <linearGradient id="fillBalance" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="var(--color-closingBalance)" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="var(--color-closingBalance)" stopOpacity={0.1} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
+                                <YAxis tickLine={false} axisLine={false} tickMargin={10} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                                <ChartTooltip cursor={true} content={<ChartTooltipContent indicator="dot" />} />
+                                <Area dataKey="closingBalance" type="natural" fill="url(#fillBalance)" stroke="var(--color-closingBalance)" stackId="a" />
+                            </AreaChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+             )}
         </div>
     )
 }
