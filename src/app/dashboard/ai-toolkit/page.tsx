@@ -803,16 +803,15 @@ const DocumentGenerator = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
-      <Card className="lg:col-span-1 xl:col-span-1 flex flex-col bg-card interactive-lift lg:max-h-[calc(100vh-22rem)]">
-        <CardHeader>
-          <CardTitle className="text-base">Document Generator</CardTitle>
-        </CardHeader>
-        <ScrollArea className="flex-1">
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-sm">1. Select a template</Label>
+      <div className="lg:col-span-1 xl:col-span-1 flex flex-col space-y-6">
+        <Card className="flex flex-col bg-card interactive-lift lg:max-h-[calc(100vh-22rem)]">
+          <CardHeader>
+            <CardTitle className="text-base">1. Select a Template</CardTitle>
+          </CardHeader>
+          <ScrollArea className="flex-1">
+            <CardContent>
               <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                  <Accordion type="multiple" defaultValue={availableCategories.map(c => c.name)} className="w-full">
+                  <Accordion type="multiple" defaultValue={[]} className="w-full">
                       {availableCategories.map((category) => (
                           <AccordionItem value={category.name} key={category.name}>
                               <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
@@ -821,42 +820,47 @@ const DocumentGenerator = () => {
                       ))}
                   </Accordion>
               </RadioGroup>
-            </div>
-            
-            {selectedTemplate && (
-              <div className="space-y-4 pt-4 border-t animate-in fade-in-50">
-                  <Label className="text-sm">2. Add context (Optional)</Label>
-                  <div className="space-y-2">
-                      <Label htmlFor="context" className="text-xs font-normal">Situation / Context</Label>
-                      <Textarea
-                          id="context"
-                          value={context}
-                          onChange={(e) => setContext(e.target.value)}
-                          placeholder={placeholders.context}
-                          className="text-xs h-20"
-                      />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="reason" className="text-xs font-normal">Goal / Reason</Label>
-                      <Textarea
-                          id="reason"
-                          value={reason}
-                          onChange={(e) => setReason(e.target.value)}
-                          placeholder={placeholders.reason}
-                          className="text-xs h-20"
-                      />
-                  </div>
+            </CardContent>
+          </ScrollArea>
+        </Card>
+        
+        {selectedTemplate && (
+          <Card className="animate-in fade-in-50">
+            <CardHeader>
+              <CardTitle className="text-base">2. Add Context (Optional)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                  <Label htmlFor="context" className="text-xs font-normal">Situation / Context</Label>
+                  <Textarea
+                      id="context"
+                      value={context}
+                      onChange={(e) => setContext(e.target.value)}
+                      placeholder={placeholders.context}
+                      className="text-xs h-20"
+                  />
               </div>
-            )}
-          </CardContent>
-        </ScrollArea>
-        <CardFooter className="mt-auto pt-4 border-t flex flex-col gap-2">
-          <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
-            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
-          </Button>
-          <p className="text-xs text-muted-foreground">3 Credits per generation.</p>
-        </CardFooter>
-      </Card>
+              <div className="space-y-2">
+                  <Label htmlFor="reason" className="text-xs font-normal">Goal / Reason</Label>
+                  <Textarea
+                      id="reason"
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      placeholder={placeholders.reason}
+                      className="text-xs h-20"
+                  />
+              </div>
+            </CardContent>
+             <CardFooter className="flex flex-col gap-2">
+              <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
+              </Button>
+              <p className="text-xs text-muted-foreground">3 Credits per generation.</p>
+            </CardFooter>
+          </Card>
+        )}
+      </div>
+
       <div className="lg:col-span-2 xl:col-span-3 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <h2 className="text-xl font-bold font-headline">Document Preview & Edit</h2>
@@ -1341,9 +1345,7 @@ export default function AiToolkitPage() {
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const showAnalyzer = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
-    const showReconciliation = (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Enterprise';
     const showWatcher = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
-    const showWorkflows = userProfile?.role !== 'Founder';
     const showResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
 
     const pageTitle = useMemo(() => {
@@ -1402,5 +1404,7 @@ export default function AiToolkitPage() {
         </div>
     );
 }
+
+    
 
     
