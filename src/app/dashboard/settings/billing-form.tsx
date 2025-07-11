@@ -21,7 +21,7 @@ const founderPlans = [
     },
     {
         name: 'Pro',
-        price: { monthly: 199, yearly: 1990 }, // Assuming 2 months free for yearly
+        price: { monthly: 199, yearly: 1990 },
         benefits: ['299 monthly credits', 'Unlock premium features'],
         isCurrent: (currentPlan: UserPlan) => currentPlan === 'Founder',
         popular: true,
@@ -37,7 +37,7 @@ const caPlans = [
     },
     {
         name: 'Pro',
-        price: { monthly: 499, yearly: 4990 }, // Assuming 2 months free for yearly
+        price: { monthly: 499, yearly: 4990 },
         benefits: ['499 monthly credits', 'Unlock analyzer, clause lib, PDF tools'],
         isCurrent: (currentPlan: UserPlan) => currentPlan === 'Professional',
         popular: true,

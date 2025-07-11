@@ -377,7 +377,7 @@ const DataroomAudit = () => {
 }
 
 
-// --- Tab: Document Intelligence ---
+// --- Tab: Document Analyzer ---
 const DocumentAnalyzerTab = () => {
   const { userProfile, deductCredits } = useAuth();
   const { toast } = useToast();

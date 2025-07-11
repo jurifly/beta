@@ -53,13 +53,16 @@ const feedbackSchema = z.object({ category: z.string().min(1, "Please select a c
 type FeedbackFormData = z.infer<typeof feedbackSchema>;
 const feedbackCategories = [ { id: 'bug-report', label: 'Bug Report', icon: Bug }, { id: 'feature-request', label: 'Feature Request', icon: Lightbulb }, { id: 'ui-ux', label: 'UI/UX Feedback', icon: Palette }, { id: 'general', label: 'General Comment', icon: MessageCircle }, ];
 const FeedbackTab = () => {
+    const { user, addFeedback } = useAuth();
     const { toast } = useToast();
     const { control, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm<FeedbackFormData>({ resolver: zodResolver(feedbackSchema), defaultValues: { category: "", sentiment: undefined, message: "" } });
     const selectedCategory = watch("category");
     const onSubmit = async (data: FeedbackFormData) => { 
-        // In a real app, this would send data to a backend (e.g., Firestore).
-        console.log("Feedback submitted:", data);
-        await new Promise(resolve => setTimeout(resolve, 1000)); 
+        if (!user) {
+             toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to submit feedback.' });
+             return;
+        }
+        await addFeedback(data.category, data.message, data.sentiment);
         toast({ title: "Feedback Submitted!", description: "Thank you for helping us improve." }); 
         reset(); 
     };

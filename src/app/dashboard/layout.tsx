@@ -363,9 +363,9 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const navItems = getSidebarNavItems(userProfile.role);
   
   const bonusCredits = userProfile.creditBalance ?? 0;
-  const creditsUsed = userProfile.dailyCreditsUsed ?? 0;
+  const dailyCreditsUsed = userProfile.dailyCreditsUsed ?? 0;
   const creditLimit = userProfile.dailyCreditLimit ?? 0;
-  const dailyRemaining = Math.max(0, creditLimit - creditsUsed);
+  const dailyRemaining = Math.max(0, creditLimit - dailyCreditsUsed);
   const totalCreditsRemaining = bonusCredits + dailyRemaining;
 
   const isPro = planHierarchy[userProfile.plan] > 0;
