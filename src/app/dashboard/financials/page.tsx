@@ -19,7 +19,7 @@ import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart as RechartsBarChart, Bar } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -387,7 +387,7 @@ const FinancialsTab = () => {
             burnRate: burn,
             runway: runwayMonthsText,
             runwayLabel: burn > 0 ? "Estimated Runway" : "Financial Status",
-            chartData: [ { name: 'Revenue', value: revenue, color: 'hsl(var(--chart-2))' }, { name: 'Expenses', value: expenses, color: 'hsl(var(--chart-5))' } ].filter(d => d.value > 0),
+            chartData: [ { name: 'Revenue', value: revenue }, { name: 'Expenses', value: expenses } ],
         };
     }, [revenue, expenses, cashBalance]);
 
@@ -455,15 +455,15 @@ const FinancialsTab = () => {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="cashBalance">Current Cash Balance (₹)</Label>
-                            <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value))} placeholder="e.g. 10000000" />
+                            <Input id="cashBalance" type="number" value={cashBalance} onChange={(e) => setCashBalance(Number(e.target.value) || 0)} placeholder="e.g. 10000000" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="revenue">Average Monthly Revenue (₹)</Label>
-                            <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value))} placeholder="e.g. 500000" />
+                            <Input id="revenue" type="number" value={revenue} onChange={(e) => setRevenue(Number(e.target.value) || 0)} placeholder="e.g. 500000" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="expenses">Average Monthly Expenses (₹)</Label>
-                            <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} placeholder="e.g. 800000" />
+                            <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value) || 0)} placeholder="e.g. 800000" />
                         </div>
                     </CardContent>
                     <CardFooter>
@@ -490,14 +490,15 @@ const FinancialsTab = () => {
                             </div>
                         </div>
                         <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-48 w-full">
-                            <RechartsBarChart data={chartData} layout="vertical" margin={{ left: 10, right: 10 }}>
-                                <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={60} />
-                                <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
-                                {chartData.map(entry => (
-                                    <Bar key={entry.name} dataKey="value" fill={entry.color} name={entry.name} radius={4}/>
-                                ))}
-                            </RechartsBarChart>
+                            <AreaChart data={[{name: 'Metrics', revenue, expenses}]} margin={{ left: 12, right: 12 }}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="name" tickLine={false} axisLine={false} hide />
+                                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
+                                <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                                <Area dataKey="revenue" type="monotone" fill="var(--color-revenue)" stroke="var(--color-revenue)" name="Revenue" />
+                                <Area dataKey="expenses" type="monotone" fill="var(--color-expenses)" stroke="var(--color-expenses)" name="Expenses" />
+                                <Legend />
+                            </AreaChart>
                         </ChartContainer>
                     </CardContent>
                  </Card>
