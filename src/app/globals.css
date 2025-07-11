@@ -37,25 +37,25 @@ html {
   }
  
   .dark {
-    /* Dark Theme - Confident and Modern */
-    --background: 222 47% 11%; /* Dark Slate Blue */
-    --foreground: 210 40% 98%; /* Light Gray */
-    --card: 222 47% 15%; /* Slightly lighter card */
+    /* Dark Theme - Pitch Black */
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 0 0% 8%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 0 0% 0%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%; /* Brighter blue for dark mode */
+    --primary: 217 91% 60%;
     --primary-foreground: 222 47% 11%;
-    --secondary: 222 47% 15%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 15%;
+    --muted: 0 0% 15%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 142 71% 41%; /* Mint Green */
+    --accent: 142 71% 41%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 25%;
-    --input: 217.2 32.6% 22%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
     --ring: 217 91% 60%;
     --chart-1: 217 91% 60%;
     --chart-2: 142 71% 41%;
