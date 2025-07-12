@@ -143,7 +143,8 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
         id: Date.now().toString(),
         ...data
       };
-      updatedCompanies = [...(userProfile.companies || []), newCompany];
+      const existingCompanies = Array.isArray(userProfile.companies) ? userProfile.companies : [];
+      updatedCompanies = [...existingCompanies, newCompany];
       activeCompanyId = newCompany.id;
     }
     
