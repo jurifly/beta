@@ -9,7 +9,7 @@ import BillingForm from "./billing-form";
 import NotificationsForm from "./notifications-form";
 import FeedbackForm from "./feedback-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, CreditCard, Bell, Lock, KeyRound, Loader2, MessageCircle, BookLock, ChevronRight, ArrowLeft } from 'lucide-react';
+import { User, CreditCard, Bell, Lock, KeyRound, Loader2, MessageCircle, BookLock, ChevronRight, ArrowLeft, LifeBuoy } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -110,6 +110,7 @@ const settingsItems = [
     { key: 'security', title: 'Security', description: 'Change password and manage access', icon: Lock, component: SecurityTab },
     { key: 'policies', title: 'Legal & Policies', description: 'Our terms, privacy, and disclaimers', icon: BookLock, component: PoliciesTab },
     { key: 'feedback', title: 'Feedback', description: 'Help us improve the product', icon: MessageCircle, component: FeedbackForm },
+    { key: 'help', title: 'Help & FAQ', description: 'Find answers to common questions', icon: LifeBuoy, component: null, href: '/dashboard/help' },
 ];
 
 export default function SettingsPage() {
@@ -167,7 +168,7 @@ export default function SettingsPage() {
   const activeComponent = settingsItems.find(item => item.key === activeView);
 
   if (isMobile) {
-    if (activeComponent) {
+    if (activeComponent && activeComponent.component) {
       const Component = activeComponent.component as any;
       return (
         <div className="space-y-4">
@@ -197,20 +198,28 @@ export default function SettingsPage() {
                 </div>
             </div>
             <div className="space-y-2">
-              {settingsItems.map(item => (
-                <button 
-                  key={item.key} 
-                  onClick={() => setActiveView(item.key)}
-                  className="w-full flex items-center gap-4 p-4 text-left rounded-lg hover:bg-muted"
-                >
-                  <item.icon className="w-6 h-6 text-muted-foreground"/>
-                  <div className="flex-1">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground"/>
-                </button>
-              ))}
+              {settingsItems.map(item => {
+                const content = (
+                    <div className="w-full flex items-center gap-4 p-4 text-left rounded-lg hover:bg-muted">
+                        <item.icon className="w-6 h-6 text-muted-foreground"/>
+                        <div className="flex-1">
+                          <p className="font-medium">{item.title}</p>
+                          <p className="text-sm text-muted-foreground">{item.description}</p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground"/>
+                    </div>
+                );
+
+                if (item.href) {
+                    return <Link href={item.href} key={item.key}>{content}</Link>
+                }
+
+                return (
+                    <button key={item.key} onClick={() => setActiveView(item.key)}>
+                        {content}
+                    </button>
+                );
+              })}
             </div>
         </div>
       </>
@@ -234,7 +243,17 @@ export default function SettingsPage() {
           <ScrollArea className="w-full sm:w-auto -mx-4 px-4 sm:mx-0 sm:px-0" orientation="horizontal">
               <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
                 {settingsItems.map(item => (
-                    <TabsTrigger value={item.key} key={item.key}><item.icon className="mr-2 h-4 w-4"/>{item.title}</TabsTrigger>
+                    <TabsTrigger value={item.key} key={item.key} asChild={!!item.href}>
+                        {item.href ? (
+                            <Link href={item.href}>
+                                <item.icon className="mr-2 h-4 w-4"/>{item.title}
+                            </Link>
+                        ) : (
+                            <span>
+                                <item.icon className="mr-2 h-4 w-4"/>{item.title}
+                            </span>
+                        )}
+                    </TabsTrigger>
                 ))}
               </TabsList>
           </ScrollArea>
