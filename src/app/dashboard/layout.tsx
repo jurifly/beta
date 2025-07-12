@@ -471,7 +471,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>('en');
-  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -544,64 +543,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="shrink-0 md:hidden"
-                        >
-                            <Menu className="h-5 w-5" />
-                            <span className="sr-only">Toggle navigation menu</span>
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="flex flex-col p-0">
-                         <SheetHeader className="h-14 flex flex-row items-center border-b px-4 lg:h-[60px] lg:px-6">
-                            <SheetTitle>Navigation Menu</SheetTitle>
-                            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
-                            {isPro && <Flame className="h-6 w-6 text-accent" />}
-                            <Logo />
-                            <span className="flex items-center">
-                                Claari
-                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">बीटा</Badge>
-                            </span>
-                            </Link>
-                        </SheetHeader>
-                        <ScrollArea className="flex-1">
-                            <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
-                            {navItems.map((item) => {
-                                const isActive = item.href === '/dashboard' 
-                                ? pathname === item.href 
-                                : pathname.startsWith(item.href);
-                                const isLocked = item.locked && !isPro && !isDevMode;
-                                const label = translations[item.label_override_key || item.translationKey][language];
-
-                                return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    onClick={(e) => {
-                                        if (isLocked) {
-                                            e.preventDefault();
-                                            setLockedFeature(label);
-                                        }
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                        isActive && "bg-muted text-primary",
-                                        isLocked && "cursor-not-allowed"
-                                    )}
-                                >
-                                    <item.icon className="h-4 w-4" />
-                                    {label}
-                                    {isLocked && <Lock className="ml-auto h-4 w-4 opacity-50" />}
-                                </Link>
-                                )
-                            })}
-                            </nav>
-                        </ScrollArea>
-                    </SheetContent>
-                </Sheet>
                 <div className="flex-1">
                 <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Link href="/dashboard" className="flex items-center gap-2">
