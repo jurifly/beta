@@ -825,24 +825,36 @@ const DocumentGenerator = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
       <div className="lg:col-span-1 xl:col-span-1 flex flex-col space-y-6">
-        <Card className="flex flex-col bg-card interactive-lift lg:max-h-[calc(100vh-22rem)]">
-          <CardHeader>
-            <CardTitle className="text-base">1. Select a Template</CardTitle>
-          </CardHeader>
-          <ScrollArea className="flex-1">
-            <CardContent>
-              <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                  <Accordion type="multiple" defaultValue={[]} className="w-full">
-                      {availableCategories.map((category) => (
-                          <AccordionItem value={category.name} key={category.name}>
-                              <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
-                              <AccordionContent><div className="flex flex-col gap-1 pl-2">{category.templates.map((template) => { const isLocked = template.isPremium; return ( <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}><RadioGroupItem value={template.name} id={template.name} /><span className="font-normal text-sm">{template.name}</span></Label> ) })}</div></AccordionContent>
-                          </AccordionItem>
-                      ))}
-                  </Accordion>
-              </RadioGroup>
+        <Card className="flex flex-col bg-card interactive-lift">
+            <CardHeader>
+                <CardTitle className="text-base">1. Select a Template</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1">
+                <ScrollArea className="h-full">
+                    <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
+                        <Accordion type="multiple" defaultValue={availableCategories.map(c => c.name)} className="w-full">
+                            {availableCategories.map((category) => (
+                                <AccordionItem value={category.name} key={category.name}>
+                                    <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="flex flex-col gap-1 pl-2">
+                                            {category.templates.map((template) => {
+                                                const isLocked = template.isPremium;
+                                                return (
+                                                    <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}>
+                                                        <RadioGroupItem value={template.name} id={template.name} />
+                                                        <span className="font-normal text-sm">{template.name}</span>
+                                                    </Label>
+                                                )
+                                            })}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    </RadioGroup>
+                </ScrollArea>
             </CardContent>
-          </ScrollArea>
         </Card>
         
         {selectedTemplate && (
