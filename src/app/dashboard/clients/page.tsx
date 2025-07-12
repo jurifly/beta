@@ -61,7 +61,7 @@ export default function ClientsPage() {
                   <CardDescription>An overview of all companies in your portfolio.</CardDescription>
               </div>
               <div className="flex w-full sm:w-auto gap-2">
-                  <div className="relative flex-1 sm:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search clients..." className="pl-10" /></div>
+                  <div className="relative flex-1 sm:flex-initial"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search clients..." className="pl-10" /></div>
               </div>
           </CardHeader>
           <CardContent>
@@ -86,7 +86,7 @@ export default function ClientsPage() {
                             <DropdownMenuTrigger asChild><Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Toggle menu</span></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={() => handleViewDetails(company.id)}><View className="mr-2"/>View Dashboard</DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleViewDetails(company.id)}><View className="mr-2"/>View Workspace</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

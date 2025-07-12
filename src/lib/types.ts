@@ -74,7 +74,6 @@ export interface Invite {
 
 export interface ActivityLog {
     id: string;
-    userId: string;
     userName: string;
     action: string;
     timestamp: string;

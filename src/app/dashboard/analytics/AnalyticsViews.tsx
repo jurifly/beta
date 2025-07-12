@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { generateFilings } from "@/ai/flows/filing-generator-flow"
-import { format, formatDistanceToNowStrict } from "date-fns"
+import { format, formatDistanceToNowStrict, startOfToday } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare } from "lucide-react"
@@ -479,16 +479,14 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         let totalCompleteness = 0;
         const healthData = userProfile.companies.map(company => {
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-            if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company', 'LLP'].includes(company.type)) {
-                requiredFields.push('cin');
-            }
+            if (company.legalRegion === 'India') requiredFields.push('cin');
             const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
             const completeness = (filledFields / requiredFields.length) * 100;
             totalCompleteness += completeness;
             
-            const overdueTasks = Math.floor(Math.random() * 5); 
-            const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
-            const healthScore = Math.round((completeness * 0.5) + (filingPerf * 0.5));
+            const overdueTasks = company.docRequests?.filter(r => new Date(r.dueDate) < startOfToday() && r.status === 'Pending').length || 0;
+            const filingPerf = Math.max(0, 100 - (overdueTasks * 20)); // Simplified health calc
+            const healthScore = Math.round((completeness * 0.7) + (filingPerf * 0.3));
             
             let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
             if (healthScore < 60) riskLevel = 'High';

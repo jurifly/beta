@@ -48,7 +48,7 @@ import {
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
-import type { UserProfile, Company } from "@/lib/types";
+import type { UserProfile, Company, ActivityLog } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { getProactiveInsights, type ProactiveInsightsOutput } from "@/ai/flows/proactive-insights-flow";
@@ -59,7 +59,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell } from "recharts";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
-import { addDays, format, startOfToday, differenceInDays } from "date-fns";
+import { addDays, format, startOfToday, differenceInDays, formatDistanceToNow } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -660,15 +660,14 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
     const [insightsLoading, setInsightsLoading] = useState(true);
 
     const clientCount = userProfile.companies.length;
+    
     const { highRiskClientCount, portfolioDeadlines } = useMemo(() => {
-        if (clientCount === 0) return { highRiskClientCount: 0, portfolioDeadlines: [] };
-        
         let highRisk = 0;
         let deadlines: any[] = [];
         
         userProfile.companies.forEach(company => {
             const overdueTasks = company.docRequests?.filter(r => r.status === 'Pending' && new Date(r.dueDate) < startOfToday()).length || 0;
-            const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
+            const filingPerf = Math.max(0, 100 - (overdueTasks * 20)); // Simplified health calc
             
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
             const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
@@ -679,16 +678,18 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
 
             const upcomingRequests = company.docRequests
                 ?.filter(r => r.status === 'Pending' && new Date(r.dueDate) >= startOfToday())
-                .map(r => ({ client: company.name, task: r.title, due: formatDistanceToNow(new Date(r.dueDate), { addSuffix: true }), icon: <FileText className="w-5 h-5"/> })) || [];
-
+                .map(r => ({ ...r, clientName: company.name })) || [];
+            
             deadlines = [...deadlines, ...upcomingRequests];
         });
+        
+        deadlines.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
         return {
             highRiskClientCount: highRisk,
-            portfolioDeadlines: deadlines.sort((a,b) => a.due.localeCompare(b.due)).slice(0, 3)
+            portfolioDeadlines: deadlines.slice(0, 3)
         };
-    }, [userProfile.companies, clientCount]);
+    }, [userProfile.companies]);
 
     useEffect(() => {
         const fetchInsights = async () => {
@@ -714,11 +715,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
         fetchInsights();
     }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast]);
 
-   const mockActivities = userProfile.companies.length > 0 ? [
-       { client: userProfile.companies[0 % userProfile.companies.length].name, action: 'uploaded "Bank Statement.pdf"', time: '2h ago', icon: <FileUp className="w-5 h-5"/> },
-       { client: userProfile.companies[Math.min(1, userProfile.companies.length-1)].name, action: 'updated their PAN details', time: '1 day ago', icon: <Users className="w-5 h-5"/> },
-       { client: userProfile.companies[Math.min(2, userProfile.companies.length-1)].name, action: 'completed "Director KYC"', time: '3 days ago', icon: <CheckCircle className="w-5 h-5"/> },
-   ] : [];
+   const activityLog = userProfile.activityLog || [];
 
    if (clientCount === 0) {
      return (
@@ -780,10 +777,10 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                         <div className="space-y-4">
                             {portfolioDeadlines.map((item, index) => (
                                 <div key={index} className="flex items-center gap-4">
-                                    <div className="p-2 bg-muted rounded-full text-primary">{item.icon}</div>
+                                    <div className="p-2 bg-muted rounded-full text-primary"><FileText className="w-5 h-5"/></div>
                                     <div>
-                                        <p className="font-medium text-sm">{item.task}</p>
-                                        <p className="text-xs text-muted-foreground">{item.client} &bull; <span className="font-semibold">Due {item.due}</span></p>
+                                        <p className="font-medium text-sm">{item.title}</p>
+                                        <p className="text-xs text-muted-foreground">{item.clientName} &bull; <span className="font-semibold">Due {formatDistanceToNow(new Date(item.dueDate), { addSuffix: true })}</span></p>
                                     </div>
                                 </div>
                             ))}
@@ -793,18 +790,18 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
             </Card>
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CheckCircle/> Recent Client Activity</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><CheckCircle/> Recent Activity</CardTitle>
                     <CardDescription>The latest actions from across your portfolio.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {mockActivities.length > 0 ? (
+                    {activityLog.length > 0 ? (
                         <div className="space-y-4">
-                            {mockActivities.map((item, index) => (
+                            {activityLog.slice(0, 3).map((item, index) => (
                                 <div key={index} className="flex items-center gap-4">
-                                    <div className="p-2 bg-muted rounded-full text-muted-foreground">{item.icon}</div>
+                                    <div className="p-2 bg-muted rounded-full text-muted-foreground"><Users className="w-5 h-5"/></div>
                                     <div>
-                                        <p className="text-sm"><span className="font-semibold">{item.client}</span> {item.action}.</p>
-                                        <p className="text-xs text-muted-foreground">{item.time}</p>
+                                        <p className="text-sm"><span className="font-semibold">{item.userName}</span> {item.action}.</p>
+                                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}</p>
                                     </div>
                                 </div>
                             ))}
@@ -892,6 +889,13 @@ export default function Dashboard() {
     ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
     : null;
 
+  const getAddButtonText = () => {
+      if (userProfile?.role === 'CA' || userProfile?.role === 'Legal Advisor') {
+          return 'Add Client';
+      }
+      return 'Add Company';
+  }
+
   return (
     <>
       <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
@@ -909,7 +913,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-4">
                   <Button onClick={() => setAddCompanyModalOpen(true)} className="w-full sm:w-auto interactive-lift">
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Company
+                      {getAddButtonText()}
                   </Button>
               </div>
           </div>

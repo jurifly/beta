@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLog } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -106,6 +106,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       dailyCreditsUsed: 0,
       lastCreditReset: new Date().toISOString(),
       signupIndex: newIndex,
+      teamMembers: [{ id: firebaseUser.uid, name: firebaseUser.displayName || 'Me', email: firebaseUser.email || '', role: 'Admin' }],
+      invites: [],
+      activityLog: [{ id: Date.now().toString(), userName: 'System', action: 'Created workspace', timestamp: new Date().toISOString() }],
     };
     
     await setDoc(userDocRef, newProfile);
