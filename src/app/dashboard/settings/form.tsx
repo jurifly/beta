@@ -110,6 +110,8 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
     ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
     : null;
 
+  const addButtonText = userProfile.role === 'CA' ? 'Add New Client' : 'Add New Company';
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
       <Card className="interactive-lift">
@@ -233,7 +235,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
                 </CardDescription>
             </div>
             <Button variant="outline" type="button" onClick={onAddCompanyClick}>
-                <PlusCircle className="mr-2 h-4 w-4"/>Add New Company
+                <PlusCircle className="mr-2 h-4 w-4"/>{addButtonText}
             </Button>
         </CardHeader>
         <CardContent className="space-y-4">

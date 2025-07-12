@@ -670,6 +670,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
             const filingPerf = Math.max(0, 100 - (overdueTasks * 20)); // Simplified health calc
             
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (company.legalRegion === 'India') requiredFields.push('cin');
             const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
             const profileCompleteness = (filledFields / requiredFields.length) * 100;
             

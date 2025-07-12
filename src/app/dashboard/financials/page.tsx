@@ -23,6 +23,7 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Lege
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
+import Link from 'next/link';
 
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
@@ -613,29 +614,37 @@ const FinancialsTab = () => {
                         <CardDescription>Your startup's key financial health indicators.</CardDescription>
                     </CardHeader>
                      <CardContent className="space-y-4">
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg bg-muted border text-center">
-                                <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                        {(revenue > 0 || expenses > 0 || cashBalance > 0) ? (
+                            <>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-lg bg-muted border text-center">
+                                        <p className="text-sm text-muted-foreground">{burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                        <p className={`text-2xl font-bold ${burnRate > 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(Math.abs(burnRate))}</p>
+                                    </div>
+                                    <div className="p-4 rounded-lg bg-muted border text-center">
+                                        <p className="text-sm text-muted-foreground">{runwayLabel}</p>
+                                        <p className="text-2xl font-bold">{runway}</p>
+                                    </div>
+                                </div>
+                                <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-48 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={[{ name: 'Metrics', revenue, expenses }]} layout="vertical" margin={{ left: 12 }}>
+                                            <CartesianGrid horizontal={false} />
+                                            <YAxis type="category" dataKey="name" hide />
+                                            <XAxis type="number" hide />
+                                            <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                            <Legend />
+                                            <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4}/>
+                                            <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4}/>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </ChartContainer>
+                            </>
+                        ) : (
+                             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                                <p>Enter your financial data to see an overview.</p>
                             </div>
-                            <div className="p-4 rounded-lg bg-muted border text-center">
-                                <p className="text-sm text-muted-foreground">{runwayLabel}</p>
-                                <p className="text-2xl font-bold">{runway}</p>
-                            </div>
-                        </div>
-                        <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-48 w-full">
-                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={[{ name: 'Metrics', revenue, expenses }]} layout="vertical" margin={{ left: 12 }}>
-                                    <CartesianGrid horizontal={false} />
-                                    <YAxis type="category" dataKey="name" hide />
-                                    <XAxis type="number" hide />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
-                                    <Legend />
-                                    <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4}/>
-                                    <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4}/>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </ChartContainer>
+                        )}
                     </CardContent>
                  </Card>
             </div>

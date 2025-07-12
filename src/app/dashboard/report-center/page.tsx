@@ -33,7 +33,6 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
 
     return (
         <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Manrope, sans-serif' }}>
-            {/* Header */}
             <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
                 <div className="flex items-center gap-3">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary">
@@ -51,9 +50,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="mt-8">
-                {/* Score Section */}
                 <section className="grid grid-cols-3 gap-6 mb-8">
                     <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
                         <p className="text-sm font-semibold text-gray-600">Legal Hygiene Score</p>
@@ -76,7 +73,6 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                 </section>
                 
                 <div className="grid grid-cols-5 gap-6">
-                    {/* Left Column */}
                     <div className="col-span-2 space-y-6">
                          <div className="p-4 border border-gray-200 rounded-xl bg-white">
                             <h3 className="text-base font-semibold text-gray-700 mb-3">Client Details</h3>
@@ -100,7 +96,6 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                         </div>
                     </div>
 
-                    {/* Right Column */}
                      <div className="col-span-3 space-y-6">
                         <div className="p-4 border border-red-300 bg-red-50 rounded-xl h-full">
                             <h3 className="text-base font-semibold text-red-700 mb-2">Overdue Filings ({data.overdueFilings.length})</h3>
@@ -123,7 +118,6 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
 
             </main>
 
-            {/* Footer */}
             <footer className="text-center text-xs text-gray-400 mt-12 border-t border-gray-100 pt-4 flex flex-col items-center gap-2">
                 <div className="flex items-center gap-1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"><path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path></svg>
