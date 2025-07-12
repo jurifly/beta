@@ -61,7 +61,9 @@ export function UserNav() {
     return initials.slice(0, 2).toUpperCase();
   }
 
-  const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+  const activeCompany = Array.isArray(userProfile.companies)
+    ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
+    : null;
 
   return (
     <DropdownMenu>
