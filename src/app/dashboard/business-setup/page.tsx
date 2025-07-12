@@ -47,6 +47,7 @@ import type { UserProfile } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 
 const STEPS = [
@@ -149,27 +150,36 @@ export default function BusinessSetupPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="font-semibold">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].name}</p>
             <div aria-label="Progress bar" className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              {STEPS.map((step, index) => {
-                const stepStatus =
-                  navigatorState.completedSteps.includes(step.id) ? 'completed' : currentStep === index + 1 ? 'current' : 'upcoming';
-                return (
-                  <div key={step.id} className="flex items-center gap-2 sm:gap-4 w-full">
-                    <button
-                      onClick={() => jumpToStep(step.id)}
-                      disabled={stepStatus === 'upcoming'}
-                      className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors",
-                        stepStatus === 'completed' && 'bg-primary border-primary text-primary-foreground',
-                        stepStatus === 'current' && 'border-primary',
-                        stepStatus === 'upcoming' && 'bg-muted border-muted-foreground/20 text-muted-foreground'
-                      )}
-                    >
-                      {stepStatus === 'completed' ? <Check className="w-5 h-5" /> : <step.icon className="w-4 h-4" />}
-                    </button>
-                    {index < STEPS.length - 1 && <div className={cn("flex-1 h-0.5", stepStatus === 'completed' ? 'bg-primary' : 'bg-muted-foreground/20')} />}
-                  </div>
-                );
-              })}
+              <TooltipProvider>
+                {STEPS.map((step, index) => {
+                  const stepStatus =
+                    navigatorState.completedSteps.includes(step.id) ? 'completed' : currentStep === index + 1 ? 'current' : 'upcoming';
+                  return (
+                    <div key={step.id} className="flex items-center gap-2 sm:gap-4 w-full">
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                            <button
+                              onClick={() => jumpToStep(step.id)}
+                              disabled={stepStatus === 'upcoming'}
+                              className={cn(
+                                "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors",
+                                stepStatus === 'completed' && 'bg-primary border-primary text-primary-foreground',
+                                stepStatus === 'current' && 'border-primary',
+                                stepStatus === 'upcoming' && 'bg-muted border-muted-foreground/20 text-muted-foreground'
+                              )}
+                            >
+                              {stepStatus === 'completed' ? <Check className="w-5 h-5" /> : <step.icon className="w-4 h-4" />}
+                            </button>
+                         </TooltipTrigger>
+                         <TooltipContent>
+                           <p>{step.name}</p>
+                         </TooltipContent>
+                       </Tooltip>
+                      {index < STEPS.length - 1 && <div className={cn("flex-1 h-0.5", stepStatus === 'completed' ? 'bg-primary' : 'bg-muted-foreground/20')} />}
+                    </div>
+                  );
+                })}
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
