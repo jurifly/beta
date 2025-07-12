@@ -333,7 +333,7 @@ const DataroomAudit = () => {
   
   const handleShare = () => { navigator.clipboard.writeText(window.location.href); toast({ title: "Link Copied!", description: "A shareable link to this checklist has been copied." }); }
 
-  const { completedCount, totalCount, progress } = useMemo(() => { if (!checklistState.data) return { completedCount: 0, totalCount: 0, progress: 0 }; const allItems = checklistState.data.checklist.flatMap(c => c.items); const completedItems = allItems.filter(i => i.status === 'Completed'); const totalItems = allItems.length; if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0 }; return { completedCount: completedItems.length, totalCount: totalItems, progress: Math.round((completedItems.length / totalItems) * 100) }; }, [checklistState.data]);
+  const { completedCount, totalCount, progress } = useMemo(() => { if (!checklistState.data) return { completedCount: 0, totalCount: 0, progress: 0 }; const allItems = checklistState.data.checklist.flatMap(c => c.items); const completedItems = allItems.filter(i => i.status === 'Completed').length; const totalItems = allItems.length; if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0 }; return { completedCount: completedItems.length, totalCount: totalItems, progress: Math.round((completedItems.length / totalItems) * 100) }; }, [checklistState.data]);
 
   const filteredChecklist = useMemo(() => { if (!checklistState.data) return []; if (activeFilter === 'all') return checklistState.data.checklist; return checklistState.data.checklist.map(category => ({ ...category, items: category.items.filter(item => { if (activeFilter === 'completed') return item.status === 'Completed'; if (activeFilter === 'pending') return ['Pending', 'In Progress', 'Not Applicable'].includes(item.status); return true; }), })).filter(category => category.items.length > 0); }, [checklistState.data, activeFilter]);
 
@@ -832,7 +832,7 @@ const DocumentGenerator = () => {
             <CardContent className="flex-1">
                 <ScrollArea className="h-[400px]">
                     <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                        <Accordion type="multiple" defaultValue={[]} className="w-full">
+                        <Accordion type="single" collapsible className="w-full">
                             {availableCategories.map((category) => (
                                 <AccordionItem value={category.name} key={category.name}>
                                     <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
@@ -1533,13 +1533,13 @@ export default function AiToolkitPage() {
     const currentTabInfo = tabs.find(t => t.value === activeTab) || tabs[0];
 
     return (
-        <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold font-headline">{pageTitle}</h1>
                 <p className="text-muted-foreground">{pageDescription}</p>
             </div>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="md:hidden">
                     <Select value={activeTab} onValueChange={setActiveTab}>
                         <SelectTrigger className="w-full">
@@ -1571,10 +1571,10 @@ export default function AiToolkitPage() {
                     </TabsList>
                 </div>
                 
-                <div className="mt-6 md:flex-1 md:min-h-0 md:overflow-y-auto">
+                <div className="mt-6">
                     {tabs.map(t => (
-                        <TabsContent key={t.value} value={t.value} className="h-full mt-0 md:mt-0">
-                            {t.content}
+                        <TabsContent key={t.value} value={t.value} className="mt-0">
+                            {activeTab === t.value && t.content}
                         </TabsContent>
                     ))}
                 </div>
