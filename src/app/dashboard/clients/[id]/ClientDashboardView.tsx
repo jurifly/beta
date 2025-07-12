@@ -35,7 +35,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ComplianceActivityChart = dynamic(
   () => import('../../ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -351,23 +351,31 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                                 <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
                                 <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
                             </div>
-                             <Button variant="outline" size="sm" onClick={() => handleCompleteYear(selectedYear)}>
-                                <CheckCircle className="mr-2 h-4 w-4 text-primary" />
-                                Complete Past for {selectedYear}
-                            </Button>
+                            {checklistYears.length > 0 && (
+                                <Select onValueChange={(value) => {
+                                    if(value.startsWith('complete-')) {
+                                        handleCompleteYear(value.replace('complete-', ''));
+                                    } else {
+                                        setSelectedYear(value);
+                                    }
+                                }}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder={selectedYear} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {checklistYears.map(year => (
+                                            <SelectItem key={year} value={year}>
+                                                <div className="flex items-center gap-2">
+                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                                    {year}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                        {checklistYears.includes(selectedYear) && <SelectItem value={`complete-${selectedYear}`} className="text-primary">Complete Past for {selectedYear}</SelectItem>}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </div>
-                        {checklistYears.length > 0 && (
-                            <Tabs value={selectedYear} onValueChange={setSelectedYear} className="w-full mt-4">
-                                <TabsList>
-                                    {checklistYears.map(year => (
-                                        <TabsTrigger key={year} value={year} className="flex items-center gap-2">
-                                            {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                            {year}
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
-                            </Tabs>
-                        )}
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {isLoading ? (

@@ -490,28 +490,36 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 
                 <Card className="interactive-lift">
                     <CardHeader>
-                         <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                        <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
                             <div>
                                 <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
                                 <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => handleCompleteYear(selectedYear)}>
-                                <CheckCircle className="mr-2 h-4 w-4 text-primary" />
-                                Complete Past for {selectedYear}
-                            </Button>
+                             {checklistYears.length > 0 && (
+                                <Select onValueChange={(value) => {
+                                    if(value.startsWith('complete-')) {
+                                        handleCompleteYear(value.replace('complete-', ''));
+                                    } else {
+                                        setSelectedYear(value);
+                                    }
+                                }}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder={selectedYear} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {checklistYears.map(year => (
+                                            <SelectItem key={year} value={year}>
+                                                <div className="flex items-center gap-2">
+                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                                    {year}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                        {checklistYears.includes(selectedYear) && <SelectItem value={`complete-${selectedYear}`} className="text-primary">Complete Past for {selectedYear}</SelectItem>}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </div>
-                        {checklistYears.length > 0 && (
-                            <Tabs value={selectedYear} onValueChange={setSelectedYear} className="w-full mt-4">
-                                <TabsList>
-                                    {checklistYears.map(year => (
-                                        <TabsTrigger key={year} value={year} className="flex items-center gap-2">
-                                            {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                            {year}
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
-                            </Tabs>
-                        )}
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {isLoading ? (
