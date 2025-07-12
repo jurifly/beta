@@ -36,7 +36,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const ComplianceActivityChart = dynamic(
   () => import('../../ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -90,6 +90,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+    const [popoverOpen, setPopoverOpen] = useState(false);
     
     const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     
@@ -161,6 +162,28 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         updateCompanyChecklistStatus(activeCompany.id, newStatuses);
     };
 
+    const handleCompleteYear = (year: string) => {
+      if (!activeCompany) return;
+      const today = startOfToday();
+      
+      const updatedChecklist = checklist.map(item => {
+        const dueDate = new Date(item.dueDate + 'T00:00:00');
+        if (dueDate.getFullYear().toString() === year && dueDate <= today) {
+          return { ...item, completed: true };
+        }
+        return item;
+      });
+      setChecklist(updatedChecklist);
+
+      const updatedStatuses = updatedChecklist.reduce((acc, item) => {
+          acc[item.id] = item.completed;
+          return acc;
+      }, {} as Record<string, boolean>);
+      
+      updateCompanyChecklistStatus(activeCompany.id, updatedStatuses);
+      toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
+    };
+
     const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
         if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0 };
         
@@ -193,9 +216,10 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         }
     }, [checklist, activeCompany]);
     
-    const { checklistYears, overdueYears } = useMemo(() => {
+    const { checklistYears, overdueYears, yearCompletionStatus } = useMemo(() => {
         const years = new Set<string>();
         const overdue = new Set<string>();
+        const completionStatus: Record<string, boolean> = {};
         const today = startOfToday();
 
         checklist.forEach(item => {
@@ -207,9 +231,22 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
             }
         });
 
+        const sortedYears = Array.from(years).sort((a, b) => Number(b) - Number(a));
+
+        sortedYears.forEach(year => {
+            const itemsForYear = checklist.filter(item => new Date(item.dueDate).getFullYear().toString() === year);
+            const pastItems = itemsForYear.filter(item => new Date(item.dueDate) <= today);
+            if (pastItems.length > 0) {
+              completionStatus[year] = pastItems.every(item => item.completed);
+            } else {
+              completionStatus[year] = true; // No past items, so considered complete
+            }
+        });
+
         return {
-            checklistYears: Array.from(years).sort((a, b) => Number(b) - Number(a)),
-            overdueYears: overdue
+            checklistYears: sortedYears,
+            overdueYears: overdue,
+            yearCompletionStatus: completionStatus,
         };
     }, [checklist]);
 
@@ -330,16 +367,43 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                             <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
                         </div>
                         {checklistYears.length > 0 && (
-                            <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger className="w-full sm:w-[120px] mt-4 sm:mt-0">
-                                    <SelectValue placeholder="Select year"/>
-                                </SelectTrigger>
-                                <SelectContent>
+                             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="w-full sm:w-auto mt-4 sm:mt-0">
+                                        {overdueYears.has(selectedYear) && <AlertTriangle className="h-4 w-4 text-destructive mr-2"/>}
+                                        {selectedYear}
+                                        <ChevronDown className="ml-2 h-4 w-4"/>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                    <div className="space-y-1">
                                     {checklistYears.map(year => (
-                                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                                        <div key={year} className="flex items-center justify-between gap-4 p-2 rounded-md hover:bg-muted">
+                                            <button 
+                                                onClick={() => { setSelectedYear(year); setPopoverOpen(false); }}
+                                                className={cn("flex-1 text-left flex items-center gap-2", selectedYear === year && "font-bold text-primary")}
+                                            >
+                                                {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive"/>}
+                                                {year}
+                                            </button>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Checkbox 
+                                                            checked={yearCompletionStatus[year]}
+                                                            onCheckedChange={() => handleCompleteYear(year)}
+                                                        />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Complete all past tasks for {year}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
                                     ))}
-                                </SelectContent>
-                            </Select>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         )}
                     </CardHeader>
                     <CardContent className="space-y-3">
