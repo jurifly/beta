@@ -44,11 +44,20 @@ export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartP
   }, []);
 
   const years = React.useMemo(() => Object.keys(dataByYear).sort((a,b) => Number(b) - Number(a)), [dataByYear]);
-  const [selectedYear, setSelectedYear] = React.useState(years[0] || new Date().getFullYear().toString());
+  
+  const getDefaultYear = () => {
+    const currentYear = new Date().getFullYear().toString();
+    if (years.includes(currentYear)) {
+      return currentYear;
+    }
+    return years[0] || currentYear;
+  };
+
+  const [selectedYear, setSelectedYear] = React.useState(getDefaultYear());
   
   React.useEffect(() => {
     if (years.length > 0 && !years.includes(selectedYear)) {
-      setSelectedYear(years[0]);
+      setSelectedYear(getDefaultYear());
     }
   }, [years, selectedYear]);
 
