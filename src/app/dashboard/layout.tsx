@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -230,7 +231,7 @@ const navItemConfig: NavItemConfig = {
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
-  analytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
+  portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
   team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: true },
