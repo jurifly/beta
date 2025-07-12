@@ -133,6 +133,7 @@ export const translations: Translations = {
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA" },
     
     // Global UI
+    beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta" },
     more: { en: "More", hi: "अन्य", es: "Más", zh: "更多", fr: "Plus", de: "Mehr", pt: "Mais" },
     moreOptions: { en: "More Options", hi: "अन्य विकल्प", es: "Más Opciones", zh: "更多选项", fr: "Plus d'Options", de: "Weitere Optionen", pt: "Mais Opções" },
     notifications: { en: "Notifications", hi: "सूचनाएं", es: "Notificaciones", zh: "通知", fr: "Notifications", de: "Benachrichtigungen", pt: "Notificações" },
@@ -399,6 +400,15 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
                                 </Link>
                             </SheetTrigger>
                         )})}
+                         <div className="pt-4 mt-4 border-t">
+                            <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <div className="flex items-center gap-4">
+                                    <Settings className="h-5 w-5 text-muted-foreground" />
+                                    <span className="font-medium">{translations.settings[lang]}</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                         </div>
                     </nav>
                 </ScrollArea>
             </SheetContent>
@@ -521,15 +531,13 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <div className="flex-1">
                 <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     {isPro && <Flame className="h-6 w-6 text-accent" />}
                     <Logo />
                     <span>Claari</span>
                 </Link>
-                </div>
                 
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="hidden sm:inline-flex">
@@ -665,7 +673,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
               <Logo />
               <span className="flex items-center">
                 Claari
-                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">बीटा</Badge>
+                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">{translations.beta[lang]}</Badge>
               </span>
             </Link>
           </div>
@@ -723,3 +731,4 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
+
