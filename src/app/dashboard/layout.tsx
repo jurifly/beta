@@ -95,31 +95,32 @@ type NavItemConfig = {
     [key: string]: {
         href: string;
         label: string;
+        label_hi: string;
         icon: React.ElementType;
         locked?: boolean;
     }
 }
 
 const navItemConfig: NavItemConfig = {
-  dashboard: { href: "/dashboard", label: "डैशबोर्ड", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", label: "सलाहकार हब", icon: Users, locked: true },
-  aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI टूलकिट", icon: Sparkles },
-  launchPad: { href: "/dashboard/business-setup", label: "लॉन्च पैड", icon: Network },
-  playbook: { href: "/dashboard/learn", label: "प्लेबुक", icon: BookOpenCheck },
-  capTable: { href: "/dashboard/cap-table", label: "कैप टेबल", icon: PieChart },
-  financials: { href: "/dashboard/financials", label: "वित्तीय", icon: Receipt },
-  documents: { href: "/dashboard/documents", label: "दस्तावेज़ वॉल्ट", icon: Archive },
-  analytics: { href: "/dashboard/analytics", label: "पोर्टफोलियो एनालिटिक्स", icon: LineChart },
-  community: { href: "/dashboard/community", label: "समुदाय", icon: MessageSquare, locked: true },
-  clients: { href: "/dashboard/clients", label: "क्लाइंट", icon: FolderKanban },
-  team: { href: "/dashboard/team", label: "टीम", icon: Users, locked: true },
-  clauseLibrary: { href: "/dashboard/clause-library", label: "क्लॉज लाइब्रेरी", icon: Library },
-  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "वर्कफ़्लो", icon: Workflow, locked: true },
-  invitations: { href: "/dashboard/invitations", label: "आमंत्रण", icon: Mail, locked: true },
-  reportCenter: { href: "/dashboard/report-center", label: "रिपोर्ट केंद्र", icon: FileText, locked: true },
-  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "समाधान", icon: Scale, locked: true },
-  settings: { href: "/dashboard/settings", label: "सेटिंग्स", icon: Settings },
-  help: { href: "/dashboard/help", label: "मदद और FAQ", icon: LifeBuoy },
+  dashboard: { href: "/dashboard", label: "Dashboard", label_hi: "डैशबोर्ड", icon: LayoutDashboard },
+  caConnect: { href: "/dashboard/ca-connect", label: "Advisor Hub", label_hi: "सलाहकार हब", icon: Users, locked: true },
+  aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", label_hi: "AI टूलकिट", icon: Sparkles },
+  launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", label_hi: "लॉन्च पैड", icon: Network },
+  playbook: { href: "/dashboard/learn", label: "Playbook", label_hi: "प्लेबुक", icon: BookOpenCheck },
+  capTable: { href: "/dashboard/cap-table", label: "Cap Table", label_hi: "कैप टेबल", icon: PieChart },
+  financials: { href: "/dashboard/financials", label: "Financials", label_hi: "वित्तीय", icon: Receipt },
+  documents: { href: "/dashboard/documents", label: "Doc Vault", label_hi: "दस्तावेज़ वॉल्ट", icon: Archive },
+  analytics: { href: "/dashboard/analytics", label: "Portfolio Analytics", label_hi: "पोर्टफोलियो एनालिटिक्स", icon: LineChart },
+  community: { href: "/dashboard/community", label: "Community", label_hi: "समुदाय", icon: MessageSquare, locked: true },
+  clients: { href: "/dashboard/clients", label: "Clients", label_hi: "क्लाइंट", icon: FolderKanban },
+  team: { href: "/dashboard/team", label: "Team", label_hi: "टीम", icon: Users, locked: true },
+  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", label_hi: "क्लॉज लाइब्रेरी", icon: Library },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", label_hi: "वर्कफ़्लो", icon: Workflow, locked: true },
+  invitations: { href: "/dashboard/invitations", label: "Invitations", label_hi: "आमंत्रण", icon: Mail, locked: true },
+  reportCenter: { href: "/dashboard/report-center", label: "Report Center", label_hi: "रिपोर्ट केंद्र", icon: FileText, locked: true },
+  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", label_hi: "समाधान", icon: Scale, locked: true },
+  settings: { href: "/dashboard/settings", label: "Settings", label_hi: "सेटिंग्स", icon: Settings },
+  help: { href: "/dashboard/help", label: "Help & FAQ", label_hi: "मदद और FAQ", icon: LifeBuoy },
 } as const;
 
 
@@ -134,24 +135,24 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.analytics, label: "एनालिटिक्स" },
+  { ...navItemConfig.analytics, label: "Analytics", label_hi: "एनालिटिक्स" },
   { ...navItemConfig.playbook },
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.community },
-  { ...navItemConfig.team, label: "टीम प्रबंधन", locked: true },
+  { ...navItemConfig.team, label: "Team Management", label_hi: "टीम प्रबंधन", locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.dashboard },
-  { ...navItemConfig.clients, label: "क्लाइंट प्रबंधन", icon: Briefcase },
-  { ...navItemConfig.team, label: "टीम प्रबंधन", locked: true },
-  { ...navItemConfig.aiToolkit, label: "AI प्रैक्टिस सुइट" },
+  { ...navItemConfig.clients, label: "Client Management", label_hi: "क्लाइंट प्रबंधन", icon: Briefcase },
+  { ...navItemConfig.team, label: "Team Management", label_hi: "टीम प्रबंधन", locked: true },
+  { ...navItemConfig.aiToolkit, label: "AI Practice Suite", label_hi: "AI प्रैक्टिस सुइट" },
   { ...navItemConfig.analytics },
-  { ...navItemConfig.caConnect, label: 'सलाहकार हब', icon: Users },
+  { ...navItemConfig.caConnect, label: 'Advisor Hub', label_hi: 'सलाहकार हब', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.workflows, label: "वर्कफ़्लो", locked: true },
+  { ...navItemConfig.workflows, label: "Workflows", label_hi: "वर्कफ़्लो", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.clauseLibrary, locked: true },
@@ -161,7 +162,7 @@ const caNavItems: ThemedNavItem[] = [
 const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
-  { ...navItemConfig.aiToolkit, label: "AI काउंसिल टूल्स" },
+  { ...navItemConfig.aiToolkit, label: "AI Counsel Tools", label_hi: "AI काउंसिल टूल्स" },
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
   navItemConfig.playbook,
@@ -169,7 +170,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.team, label: "टीम प्रबंधन", locked: false }, // Unlocked for Enterprise
+  { ...navItemConfig.team, label: "Team Management", label_hi: "टीम प्रबंधन", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.caConnect,
   navItemConfig.analytics,
@@ -220,14 +221,14 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label: "AI सुइट" },
+        { ...navItemConfig.aiToolkit, label: "AI Suite", label_hi: "AI सुइट" },
         navItemConfig.caConnect,
       ];
     case 'Legal Advisor':
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label: "AI टूल्स" },
+        { ...navItemConfig.aiToolkit, label: "AI Tools", label_hi: "AI टूल्स" },
         navItemConfig.clauseLibrary,
       ];
     case 'Enterprise':
@@ -248,7 +249,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
   }
 };
 
-const MoreMenuSheet = () => {
+const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en' | 'hi') => void }) => {
     const { userProfile } = useAuth();
     if (!userProfile) return null;
 
@@ -265,7 +266,7 @@ const MoreMenuSheet = () => {
     
     // Custom logic to add analytics for founder
     if (userProfile.role === 'Founder' && !menuItems.some(i => i.href === '/dashboard/analytics')) {
-        menuItems.push({ ...navItemConfig.analytics, label: 'Analytics' });
+        menuItems.push({ ...navItemConfig.analytics, label: 'Analytics', label_hi: 'एनालिटिक्स' });
     }
      // Custom logic to add docs for CA
     if (userProfile.role === 'CA' && !menuItems.some(i => i.href === '/dashboard/documents')) {
@@ -277,12 +278,12 @@ const MoreMenuSheet = () => {
             <SheetTrigger asChild>
                 <button className="inline-flex flex-col items-center justify-center px-1 text-center text-muted-foreground group">
                     <MoreHorizontal className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                    <span className="text-[10px] font-medium">More</span>
+                    <span className="text-[10px] font-medium">{lang === 'hi' ? 'अन्य' : 'More'}</span>
                 </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-3/4 rounded-t-lg">
                 <SheetHeader>
-                    <SheetTitle>अन्य विकल्प</SheetTitle>
+                    <SheetTitle>{lang === 'hi' ? 'अन्य विकल्प' : 'More Options'}</SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100%-4rem)]">
                     <nav className="flex flex-col gap-1 p-4">
@@ -294,7 +295,7 @@ const MoreMenuSheet = () => {
                                 >
                                     <div className="flex items-center gap-4">
                                         <item.icon className="h-5 w-5 text-muted-foreground" />
-                                        <span className="font-medium">{item.label}</span>
+                                        <span className="font-medium">{lang === 'hi' ? item.label_hi : item.label}</span>
                                         {item.locked && (
                                             <Lock className="ml-2 h-3.5 w-3.5 text-muted-foreground/70" />
                                         )}
@@ -307,7 +308,7 @@ const MoreMenuSheet = () => {
                             <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted mt-4 border-t">
                                 <div className="flex items-center gap-4">
                                     <Settings className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">सेटिंग्स</span>
+                                    <span className="font-medium">{lang === 'hi' ? 'सेटिंग्स' : 'Settings'}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -316,7 +317,7 @@ const MoreMenuSheet = () => {
                             <Link href="/dashboard/help" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
                                 <div className="flex items-center gap-4">
                                     <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">मदद और FAQ</span>
+                                    <span className="font-medium">{lang === 'hi' ? 'मदद और FAQ' : 'Help & FAQ'}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -329,7 +330,7 @@ const MoreMenuSheet = () => {
 };
 
 
-const BottomNavBar = () => {
+const BottomNavBar = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en' | 'hi') => void }) => {
     const pathname = usePathname();
     const { userProfile } = useAuth();
     if (!userProfile) return null;
@@ -353,11 +354,11 @@ const BottomNavBar = () => {
                             )}
                         >
                             <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                            <span className="text-[10px] font-medium">{item.label}</span>
+                            <span className="text-[10px] font-medium">{lang === 'hi' ? item.label_hi : item.label}</span>
                         </Link>
                     )
                 })}
-                <MoreMenuSheet />
+                <MoreMenuSheet lang={lang} setLang={setLang} />
             </div>
         </div>
     );
@@ -368,6 +369,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
+  const [language, setLanguage] = useState<'en' | 'hi'>('hi');
   const pathname = usePathname();
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -409,7 +411,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             notification={selectedNotification}
         />
         <div className="flex h-screen w-full">
-            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} />
+            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <Sheet>
@@ -459,7 +461,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                                     )}
                                 >
                                     <item.icon className="h-4 w-4" />
-                                    {item.label}
+                                    {language === 'hi' ? item.label_hi : item.label}
                                     {isLocked && <Lock className="ml-auto h-4 w-4 opacity-50" />}
                                 </Link>
                                 )
@@ -483,12 +485,12 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="hidden sm:inline-flex">
                             <Globe className="mr-2 h-4 w-4" />
-                            हिंदी
+                            {language === 'hi' ? 'हिंदी' : 'English'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuRadioGroup value="hi">
+                        <DropdownMenuRadioGroup value={language} onValueChange={(value) => setLanguage(value as 'en' | 'hi')}>
                             <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
                             <DropdownMenuRadioItem value="hi">हिंदी</DropdownMenuRadioItem>
                         </DropdownMenuRadioGroup>
@@ -496,7 +498,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
                 <Link href="/dashboard/settings?tab=subscription" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{isDevMode ? 'असीमित क्रेडिट' : `${totalCreditsRemaining} क्रेडिट शेष`}</span>
+                    <span className="text-muted-foreground">{isDevMode ? (language === 'hi' ? 'असीमित क्रेडिट' : 'Unlimited Credits') : `${totalCreditsRemaining} ${language === 'hi' ? 'क्रेडिट शेष' : 'credits left'}`}</span>
                 </Link>
                 <ThemeToggle />
                 <DropdownMenu>
@@ -514,10 +516,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[90vw] max-w-sm md:w-[380px] p-0">
                         <DropdownMenuLabel className="flex items-center justify-between p-3 border-b">
-                            <span className="font-semibold">सूचनाएं</span>
+                            <span className="font-semibold">{language === 'hi' ? 'सूचनाएं' : 'Notifications'}</span>
                             {unreadCount > 0 && (
                             <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={markAllNotificationsAsRead}>
-                                सभी को पढ़ा हुआ चिह्नित करें
+                                {language === 'hi' ? 'सभी को पढ़ा हुआ चिह्नित करें' : 'Mark all as read'}
                             </Button>
                             )}
                         </DropdownMenuLabel>
@@ -541,7 +543,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             ))
                             ) : (
                             <div className="text-center text-sm text-muted-foreground py-10">
-                                आप पूरी तरह से अपडेट हैं!
+                                {language === 'hi' ? 'आप पूरी तरह से अपडेट हैं!' : 'You\'re all caught up!'}
                             </div>
                             )}
                         </ScrollArea>
@@ -556,7 +558,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <BetaBanner />
                 {children}
             </main>
-            <BottomNavBar />
+            <BottomNavBar lang={language} setLang={setLanguage}/>
             </div>
         </div>
     </>
@@ -591,7 +593,7 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
-const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void }) => {
+const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: 'en' | 'hi' }) => {
     const pathname = usePathname();
     const { isDevMode } = useAuth();
     const isPro = planHierarchy[userProfile.plan] > 0;
@@ -636,7 +638,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                       )}
                     >
                       <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                      {item.label}
+                      {lang === 'hi' ? item.label_hi : item.label}
                       {isLocked && (
                         <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                       )}
@@ -650,7 +652,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <Settings className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">सेटिंग्स</p>
+                       <p className="font-semibold">{lang === 'hi' ? 'सेटिंग्स' : 'Settings'}</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
@@ -659,7 +661,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <LifeBuoy className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">मदद और FAQ</p>
+                       <p className="font-semibold">{lang === 'hi' ? 'मदद और FAQ' : 'Help & FAQ'}</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
@@ -669,3 +671,4 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
       </div>
     );
 };
+

@@ -32,17 +32,17 @@ import { auth } from "@/lib/firebase/config";
 
 // --- Policies Tab Content ---
 const policies = {
-    "terms": { title: "सेवा की शर्तें", lastUpdated: "अक्टूबर 26, 2023", content: `<p>Claari में आपका स्वागत है। ये नियम और शर्तें हमारी वेबसाइट और सेवाओं के उपयोग के लिए नियमों और विनियमों की रूपरेखा तैयार करती हैं।</p><h3 class="font-semibold mt-4 mb-2">1. शर्तों की स्वीकृति</h3><p>इस प्लेटफ़ॉर्म तक पहुंच कर, आप इन नियमों और शर्तों को स्वीकार करते हैं। यदि आप इस पृष्ठ पर बताए गए सभी नियमों और शर्तों से सहमत नहीं हैं तो Claari का उपयोग जारी न रखें।</p><h3 class="font-semibold mt-4 mb-2">2. उपयोगकर्ता की जिम्मेदारियां</h3><p>आप यह सुनिश्चित करने के लिए जिम्मेदार हैं कि आपके द्वारा प्रदान की गई सभी जानकारी सटीक है और प्लेटफ़ॉर्म का आपका उपयोग वैध है। आपको हमारे प्लेटफ़ॉर्म का उपयोग किसी भी अवैध या अनधिकृत उद्देश्य के लिए नहीं करना चाहिए।</p><h3 class="font-semibold mt-4 mb-2">3. बौद्धिक संपदा</h3><p>सेवा और इसकी मूल सामग्री, सुविधाएँ और कार्यक्षमता Claari और इसके लाइसेंसदाताओं की अनन्य संपत्ति हैं और रहेंगी। हमारे ट्रेडमार्क का उपयोग Claari की पूर्व लिखित सहमति के बिना किसी भी उत्पाद या सेवा के संबंध में नहीं किया जा सकता है।</p><h3 class="font-semibold mt-4 mb-2">4. दायित्व की सीमा</h3><p>किसी भी स्थिति में Claari, न ही इसके निदेशक, कर्मचारी, भागीदार, एजेंट, आपूर्तिकर्ता, या सहयोगी, किसी भी अप्रत्यक्ष, आकस्मिक, विशेष, परिणामी या दंडात्मक क्षति के लिए उत्तरदायी नहीं होंगे, जिसमें लाभ, डेटा, उपयोग, सद्भावना की हानि शामिल है, लेकिन इन्हीं तक सीमित नहीं है, जो आपकी सेवा तक पहुंच या उपयोग या उपयोग करने में असमर्थता के परिणामस्वरूप होती है।</p><h3 class="font-semibold mt-4 mb-2">5. शासी कानून</h3><p>ये शर्तें भारत के कानूनों के अनुसार शासित और मानी जाएंगी, इसके कानून के प्रावधानों के टकराव की परवाह किए बिना।</p>` },
-    "privacy": { title: "गोपनीयता नीति", lastUpdated: "अक्टूबर 26, 2023", content: `<p>आपकी गोपनीयता हमारे लिए महत्वपूर्ण है। यह Claari की नीति है कि हम अपनी वेबसाइट पर आपसे एकत्र की जाने वाली किसी भी जानकारी के संबंध में आपकी गोपनीयता का सम्मान करें।</p><h3 class="font-semibold mt-4 mb-2">1. हम जो जानकारी एकत्र करते हैं</h3><p>जब हमें आपको कोई सेवा प्रदान करने के लिए वास्तव में इसकी आवश्यकता होती है तो हम केवल व्यक्तिगत जानकारी मांगते हैं। हम इसे आपके ज्ञान और सहमति से, उचित और वैध तरीकों से एकत्र करते हैं। हम आपका नाम, ईमेल पता, कंपनी विवरण और उपयोग डेटा जैसी जानकारी एकत्र कर सकते हैं।</p><h3 class="font-semibold mt-4 mb-2">2. हम आपके डेटा का उपयोग कैसे करते हैं</h3><p>हम एकत्रित डेटा का उपयोग हमारी सेवा प्रदान करने और बनाए रखने के लिए, आपको हमारी सेवा में बदलाव के बारे में सूचित करने के लिए, जब आप ऐसा करना चुनते हैं तो आपको हमारी सेवा की इंटरैक्टिव सुविधाओं में भाग लेने की अनुमति देने के लिए और ग्राहक सहायता प्रदान करने के लिए करते हैं।</p><h3 class="font-semibold mt-4 mb-2">3. डेटा सुरक्षा</h3><p>हम आपके डेटा की सुरक्षा को गंभीरता से लेते हैं और इसे अनधिकृत या गैरकानूनी प्रसंस्करण और आकस्मिक हानि, विनाश या क्षति से बचाने के लिए उपयुक्त तकनीकी और संगठनात्मक उपायों का उपयोग करते हैं।</p><h3 class="font-semibold mt-4 mb-2">4. उपयोगकर्ता अधिकार</h3><p>आपको हमारे पास मौजूद जानकारी तक पहुंचने, उसे अपडेट करने या हटाने का अधिकार है। जब भी संभव हो, आप सीधे अपनी खाता सेटिंग अनुभाग के भीतर अपने व्यक्तिगत डेटा तक पहुंच सकते हैं, उसे अपडेट कर सकते हैं या हटाने का अनुरोध कर सकते हैं।</p>` },
-    "disclaimer": { title: "AI अस्वीकरण", lastUpdated: "अक्टूबर 26, 2023", content: `<p>Claari प्लेटफ़ॉर्म पर आर्टिफिशियल इंटेलिजेंस (AI) द्वारा उत्पन्न सुविधाएँ और जानकारी केवल सूचना के उद्देश्यों के लिए प्रदान की जाती हैं।</p><h3 class="font-semibold mt-4 mb-2">1. पेशेवर सलाह नहीं</h3><p>हमारे AI द्वारा उत्पन्न सामग्री पेशेवर कानूनी, वित्तीय या कर सलाह का विकल्प नहीं है। कानूनी या वित्तीय मामले के संबंध में आपके किसी भी प्रश्न के लिए हमेशा एक योग्य पेशेवर की सलाह लें।</p><h3 class="font-semibold mt-4 mb-2">2. कोई गारंटी नहीं</h3><p>हालांकि हम सटीक और अद्यतित जानकारी प्रदान करने का प्रयास करते हैं, हम AI-जनित सामग्री के संबंध में पूर्णता, सटीकता, विश्वसनीयता, उपयुक्तता या उपलब्धता के बारे में किसी भी प्रकार का कोई प्रतिनिधित्व या वारंटी नहीं देते हैं। ऐसी जानकारी पर आप जो भी भरोसा करते हैं, वह पूरी तरह से आपके अपने जोखिम पर है।</p><h3 class="font-semibold mt-4 mb-2">3. दायित्व की सीमा</h3><p>Claari AI द्वारा प्रदान की गई सामग्री में किसी भी त्रुटि या चूक के लिए और उस सामग्री पर भरोसा करके की गई किसी भी कार्रवाई के लिए सभी दायित्व को अस्वीकार करता है।</p>` }
+    "terms": { title: "Terms of Service", lastUpdated: "October 26, 2023", content: `<p>Welcome to Claari. These terms and conditions outline the rules and regulations for the use of our website and services.</p><h3 class="font-semibold mt-4 mb-2">1. Acceptance of Terms</h3><p>By accessing this platform, you accept these terms and conditions. Do not continue to use Claari if you do not agree to all of the terms and conditions stated on this page.</p><h3 class="font-semibold mt-4 mb-2">2. User Responsibilities</h3><p>You are responsible for ensuring that all information you provide is accurate and that your use of the platform is lawful. You must not use our platform for any illegal or unauthorized purpose.</p><h3 class="font-semibold mt-4 mb-2">3. Intellectual Property</h3><p>The Service and its original content, features, and functionality are and will remain the exclusive property of Claari and its licensors. Our trademarks may not be used in connection with any product or service without the prior written consent of Claari.</p><h3 class="font-semibold mt-4 mb-2">4. Limitation of Liability</h3><p>In no event shall Claari, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, resulting from your access to or use of or inability to use the Service.</p><h3 class="font-semibold mt-4 mb-2">5. Governing Law</h3><p>These Terms shall be governed and construed in accordance with the laws of India, without regard to its conflict of law provisions.</p>` },
+    "privacy": { title: "Privacy Policy", lastUpdated: "October 26, 2023", content: `<p>Your privacy is important to us. It is Claari's policy to respect your privacy regarding any information we may collect from you across our website.</p><h3 class="font-semibold mt-4 mb-2">1. Information We Collect</h3><p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent. We may collect information such as your name, email address, company details, and usage data.</p><h3 class="font-semibold mt-4 mb-2">2. How We Use Your Data</h3><p>We use the collected data to provide and maintain our Service, to notify you about changes to our Service, to allow you to participate in interactive features of our Service when you choose to do so, and to provide customer support.</p><h3 class="font-semibold mt-4 mb-2">3. Data Security</h3><p>We take the security of your data seriously and use appropriate technical and organizational measures to protect it against unauthorized or unlawful processing and against accidental loss, destruction, or damage.</p><h3 class="font-semibold mt-4 mb-2">4. User Rights</h3><p>You have the right to access, update or to delete the information we have on you. Whenever made possible, you can access, update or request deletion of your Personal Data directly within your account settings section.</p>` },
+    "disclaimer": { title: "AI Disclaimer", lastUpdated: "October 26, 2023", content: `<p>The features and information generated by Artificial Intelligence (AI) on the Claari platform are provided for informational purposes only.</p><h3 class="font-semibold mt-4 mb-2">1. Not Professional Advice</h3><p>The content generated by our AI is not a substitute for professional legal, financial, or tax advice. Always seek the advice of a qualified professional with any questions you may have regarding a legal or financial matter.</p><h3 class="font-semibold mt-4 mb-2">2. No Guarantees</h3><p>While we strive to provide accurate and up-to-date information, we make no representation or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the AI-generated content. Any reliance you place on such information is therefore strictly at your own risk.</p><h3 class="font-semibold mt-4 mb-2">3. Limitation of Liability</h3><p>Claari disclaims all liability for any errors or omissions in the content provided by the AI and for any actions taken in reliance on that content.</p>` }
 };
 const PoliciesTab = () => (
   <Card className="interactive-lift">
-    <CardHeader><CardTitle>कानूनी और नीतियां</CardTitle><CardDescription>हमारी शर्तें, गोपनीयता नीति और अन्य कानूनी दस्तावेज।</CardDescription></CardHeader>
+    <CardHeader><CardTitle>Legal & Policies</CardTitle><CardDescription>Our terms, privacy policy, and other legal documents.</CardDescription></CardHeader>
     <CardContent>
       <Accordion type="single" collapsible className="w-full">
         {Object.entries(policies).map(([key, policy]) => (
-          <AccordionItem value={key} key={key}><AccordionTrigger className="text-left hover:no-underline">{policy.title}</AccordionTrigger><AccordionContent className="prose dark:prose-invert max-w-none border-t pt-4"><p className="text-sm text-muted-foreground">अंतिम अपडेट: {policy.lastUpdated}</p><div dangerouslySetInnerHTML={{ __html: policy.content }} /></AccordionContent></AccordionItem>
+          <AccordionItem value={key} key={key}><AccordionTrigger className="text-left hover:no-underline">{policy.title}</AccordionTrigger><AccordionContent className="prose dark:prose-invert max-w-none border-t pt-4"><p className="text-sm text-muted-foreground">Last updated: {policy.lastUpdated}</p><div dangerouslySetInnerHTML={{ __html: policy.content }} /></AccordionContent></AccordionItem>
         ))}
       </Accordion>
     </CardContent>
@@ -75,27 +75,27 @@ const SecurityTab = () => {
 
     return (
         <Card className="interactive-lift">
-            <CardHeader><CardTitle>सुरक्षा</CardTitle><CardDescription>अपनी कार्यक्षेत्र सुरक्षा सेटिंग्स प्रबंधित करें।</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Security</CardTitle><CardDescription>Manage your workspace security settings.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
               <Card>
-                  <CardHeader><CardTitle className="text-base">पासवर्ड बदलें</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base">Change Password</CardTitle></CardHeader>
                   <CardContent>
                     {isEmailProvider ? (
-                      <p className="text-sm text-muted-foreground mb-4">अपने ईमेल पते पर पासवर्ड रीसेट लिंक भेजने के लिए नीचे दिए गए बटन पर क्लिक करें।</p>
+                      <p className="text-sm text-muted-foreground mb-4">Click the button below to send a password reset link to your email address.</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground">आपने एक सामाजिक प्रदाता (जैसे, Google) के साथ साइन इन किया है। आप उनके माध्यम से अपना पासवर्ड बदल सकते हैं।</p>
+                      <p className="text-sm text-muted-foreground">You signed in with a social provider (e.g., Google). You can change your password through them.</p>
                     )}
                   </CardContent>
                   {isEmailProvider && (
                     <CardFooter>
                       <Button onClick={handlePasswordReset} disabled={isSending}>
                           {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                          रीसेट लिंक भेजें
+                          Send Reset Link
                       </Button>
                     </CardFooter>
                   )}
               </Card>
-              <Card><CardHeader><CardTitle className="text-base flex items-center justify-between">एकल साइन-ऑन (SSO)<Lock className="w-4 h-4 text-muted-foreground"/></CardTitle><CardDescription>अपनी टीम को अपने कॉर्पोरेट पहचान प्रदाता के साथ साइन इन करने की अनुमति दें।</CardDescription></CardHeader><CardFooter className="border-t pt-4"><p className="text-sm text-muted-foreground">SSO एक एंटरप्राइज सुविधा है। इसे सक्षम करने के लिए कृपया बिक्री से संपर्क करें।</p></CardFooter></Card>
+              <Card><CardHeader><CardTitle className="text-base flex items-center justify-between">Single Sign-On (SSO)<Lock className="w-4 h-4 text-muted-foreground"/></CardTitle><CardDescription>Allow your team to sign in with your corporate identity provider.</CardDescription></CardHeader><CardFooter className="border-t pt-4"><p className="text-sm text-muted-foreground">SSO is an Enterprise feature. Please contact sales to enable.</p></CardFooter></Card>
             </CardContent>
         </Card>
     );
@@ -139,18 +139,18 @@ export default function SettingsPage() {
       />
       <div className="space-y-6">
         <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
-            <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">सेटिंग्स</h2>
-            <p className="text-muted-foreground">अपनी व्यक्तिगत, बिलिंग और कंपनी की जानकारी प्रबंधित करें।</p>
+            <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Settings</h2>
+            <p className="text-muted-foreground">Manage your personal, billing, and company information.</p>
         </div>
         <Tabs defaultValue={tab} className="space-y-6">
           <ScrollArea className="w-full sm:w-auto -mx-4 px-4 sm:mx-0 sm:px-0" orientation="horizontal">
               <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
-                <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>प्रोफ़ाइल</TabsTrigger>
-                <TabsTrigger value="subscription"><CreditCard className="mr-2 h-4 w-4"/>सदस्यता</TabsTrigger>
-                <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4"/>सूचनाएं</TabsTrigger>
-                <TabsTrigger value="security"><Lock className="mr-2 h-4 w-4"/>सुरक्षा</TabsTrigger>
-                <TabsTrigger value="policies"><BookLock className="mr-2 h-4 w-4"/>नीतियां</TabsTrigger>
-                <TabsTrigger value="feedback"><MessageCircle className="mr-2 h-4 w-4"/>प्रतिक्रिया</TabsTrigger>
+                <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
+                <TabsTrigger value="subscription"><CreditCard className="mr-2 h-4 w-4"/>Subscription</TabsTrigger>
+                <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4"/>Notifications</TabsTrigger>
+                <TabsTrigger value="security"><Lock className="mr-2 h-4 w-4"/>Security</TabsTrigger>
+                <TabsTrigger value="policies"><BookLock className="mr-2 h-4 w-4"/>Policies</TabsTrigger>
+                <TabsTrigger value="feedback"><MessageCircle className="mr-2 h-4 w-4"/>Feedback</TabsTrigger>
               </TabsList>
           </ScrollArea>
           <TabsContent value="profile" className="space-y-6">
