@@ -33,6 +33,7 @@ export interface AuthContextType {
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   addFeedback: (category: string, message: string, sentiment?: 'positive' | 'negative') => Promise<void>;
+  sendCaInvite: (caEmail: string, companyId: string, companyName: string) => Promise<{ success: boolean; message: string }>;
   getPendingInvites: () => Promise<any[]>;
   acceptInvite: (inviteId: string) => Promise<void>;
 }
@@ -422,6 +423,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   };
+  
+  const sendCaInvite = async (caEmail: string, companyId: string, companyName: string): Promise<{ success: boolean; message: string }> => {
+    if (!user || !userProfile || userProfile.role !== 'Founder') {
+      return { success: false, message: 'Only founders can send invites.' };
+    }
+    const invitesRef = collection(db, 'invites');
+    const q = query(invitesRef, where('caEmail', '==', caEmail), where('founderId', '==', user.uid), where('status', '==', 'pending'));
+    const existingInvites = await getDocs(q);
+    if (!existingInvites.empty) {
+        return { success: false, message: 'You have already sent an invitation to this advisor.' };
+    }
+    
+    try {
+        await addDoc(invitesRef, {
+            caEmail,
+            founderId: user.uid,
+            founderName: userProfile.name,
+            companyId,
+            companyName,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+        });
+        await updateUserProfile({ invitedCaEmail: caEmail });
+        return { success: true, message: 'Invitation sent successfully!' };
+    } catch (error) {
+        console.error('Error sending invite:', error);
+        return { success: false, message: 'An error occurred while sending the invitation.' };
+    }
+  };
 
   const acceptInvite = async (inviteId: string) => {
     if (!user || userProfile?.role !== 'CA') throw new Error("Only CAs can accept invites.");
@@ -452,7 +482,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetchUserProfile(user); // Refresh CA's profile
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

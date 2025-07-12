@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, PlusCircle, Search, Loader2, Award, Star, ShieldCheck, FileText, BarChart, ArrowLeft } from "lucide-react";
+import { MessageSquare, PlusCircle, Search, Loader2, Award, Star, ShieldCheck, FileText, BarChart, ArrowLeft, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -107,13 +107,13 @@ export default function CaMarketplacePage() {
                         </div>
                     </CardContent>
                 </Card>
-                 <Card className="interactive-lift">
+                 <Card className="interactive-lift bg-primary/10 border-primary/20">
                     <CardHeader>
-                        <CardTitle>Can't Find an Expert?</CardTitle>
-                        <CardDescription>Post a job and let advisors come to you.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><Building2 className="text-primary"/> Are you an Advisor?</CardTitle>
+                        <CardDescription>Want to get listed on our marketplace and connect with high-growth startups?</CardDescription>
                     </CardHeader>
                     <CardContent>
-                       <Button variant="outline" className="w-full" disabled>Post a Job (Coming Soon)</Button>
+                       <Button variant="outline" className="w-full bg-background" disabled>Apply for Verification (Coming Soon)</Button>
                     </CardContent>
                 </Card>
             </div>

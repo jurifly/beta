@@ -16,6 +16,7 @@ import {
   Briefcase,
   Search,
   ArrowRight,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -28,6 +29,7 @@ import { ProvideDocumentModal } from '@/components/dashboard/provide-document-mo
 import type { Company, DocumentRequest } from '@/lib/types';
 import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { InviteAdvisorModal } from '@/components/dashboard/invite-advisor-modal';
 
 
 const statusConfig = {
@@ -82,7 +84,7 @@ const EmptyState = ({ onAddRequest }: { onAddRequest: () => void }) => {
   )
 }
 
-const AdvisorConnectCard = () => {
+const AdvisorConnectCard = ({ onInvite }: { onInvite: () => void }) => {
     const { userProfile } = useAuth();
 
     if (!userProfile || userProfile.role !== 'Founder') return null;
@@ -103,17 +105,31 @@ const AdvisorConnectCard = () => {
         );
     }
 
+    if (userProfile.invitedCaEmail) {
+      return (
+        <Card className="interactive-lift bg-amber-500/10 border-amber-500/20">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Clock className="text-amber-600" /> Invitation Sent</CardTitle>
+                <CardDescription>An invitation has been sent to <strong>{userProfile.invitedCaEmail}</strong>. It is pending their acceptance.</CardDescription>
+            </CardHeader>
+        </Card>
+      );
+    }
+
     return (
         <Card className="interactive-lift bg-muted/50">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Find a Professional</CardTitle>
-                <CardDescription>Need an expert? Browse our marketplace to find a verified CA or legal advisor.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Connect with an Advisor</CardTitle>
+                <CardDescription>Find a new expert from our marketplace or invite your existing professional to collaborate.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-wrap gap-4">
                 <Button asChild>
                     <Link href="/dashboard/ca-connect/marketplace">
-                       <Search className="mr-2"/> Find an Advisor <ArrowRight className="ml-2"/>
+                       <Search className="mr-2"/> Find an Advisor
                     </Link>
+                </Button>
+                <Button variant="secondary" onClick={onInvite}>
+                    <UserPlus className="mr-2"/> Invite My CA
                 </Button>
             </CardContent>
         </Card>
@@ -126,6 +142,7 @@ export default function CaConnectPage() {
   
   const [addRequestModalOpen, setAddRequestModalOpen] = useState(false);
   const [provideDocModalOpen, setProvideDocModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DocumentRequest | null>(null);
 
   const activeCompany = useMemo(() => {
@@ -199,6 +216,7 @@ export default function CaConnectPage() {
                 docRequest={selectedRequest}
             />
         )}
+        <InviteAdvisorModal isOpen={inviteModalOpen} onOpenChange={setInviteModalOpen} />
         <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -208,7 +226,7 @@ export default function CaConnectPage() {
             {!isFounder && <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>}
             </div>
 
-            <AdvisorConnectCard />
+            <AdvisorConnectCard onInvite={() => setInviteModalOpen(true)} />
             
             <Card className="interactive-lift">
                 <CardHeader>
