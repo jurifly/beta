@@ -1343,7 +1343,7 @@ const PenaltyPredictorTab = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!defaultDescription.trim() || !userProfile) return;
-        if (!await deductCredits(2)) return;
+        if (!await deductCredits(1)) return;
         setIsProcessing(true);
         setResult(null);
 
@@ -1393,7 +1393,7 @@ const PenaltyPredictorTab = () => {
                     <CardFooter>
                         <Button type="submit" className="w-full" disabled={isProcessing || !defaultDescription.trim()}>
                             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Predict Penalty (2 Credits)
+                            Predict Penalty (1 Credit)
                         </Button>
                     </CardFooter>
                 </Card>
@@ -1411,11 +1411,11 @@ const PenaltyPredictorTab = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="p-4 rounded-lg bg-muted/50 border text-center">
                                         <p className="text-sm text-muted-foreground">Estimated Penalty</p>
-                                        <p className="text-2xl font-bold">{result.penaltyAmount}</p>
+                                        <p className="text-xl font-bold">{result.penaltyAmount}</p>
                                     </div>
                                     <div className={cn("p-4 rounded-lg border text-center", getRiskColorClasses(result.riskLevel))}>
                                         <p className="text-sm font-medium">Risk Level</p>
-                                        <p className="text-2xl font-bold">{result.riskLevel}</p>
+                                        <p className="text-xl font-bold">{result.riskLevel}</p>
                                     </div>
                                 </div>
                                 <div>
