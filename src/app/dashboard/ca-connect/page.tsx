@@ -120,7 +120,7 @@ const FounderAdvisorHub = ({ onInvite }: { onInvite: () => void }) => {
                      <Search className="mr-2"/> Find an Advisor
                   </Link>
               </Button>
-              <Button variant="secondary" onClick={onInvite}>
+              <Button onClick={onInvite}>
                   <UserPlus className="mr-2"/> Invite My CA
               </Button>
               <Button variant="outline" asChild>
@@ -134,7 +134,7 @@ const FounderAdvisorHub = ({ onInvite }: { onInvite: () => void }) => {
 }
 
 const CATabsView = ({ onAddRequest, onProvideDoc, pendingRequests, overdueRequests, completedRequests }: any) => {
-    const { getPendingInvites, acceptInvite } = useAuth();
+    const { userProfile, getPendingInvites, acceptInvite } = useAuth();
     const [invites, setInvites] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [acceptingId, setAcceptingId] = useState<string | null>(null);
@@ -231,7 +231,6 @@ const CATabsView = ({ onAddRequest, onProvideDoc, pendingRequests, overdueReques
                             <Building className="w-16 h-16 text-primary/20"/>
                             <p className="font-semibold text-lg">Marketplace Coming Soon</p>
                             <p className="text-sm max-w-sm">Soon you'll be able to browse and connect with other CAs and Legal Experts.</p>
-                             <Button variant="outline" disabled>Get Listed on Marketplace</Button>
                         </CardContent>
                     </Card>
                      <Card className="interactive-lift bg-primary/10 border-primary/20 mt-6">
