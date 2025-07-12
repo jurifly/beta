@@ -574,7 +574,8 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="flex flex-col p-0">
-                         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                         <SheetHeader className="h-14 flex flex-row items-center border-b px-4 lg:h-[60px] lg:px-6">
+                            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
                             {isPro && <Flame className="h-6 w-6 text-accent" />}
                             <Logo />
@@ -583,7 +584,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">बीटा</Badge>
                             </span>
                             </Link>
-                        </div>
+                        </SheetHeader>
                         <ScrollArea className="flex-1">
                             <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
                             {navItems.map((item) => {
@@ -600,7 +601,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                                     onClick={(e) => {
                                         if (isLocked) {
                                             e.preventDefault();
-                                            onLockedFeatureClick(label);
+                                            setLockedFeature(label);
                                         }
                                     }}
                                     className={cn(
