@@ -506,18 +506,23 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-4" align="end">
                                         <div className="space-y-4">
-                                            <div className="space-y-2">
+                                            <div className="grid grid-cols-3 gap-2">
                                                 {checklistYears.map(year => (
-                                                    <div key={year} className="flex items-center gap-2">
-                                                        <Checkbox id={`complete-${year}`} onCheckedChange={() => handleCompleteYear(year)} />
+                                                    <div key={year} className="flex flex-col gap-2">
                                                         <Button 
                                                             variant={selectedYear === year ? "default" : "outline"}
                                                             onClick={() => setSelectedYear(year)}
-                                                            className="flex-1 justify-start gap-2"
+                                                            className="flex-1 justify-center gap-2 aspect-square p-2 h-auto"
                                                         >
-                                                            {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                                            {year}
+                                                            <div className="flex items-center gap-1">
+                                                              {overdueYears.has(year) && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                                                              {year}
+                                                            </div>
                                                         </Button>
+                                                        <div className="flex items-center justify-center space-x-2">
+                                                          <Checkbox id={`complete-${year}`} onCheckedChange={() => handleCompleteYear(year)} />
+                                                          <Label htmlFor={`complete-${year}`} className="text-xs">Complete</Label>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
