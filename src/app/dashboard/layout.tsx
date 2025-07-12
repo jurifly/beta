@@ -91,41 +91,90 @@ import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
 
+type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt';
+type Translations = Record<string, Record<Language, string>>;
+
+const languages: { code: Language; name: string }[] = [
+    { code: 'en', name: 'English' },
+    { code: 'hi', name: 'हिंदी' },
+    { code: 'es', name: 'Español' },
+    { code: 'zh', name: '简体中文' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'pt', name: 'Português' },
+];
+
+const translations: Translations = {
+    dashboard: { en: "Dashboard", hi: "डैशबोर्ड", es: "Panel", zh: "仪表板", fr: "Tableau de bord", de: "Dashboard", pt: "Painel" },
+    advisorHub: { en: "Advisor Hub", hi: "सलाहकार हब", es: "Centro de Asesores", zh: "顾问中心", fr: "Pôle Conseiller", de: "Berater-Hub", pt: "Hub de Consultores" },
+    aiToolkit: { en: "AI Toolkit", hi: "AI टूलकिट", es: "Herramientas de IA", zh: "AI工具箱", fr: "Outils d'IA", de: "KI-Werkzeugkasten", pt: "Kit de Ferramentas de IA" },
+    launchPad: { en: "Launch Pad", hi: "लॉन्च पैड", es: "Plataforma de Lanzamiento", zh: "启动台", fr: "Rampe de Lancement", de: "Startrampe", pt: "Plataforma de Lançamento" },
+    playbook: { en: "Playbook", hi: "प्लेबुक", es: "Manual de Estrategias", zh: "战术手册", fr: "Livre de Stratégies", de: "Playbook", pt: "Manual" },
+    capTable: { en: "Cap Table", hi: "कैप टेबल", es: "Tabla de Capitalización", zh: "股权结构表", fr: "Table de Capitalisation", de: "Kapitalisierungstabelle", pt: "Tabela de Capitalização" },
+    financials: { en: "Financials", hi: "वित्तीय", es: "Finanzas", zh: "财务", fr: "Finances", de: "Finanzen", pt: "Finanças" },
+    docVault: { en: "Doc Vault", hi: "दस्तावेज़ वॉल्ट", es: "Bóveda de Documentos", zh: "文档保险库", fr: "Coffre-fort de Documents", de: "Dokumententresor", pt: "Cofre de Documentos" },
+    portfolioAnalytics: { en: "Portfolio Analytics", hi: "पोर्टफोलियो एनालिटिक्स", es: "Análisis de Cartera", zh: "投资组合分析", fr: "Analyse de Portefeuille", de: "Portfolio-Analyse", pt: "Análise de Portfólio" },
+    community: { en: "Community", hi: "समुदाय", es: "Comunidad", zh: "社区", fr: "Communauté", de: "Gemeinschaft", pt: "Comunidade" },
+    clients: { en: "Clients", hi: "क्लाइंट", es: "Clientes", zh: "客户", fr: "Clients", de: "Kunden", pt: "Clientes" },
+    team: { en: "Team", hi: "टीम", es: "Equipo", zh: "团队", fr: "Équipe", de: "Team", pt: "Equipe" },
+    clauseLibrary: { en: "Clause Library", hi: "क्लॉज लाइब्रेरी", es: "Biblioteca de Cláusulas", zh: "条款库", fr: "Bibliothèque de Clauses", de: "Klauselbibliothek", pt: "Biblioteca de Cláusulas" },
+    workflows: { en: "Workflows", hi: "वर्कफ़्लो", es: "Flujos de Trabajo", zh: "工作流", fr: "Flux de Travail", de: "Arbeitsabläufe", pt: "Fluxos de Trabalho" },
+    invitations: { en: "Invitations", hi: "आमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites" },
+    reportCenter: { en: "Report Center", hi: "रिपोर्ट केंद्र", es: "Centro de Informes", zh: "报告中心", fr: "Centre de Rapports", de: "Berichtszentrum", pt: "Central de Relatórios" },
+    reconciliation: { en: "Reconciliation", hi: "समाधान", es: "Conciliación", zh: "对账", fr: "Rapprochement", de: "Abstimmung", pt: "Conciliação" },
+    settings: { en: "Settings", hi: "सेटिंग्स", es: "Configuración", zh: "设置", fr: "Paramètres", de: "Einstellungen", pt: "Configurações" },
+    help: { en: "Help & FAQ", hi: "मदद और FAQ", es: "Ayuda y Preguntas", zh: "帮助与常见问题", fr: "Aide & FAQ", de: "Hilfe & FAQ", pt: "Ajuda & FAQ" },
+    analytics: { en: "Analytics", hi: "एनालिटिक्स", es: "Análisis", zh: "分析", fr: "Analytique", de: "Analytik", pt: "Análises" },
+    teamManagement: { en: "Team Management", hi: "टीम प्रबंधन", es: "Gestión de Equipo", zh: "团队管理", fr: "Gestion d'Équipe", de: "Team-Management", pt: "Gestão de Equipe" },
+    clientManagement: { en: "Client Management", hi: "क्लाइंट प्रबंधन", es: "Gestión de Clientes", zh: "客户管理", fr: "Gestion des Clients", de: "Kundenverwaltung", pt: "Gestão de Clientes" },
+    aiPracticeSuite: { en: "AI Practice Suite", hi: "AI प्रैक्टिस सुइट", es: "Suite de Práctica de IA", zh: "AI实践套件", fr: "Suite Pratique IA", de: "KI-Praxis-Suite", pt: "Suíte de Prática de IA" },
+    aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA" },
+    aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA" },
+    more: { en: "More", hi: "अन्य", es: "Más", zh: "更多", fr: "Plus", de: "Mehr", pt: "Mais" },
+    moreOptions: { en: "More Options", hi: "अन्य विकल्प", es: "Más Opciones", zh: "更多选项", fr: "Plus d'Options", de: "Weitere Optionen", pt: "Mais Opções" },
+    notifications: { en: "Notifications", hi: "सूचनाएं", es: "Notificaciones", zh: "通知", fr: "Notifications", de: "Benachrichtigungen", pt: "Notificações" },
+    markAllAsRead: { en: "Mark all as read", hi: "सभी को पढ़ा हुआ चिह्नित करें", es: "Marcar todo como leído", zh: "全部标记为已读", fr: "Tout marquer comme lu", de: "Alle als gelesen markieren", pt: "Marcar tudo como lido" },
+    youAreCaughtUp: { en: "You're all caught up!", hi: "आप पूरी तरह से अपडेट हैं!", es: "¡Estás al día!", zh: "您已处理所有通知！", fr: "Vous êtes à jour !", de: "Du bist auf dem Laufenden!", pt: "Você está em dia!" },
+    unlimitedCredits: { en: "Unlimited Credits", hi: "असीमित क्रेडिट", es: "Créditos Ilimitados", zh: "无限信用", fr: "Crédits Illimités", de: "Unbegrenzte Kredite", pt: "Créditos Ilimitados" },
+    creditsLeft: { en: "credits left", hi: "क्रेडिट शेष", es: "créditos restantes", zh: "剩余信用", fr: "crédits restants", de: "Kredite übrig", pt: "créditos restantes" },
+};
+
 type NavItemConfig = {
     [key: string]: {
         href: string;
-        label: string;
-        label_hi: string;
+        translationKey: keyof typeof translations;
         icon: React.ElementType;
         locked?: boolean;
+        label?: string; // For overrides
     }
 }
 
 const navItemConfig: NavItemConfig = {
-  dashboard: { href: "/dashboard", label: "Dashboard", label_hi: "डैशबोर्ड", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", label: "Advisor Hub", label_hi: "सलाहकार हब", icon: Users, locked: true },
-  aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", label_hi: "AI टूलकिट", icon: Sparkles },
-  launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", label_hi: "लॉन्च पैड", icon: Network },
-  playbook: { href: "/dashboard/learn", label: "Playbook", label_hi: "प्लेबुक", icon: BookOpenCheck },
-  capTable: { href: "/dashboard/cap-table", label: "Cap Table", label_hi: "कैप टेबल", icon: PieChart },
-  financials: { href: "/dashboard/financials", label: "Financials", label_hi: "वित्तीय", icon: Receipt },
-  documents: { href: "/dashboard/documents", label: "Doc Vault", label_hi: "दस्तावेज़ वॉल्ट", icon: Archive },
-  analytics: { href: "/dashboard/analytics", label: "Portfolio Analytics", label_hi: "पोर्टफोलियो एनालिटिक्स", icon: LineChart },
-  community: { href: "/dashboard/community", label: "Community", label_hi: "समुदाय", icon: MessageSquare, locked: true },
-  clients: { href: "/dashboard/clients", label: "Clients", label_hi: "क्लाइंट", icon: FolderKanban },
-  team: { href: "/dashboard/team", label: "Team", label_hi: "टीम", icon: Users, locked: true },
-  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", label_hi: "क्लॉज लाइब्रेरी", icon: Library },
-  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", label_hi: "वर्कफ़्लो", icon: Workflow, locked: true },
-  invitations: { href: "/dashboard/invitations", label: "Invitations", label_hi: "आमंत्रण", icon: Mail, locked: true },
-  reportCenter: { href: "/dashboard/report-center", label: "Report Center", label_hi: "रिपोर्ट केंद्र", icon: FileText, locked: true },
-  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", label_hi: "समाधान", icon: Scale, locked: true },
-  settings: { href: "/dashboard/settings", label: "Settings", label_hi: "सेटिंग्स", icon: Settings },
-  help: { href: "/dashboard/help", label: "Help & FAQ", label_hi: "मदद और FAQ", icon: LifeBuoy },
+  dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
+  caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users, locked: true },
+  aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
+  launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
+  playbook: { href: "/dashboard/learn", translationKey: "playbook", icon: BookOpenCheck },
+  capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
+  financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
+  documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
+  analytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
+  community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
+  clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
+  team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: true },
+  clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: true },
+  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail, locked: true },
+  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: true },
+  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
+  settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
+  help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
 } as const;
 
 
 type ThemedNavItem = (typeof navItemConfig)[keyof typeof navItemConfig] & {
     color?: string;
+    label_override_key?: keyof typeof translations;
 }
 
 const founderNavItems: ThemedNavItem[] = [
@@ -135,24 +184,24 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.analytics, label: "Analytics", label_hi: "एनालिटिक्स" },
+  { ...navItemConfig.analytics, label_override_key: "analytics" },
   { ...navItemConfig.playbook },
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.community },
-  { ...navItemConfig.team, label: "Team Management", label_hi: "टीम प्रबंधन", locked: true },
+  { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.dashboard },
-  { ...navItemConfig.clients, label: "Client Management", label_hi: "क्लाइंट प्रबंधन", icon: Briefcase },
-  { ...navItemConfig.team, label: "Team Management", label_hi: "टीम प्रबंधन", locked: true },
-  { ...navItemConfig.aiToolkit, label: "AI Practice Suite", label_hi: "AI प्रैक्टिस सुइट" },
+  { ...navItemConfig.clients, label_override_key: "clientManagement", icon: Briefcase },
+  { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
+  { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.analytics },
-  { ...navItemConfig.caConnect, label: 'Advisor Hub', label_hi: 'सलाहकार हब', icon: Users },
+  { ...navItemConfig.caConnect, label_override_key: 'advisorHub', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.workflows, label: "Workflows", label_hi: "वर्कफ़्लो", locked: true },
+  { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.clauseLibrary, locked: true },
@@ -162,7 +211,7 @@ const caNavItems: ThemedNavItem[] = [
 const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
-  { ...navItemConfig.aiToolkit, label: "AI Counsel Tools", label_hi: "AI काउंसिल टूल्स" },
+  { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
   navItemConfig.playbook,
@@ -170,7 +219,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.team, label: "Team Management", label_hi: "टीम प्रबंधन", locked: false }, // Unlocked for Enterprise
+  { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.caConnect,
   navItemConfig.analytics,
@@ -221,14 +270,14 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label: "AI Suite", label_hi: "AI सुइट" },
+        { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
         navItemConfig.caConnect,
       ];
     case 'Legal Advisor':
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label: "AI Tools", label_hi: "AI टूल्स" },
+        { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
         navItemConfig.clauseLibrary,
       ];
     case 'Enterprise':
@@ -249,7 +298,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
   }
 };
 
-const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en' | 'hi') => void }) => {
+const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
     const { userProfile } = useAuth();
     if (!userProfile) return null;
 
@@ -262,13 +311,11 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en'
         !bottomItemsHrefs.includes(item.href) &&
         item.href !== '/dashboard/settings' &&
         item.href !== '/dashboard/help'
-    );
+    ) as ThemedNavItem[];
     
-    // Custom logic to add analytics for founder
     if (userProfile.role === 'Founder' && !menuItems.some(i => i.href === '/dashboard/analytics')) {
-        menuItems.push({ ...navItemConfig.analytics, label: 'Analytics', label_hi: 'एनालिटिक्स' });
+        menuItems.push({ ...navItemConfig.analytics, label_override_key: 'analytics' });
     }
-     // Custom logic to add docs for CA
     if (userProfile.role === 'CA' && !menuItems.some(i => i.href === '/dashboard/documents')) {
         menuItems.push(navItemConfig.documents);
     }
@@ -278,24 +325,26 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en'
             <SheetTrigger asChild>
                 <button className="inline-flex flex-col items-center justify-center px-1 text-center text-muted-foreground group">
                     <MoreHorizontal className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                    <span className="text-[10px] font-medium">{lang === 'hi' ? 'अन्य' : 'More'}</span>
+                    <span className="text-[10px] font-medium">{translations['more'][lang]}</span>
                 </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-3/4 rounded-t-lg">
                 <SheetHeader>
-                    <SheetTitle>{lang === 'hi' ? 'अन्य विकल्प' : 'More Options'}</SheetTitle>
+                    <SheetTitle>{translations['moreOptions'][lang]}</SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100%-4rem)]">
                     <nav className="flex flex-col gap-1 p-4">
-                        {menuItems.map(item => (
-                             <SheetTrigger asChild key={item.label}>
+                        {menuItems.map(item => {
+                            const label = translations[item.label_override_key || item.translationKey][lang];
+                            return (
+                             <SheetTrigger asChild key={item.href}>
                                 <Link
                                     href={item.href}
                                     className="flex items-center justify-between p-3 rounded-lg hover:bg-muted"
                                 >
                                     <div className="flex items-center gap-4">
                                         <item.icon className="h-5 w-5 text-muted-foreground" />
-                                        <span className="font-medium">{lang === 'hi' ? item.label_hi : item.label}</span>
+                                        <span className="font-medium">{label}</span>
                                         {item.locked && (
                                             <Lock className="ml-2 h-3.5 w-3.5 text-muted-foreground/70" />
                                         )}
@@ -303,12 +352,12 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en'
                                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                 </Link>
                             </SheetTrigger>
-                        ))}
+                        )})}
                          <SheetTrigger asChild>
                             <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted mt-4 border-t">
                                 <div className="flex items-center gap-4">
                                     <Settings className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">{lang === 'hi' ? 'सेटिंग्स' : 'Settings'}</span>
+                                    <span className="font-medium">{translations['settings'][lang]}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -317,7 +366,7 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en'
                             <Link href="/dashboard/help" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
                                 <div className="flex items-center gap-4">
                                     <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">{lang === 'hi' ? 'मदद और FAQ' : 'Help & FAQ'}</span>
+                                    <span className="font-medium">{translations['help'][lang]}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -330,7 +379,7 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en'
 };
 
 
-const BottomNavBar = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en' | 'hi') => void }) => {
+const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
     const pathname = usePathname();
     const { userProfile } = useAuth();
     if (!userProfile) return null;
@@ -344,9 +393,11 @@ const BottomNavBar = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en' 
                     const isActive = (item.href === '/dashboard' && pathname === item.href) ||
                                      (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     
+                    const label = translations[item.label_override_key || item.translationKey][lang];
+
                     return (
                         <Link
-                            key={item.label}
+                            key={item.href}
                             href={item.href}
                             className={cn(
                                 "inline-flex flex-col items-center justify-center px-1 text-center group",
@@ -354,7 +405,7 @@ const BottomNavBar = ({ lang, setLang }: { lang: 'en' | 'hi', setLang: (l: 'en' 
                             )}
                         >
                             <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
-                            <span className="text-[10px] font-medium">{lang === 'hi' ? item.label_hi : item.label}</span>
+                            <span className="text-[10px] font-medium">{label}</span>
                         </Link>
                     )
                 })}
@@ -369,8 +420,29 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
-  const [language, setLanguage] = useState<'en' | 'hi'>('hi');
+  const [language, setLanguage] = useState<Language>('en');
   const pathname = usePathname();
+
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem('claari-lang') as Language;
+      if (savedLang && languages.some(l => l.code === savedLang)) {
+        setLanguage(savedLang);
+      }
+    } catch (error) {
+      console.error('Could not access localStorage for language settings.', error);
+    }
+  }, []);
+
+  const handleLanguageChange = (langCode: string) => {
+    const newLang = langCode as Language;
+    setLanguage(newLang);
+    try {
+      localStorage.setItem('claari-lang', newLang);
+    } catch (error) {
+      console.error('Could not access localStorage for language settings.', error);
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -443,15 +515,16 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                                 ? pathname === item.href 
                                 : pathname.startsWith(item.href);
                                 const isLocked = item.locked && !isPro && !isDevMode;
+                                const label = translations[item.label_override_key || item.translationKey][language];
 
                                 return (
                                 <Link
-                                    key={item.label}
+                                    key={item.href}
                                     href={item.href}
                                     onClick={(e) => {
                                         if (isLocked) {
                                             e.preventDefault();
-                                            onLockedFeatureClick(item.label);
+                                            onLockedFeatureClick(label);
                                         }
                                     }}
                                     className={cn(
@@ -461,7 +534,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                                     )}
                                 >
                                     <item.icon className="h-4 w-4" />
-                                    {language === 'hi' ? item.label_hi : item.label}
+                                    {label}
                                     {isLocked && <Lock className="ml-auto h-4 w-4 opacity-50" />}
                                 </Link>
                                 )
@@ -485,20 +558,21 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="hidden sm:inline-flex">
                             <Globe className="mr-2 h-4 w-4" />
-                            {language === 'hi' ? 'हिंदी' : 'English'}
+                            {languages.find(l => l.code === language)?.name || 'Language'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuRadioGroup value={language} onValueChange={(value) => setLanguage(value as 'en' | 'hi')}>
-                            <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="hi">हिंदी</DropdownMenuRadioItem>
+                        <DropdownMenuRadioGroup value={language} onValueChange={handleLanguageChange}>
+                            {languages.map(lang => (
+                                <DropdownMenuRadioItem key={lang.code} value={lang.code}>{lang.name}</DropdownMenuRadioItem>
+                            ))}
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <Link href="/dashboard/settings?tab=subscription" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{isDevMode ? (language === 'hi' ? 'असीमित क्रेडिट' : 'Unlimited Credits') : `${totalCreditsRemaining} ${language === 'hi' ? 'क्रेडिट शेष' : 'credits left'}`}</span>
+                    <span className="text-muted-foreground">{isDevMode ? translations.unlimitedCredits[language] : `${totalCreditsRemaining} ${translations.creditsLeft[language]}`}</span>
                 </Link>
                 <ThemeToggle />
                 <DropdownMenu>
@@ -516,10 +590,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[90vw] max-w-sm md:w-[380px] p-0">
                         <DropdownMenuLabel className="flex items-center justify-between p-3 border-b">
-                            <span className="font-semibold">{language === 'hi' ? 'सूचनाएं' : 'Notifications'}</span>
+                            <span className="font-semibold">{translations['notifications'][language]}</span>
                             {unreadCount > 0 && (
                             <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={markAllNotificationsAsRead}>
-                                {language === 'hi' ? 'सभी को पढ़ा हुआ चिह्नित करें' : 'Mark all as read'}
+                                {translations['markAllAsRead'][language]}
                             </Button>
                             )}
                         </DropdownMenuLabel>
@@ -543,7 +617,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             ))
                             ) : (
                             <div className="text-center text-sm text-muted-foreground py-10">
-                                {language === 'hi' ? 'आप पूरी तरह से अपडेट हैं!' : 'You\'re all caught up!'}
+                                {translations['youAreCaughtUp'][language]}
                             </div>
                             )}
                         </ScrollArea>
@@ -558,7 +632,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <BetaBanner />
                 {children}
             </main>
-            <BottomNavBar lang={language} setLang={setLanguage}/>
+            <BottomNavBar lang={language} setLang={handleLanguageChange}/>
             </div>
         </div>
     </>
@@ -593,15 +667,16 @@ export default function DashboardLayout({
   return <DashboardApp>{children}</DashboardApp>;
 }
 
-const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: 'en' | 'hi' }) => {
+const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: Language }) => {
     const pathname = usePathname();
     const { isDevMode } = useAuth();
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
+        const label = translations[item.label_override_key || item.translationKey][lang];
         if (item.locked && !isPro && !isDevMode) {
             e.preventDefault();
-            onLockedFeatureClick(item.label);
+            onLockedFeatureClick(label);
         }
     };
 
@@ -625,6 +700,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                   ? pathname === item.href 
                   : pathname.startsWith(item.href);
                 const isLocked = item.locked && !isPro && !isDevMode;
+                const label = translations[item.label_override_key || item.translationKey][lang];
 
                 return (
                     <Link
@@ -638,7 +714,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       )}
                     >
                       <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                      {lang === 'hi' ? item.label_hi : item.label}
+                      {label}
                       {isLocked && (
                         <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                       )}
@@ -652,7 +728,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <Settings className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">{lang === 'hi' ? 'सेटिंग्स' : 'Settings'}</p>
+                       <p className="font-semibold">{translations.settings[lang]}</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
@@ -661,7 +737,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <LifeBuoy className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">{lang === 'hi' ? 'मदद और FAQ' : 'Help & FAQ'}</p>
+                       <p className="font-semibold">{translations.help[lang]}</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
@@ -671,4 +747,3 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
-

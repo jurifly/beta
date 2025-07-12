@@ -52,7 +52,7 @@ export function BetaBanner() {
       <div className="flex items-center gap-3">
         <Rocket className="h-5 w-5 text-primary shrink-0" />
         <p className="font-medium text-primary">
-          आप उपयोगकर्ता #{signupIndex} हैं — {dailyCreditLimit} मुफ्त दैनिक AI क्रेडिट का आनंद लें! 🚀
+          You're user #{signupIndex} — enjoy {dailyCreditLimit} free daily AI credits! 🚀
         </p>
       </div>
       <Button
