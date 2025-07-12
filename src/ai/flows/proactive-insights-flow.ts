@@ -14,6 +14,7 @@ const ProactiveInsightsInputSchema = z.object({
       companyAgeInDays: z.number(),
       companyType: z.string(),
       hygieneScore: z.number(),
+      profileCompleteness: z.number().min(0).max(100),
       overdueCount: z.number(),
       upcomingIn30DaysCount: z.number(),
       burnRate: z.number().describe("The monthly cash burn rate. Positive number indicates a loss."),
@@ -30,7 +31,7 @@ const InsightSchema = z.object({
   description: z.string().describe("A one-sentence description of the situation or suggestion."),
   cta: z.string().describe("A call to action, e.g., 'Generate Report' or 'Review Filings'."),
   href: z.string().describe("The in-app link for the call to action."),
-  icon: z.enum(["Lightbulb", "BarChart", "FileText", "AlertTriangle", "Users", "ShieldCheck"]).describe("The most relevant icon name for the insight."),
+  icon: z.enum(["Lightbulb", "BarChart", "FileText", "AlertTriangle", "Users", "ShieldCheck", "Settings"]).describe("The most relevant icon name for the insight."),
 });
 
 const ProactiveInsightsOutputSchema = z.object({
@@ -56,17 +57,19 @@ const prompt = ai.definePrompt({
 - Company Age: {{founderContext.companyAgeInDays}} days
 - Company Type: {{founderContext.companyType}}
 - Legal Hygiene Score: {{founderContext.hygieneScore}}/100
+- Profile Completeness: {{founderContext.profileCompleteness}}/100
 - Overdue Filings: {{founderContext.overdueCount}}
 - Upcoming Filings (30 days): {{founderContext.upcomingIn30DaysCount}}
 - Monthly Burn Rate: {{founderContext.burnRate}}
 ---
 
-**Founder Insight Generation Rules:**
+**Founder Insight Generation Rules (select the top 1-3 most important):**
+- **If profileCompleteness < 90:** Suggest completing the company profile to improve AI accuracy. (Icon: Settings, href: /dashboard/settings)
 - **If hygieneScore < 70:** Suggest reviewing the Analytics page to identify improvement areas. (Icon: ShieldCheck, href: /dashboard/analytics)
-- **If overdueCount > 0:** Urgently prompt them to visit the CA Connect page to clear backlogs. (Icon: AlertTriangle, href: /dashboard/ca-connect)
+- **If overdueCount > 0:** Urgently prompt them to visit the Advisor Hub to clear backlogs. (Icon: AlertTriangle, href: /dashboard/ca-connect)
 - **If burnRate > 0:** Suggest visiting the Financials page to analyze their burn rate and runway. (Icon: BarChart, href: /dashboard/financials)
 - **If companyAgeInDays > 540 and companyType contains 'Private Limited':** Suggest it might be time to think about an ESOP plan and generate one from the Document Studio. (Icon: FileText, href: /dashboard/ai-toolkit?tab=studio)
-- **If upcomingIn30DaysCount > 0:** Gently remind them of upcoming deadlines on the CA Connect page. (Icon: Lightbulb, href: /dashboard/ca-connect)
+- **If upcomingIn30DaysCount > 0:** Gently remind them of upcoming deadlines on the Advisor Hub. (Icon: Lightbulb, href: /dashboard/ca-connect)
 {{/if}}
 
 {{#if caContext}}
@@ -88,7 +91,7 @@ const prompt = ai.definePrompt({
 2.  Select the **most relevant and urgent** insight first.
 3.  Generate a list of 1 to 3 unique insights. Do not repeat suggestions.
 4.  For each insight, provide a concise \`title\`, \`description\`, a clear call-to-action \`cta\`, a valid \`href\`, and a matching \`icon\`.
-5.  **Crucially for Founders**, when suggesting they visit their compliance page, use the term "CA Connect" for the \`cta\` and the link \`/dashboard/ca-connect\` for the \`href\`. Do not use "Compliance Hub".
+5.  **Crucially for Founders**, when suggesting they visit their compliance page, use the term "Advisor Hub" for the \`cta\` and the link \`/dashboard/ca-connect\` for the \`href\`.
 
 **CRITICAL QUALITY CONTROL**: All generated text in the \`title\`, \`description\`, and \`cta\` fields must be professional and completely free of any spelling or grammatical errors.
 `,

@@ -34,7 +34,8 @@ import {
   CheckCircle,
   FileUp,
   LineChart,
-  ChevronDown
+  ChevronDown,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,6 +86,7 @@ const InsightCard = ({ insight, onCtaClick }: { insight: ProactiveInsightsOutput
     AlertTriangle: <AlertTriangle className="w-5 h-5 text-red-500" />,
     Users: <Users className="w-5 h-5 text-indigo-500" />,
     ShieldCheck: <ShieldCheck className="w-5 h-5 text-teal-500" />,
+    Settings: <Settings className="w-5 h-5 text-gray-500" />,
   };
 
   return (
@@ -168,8 +170,8 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     const [popoverOpen, setPopoverOpen] = useState(false);
 
-    const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
-        if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0 };
+    const { upcomingFilingsCount, overdueFilingsCount, hygieneScore, profileCompleteness } = useMemo(() => {
+        if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0, profileCompleteness: 0 };
         
         const today = startOfToday();
         const thirtyDaysFromNow = addDays(today, 30);
@@ -183,21 +185,21 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
             return dueDate < today && !item.completed;
         });
 
-        // HYGIENE SCORE CALCULATION
         const totalFilings = checklist.length;
         const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
         
         const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
         if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
         const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
-        const profileCompleteness = (filledFields / requiredFields.length) * 100;
+        const completeness = (filledFields / requiredFields.length) * 100;
         
-        const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+        const score = Math.round((filingPerf * 0.7) + (completeness * 0.3));
 
         return {
             upcomingFilingsCount: upcomingFilings.length,
             overdueFilingsCount: overdueFilings.length,
             hygieneScore: score,
+            profileCompleteness: Math.round(completeness),
         }
     }, [checklist, activeCompany]);
     
@@ -269,6 +271,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
                         companyAgeInDays: differenceInDays(new Date(), new Date(activeCompany.incorporationDate)),
                         companyType: activeCompany.type,
                         hygieneScore: hygieneScore,
+                        profileCompleteness: profileCompleteness,
                         overdueCount: overdueFilingsCount,
                         upcomingIn30DaysCount: upcomingFilingsCount,
                         burnRate: burnRate > 0 ? burnRate : 0,
@@ -284,7 +287,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
         };
 
         fetchInsights();
-    }, [isLoading, activeCompany, hygieneScore, overdueFilingsCount, upcomingFilingsCount, userProfile, toast]);
+    }, [isLoading, activeCompany, hygieneScore, overdueFilingsCount, upcomingFilingsCount, userProfile, toast, profileCompleteness]);
     
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
