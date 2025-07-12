@@ -46,6 +46,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradePrompt } from '@/components/upgrade-prompt';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { PenaltyPredictorOutput } from '@/ai/flows/penalty-predictor-flow';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // --- Tab: AI Legal Assistant ---
 
@@ -274,7 +275,7 @@ const dealTypesByRole = {
 };
 
 function DataroomAuditSubmitButton({ isRegenerate, isPending }: { isRegenerate: boolean, isPending: boolean }) {
-  return ( <Button type="submit" disabled={isPending} className="w-full sm:w-auto interactive-lift"> {isPending ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : isRegenerate ? (<RefreshCw className="mr-2 h-4 w-4" />) : (<Sparkles className="mr-2 h-4 w-4" />)} {isRegenerate ? "Regenerate" : "Generate Checklist"} </Button> );
+  return ( <Button type="submit" disabled={isPending} className="w-full sm:w-auto interactive-lift"> {isPending ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : isRegenerate ? (<RefreshCw className="mr-2 h-4 w-4" />) : (<Sparkles className="mr-2 h-4 w-4" />)} {isRegenerate ? "Regenerate" : "Generate Checklist (2 Credits)"} </Button> );
 }
 
 const DataroomAudit = () => {
@@ -285,6 +286,7 @@ const DataroomAudit = () => {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const isMobile = useIsMobile();
   
   if (!userProfile) return <Loader2 className="animate-spin" />;
 
@@ -355,15 +357,22 @@ const DataroomAudit = () => {
                     <AccordionTrigger className="font-semibold text-base hover:no-underline rounded-md px-4 data-[state=open]:bg-muted interactive-lift">{category.category}</AccordionTrigger>
                     <AccordionContent className="pt-4"><div className="space-y-3">
                         {category.items.map(item => (
-                        <div key={item.id} className="flex items-start gap-4 p-4 border rounded-lg bg-card hover:border-primary/50 transition-colors interactive-lift">
-                            <Checkbox id={item.id} className="mt-1" checked={item.status === 'Completed'} onCheckedChange={(checked) => handleCheckChange(category.category, item.id, !!checked)} />
-                            <div className="grid gap-1.5 leading-none flex-1"><label htmlFor={item.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">{item.task}</label><p className="text-sm text-muted-foreground">{item.description}</p></div>
-                            <Badge variant={item.status === 'Completed' ? 'secondary' : item.status === 'In Progress' ? 'default' : 'outline'} className={cn("ml-auto shrink-0 self-center", item.status === 'Completed' && 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-transparent')}>{item.status}</Badge>
-                            <div className="flex items-center gap-1 self-center">
-                                <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 interactive-lift" disabled><FileUp className="h-4 w-4"/><span className="sr-only">Upload Document</span></Button></TooltipTrigger><TooltipContent><p>Document upload coming soon!</p></TooltipContent></Tooltip></TooltipProvider>
-                                <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 interactive-lift" disabled><MessageSquare className="h-4 w-4"/><span className="sr-only">Add Comment</span></Button></TooltipTrigger><TooltipContent><p>Commenting coming soon!</p></TooltipContent></Tooltip></TooltipProvider>
-                            </div>
-                        </div>
+                            isMobile ? (
+                                <div key={item.id} className="flex items-start gap-4 p-4 border rounded-lg bg-card hover:border-primary/50 transition-colors interactive-lift">
+                                    <Checkbox id={item.id + '-mobile'} className="mt-1" checked={item.status === 'Completed'} onCheckedChange={(checked) => handleCheckChange(category.category, item.id, !!checked)} />
+                                    <div className="grid gap-1.5 leading-none flex-1"><label htmlFor={item.id + '-mobile'} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">{item.task}</label></div>
+                                </div>
+                            ) : (
+                                <div key={item.id} className="flex items-start gap-4 p-4 border rounded-lg bg-card hover:border-primary/50 transition-colors interactive-lift">
+                                    <Checkbox id={item.id} className="mt-1" checked={item.status === 'Completed'} onCheckedChange={(checked) => handleCheckChange(category.category, item.id, !!checked)} />
+                                    <div className="grid gap-1.5 leading-none flex-1"><label htmlFor={item.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">{item.task}</label><p className="text-sm text-muted-foreground">{item.description}</p></div>
+                                    <Badge variant={item.status === 'Completed' ? 'secondary' : item.status === 'In Progress' ? 'default' : 'outline'} className={cn("ml-auto shrink-0 self-center", item.status === 'Completed' && 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-transparent')}>{item.status}</Badge>
+                                    <div className="flex items-center gap-1 self-center">
+                                        <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 interactive-lift" disabled><FileUp className="h-4 w-4"/><span className="sr-only">Upload Document</span></Button></TooltipTrigger><TooltipContent><p>Document upload coming soon!</p></TooltipContent></Tooltip></TooltipProvider>
+                                        <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 interactive-lift" disabled><MessageSquare className="h-4 w-4"/><span className="sr-only">Add Comment</span></Button></TooltipTrigger><TooltipContent><p>Commenting coming soon!</p></TooltipContent></Tooltip></TooltipProvider>
+                                    </div>
+                                </div>
+                            )
                         ))}
                     </div></AccordionContent>
                 </AccordionItem>
@@ -1546,13 +1555,15 @@ const PenaltyPredictorTab = () => {
     )
 }
 
-// --- Main AI Toolkit Page ---
+// Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile, isDevMode } = useAuth();
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
-    const [activeTab, setActiveTab] = useState(tabParam || 'assistant');
     
+    // State to manage the active tab, initialized from URL param or default
+    const [activeTab, setActiveTab] = useState(tabParam || 'assistant');
+
     useEffect(() => {
         if(tabParam) {
             setActiveTab(tabParam);
@@ -1600,8 +1611,7 @@ export default function AiToolkitPage() {
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);
     
-    const currentTab = tabs.find(t => t.value === activeTab);
-    const CurrentIcon = currentTab?.icon || Sparkles;
+    const currentTabInfo = tabs.find(t => t.value === activeTab) || tabs[0];
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1609,13 +1619,14 @@ export default function AiToolkitPage() {
                 <h1 className="text-3xl font-bold font-headline">{pageTitle}</h1>
                 <p className="text-muted-foreground">{pageDescription}</p>
             </div>
+            
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
-                <div className="md:hidden mb-4">
+                <div className="md:hidden">
                     <Select value={activeTab} onValueChange={setActiveTab}>
                         <SelectTrigger className="w-full">
                            <div className="flex items-center gap-2">
-                               <CurrentIcon className="w-4 h-4" />
-                               <span>{currentTab?.label}</span>
+                               <currentTabInfo.icon className="w-4 h-4" />
+                               <span>{currentTabInfo.label}</span>
                            </div>
                         </SelectTrigger>
                         <SelectContent>
@@ -1630,15 +1641,17 @@ export default function AiToolkitPage() {
                         </SelectContent>
                     </Select>
                 </div>
-                <ScrollArea orientation="horizontal" className="hidden md:block w-full">
-                    <TabsList className="inline-flex">
+                
+                <div className="hidden md:block">
+                    <TabsList>
                         {tabs.map(t => (
                             <TabsTrigger key={t.value} value={t.value} className="interactive-lift">
                                 <t.icon className="mr-2"/>{t.label}
                             </TabsTrigger>
                         ))}
                     </TabsList>
-                </ScrollArea>
+                </div>
+                
                 <div className="mt-6 md:flex-1 md:min-h-0 md:overflow-y-auto">
                     {tabs.map(t => (
                         <TabsContent key={t.value} value={t.value} className="h-full mt-0 md:mt-0">
