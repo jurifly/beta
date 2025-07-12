@@ -9,42 +9,21 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Mail, Building, User, Clock, CheckCircle, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
+import type { Invite } from "@/lib/types";
 
 export default function InvitationsPage() {
     const { userProfile } = useAuth();
-    const [invites, setInvites] = useState<any[]>([]);
+    const [invites, setInvites] = useState<Invite[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         if (userProfile?.role === 'Founder') {
-            const founderInvites = userProfile.invites?.map(inv => ({
-                id: inv.email, // Use email as key for founder view
-                caEmail: inv.email,
-                status: 'Pending', // Assume all in list are pending
-                invitedAt: inv.invitedAt
-            })) || [];
-            
-            if (userProfile.invitedCaEmail && !founderInvites.some(i => i.caEmail === userProfile.invitedCaEmail)) {
-                 founderInvites.push({
-                     id: userProfile.invitedCaEmail,
-                     caEmail: userProfile.invitedCaEmail,
-                     status: 'Pending',
-                     invitedAt: new Date().toISOString() // Placeholder date
-                 });
-            }
-            if (userProfile.connectedCaUid) {
-                 founderInvites.push({
-                     id: userProfile.connectedCaUid,
-                     caEmail: 'Your Connected Advisor', // Placeholder
-                     status: 'Accepted',
-                     invitedAt: new Date().toISOString() // Placeholder
-                 });
-            }
-
+            const founderInvites = userProfile.invites || [];
             setInvites(founderInvites);
             setLoading(false);
         } else {
+             // Redirect non-founders away from this page
              router.push('/dashboard/ca-connect');
         }
     }, [userProfile, router]);
@@ -81,18 +60,18 @@ export default function InvitationsPage() {
                                                 <p className="font-semibold text-lg">{invite.caEmail}</p>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                               {invite.status === 'Pending' ? <Clock className="w-4 h-4 text-amber-500" /> : <CheckCircle className="w-4 h-4 text-green-500" /> }
+                                               {invite.status === 'pending' ? <Clock className="w-4 h-4 text-amber-500" /> : <CheckCircle className="w-4 h-4 text-green-500" /> }
                                                 <span>Status: {invite.status}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4 w-full sm:w-auto">
                                             <p className="text-xs text-muted-foreground flex-1 sm:flex-initial">
-                                                {formatDistanceToNow(new Date(invite.invitedAt), { addSuffix: true })}
+                                                {formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}
                                             </p>
                                             <Button 
                                                 size="sm" 
                                                 variant="outline"
-                                                disabled={invite.status !== 'Pending'}
+                                                disabled={invite.status !== 'pending'}
                                             >
                                                 Revoke
                                             </Button>

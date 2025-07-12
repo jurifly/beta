@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLog } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLog, Invite } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -35,6 +35,7 @@ export interface AuthContextType {
   markAllNotificationsAsRead: () => void;
   addFeedback: (category: string, message: string, sentiment?: 'positive' | 'negative') => Promise<void>;
   sendCaInvite: (caEmail: string, companyId: string, companyName: string) => Promise<{ success: boolean; message: string }>;
+  sendClientInvite: (clientEmail: string) => Promise<{ success: boolean; message: string }>;
   getPendingInvites: () => Promise<any[]>;
   acceptInvite: (inviteId: string) => Promise<void>;
 }
@@ -469,29 +470,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   };
+
+  const sendClientInvite = async (clientEmail: string): Promise<{ success: boolean; message: string }> => {
+    if (!user || !userProfile || userProfile.role !== 'CA') {
+      return { success: false, message: 'Only CAs can invite clients.' };
+    }
+    try {
+        await addDoc(collection(db, "invites"), {
+            type: 'ca_to_client',
+            caId: user.uid,
+            caName: userProfile.name,
+            clientEmail: clientEmail,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+        });
+        return { success: true, message: "Client invitation sent." };
+    } catch (error) {
+        console.error("Error sending client invite:", error);
+        return { success: false, message: "An error occurred." };
+    }
+  };
   
   const sendCaInvite = async (caEmail: string, companyId: string, companyName: string): Promise<{ success: boolean; message: string }> => {
     if (!user || !userProfile || userProfile.role !== 'Founder') {
       return { success: false, message: 'Only founders can send invites.' };
     }
     const invitesRef = collection(db, 'invites');
-    const q = query(invitesRef, where('caEmail', '==', caEmail), where('founderId', '==', user.uid), where('status', '==', 'pending'));
-    const existingInvites = await getDocs(q);
-    if (!existingInvites.empty) {
-        return { success: false, message: 'You have already sent an invitation to this advisor.' };
-    }
-    
+    const newInvite: Invite = {
+        id: '', // Firestore will generate this
+        caEmail,
+        founderId: user.uid,
+        founderName: userProfile.name,
+        companyId,
+        companyName,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+    };
+    const userUpdates: Partial<UserProfile> = {
+        invites: [...(userProfile.invites || []), newInvite],
+        invitedCaEmail: caEmail, // also keep the legacy field for now
+    };
+
     try {
-        await addDoc(invitesRef, {
-            caEmail,
-            founderId: user.uid,
-            founderName: userProfile.name,
-            companyId,
-            companyName,
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-        });
-        await updateUserProfile({ invitedCaEmail: caEmail });
+        const inviteDocRef = await addDoc(invitesRef, newInvite);
+        // Also update the user's profile to reflect the sent invite
+        await updateUserProfile(userUpdates);
         return { success: true, message: 'Invitation sent successfully!' };
     } catch (error) {
         console.error('Error sending invite:', error);
@@ -505,9 +528,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const inviteRef = doc(db, 'invites', inviteId);
     await runTransaction(db, async (transaction) => {
         const inviteDoc = await transaction.get(inviteRef);
-        if (!inviteDoc.exists()) throw new Error("Invite not found.");
+        if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') throw new Error("Invite not found or already accepted.");
 
-        const { founderId, companyId } = inviteDoc.data();
+        const { founderId, companyId, companyName } = inviteDoc.data();
         const founderRef = doc(db, 'users', founderId);
         const caRef = doc(db, 'users', user.uid);
 
@@ -520,15 +543,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
 
-        transaction.update(founderRef, { connectedCaUid: user.uid, invitedCaEmail: null });
+        // Update founder's profile
+        const founderInvites = (founderProfile.invites || []).filter(inv => inv.caEmail !== user.email);
+        transaction.update(founderRef, { connectedCaUid: user.uid, invitedCaEmail: null, invites: founderInvites });
+
+        // Update CA's profile
         transaction.update(caRef, { companies: [...userProfile.companies, companyForCa] });
-        transaction.delete(inviteRef);
+        
+        // Update invite status to 'accepted' instead of deleting
+        transaction.update(inviteRef, { status: 'accepted' });
     });
 
     await fetchUserProfile(user); // Refresh CA's profile
+    await addNotification({
+        title: 'Client Connected!',
+        description: `You are now connected with ${companyName}. You can manage their profile from your dashboard.`,
+        icon: 'CheckCircle',
+        link: `/dashboard/clients/${companyId}`
+    });
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

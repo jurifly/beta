@@ -32,21 +32,29 @@ interface InviteClientModalProps {
 
 export function InviteClientModal({ isOpen, onOpenChange }: InviteClientModalProps) {
   const { toast } = useToast();
+  const { sendClientInvite } = useAuth();
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
     resolver: zodResolver(inviteSchema),
   });
   
   const onSubmit = async (data: FormData) => {
-    // This is a placeholder for the actual invite logic
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const result = await sendClientInvite(data.email);
     
-    toast({
-      title: "Invite Sent!",
-      description: `An invitation to join has been sent to ${data.email}.`,
-    });
-    onOpenChange(false);
-    reset();
+    if (result.success) {
+      toast({
+        title: "Invite Sent!",
+        description: `An invitation to join has been sent to ${data.email}.`,
+      });
+      onOpenChange(false);
+      reset();
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Send',
+            description: result.message
+        })
+    }
   };
 
   return (
