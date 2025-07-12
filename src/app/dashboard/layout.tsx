@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -138,6 +139,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.caConnect, color: "#F43F5E", locked: true },
   { ...navItemConfig.documents, color: "#64748B" },
   { ...navItemConfig.community, color: "#A855F7" },
+  { ...navItemConfig.team, color: "#9333EA", locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
