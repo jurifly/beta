@@ -47,6 +47,7 @@ import {
   ChevronDown,
   Briefcase,
   BookUser,
+  Newspaper,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,6 +58,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -133,6 +135,7 @@ export const translations: Translations = {
     aiPracticeSuite: { en: "AI Practice Suite", hi: "AI प्रैक्टिस सुइट", es: "Suite de Práctica de IA", zh: "AI实践套件", fr: "Suite Pratique IA", de: "KI-Praxis-Suite", pt: "Suíte de Prática de IA", ja: "AI実務スイート" },
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
+    legalNews: { en: "Legal News", hi: "कानूनी समाचार", es: "Noticias Legales", zh: "法律新闻", fr: "Actualités Juridiques", de: "Rechtsnachrichten", pt: "Notícias Jurídicas", ja: "リーガルニュース" },
     
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
@@ -233,6 +236,7 @@ const navItemConfig: NavItemConfig = {
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
   playbook: { href: "/dashboard/learn", translationKey: "playbook", icon: BookOpenCheck },
+  legalNews: { href: "/dashboard/news", translationKey: "legalNews", icon: Newspaper },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
@@ -257,6 +261,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
+  { ...navItemConfig.legalNews },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect, locked: true },
@@ -272,6 +277,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.portfolioAnalytics },
+  { ...navItemConfig.legalNews },
   { ...navItemConfig.caConnect, label_override_key: 'advisorHub', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
@@ -286,6 +292,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
+  navItemConfig.legalNews,
   navItemConfig.clauseLibrary,
   navItemConfig.portfolioAnalytics,
 ];
@@ -294,6 +301,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
+  navItemConfig.legalNews,
   navItemConfig.caConnect,
   navItemConfig.portfolioAnalytics,
   navItemConfig.documents,
@@ -544,7 +552,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Logo />
-                    <span className="sr-only">Claari</span>
+                    <span className="">Claari</span>
                 </Link>
                 <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
