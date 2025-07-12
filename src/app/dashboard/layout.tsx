@@ -111,7 +111,6 @@ export const translations: Translations = {
     advisorHub: { en: "Advisor Hub", hi: "सलाहकार हब", es: "Centro de Asesores", zh: "顾问中心", fr: "Pôle Conseiller", de: "Berater-Hub", pt: "Hub de Consultores" },
     aiToolkit: { en: "AI Toolkit", hi: "AI टूलकिट", es: "Herramientas de IA", zh: "AI工具箱", fr: "Outils d'IA", de: "KI-Werkzeugkasten", pt: "Kit de Ferramentas de IA" },
     launchPad: { en: "Launch Pad", hi: "लॉन्च पैड", es: "Plataforma de Lanzamiento", zh: "启动台", fr: "Rampe de Lancement", de: "Startrampe", pt: "Plataforma de Lançamento" },
-    playbook: { en: "Playbook", hi: "प्लेबुक", es: "Manual de Estrategias", zh: "战术手册", fr: "Livre de Stratégies", de: "Playbook", pt: "Manual" },
     capTable: { en: "Cap Table", hi: "कैप टेबल", es: "Tabla de Capitalización", zh: "股权结构表", fr: "Table de Capitalisation", de: "Kapitalisierungstabelle", pt: "Tabela de Capitalização" },
     financials: { en: "Financials", hi: "वित्तीय", es: "Finanzas", zh: "财务", fr: "Finances", de: "Finanzen", pt: "Finanças" },
     docVault: { en: "Doc Vault", hi: "दस्तावेज़ वॉल्ट", es: "Bóveda de Documentos", zh: "文档保险库", fr: "Coffre-fort de Documents", de: "Dokumententresor", pt: "Cofre de Documentos" },
@@ -227,7 +226,6 @@ const navItemConfig: NavItemConfig = {
   caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users, locked: true },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
-  playbook: { href: "/dashboard/learn", translationKey: "playbook", icon: BookOpenCheck },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
@@ -257,8 +255,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.analytics, label_override_key: "analytics" },
-  { ...navItemConfig.playbook },
+  { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.community },
@@ -270,7 +267,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clients, label_override_key: "clientManagement", icon: Briefcase },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
-  { ...navItemConfig.analytics },
+  { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.caConnect, label_override_key: 'advisorHub', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
@@ -278,7 +275,6 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.clauseLibrary, locked: true },
-  { ...navItemConfig.playbook },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
@@ -286,8 +282,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
-  navItemConfig.analytics,
-  navItemConfig.playbook,
+  navItemConfig.portfolioAnalytics,
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
@@ -295,7 +290,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.caConnect,
-  navItemConfig.analytics,
+  navItemConfig.portfolioAnalytics,
   navItemConfig.documents,
 ];
 
@@ -358,7 +353,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
         navItemConfig.dashboard,
         {...navItemConfig.team, locked: false},
         navItemConfig.caConnect,
-        navItemConfig.analytics,
+        navItemConfig.portfolioAnalytics,
       ];
     case 'Founder':
     default:
@@ -387,7 +382,7 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
     ) as ThemedNavItem[];
     
     if (userProfile.role === 'Founder' && !menuItems.some(i => i.href === '/dashboard/analytics')) {
-        menuItems.push({ ...navItemConfig.analytics, label_override_key: 'analytics' });
+        menuItems.push({ ...navItemConfig.portfolioAnalytics, label_override_key: 'analytics' });
     }
     if (userProfile.role === 'CA' && !menuItems.some(i => i.href === '/dashboard/documents')) {
         menuItems.push(navItemConfig.documents);
