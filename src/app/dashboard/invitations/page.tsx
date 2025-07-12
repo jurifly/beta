@@ -6,35 +6,42 @@ import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, Building, User, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Mail, Clock, CheckCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import type { Invite } from "@/lib/types";
 
 export default function InvitationsPage() {
-    const { userProfile } = useAuth();
+    const { userProfile, updateUserProfile } = useAuth();
     const [invites, setInvites] = useState<Invite[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         if (userProfile?.role === 'Founder') {
             const founderInvites = userProfile.invites || [];
-            setInvites(founderInvites);
+            setInvites(founderInvites.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
             setLoading(false);
         } else {
-             // Redirect non-founders away from this page
              router.push('/dashboard/ca-connect');
         }
     }, [userProfile, router]);
     
+    const handleRevoke = async (inviteId: string) => {
+        if (!userProfile) return;
+        const updatedInvites = invites.filter(i => i.id !== inviteId);
+        await updateUserProfile({ invites: updatedInvites });
+        // Here you would also update the invite document in Firestore to 'revoked'
+        toast({title: 'Invite Revoked', description: 'The invitation has been cancelled.'})
+    }
 
     if (loading) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
     if (userProfile?.role !== 'Founder') {
-        return null; // Redirecting...
+        return null;
     }
     
     return (
@@ -61,7 +68,7 @@ export default function InvitationsPage() {
                                             </div>
                                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                                {invite.status === 'pending' ? <Clock className="w-4 h-4 text-amber-500" /> : <CheckCircle className="w-4 h-4 text-green-500" /> }
-                                                <span>Status: {invite.status}</span>
+                                                <span>Status: <span className="capitalize">{invite.status}</span></span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -71,6 +78,7 @@ export default function InvitationsPage() {
                                             <Button 
                                                 size="sm" 
                                                 variant="outline"
+                                                onClick={() => handleRevoke(invite.id)}
                                                 disabled={invite.status !== 'pending'}
                                             >
                                                 Revoke

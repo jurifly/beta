@@ -117,23 +117,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return newProfile;
   }, []);
 
-  const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
-    if (!user) return;
-    const notificationsRef = collection(db, `users/${user.uid}/notifications`);
+  const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>, targetUserId?: string) => {
+    const uid = targetUserId || user?.uid;
+    if (!uid) return;
 
+    const notificationsRef = collection(db, `users/${uid}/notifications`);
     const q = query(notificationsRef, where('title', '==', notificationData.title), where('read', '==', false));
     const existing = await getDocs(q);
     if (!existing.empty) {
-      return;
+        return;
     }
 
     const notification: Omit<AppNotification, 'id'> = {
-      ...notificationData,
-      createdAt: new Date().toISOString(),
-      read: false,
+        ...notificationData,
+        createdAt: new Date().toISOString(),
+        read: false,
     };
     const newDocRef = await addDoc(notificationsRef, notification);
-    setNotifications(prev => [{ ...notification, id: newDocRef.id }, ...prev]);
+
+    // If the notification is for the current user, update local state
+    if (uid === user?.uid) {
+        setNotifications(prev => [{ ...notification, id: newDocRef.id }, ...prev]);
+    }
   }, [user]);
 
   const fetchUserProfile = useCallback(async (firebaseUser: User) => {
@@ -527,43 +532,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const acceptInvite = async (inviteId: string) => {
     if (!user || userProfile?.role !== 'CA') throw new Error("Only CAs can accept invites.");
     
-    const inviteRef = doc(db, 'invites', inviteId);
+    let founderData: UserProfile | null = null;
+    let inviteData: Invite | null = null;
+
     await runTransaction(db, async (transaction) => {
+        const inviteRef = doc(db, 'invites', inviteId);
         const inviteDoc = await transaction.get(inviteRef);
         if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') throw new Error("Invite not found or already accepted.");
-
-        const { founderId, companyId, companyName } = inviteDoc.data();
+        
+        inviteData = inviteDoc.data() as Invite;
+        const { founderId, companyId } = inviteData;
         const founderRef = doc(db, 'users', founderId);
         const caRef = doc(db, 'users', user.uid);
 
         const founderDoc = await transaction.get(founderRef);
         if (!founderDoc.exists()) throw new Error("Founder account not found.");
+        founderData = founderDoc.data() as UserProfile;
 
-        const founderProfile = founderDoc.data() as UserProfile;
-        const companyToAccept = founderProfile.companies.find(c => c.id === companyId);
+        const companyToAccept = founderData.companies.find(c => c.id === companyId);
         if (!companyToAccept) throw new Error("Company not found in founder's profile.");
         
         const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
 
-        // Update founder's profile
-        const founderInvites = (founderProfile.invites || []).filter(inv => inv.id !== inviteId);
-        transaction.update(founderRef, { connectedCaUid: user.uid, invitedCaEmail: null, invites: founderInvites });
+        const founderInvites = (founderData.invites || []).map(inv => 
+            inv.caEmail === user.email && inv.companyId === companyId ? { ...inv, status: 'accepted' as const } : inv
+        );
+        transaction.update(founderRef, { connectedCaUid: user.uid, invites: founderInvites });
 
-        // Update CA's profile
         const caProfile = (await transaction.get(caRef)).data() as UserProfile;
         transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
         
-        // Update invite status to 'accepted' instead of deleting
         transaction.update(inviteRef, { status: 'accepted' });
     });
 
+    if (founderData && inviteData) {
+        await addNotification({
+            title: 'Invitation Accepted!',
+            description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
+            icon: 'CheckCircle',
+            link: '/dashboard/ca-connect'
+        }, founderData.uid);
+    }
+
     await fetchUserProfile(user); // Refresh CA's profile
-    await addNotification({
-        title: 'Client Connected!',
-        description: `You are now connected with ${companyName}. You can manage their profile from your dashboard.`,
-        icon: 'CheckCircle' as any, // Cast because Lucide types don't match exactly
-        link: `/dashboard/clients/${companyId}`
-    });
   };
 
   const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite };
