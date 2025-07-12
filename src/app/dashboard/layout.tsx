@@ -367,6 +367,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
+  const pathname = usePathname();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
