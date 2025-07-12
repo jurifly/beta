@@ -550,10 +550,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
+                <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
                     <Logo />
                     <span className="">Claari</span>
-                </Link>
+                </div>
                 <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

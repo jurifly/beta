@@ -560,7 +560,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await addNotification({
         title: 'Client Connected!',
         description: `You are now connected with ${companyName}. You can manage their profile from your dashboard.`,
-        icon: 'CheckCircle',
+        icon: 'CheckCircle' as any, // Cast because Lucide types don't match exactly
         link: `/dashboard/clients/${companyId}`
     });
   };

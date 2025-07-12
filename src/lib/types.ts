@@ -133,7 +133,7 @@ export interface UserProfile {
   // Team Management
   teamMembers?: TeamMember[];
   invites?: Invite[];
-  activityLog?: ActivityLog[];
+  activityLog?: ActivityLogItem[];
 
   // Beta AI Credit System
   signupIndex?: number;
