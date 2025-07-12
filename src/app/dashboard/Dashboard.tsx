@@ -301,28 +301,6 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
         updateCompanyChecklistStatus(activeCompany.id, newStatuses);
     };
 
-    const handleCompleteYear = (year: string) => {
-        if (!activeCompany || checklist.length === 0) return;
-        const today = startOfToday();
-
-        const newChecklist = checklist.map(item => {
-            const dueDate = new Date(item.dueDate + 'T00:00:00');
-            if (dueDate.getFullYear().toString() === year && dueDate <= today) {
-                return { ...item, completed: true };
-            }
-            return item;
-        });
-        setChecklist(newChecklist);
-        
-        const newStatuses = newChecklist.reduce((acc, item) => {
-            acc[item.id] = item.completed;
-            return acc;
-        }, {} as Record<string, boolean>);
-
-        updateCompanyChecklistStatus(activeCompany.id, newStatuses);
-        toast({ title: `Past tasks for ${year} completed!` });
-    };
-    
     const { checklistYears, overdueYears } = useMemo(() => {
         const years = new Set<string>();
         const overdue = new Set<string>();
@@ -497,38 +475,12 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                         </div>
                          {checklistYears.length > 0 && (
                             <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger className="w-full sm:w-[140px] mt-4 sm:mt-0">
-                                    <div className="flex items-center gap-2">
-                                        {overdueYears.size > 0 && <AlertTriangle className="h-4 w-4 text-destructive"/>}
-                                        <SelectValue placeholder="Select year"/>
-                                    </div>
+                                <SelectTrigger className="w-full sm:w-[120px] mt-4 sm:mt-0">
+                                    <SelectValue placeholder="Select year"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {checklistYears.map(year => (
-                                        <SelectItem key={year} value={year} onSelect={(e) => e.preventDefault()}>
-                                            <div className="flex items-center justify-between w-full">
-                                                <div className="flex items-center gap-2">
-                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                                    <span>{year}</span>
-                                                </div>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Checkbox
-                                                                className="ml-4"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation(); // prevent select from closing
-                                                                    handleCompleteYear(year);
-                                                                }}
-                                                            />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Complete all past tasks for {year}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                        </SelectItem>
+                                        <SelectItem key={year} value={year}>{year}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
