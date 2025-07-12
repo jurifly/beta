@@ -13,7 +13,8 @@ import {
   ListChecks,
   PieChart,
   Info,
-  CalendarClock
+  CalendarClock,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 const ComplianceActivityChart = dynamic(
@@ -159,16 +161,13 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         updateCompanyChecklistStatus(activeCompany.id, newStatuses);
     };
 
-    const handleCompleteYear = () => {
+    const handleCompleteYear = (year: string) => {
         if (!activeCompany || checklist.length === 0) return;
-
-        const currentStatuses = checklist.reduce((acc, item) => {
-            acc[item.id] = item.completed;
-            return acc;
-        }, {} as Record<string, boolean>);
-
+        const today = startOfToday();
+        
         const newChecklist = checklist.map(item => {
-            if (new Date(item.dueDate).getFullYear().toString() === selectedYear) {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            if (dueDate.getFullYear().toString() === year && dueDate <= today) {
                 return { ...item, completed: true };
             }
             return item;
@@ -181,7 +180,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         }, {} as Record<string, boolean>);
 
         updateCompanyChecklistStatus(activeCompany.id, newStatuses);
-        toast({ title: `All tasks for ${selectedYear} completed!` });
+        toast({ title: `Past tasks for ${year} completed!` });
     };
 
     const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
@@ -339,13 +338,40 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                                 <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
                             </div>
                             <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <Button variant="outline" size="sm" onClick={handleCompleteYear}>Complete Year</Button>
                                 {checklistYears.length > 0 && (
-                                    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
-                                        {checklistYears.map(year => (
-                                            <option key={year} value={year}>{year}</option>
-                                        ))}
-                                    </select>
+                                     <Select
+                                        value={selectedYear}
+                                        onValueChange={(value) => {
+                                            if (value.startsWith('complete_')) {
+                                                const yearToComplete = value.split('_')[1];
+                                                handleCompleteYear(yearToComplete);
+                                            } else {
+                                                setSelectedYear(value);
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full sm:w-auto">
+                                            <SelectValue placeholder="Select year..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {checklistYears.map(year => (
+                                                <SelectItem key={year} value={year}>
+                                                    View {year}
+                                                </SelectItem>
+                                            ))}
+                                            {checklistYears.length > 0 && (
+                                                <>
+                                                    <div className="my-1 border-t"></div>
+                                                    <SelectItem value={`complete_${selectedYear}`}>
+                                                        <span className="flex items-center gap-2 text-primary">
+                                                            <CheckCircle className="h-4 w-4" />
+                                                            Complete all for {selectedYear}
+                                                        </span>
+                                                    </SelectItem>
+                                                </>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
                                 )}
                             </div>
                         </div>
