@@ -361,26 +361,22 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                                             <ChevronDown className="ml-2 h-4 w-4"/>
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-4">
+                                    <PopoverContent className="w-auto p-4" align="end">
                                         <div className="space-y-4">
-                                            <div className="flex gap-2">
+                                            <div className="space-y-2">
                                                 {checklistYears.map(year => (
-                                                    <Button 
-                                                        key={year}
-                                                        variant={selectedYear === year ? "default" : "outline"}
-                                                        onClick={() => setSelectedYear(year)}
-                                                        className="flex items-center gap-2"
-                                                    >
-                                                        {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                                        {year}
-                                                    </Button>
+                                                    <div key={year} className="flex items-center gap-2">
+                                                        <Checkbox id={`complete-client-${year}`} onCheckedChange={() => handleCompleteYear(year)} />
+                                                        <Button 
+                                                            variant={selectedYear === year ? "default" : "outline"}
+                                                            onClick={() => setSelectedYear(year)}
+                                                            className="flex-1 justify-start gap-2"
+                                                        >
+                                                            {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                                            {year}
+                                                        </Button>
+                                                    </div>
                                                 ))}
-                                            </div>
-                                            <div className="flex items-center space-x-2 border-t pt-4">
-                                                <Checkbox id={`complete-${selectedYear}`} onCheckedChange={() => handleCompleteYear(selectedYear)} />
-                                                <Label htmlFor={`complete-${selectedYear}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                    Complete all past-due for {selectedYear}
-                                                </Label>
                                             </div>
                                         </div>
                                     </PopoverContent>
