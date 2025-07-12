@@ -242,7 +242,7 @@ const navItemConfig: NavItemConfig = {
   team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: true },
   clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: true },
-  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: false },
+  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: true },
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
