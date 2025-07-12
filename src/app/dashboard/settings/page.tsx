@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from "react";
@@ -188,39 +187,39 @@ export default function SettingsPage() {
       <>
         <AddCompanyModal isOpen={isModalOpen} onOpenChange={onModalOpenChange} companyToEdit={companyToEdit} deductCredits={deductCredits} />
         <div className="space-y-4">
-            <div className="flex items-center gap-4 p-2">
-                <Avatar className="h-16 w-16 border-2 border-primary/20">
-                    <AvatarFallback className="text-2xl">{getInitials(userProfile.name)}</AvatarFallback>
-                </Avatar>
-                <div>
-                    <h1 className="text-xl font-bold">{userProfile.name}</h1>
-                    <p className="text-sm text-muted-foreground">{userProfile.email}</p>
-                </div>
-            </div>
-            <div className="space-y-2">
-              {settingsItems.map(item => {
-                const content = (
-                    <div className="w-full flex items-center gap-4 p-4 text-left rounded-lg hover:bg-muted">
-                        <item.icon className="w-6 h-6 text-muted-foreground"/>
-                        <div className="flex-1">
-                          <p className="font-medium">{item.title}</p>
-                          <p className="text-sm text-muted-foreground">{item.description}</p>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground"/>
-                    </div>
-                );
+          <div className="flex items-center gap-4 p-4">
+              <Avatar className="h-16 w-16 border-2 border-primary/20">
+                  <AvatarFallback className="text-2xl">{getInitials(userProfile.name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                  <h1 className="text-xl font-bold">{userProfile.name}</h1>
+                  <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+              </div>
+          </div>
+          <div className="space-y-2">
+            {settingsItems.map(item => {
+              const content = (
+                  <div className="w-full flex items-center gap-4 p-4 text-left rounded-lg hover:bg-muted">
+                      <item.icon className="w-6 h-6 text-muted-foreground"/>
+                      <div className="flex-1">
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground"/>
+                  </div>
+              );
 
-                if (item.href) {
-                    return <Link href={item.href} key={item.key}>{content}</Link>
-                }
+              if (item.href) {
+                  return <Link href={item.href} key={item.key} className="block hover:bg-muted rounded-lg">{content}</Link>
+              }
 
-                return (
-                    <button key={item.key} onClick={() => setActiveView(item.key)}>
-                        {content}
-                    </button>
-                );
-              })}
-            </div>
+              return (
+                  <button key={item.key} onClick={() => setActiveView(item.key)} className="w-full text-left hover:bg-muted rounded-lg">
+                      {content}
+                  </button>
+              );
+            })}
+          </div>
         </div>
       </>
     );
