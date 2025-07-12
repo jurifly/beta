@@ -36,9 +36,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ComplianceActivityChart = dynamic(
   () => import('../../ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -348,34 +346,50 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                 <ComplianceActivityChart dataByYear={complianceChartDataByYear} />
                 
                 <Card className="interactive-lift">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                        <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
-                    </CardHeader>
-                    <div className="px-6 pb-4">
+                    <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center">
+                        <div>
+                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
+                            <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
+                        </div>
                         {checklistYears.length > 0 && (
-                            <ScrollArea className="w-full whitespace-nowrap">
-                                <div className="flex space-x-2 pb-2">
+                            <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                <SelectTrigger className="w-full sm:w-[140px] mt-4 sm:mt-0">
+                                    <div className="flex items-center gap-2">
+                                        {overdueYears.size > 0 && <AlertTriangle className="h-4 w-4 text-destructive"/>}
+                                        <SelectValue placeholder="Select year"/>
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
                                     {checklistYears.map(year => (
-                                        <div key={year} className="flex-shrink-0">
-                                            <Button 
-                                                variant={selectedYear === year ? "default" : "outline"}
-                                                onClick={() => setSelectedYear(year)}
-                                                className="justify-center gap-2"
-                                            >
-                                                {overdueYears.has(year) && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                                                {year}
-                                            </Button>
-                                            <div className="flex items-center justify-center space-x-2 mt-1.5">
-                                                <Checkbox id={`complete-client-${year}`} onCheckedChange={() => handleCompleteYear(year)} />
-                                                <Label htmlFor={`complete-client-${year}`} className="text-xs">Complete</Label>
+                                        <SelectItem key={year} value={year} onSelect={(e) => e.preventDefault()}>
+                                            <div className="flex items-center justify-between w-full">
+                                                <div className="flex items-center gap-2">
+                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                                    <span>{year}</span>
+                                                </div>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Checkbox
+                                                                className="ml-4"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation(); // prevent select from closing
+                                                                    handleCompleteYear(year);
+                                                                }}
+                                                            />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Complete all past tasks for {year}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
-                                        </div>
+                                        </SelectItem>
                                     ))}
-                                </div>
-                            </ScrollArea>
+                                </SelectContent>
+                            </Select>
                         )}
-                    </div>
+                    </CardHeader>
                     <CardContent className="space-y-3">
                         {isLoading ? (
                             <div className="space-y-3">
