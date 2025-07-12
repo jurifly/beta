@@ -35,7 +35,8 @@ import {
   FileUp,
   LineChart,
   ChevronDown,
-  Settings
+  Settings,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,7 +50,7 @@ import {
 import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { cn } from "@/lib/utils";
-import type { UserProfile, Company, ActivityLog } from "@/lib/types";
+import type { UserProfile, Company, ActivityLogItem } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { getProactiveInsights, type ProactiveInsightsOutput } from "@/ai/flows/proactive-insights-flow";
@@ -694,6 +695,16 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
         };
     }, [userProfile.companies]);
 
+    const activityLog = useMemo(() => {
+        const allLogs: (ActivityLogItem & { clientName: string })[] = [];
+        userProfile.companies.forEach(company => {
+            if (company.activityLog) {
+                allLogs.push(...company.activityLog.map(log => ({ ...log, clientName: company.name })));
+            }
+        });
+        return allLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }, [userProfile.companies]);
+
     useEffect(() => {
         const fetchInsights = async () => {
             setInsightsLoading(true);
@@ -717,8 +728,6 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
 
         fetchInsights();
     }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast]);
-
-   const activityLog = userProfile.activityLog || [];
 
    if (clientCount === 0) {
      return (
@@ -801,10 +810,10 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
                         <div className="space-y-4">
                             {activityLog.slice(0, 3).map((item, index) => (
                                 <div key={index} className="flex items-center gap-4">
-                                    <div className="p-2 bg-muted rounded-full text-muted-foreground"><Users className="w-5 h-5"/></div>
+                                    <div className="p-2 bg-muted rounded-full text-muted-foreground"><Activity className="w-5 h-5"/></div>
                                     <div>
                                         <p className="text-sm"><span className="font-semibold">{item.userName}</span> {item.action}.</p>
-                                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}</p>
+                                        <p className="text-xs text-muted-foreground">{item.clientName} &bull; {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}</p>
                                     </div>
                                 </div>
                             ))}
