@@ -19,28 +19,43 @@ interface FeatureLockedModalProps {
 }
 
 const wittyMessages: Record<string, { title: string; lines: string[]; eta: string }> = {
-    "Analyzer": {
-        title: "AI Document Analyzer",
-        lines: ["Unlock the ability to analyze contracts in seconds.", "Identify risks, get summaries, and find critical clauses instantly."],
-        eta: "This is a premium feature available on Pro plans."
+    "Team Management": {
+        title: "Team? What Team?",
+        lines: ["This feature is for managing your team.", "Right now, it's just you. And our AI. And the AI is on a coffee break."],
+        eta: "Unlocks on our Pro & Enterprise plans."
     },
-    "Watcher": {
-        title: "Regulation Watcher",
-        lines: ["Stay ahead of regulatory changes with AI-powered summaries.", "Monitor government portals for updates relevant to you."],
-        eta: "This is a premium feature available on Pro plans."
+     "Advisor Hub": {
+        title: "Advisor Connection Offline",
+        lines: ["You wanted to connect with your advisor?", "We wanted to connect with our sleep cycle. Neither is happening."],
+        eta: "Unlocks on our Pro plans. For now, there's always email."
     },
-    "Reconciliation": {
-        title: "AI Reconciliation Tool",
-        lines: ["Automate the comparison of financial documents.", "Let AI find discrepancies between your GST, ROC, and ITR filings."],
+    "Compliance Hub": {
+        title: "Compliance Hub Offline",
+        lines: ["You wanted to connect with your clients here?", "We wanted to connect with our sleep cycle. Neither is happening."],
+        eta: "Unlocks on our Pro plans. For now, there's always email."
+    },
+    "Community": {
+        title: "Community Feature Missing",
+        lines: [
+            "Our intern said: ‘I'll build the community feature.’",
+            "That was 49 days ago. No updates since.",
+        ],
+        eta: "We’re filing a missing person report. 🕵️‍♂️"
+    },
+    "Report Center": {
+        title: "The Report Center is... Reporting Off",
+        lines: ["This feature generates beautiful, investor-ready reports.", "Currently, it only generates existential dread for our developers."],
         eta: "This is a premium feature available on our Pro plans."
     },
-    "Invitations": {
-        title: "Invite System Under Construction",
-        lines: [
-            "We were going to build an invite system.",
-            "Then we accidentally invited burnout instead.",
-        ],
-        eta: "Coming soon… once coffee works again. ☕"
+    "Clause Library": {
+        title: "Clause Library is Checked Out",
+        lines: ["A library of pre-approved legal clauses, just for you.", "Right now, the only clause is 'Santa Clause' and he's on vacation."],
+        eta: "This is a premium feature available on our Pro plans."
+    },
+    "Reconciliation": {
+        title: "AI Reconciliation is Reconciling Its Feelings",
+        lines: ["Automate the painful process of matching financial documents.", "Our AI is currently trying to reconcile its code with its purpose."],
+        eta: "Unlocks on our Pro plans."
     },
     "Workflows": {
         title: "Workflow Engine is... Napping",
@@ -50,51 +65,11 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         ],
         eta: "ETA: After 7 cups of chai and one long nap. 💤"
     },
-    "Community": {
-        title: "Community Feature Missing",
-        lines: [
-            "Our intern said: ‘I'll build the community feature.’",
-            "That was 49 days ago. No updates since.",
-        ],
-        eta: "We’re filing a missing feature report. 🕵️‍♂️"
-    },
-    "CA Connect": {
-        title: "Connection Timed Out",
-        lines: [
-            "You wanted to connect with your CA?",
-            "We wanted to connect with our sleep cycle.",
-        ],
-        eta: "Neither is happening. Stay tuned. 😴"
-    },
-    "Compliance Hub": {
-        title: "Connection Timed Out",
-        lines: [
-            "You wanted to connect with your CA?",
-            "We wanted to connect with our sleep cycle.",
-        ],
-        eta: "Neither is happening. Stay tuned. 😴"
-    },
-    "Report Center": {
-        title: "Upgrade to Pro to Generate Reports",
-        lines: [
-            "Unlock professional, investor-ready reports.",
-            "Impress your stakeholders with a single click."
-        ],
-        eta: "This is a premium feature available on our Pro plans."
-    },
-    "Clause Library": {
-        title: "Upgrade to Pro for Clause Library",
-        lines: [
-            "Build a library of your firm's standard legal clauses.",
-            "Ensure consistency and speed up document drafting."
-        ],
-        eta: "This is a premium feature available on our Pro plans."
-    },
     "default": {
-        title: "Feature Coming Soon!",
+        title: "Feature Not Found",
         lines: [
-            "This feature is still under development.",
-            "Our team is working hard to bring it to you.",
+            "Error 404: This feature has gone on an unscheduled vacation.",
+            "We've sent a postcard asking it to return.",
         ],
         eta: "Check back soon for updates."
     }
