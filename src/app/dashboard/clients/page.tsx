@@ -14,53 +14,87 @@ import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { Company } from "@/lib/types";
-import { startOfToday } from "date-fns";
+import { startOfToday, format } from "date-fns";
+import { generateFilings } from "@/ai/flows/filing-generator-flow";
 
+type ClientHealthInfo = Company & {
+  healthScore: number;
+  riskLevel: 'Low' | 'Medium' | 'High';
+};
 
 export default function ClientsPage() {
   const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const router = useRouter();
+  const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
+  const [isLoadingHealth, setIsLoadingHealth] = useState(true);
 
-  const clientHealthData = useMemo(() => {
-    if (!userProfile?.companies) return [];
+  useEffect(() => {
+    const calculateAllClientHealth = async () => {
+      if (!userProfile?.companies || userProfile.companies.length === 0) {
+        setIsLoadingHealth(false);
+        return;
+      }
 
-    return userProfile.companies.map(company => {
-      const savedStatuses = company.checklistStatus || {};
+      setIsLoadingHealth(true);
+      const healthPromises = userProfile.companies.map(async (company) => {
+        try {
+          const filingResponse = await generateFilings({
+            companyType: company.type,
+            incorporationDate: company.incorporationDate,
+            currentDate: format(new Date(), 'yyyy-MM-dd'),
+            legalRegion: company.legalRegion,
+            gstin: company.gstin,
+          });
+
+          const totalFilings = filingResponse.filings.length;
+          const savedStatuses = company.checklistStatus || {};
+          
+          const overdueFilings = filingResponse.filings.filter(filing => {
+            const dueDate = new Date(filing.date + 'T00:00:00');
+            const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+            const isCompleted = savedStatuses[uniqueId] ?? false;
+            return dueDate < startOfToday() && !isCompleted;
+          }).length;
+          
+          const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
+          
+          const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+          if (company.legalRegion === 'India') requiredFields.push('cin');
+          const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+          const profileCompleteness = (filledFields / requiredFields.length) * 100;
+
+          const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+          let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+          if (healthScore < 60) riskLevel = 'High';
+          else if (healthScore < 85) riskLevel = 'Medium';
+          
+          return { ...company, healthScore, riskLevel };
+        } catch (error) {
+          console.error(`Failed to calculate health for ${company.name}`, error);
+          // Return company with a default/error state if calculation fails
+          return { ...company, healthScore: 0, riskLevel: 'High' as const };
+        }
+      });
       
-      const overdueTasks = Object.entries(savedStatuses).filter(([key, value]) => {
-          const datePart = key.split('-').slice(-3).join('-');
-          const dueDate = new Date(datePart + 'T00:00:00');
-          return !value && dueDate < startOfToday();
-      }).length;
+      const results = await Promise.all(healthPromises);
+      setClientHealthData(results);
+      setIsLoadingHealth(false);
+    };
 
-      const totalTasks = Object.keys(savedStatuses).length;
-      
-      const filingPerf = totalTasks > 0 ? ((totalTasks - overdueTasks) / totalTasks) * 100 : 100;
-      
-      const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-      if (company.legalRegion === 'India') requiredFields.push('cin');
-      const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-      const profileCompleteness = (filledFields / requiredFields.length) * 100;
-
-      const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
-
-      let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
-      if (healthScore < 60) riskLevel = 'High';
-      else if (healthScore < 85) riskLevel = 'Medium';
-      
-      return { ...company, healthScore, riskLevel };
-    });
+    calculateAllClientHealth();
   }, [userProfile?.companies]);
-  
+
   const highRiskClientCount = useMemo(() => {
-      return clientHealthData.filter(client => client.riskLevel === 'High').length;
+    return clientHealthData.filter(client => client.riskLevel === 'High').length;
   }, [clientHealthData]);
-  
+
   const complianceRate = useMemo(() => {
+    if (isLoadingHealth || clientHealthData.length === 0) return 0;
     const totalScore = clientHealthData.reduce((acc, client) => acc + client.healthScore, 0);
-    return clientHealthData.length > 0 ? Math.round(totalScore / clientHealthData.length) : 100;
-  }, [clientHealthData]);
+    return Math.round(totalScore / clientHealthData.length);
+  }, [clientHealthData, isLoadingHealth]);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -91,9 +125,24 @@ export default function ClientsPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Clients</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{clientCount}</div><p className="text-xs text-muted-foreground">{clientCount} {clientCount === 1 ? 'client' : 'clients'} managed</p></CardContent></Card>
-          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">High-Risk Clients</CardTitle><AlertTriangle className="h-4 w-4 text-destructive" /></CardHeader><CardContent><div className="text-2xl font-bold">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with low health scores</p></CardContent></Card>
-          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Compliance Rate</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold">{complianceRate}%</div><p className="text-xs text-muted-foreground">Average portfolio health</p></CardContent></Card>
+          <Card className="interactive-lift">
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Clients</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader>
+            <CardContent><div className="text-2xl font-bold">{clientCount}</div><p className="text-xs text-muted-foreground">{clientCount} {clientCount === 1 ? 'client' : 'clients'} managed</p></CardContent>
+          </Card>
+          <Card className="interactive-lift">
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">High-Risk Clients</CardTitle><AlertTriangle className="h-4 w-4 text-destructive" /></CardHeader>
+            <CardContent>
+              {isLoadingHealth ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">{highRiskClientCount}</div>}
+              <p className="text-xs text-muted-foreground">Clients with low health scores</p>
+            </CardContent>
+          </Card>
+          <Card className="interactive-lift">
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Compliance Rate</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader>
+            <CardContent>
+              {isLoadingHealth ? <Loader2 className="h-6 w-6 animate-spin"/> : <div className="text-2xl font-bold">{complianceRate}%</div>}
+              <p className="text-xs text-muted-foreground">Average portfolio health</p>
+            </CardContent>
+          </Card>
         </div>
 
         <Card className="interactive-lift">
@@ -107,7 +156,9 @@ export default function ClientsPage() {
               </div>
           </CardHeader>
           <CardContent>
-              {clientCount > 0 ? (
+              {isLoadingHealth ? (
+                 <div className="flex h-64 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+              ) : clientCount > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
