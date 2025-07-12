@@ -546,11 +546,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
 
         // Update founder's profile
-        const founderInvites = (founderProfile.invites || []).filter(inv => inv.caEmail !== user.email);
+        const founderInvites = (founderProfile.invites || []).filter(inv => inv.id !== inviteId);
         transaction.update(founderRef, { connectedCaUid: user.uid, invitedCaEmail: null, invites: founderInvites });
 
         // Update CA's profile
-        transaction.update(caRef, { companies: [...userProfile.companies, companyForCa] });
+        const caProfile = (await transaction.get(caRef)).data() as UserProfile;
+        transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
         
         // Update invite status to 'accepted' instead of deleting
         transaction.update(inviteRef, { status: 'accepted' });
