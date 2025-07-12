@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,12 +13,54 @@ import { useAuth } from "@/hooks/auth";
 import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import type { Company } from "@/lib/types";
+import { startOfToday } from "date-fns";
 
 
 export default function ClientsPage() {
   const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const router = useRouter();
+
+  const clientHealthData = useMemo(() => {
+    if (!userProfile?.companies) return [];
+
+    return userProfile.companies.map(company => {
+      const savedStatuses = company.checklistStatus || {};
+      
+      const overdueTasks = Object.entries(savedStatuses).filter(([key, value]) => {
+          const datePart = key.split('-').slice(-3).join('-');
+          const dueDate = new Date(datePart + 'T00:00:00');
+          return !value && dueDate < startOfToday();
+      }).length;
+
+      const totalTasks = Object.keys(savedStatuses).length;
+      
+      const filingPerf = totalTasks > 0 ? ((totalTasks - overdueTasks) / totalTasks) * 100 : 100;
+      
+      const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+      if (company.legalRegion === 'India') requiredFields.push('cin');
+      const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+      const profileCompleteness = (filledFields / requiredFields.length) * 100;
+
+      const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+      let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+      if (healthScore < 60) riskLevel = 'High';
+      else if (healthScore < 85) riskLevel = 'Medium';
+      
+      return { ...company, healthScore, riskLevel };
+    });
+  }, [userProfile?.companies]);
+  
+  const highRiskClientCount = useMemo(() => {
+      return clientHealthData.filter(client => client.riskLevel === 'High').length;
+  }, [clientHealthData]);
+  
+  const complianceRate = useMemo(() => {
+    const totalScore = clientHealthData.reduce((acc, client) => acc + client.healthScore, 0);
+    return clientHealthData.length > 0 ? Math.round(totalScore / clientHealthData.length) : 100;
+  }, [clientHealthData]);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -50,8 +92,8 @@ export default function ClientsPage() {
 
         <div className="grid gap-6 md:grid-cols-3">
           <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Clients</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{clientCount}</div><p className="text-xs text-muted-foreground">{clientCount} {clientCount === 1 ? 'client' : 'clients'} managed</p></CardContent></Card>
-          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">High-Risk Clients</CardTitle><AlertTriangle className="h-4 w-4 text-destructive" /></CardHeader><CardContent><div className="text-2xl font-bold">N/A</div><p className="text-xs text-muted-foreground">Risk analysis coming soon</p></CardContent></Card>
-          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Compliance Rate</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold">N/A</div><p className="text-xs text-muted-foreground">Calculated from client filings</p></CardContent></Card>
+          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">High-Risk Clients</CardTitle><AlertTriangle className="h-4 w-4 text-destructive" /></CardHeader><CardContent><div className="text-2xl font-bold">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with low health scores</p></CardContent></Card>
+          <Card className="interactive-lift"><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Compliance Rate</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold">{complianceRate}%</div><p className="text-xs text-muted-foreground">Average portfolio health</p></CardContent></Card>
         </div>
 
         <Card className="interactive-lift">
@@ -76,17 +118,17 @@ export default function ClientsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {userProfile.companies.map((company) => (
+                    {clientHealthData.map((company) => (
                       <TableRow key={company.id} onClick={() => handleViewDetails(company.id)} className="cursor-pointer">
                         <TableCell className="font-medium">{company.name}</TableCell>
                         <TableCell>{company.type}</TableCell>
-                        <TableCell><Badge variant="secondary" className="bg-green-100 text-green-700">Low</Badge></TableCell>
+                        <TableCell><Badge variant={company.riskLevel === 'High' ? 'destructive' : company.riskLevel === 'Medium' ? 'default' : 'secondary'}>{company.riskLevel}</Badge></TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Toggle menu</span></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={() => handleViewDetails(company.id)}><View className="mr-2"/>View Workspace</DropdownMenuItem>
+                              <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); handleViewDetails(company.id); }}><View className="mr-2"/>View Workspace</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
