@@ -111,7 +111,7 @@ export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedM
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
             <Lock className="h-6 w-6 text-primary" />
           </div>
-          <DialogTitle className="font-headline text-2xl">{content.title}</DialogTitle>
+          <DialogTitle className="font-headline text-2xl text-center">{content.title}</DialogTitle>
           <DialogDescription asChild>
             <div className="space-y-4 pt-4 text-center">
                 <div className="space-y-1 text-foreground text-center">
