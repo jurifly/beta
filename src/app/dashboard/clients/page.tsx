@@ -6,16 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle, Search, Users, AlertTriangle, CheckCircle, Loader2, Briefcase, FileText, View } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Search, Users, AlertTriangle, CheckCircle, Loader2, Briefcase, FileText, View, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/auth";
-import { AddCompanyModal } from "@/components/dashboard/add-company-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { Company } from "@/lib/types";
 import { startOfToday, format } from "date-fns";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
+import { InviteClientModal } from "@/components/dashboard/invite-client-modal";
 
 type ClientHealthInfo = Company & {
   healthScore: number;
@@ -23,8 +23,8 @@ type ClientHealthInfo = Company & {
 };
 
 export default function ClientsPage() {
-  const { userProfile, deductCredits } = useAuth();
-  const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
+  const { userProfile } = useAuth();
+  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const router = useRouter();
   const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
@@ -109,7 +109,7 @@ export default function ClientsPage() {
 
   return (
     <>
-      <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
+      <InviteClientModal isOpen={isInviteModalOpen} onOpenChange={setInviteModalOpen} />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -118,9 +118,9 @@ export default function ClientsPage() {
               Manage all your client companies from a single dashboard.
             </p>
           </div>
-          <Button className="w-full sm:w-auto interactive-lift" onClick={() => setAddCompanyModalOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Client
+          <Button className="w-full sm:w-auto interactive-lift" onClick={() => setInviteModalOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite New Client
           </Button>
         </div>
 
@@ -189,7 +189,7 @@ export default function ClientsPage() {
                 </Table>
               ) : (
                 <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                    <Users className="w-16 h-16 text-primary/20"/><p className="font-semibold text-lg">No Clients Found</p><p className="text-sm max-w-sm">Add a new client to get started by clicking the button above.</p>
+                    <Users className="w-16 h-16 text-primary/20"/><p className="font-semibold text-lg">No Clients Found</p><p className="text-sm max-w-sm">Invite a new client to get started.</p>
                 </div>
               )}
           </CardContent>

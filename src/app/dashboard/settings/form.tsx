@@ -110,7 +110,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
     ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
     : null;
 
-  const addButtonText = userProfile.role === 'CA' ? 'Add New Client' : 'Add New Company';
+  const addButtonText = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor' ? 'Invite New Client' : 'Add New Company';
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
