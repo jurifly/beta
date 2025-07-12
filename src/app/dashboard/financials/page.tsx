@@ -480,7 +480,7 @@ const forecastSchema = z.object({
   oneTimeExpenses: z.array(z.object({
     item: z.string().min(1, 'Item name is required'),
     amount: z.coerce.number().min(1, 'Amount is required'),
-    month: z.coerce.number().min(1).max(12),
+    month: z.coerce.number().min(1, 'Amount is required'),
   })).default([]),
 });
 type ForecastFormData = z.infer<typeof forecastSchema>;
@@ -743,8 +743,8 @@ export default function FinancialsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Financials & Tax</h1>
+            <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Financials & Tax</h1>
                 <p className="text-muted-foreground">Tools to calculate taxes and manage your startup's financial health.</p>
             </div>
             <Tabs defaultValue="financials" className="w-full">

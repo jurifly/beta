@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode, useMemo } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -388,6 +387,15 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   
   const navItems = getSidebarNavItems(userProfile.role);
   
+  const activeNavItem = useMemo(() => {
+    return [...navItems, ...getBottomNavItems(userProfile.role), ...Object.values(navItemConfig)]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find(item => pathname.startsWith(item.href));
+  }, [pathname, navItems, userProfile.role]);
+
+  const activeThemeColor = activeNavItem?.color || 'hsl(var(--primary))';
+
+
   const bonusCredits = userProfile.creditBalance ?? 0;
   const dailyCreditsUsed = userProfile.dailyCreditsUsed ?? 0;
   const creditLimit = userProfile.dailyCreditLimit ?? 0;
@@ -549,7 +557,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <UserNav />
                 </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto">
+            <main 
+                className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto"
+                style={{ '--feature-color': activeThemeColor } as React.CSSProperties}
+            >
                 <BetaBanner />
                 {children}
             </main>
@@ -621,49 +632,41 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 const isLocked = item.locked && !isPro && !isDevMode;
 
                 return (
-                  <TooltipProvider key={item.href} delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={item.href}
-                          onClick={(e) => handleLinkClick(e, item)}
-                          className={cn(
-                              "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all relative",
-                              "hover:text-primary",
-                              isActive && "text-primary font-semibold",
-                              isLocked && "cursor-not-allowed"
-                          )}
-                           style={{
-                                '--item-color': item.color || 'transparent',
-                                '--item-hover-bg': item.color ? `${item.color}1A` : 'hsl(var(--muted))'
-                            } as React.CSSProperties}
-                        >
-                          <div className={cn(
-                              "absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-[var(--item-color)] transition-all",
-                              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
-                          )}></div>
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={(e) => handleLinkClick(e, item)}
+                      className={cn(
+                          "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all relative interactive-lift",
+                          "hover:text-primary",
+                          isActive && "text-primary font-semibold",
+                          isLocked && "cursor-not-allowed"
+                      )}
+                       style={{
+                            '--item-color': item.color || 'transparent',
+                            '--item-hover-bg': item.color ? `${item.color}1A` : 'hsl(var(--muted))'
+                        } as React.CSSProperties}
+                    >
+                      <div className={cn(
+                          "absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-[var(--item-color)] transition-all",
+                          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
+                      )}></div>
 
-                          <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-[var(--item-color)]")} />
-                          {item.label}
-                          {isLocked && (
-                            <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
-                          )}
-                           <style jsx>{`
-                            a:hover {
-                                background-color: var(--item-hover-bg);
-                            }
-                            a[data-active="true"] {
-                               background-color: var(--item-hover-bg);
-                            }
-                           `}</style>
-                           <div data-active={isActive ? 'true' : 'false'}></div>
-                        </Link>
-                      </TooltipTrigger>
-                       <TooltipContent side="right">
-                          <p>{item.label}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                      <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-[var(--item-color)]")} />
+                      {item.label}
+                      {isLocked && (
+                        <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
+                      )}
+                       <style jsx>{`
+                        a:hover {
+                            background-color: var(--item-hover-bg);
+                        }
+                        a[data-active="true"] {
+                           background-color: var(--item-hover-bg);
+                        }
+                       `}</style>
+                       <div data-active={isActive ? 'true' : 'false'}></div>
+                    </Link>
                 )
               })}
             </nav>

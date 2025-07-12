@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from 'react';
@@ -29,7 +28,7 @@ type ReportData = {
 
 const ReportTemplate = ({ data }: { data: ReportData }) => {
     const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
+    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
     return (
         <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Manrope, sans-serif' }}>
@@ -249,8 +248,8 @@ export default function ReportCenterPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Report Center</h1>
+            <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Report Center</h1>
                 <p className="text-muted-foreground">Generate professional, shareable reports for your clients.</p>
             </div>
             
@@ -303,5 +302,3 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
-    

@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useState } from "react";
@@ -139,8 +138,8 @@ export default function SettingsPage() {
         deductCredits={deductCredits}
       />
       <div className="space-y-6">
-        <div>
-            <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+            <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Settings</h2>
             <p className="text-muted-foreground">Manage your personal, billing, and company information.</p>
         </div>
         <Tabs defaultValue={tab} className="space-y-6">

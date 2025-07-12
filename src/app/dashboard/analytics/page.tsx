@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useAuth } from "@/hooks/auth"
@@ -42,8 +41,8 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">{pageTitle}</h2>
+      <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+        <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">{pageTitle}</h2>
         <p className="text-muted-foreground">{pageDescription}</p>
       </div>
       {renderAnalyticsByRole()}

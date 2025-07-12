@@ -796,23 +796,25 @@ export default function Dashboard() {
   return (
     <>
       <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
-              Welcome, {userProfile?.name.split(" ")[0]}!
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Here&apos;s your {userProfile?.role} overview {userProfile?.role === 'Founder' && activeCompany ? `for ${activeCompany.name}` : ''}.
-            </p>
-          </div>
-            <div className="flex items-center gap-4">
-                <Button onClick={() => setAddCompanyModalOpen(true)} className="w-full sm:w-auto interactive-lift">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Company
-                </Button>
+      <div className="space-y-6">
+        <Card className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">
+                Welcome, {userProfile?.name.split(" ")[0]}!
+              </h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Here&apos;s your {userProfile?.role} overview {userProfile?.role === 'Founder' && activeCompany ? `for ${activeCompany.name}` : ''}.
+              </p>
             </div>
-        </div>
+              <div className="flex items-center gap-4">
+                  <Button onClick={() => setAddCompanyModalOpen(true)} className="w-full sm:w-auto interactive-lift">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Company
+                  </Button>
+              </div>
+          </div>
+        </Card>
         {renderDashboardByRole()}
       </div>
     </>
