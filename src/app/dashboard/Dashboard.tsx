@@ -154,7 +154,7 @@ type DashboardChecklistItem = {
 };
 
 function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: UserProfile, onAddCompanyClick: () => void }) {
-    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+    const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     const { toast } = useToast();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
@@ -791,7 +791,9 @@ export default function Dashboard() {
     }
   };
   
-  const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+  const activeCompany = Array.isArray(userProfile?.companies)
+    ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
+    : null;
 
   return (
     <>
