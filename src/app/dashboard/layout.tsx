@@ -235,7 +235,6 @@ const navItemConfig: NavItemConfig = {
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
-  playbook: { href: "/dashboard/learn", translationKey: "playbook", icon: BookOpenCheck },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
@@ -264,7 +263,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect },
   { ...navItemConfig.documents },
-  { ...navItemConfig.playbook },
+  { ...navItemConfig.clauseLibrary },
   { ...navItemConfig.community },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
 ];
@@ -280,8 +279,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
-  { ...navItemConfig.playbook },
-  { ...navItemConfig.clauseLibrary, locked: true },
+  { ...navItemConfig.clauseLibrary, locked: false },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
