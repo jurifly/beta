@@ -1,70 +1,97 @@
 
 "use client"
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/hooks/auth";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Library, PlusCircle, Search, Loader2, Trash2 } from "lucide-react";
+import { Library, PlusCircle, Search, Loader2, Trash2, Copy, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AddClauseModal } from "@/components/dashboard/add-clause-modal";
 import type { Clause } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { allClauses as prebuiltClauses } from "@/lib/clause-library-content";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
-const CLAUSE_STORAGE_KEY = "clauseLibrary";
+const USER_CLAUSE_STORAGE_KEY = "userClauseLibrary";
 
 export default function ClauseLibraryPage() {
     const { userProfile } = useAuth();
     const [isModalOpen, setModalOpen] = useState(false);
-    const [clauses, setClauses] = useState<Clause[]>([]);
+    const [userClauses, setUserClauses] = useState<Clause[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
 
     useEffect(() => {
         try {
-            const savedClauses = localStorage.getItem(CLAUSE_STORAGE_KEY);
+            const savedClauses = localStorage.getItem(USER_CLAUSE_STORAGE_KEY);
             if (savedClauses) {
-                setClauses(JSON.parse(savedClauses));
+                setUserClauses(JSON.parse(savedClauses));
             }
         } catch (error) {
-            console.error("Failed to load clauses from localStorage", error);
+            console.error("Failed to load user clauses from localStorage", error);
         }
     }, []);
 
-    const saveClauses = (updatedClauses: Clause[]) => {
-        setClauses(updatedClauses);
+    const saveUserClauses = (updatedClauses: Clause[]) => {
+        setUserClauses(updatedClauses);
         try {
-            localStorage.setItem(CLAUSE_STORAGE_KEY, JSON.stringify(updatedClauses));
+            localStorage.setItem(USER_CLAUSE_STORAGE_KEY, JSON.stringify(updatedClauses));
         } catch (error) {
-            console.error("Failed to save clauses to localStorage", error);
-            toast({ variant: "destructive", title: "Storage Error", description: "Could not save clauses."});
+            console.error("Failed to save user clauses to localStorage", error);
+            toast({ variant: "destructive", title: "Storage Error", description: "Could not save your custom clauses."});
         }
     };
 
     const handleAddClause = (newClauseData: Omit<Clause, 'id'>) => {
         const newClause: Clause = {
-            id: Date.now().toString(),
+            id: `user_${Date.now()}`,
             ...newClauseData,
         };
-        saveClauses([newClause, ...clauses]);
+        saveUserClauses([newClause, ...userClauses]);
     };
     
     const handleDeleteClause = (id: string) => {
-        const updatedClauses = clauses.filter(c => c.id !== id);
-        saveClauses(updatedClauses);
-        toast({ title: "Clause Deleted", description: "The clause has been removed from your library." });
+        const updatedClauses = userClauses.filter(c => c.id !== id);
+        saveUserClauses(updatedClauses);
+        toast({ title: "Clause Deleted", description: "The custom clause has been removed from your library." });
     };
+
+    const copyToClipboard = useCallback((text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: "Copied!",
+            description: "Clause content copied to clipboard.",
+        });
+    }, [toast]);
+
+    const allGroupedClauses = useMemo(() => {
+        const combined = [...prebuiltClauses, ...userClauses];
+        const lowercasedFilter = searchTerm.toLowerCase();
+
+        const filtered = combined.filter(clause => 
+            clause.title.toLowerCase().includes(lowercasedFilter) ||
+            clause.category.toLowerCase().includes(lowercasedFilter) ||
+            clause.content.toLowerCase().includes(lowercasedFilter)
+        );
+        
+        return filtered.reduce((acc, clause) => {
+            const category = clause.category;
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(clause);
+            return acc;
+        }, {} as Record<string, Clause[]>);
+
+    }, [userClauses, searchTerm]);
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    const filteredClauses = useMemo(() => {
-        return clauses.filter(clause => 
-            clause.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            clause.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            clause.content.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [clauses, searchTerm]);
+    const totalClauses = prebuiltClauses.length + userClauses.length;
 
     return (
         <>
@@ -81,7 +108,7 @@ export default function ClauseLibraryPage() {
                         <div>
                             <CardTitle>Your Clause Collection</CardTitle>
                             <CardDescription>
-                               All your saved clauses in one place.
+                               {totalClauses} clauses available. Search or browse by category.
                             </CardDescription>
                         </div>
                         <div className="flex w-full sm:w-auto gap-2">
@@ -95,40 +122,58 @@ export default function ClauseLibraryPage() {
                                 />
                             </div>
                             <Button className="w-full sm:w-auto interactive-lift" onClick={() => setModalOpen(true)}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Clause
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Custom
                             </Button>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {filteredClauses.length === 0 ? (
-                            <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                        {Object.keys(allGroupedClauses).length === 0 ? (
+                             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
                                 <Library className="w-16 h-16 text-primary/20"/>
-                                <p className="font-semibold text-lg">{clauses.length === 0 ? "Your Library is Empty" : "No Clauses Found"}</p>
+                                <p className="font-semibold text-lg">{totalClauses === 0 ? "Your Library is Empty" : "No Clauses Found"}</p>
                                 <p className="text-sm max-w-sm">
-                                    {clauses.length === 0 
+                                    {totalClauses === 0 
                                       ? "Add a new clause to get started."
                                       : "No clauses match your search term."}
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {filteredClauses.map(clause => (
-                                    <Card key={clause.id} className="interactive-lift flex flex-col group">
-                                        <CardHeader>
-                                            <CardTitle className="text-base">{clause.title}</CardTitle>
-                                            <CardDescription>{clause.category}</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex-1">
-                                            <p className="text-sm text-muted-foreground line-clamp-3">{clause.content}</p>
-                                        </CardContent>
-                                        <CardFooter>
-                                            <Button variant="ghost" size="icon" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteClause(clause.id)}>
-                                                <Trash2 className="h-4 w-4 text-destructive"/>
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
+                            <Accordion type="multiple" defaultValue={Object.keys(allGroupedClauses)} className="w-full">
+                                {Object.entries(allGroupedClauses).map(([category, clauses]) => (
+                                    <AccordionItem key={category} value={category}>
+                                        <AccordionTrigger className="hover:no-underline">{category}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="space-y-3">
+                                                {clauses.map(clause => (
+                                                    <Card key={clause.id} className="group">
+                                                        <CardHeader>
+                                                            <div className="flex justify-between items-start">
+                                                                <CardTitle className="text-base">{clause.title}</CardTitle>
+                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(clause.content)}><Copy className="w-4 h-4"/></Button>
+                                                                    {clause.id.startsWith('user_') && (
+                                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteClause(clause.id)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            {!clause.id.startsWith('user_') && <Badge variant="secondary">Pre-built</Badge>}
+                                                        </CardHeader>
+                                                        <CardContent className="space-y-3">
+                                                            <p className="text-sm text-muted-foreground">{clause.content}</p>
+                                                            <div className="text-xs text-muted-foreground space-y-1 pt-3 border-t">
+                                                                {clause.description && <p><strong>Description:</strong> {clause.description}</p>}
+                                                                {clause.useCase && <p><strong>Use Case:</strong> {clause.useCase}</p>}
+                                                                {clause.relevantSection && <p><strong>Relevant Law:</strong> {clause.relevantSection}</p>}
+                                                                {clause.editableFields && <p><strong>Editable Fields:</strong> {clause.editableFields.join(', ')}</p>}
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
                                 ))}
-                            </div>
+                            </Accordion>
                         )}
                     </CardContent>
                 </Card>

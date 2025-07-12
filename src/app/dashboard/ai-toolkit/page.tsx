@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation';
 
 import * as AiActions from './actions';
 import type { AssistantOutput } from '@/ai/flows/assistant-flow';
-import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails } from "@/lib/types"
+import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails, Clause } from "@/lib/types"
 import { planHierarchy } from "@/lib/types";
 import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
@@ -22,6 +22,7 @@ import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
 import type { WatcherOutput } from "@/ai/flows/regulation-watcher-flow";
 import type { ReconciliationOutput } from "@/ai/flows/reconciliation-flow";
 import type { LegalResearchOutput } from '@/ai/flows/legal-research-flow';
+import { allClauses } from '@/lib/clause-library-content';
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -675,24 +676,127 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
 
 
 // --- Tab: Document Studio ---
-const DocumentStudioTab = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Document Studio</CardTitle>
-            <CardDescription>Generate legal documents from templates or convert existing policies into internal wikis.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Tabs defaultValue="generator">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="generator"><FilePenLine className="mr-2"/>From a Template</TabsTrigger>
-                    <TabsTrigger value="wiki"><BookText className="mr-2"/>From a Policy</TabsTrigger>
-                </TabsList>
-                <TabsContent value="generator" className="pt-6"><DocumentGenerator/></TabsContent>
-                <TabsContent value="wiki" className="pt-6"><WikiGenerator/></TabsContent>
-            </Tabs>
-        </CardContent>
-    </Card>
-)
+const DocumentStudioTab = () => {
+    const { userProfile } = useAuth();
+    if (!userProfile) return null;
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Document Studio</CardTitle>
+                <CardDescription>Generate legal documents from templates or convert existing policies into internal wikis.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 {userProfile.role === 'CA' ? (
+                   <ClauseDocumentBuilder />
+                ) : (
+                   <Tabs defaultValue="generator">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="generator"><FilePenLine className="mr-2"/>From a Template</TabsTrigger>
+                            <TabsTrigger value="wiki"><BookText className="mr-2"/>From a Policy</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="generator" className="pt-6"><DocumentGenerator/></TabsContent>
+                        <TabsContent value="wiki" className="pt-6"><WikiGenerator/></TabsContent>
+                    </Tabs>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+// --- Clause-based Builder for CAs ---
+const ClauseDocumentBuilder = () => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedClauses, setSelectedClauses] = useState<Clause[]>([]);
+    const [builtDocument, setBuiltDocument] = useState('');
+    const { toast } = useToast();
+
+    const groupedClauses = useMemo(() => {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        const filtered = allClauses.filter(clause =>
+            clause.title.toLowerCase().includes(lowercasedFilter) ||
+            clause.category.toLowerCase().includes(lowercasedFilter) ||
+            clause.content.toLowerCase().includes(lowercasedFilter)
+        );
+
+        return filtered.reduce((acc, clause) => {
+            const category = clause.category;
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(clause);
+            return acc;
+        }, {} as Record<string, Clause[]>);
+    }, [searchTerm]);
+
+    const handleClauseToggle = (clause: Clause) => {
+        setSelectedClauses(prev =>
+            prev.some(c => c.id === clause.id)
+                ? prev.filter(c => c.id !== clause.id)
+                : [...prev, clause]
+        );
+    };
+
+    const handleBuildDocument = () => {
+        const content = selectedClauses.map(c => `## ${c.title}\n\n${c.content}`).join('\n\n---\n\n');
+        setBuiltDocument(content);
+        toast({ title: "Document Built!", description: "Your document is ready in the editor." });
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="flex flex-col space-y-4">
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search clause library..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <ScrollArea className="h-[500px] border rounded-md p-4 bg-muted/50">
+                    {Object.entries(groupedClauses).length > 0 ? (
+                        <Accordion type="multiple" defaultValue={Object.keys(groupedClauses)} className="w-full">
+                            {Object.entries(groupedClauses).map(([category, clauses]) => (
+                                <AccordionItem key={category} value={category}>
+                                    <AccordionTrigger>{category}</AccordionTrigger>
+                                    <AccordionContent className="space-y-2 pt-2">
+                                        {clauses.map(clause => (
+                                            <div key={clause.id} className="flex items-start gap-3 p-2 border rounded-md bg-card">
+                                                <Checkbox
+                                                    id={clause.id}
+                                                    checked={selectedClauses.some(c => c.id === clause.id)}
+                                                    onCheckedChange={() => handleClauseToggle(clause)}
+                                                    className="mt-1"
+                                                />
+                                                <Label htmlFor={clause.id} className="font-normal cursor-pointer flex-1">{clause.title}</Label>
+                                            </div>
+                                        ))}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    ) : (
+                        <div className="text-center text-muted-foreground py-8">No clauses found.</div>
+                    )}
+                </ScrollArea>
+                 <Button onClick={handleBuildDocument} disabled={selectedClauses.length === 0}>
+                    <Sparkles className="mr-2" /> Build Document ({selectedClauses.length} selected)
+                </Button>
+            </div>
+             <div className="lg:col-span-1 space-y-2">
+                 <h3 className="text-lg font-semibold">Document Editor</h3>
+                <Textarea
+                    value={builtDocument}
+                    onChange={(e) => setBuiltDocument(e.target.value)}
+                    className="min-h-[500px] font-code"
+                    placeholder="Select clauses and click 'Build Document' to start..."
+                />
+            </div>
+        </div>
+    );
+};
+
 
 type Template = { name: string; isPremium: boolean; };
 type TemplateCategoryData = { name: string; roles: UserRole[]; templates: Template[]; };

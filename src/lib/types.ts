@@ -141,6 +141,10 @@ export interface Clause {
   title: string;
   category: string;
   content: string;
+  description?: string;
+  useCase?: string;
+  relevantSection?: string;
+  editableFields?: string[];
 }
 
 export type VaultItem = {
