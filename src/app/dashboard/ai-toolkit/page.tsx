@@ -1457,7 +1457,7 @@ export default function AiToolkitPage() {
     const showAnalyzer = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showWatcher = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
-    const showPenaltyPredictor = showWatcher; // Same logic as watcher
+    const showPenaltyPredictor = true; // Make predictor available for all roles
 
     const pageTitle = useMemo(() => {
         if (!userProfile) return "AI Toolkit";
