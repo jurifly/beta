@@ -297,6 +297,31 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
         
         updateCompanyChecklistStatus(activeCompany.id, newStatuses);
     };
+
+    const handleCompleteYear = () => {
+        if (!activeCompany || checklist.length === 0) return;
+
+        const currentStatuses = checklist.reduce((acc, item) => {
+            acc[item.id] = item.completed;
+            return acc;
+        }, {} as Record<string, boolean>);
+
+        const newChecklist = checklist.map(item => {
+            if (new Date(item.dueDate).getFullYear().toString() === selectedYear) {
+                return { ...item, completed: true };
+            }
+            return item;
+        });
+        setChecklist(newChecklist);
+        
+        const newStatuses = newChecklist.reduce((acc, item) => {
+            acc[item.id] = item.completed;
+            return acc;
+        }, {} as Record<string, boolean>);
+
+        updateCompanyChecklistStatus(activeCompany.id, newStatuses);
+        toast({ title: `All tasks for ${selectedYear} completed!` });
+    };
     
     const checklistYears = useMemo(() => {
         const years = new Set(checklist.map(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString()));
@@ -456,13 +481,16 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                 <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
                                 <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
                             </div>
-                            {checklistYears.length > 0 && (
-                                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
-                                    {checklistYears.map(year => (
-                                        <option key={year} value={year}>{year}</option>
-                                    ))}
-                                </select>
-                            )}
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <Button variant="outline" size="sm" onClick={handleCompleteYear}>Complete Year</Button>
+                                {checklistYears.length > 0 && (
+                                    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full sm:w-auto bg-card border rounded-md px-3 py-2 text-sm">
+                                        {checklistYears.map(year => (
+                                            <option key={year} value={year}>{year}</option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
