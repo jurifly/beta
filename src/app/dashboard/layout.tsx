@@ -148,7 +148,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label: "Team Management", locked: true },
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
   { ...navItemConfig.analytics },
-  { ...navItemConfig.caConnect, label: 'Compliance Hub', icon: Users },
+  { ...navItemConfig.caConnect, label: 'Advisor Hub', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.workflows, label: "Workflows", locked: true },
@@ -156,7 +156,6 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.documents },
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.playbook },
-  { ...navItemConfig.invitations },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
