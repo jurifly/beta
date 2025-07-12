@@ -48,6 +48,7 @@ import {
   Briefcase,
   BookUser,
   Newspaper,
+  CheckCircle,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -556,10 +557,59 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
-                    <Logo />
-                    <span className="">Claari</span>
-                </div>
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0 md:hidden"
+                        >
+                            <Menu className="h-5 w-5" />
+                            <span className="sr-only">Toggle navigation menu</span>
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="flex flex-col p-0">
+                         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
+                            <Logo />
+                            <span>Claari</span>
+                            </Link>
+                        </div>
+                        <ScrollArea className="flex-1">
+                            <nav className="grid gap-2 text-lg font-medium p-4">
+                            {navItems.map((item) => {
+                                const isActive = item.href === '/dashboard' 
+                                ? usePathname() === item.href 
+                                : usePathname().startsWith(item.href);
+                                const isLocked = item.locked && !isPro && !isDevMode;
+                                const label = translations[item.label_override_key || item.translationKey][language];
+
+                                return (
+                                    <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={(e) => {
+                                        if (isLocked) {
+                                            e.preventDefault();
+                                            setLockedFeature(label);
+                                        }
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                        isActive && "bg-muted text-primary",
+                                        isLocked && "cursor-not-allowed"
+                                    )}
+                                    >
+                                    <item.icon className="h-4 w-4" />
+                                    {label}
+                                    {isLocked && <Lock className="ml-auto h-4 w-4" />}
+                                    </Link>
+                                );
+                                })}
+                            </nav>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
                 <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
