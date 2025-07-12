@@ -65,6 +65,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ComplianceActivityChart = dynamic(
   () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -491,48 +492,33 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
-                            <div>
-                                <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                                <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
-                            </div>
-                             {checklistYears.length > 0 && (
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full sm:w-auto">
-                                            {selectedYear}
-                                            <ChevronDown className="ml-2 h-4 w-4"/>
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-4" align="end">
-                                        <div className="space-y-4">
-                                            <div className="flex flex-wrap gap-2">
-                                                {checklistYears.map(year => (
-                                                    <div key={year} className="flex flex-col gap-2">
-                                                        <Button 
-                                                            size="sm"
-                                                            variant={selectedYear === year ? "default" : "outline"}
-                                                            onClick={() => setSelectedYear(year)}
-                                                            className="justify-center gap-2"
-                                                        >
-                                                            <div className="flex items-center gap-1">
-                                                              {overdueYears.has(year) && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                                                              {year}
-                                                            </div>
-                                                        </Button>
-                                                        <div className="flex items-center justify-center space-x-2">
-                                                          <Checkbox id={`complete-${year}`} onCheckedChange={() => handleCompleteYear(year)} />
-                                                          <Label htmlFor={`complete-${year}`} className="text-xs">Complete</Label>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                        <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
+                        <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
+                    </CardHeader>
+                     <div className="px-6 pb-4">
+                        {checklistYears.length > 0 && (
+                            <ScrollArea className="w-full whitespace-nowrap">
+                                <div className="flex space-x-2 pb-2">
+                                    {checklistYears.map(year => (
+                                        <div key={year} className="flex-shrink-0">
+                                            <Button 
+                                                variant={selectedYear === year ? "default" : "outline"}
+                                                onClick={() => setSelectedYear(year)}
+                                                className="justify-center gap-2"
+                                            >
+                                                {overdueYears.has(year) && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                                                {year}
+                                            </Button>
+                                            <div className="flex items-center justify-center space-x-2 mt-1.5">
+                                                <Checkbox id={`complete-${year}`} onCheckedChange={() => handleCompleteYear(year)} />
+                                                <Label htmlFor={`complete-${year}`} className="text-xs">Complete</Label>
                                             </div>
                                         </div>
-                                    </PopoverContent>
-                                </Popover>
-                            )}
-                        </div>
-                    </CardHeader>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        )}
+                    </div>
                     <CardContent className="space-y-3">
                         {isLoading ? (
                             <div className="space-y-3">
