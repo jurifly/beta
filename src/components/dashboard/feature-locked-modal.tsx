@@ -43,9 +43,9 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         eta: "We’re filing a missing person report. 🕵️‍♂️"
     },
     "Report Center": {
-        title: "The Report Center is... Reporting Off",
-        lines: ["This feature generates beautiful, investor-ready reports.", "Currently, it only generates existential dread for our developers."],
-        eta: "This is a premium feature available on our Pro plans."
+        title: "Report Center Under Construction",
+        lines: ["Our AI is currently learning how to use a PDF generator.", "It's surprisingly difficult. For the AI, we mean. Not for you."],
+        eta: "This feature is coming soon in a future beta update."
     },
     "Clause Library": {
         title: "Clause Library is Checked Out",
