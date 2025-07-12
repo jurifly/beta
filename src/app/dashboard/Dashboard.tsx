@@ -156,6 +156,7 @@ type DashboardChecklistItem = {
 function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: UserProfile, onAddCompanyClick: () => void }) {
     const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     const { toast } = useToast();
+    const { updateCompanyChecklistStatus } = useAuth();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
@@ -218,11 +219,10 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 
                 const processedFilings = response.filings.filter(f => f.date && !isNaN(new Date(f.date).getTime()));
                 
-                const storageKey = `dashboard-checklist-${activeCompany.id}`;
-                const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                const savedStatuses = activeCompany.checklistStatus || {};
                 
                 const checklistItems = processedFilings.map((filing) => {
-                    const uniqueId = `${filing.title}-${filing.date}`;
+                    const uniqueId = `${filing.title}-${filing.date}`.replace(/[.*~/[\]()]/g, '_');
                     const isCompleted = savedStatuses[uniqueId] ?? false;
                     
                     return {
@@ -290,13 +290,12 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
         );
         setChecklist(newChecklist);
 
-        const storageKey = `dashboard-checklist-${activeCompany.id}`;
         const newStatuses = newChecklist.reduce((acc, item) => {
             acc[item.id] = item.completed;
             return acc;
         }, {} as Record<string, boolean>);
         
-        localStorage.setItem(storageKey, JSON.stringify(newStatuses));
+        updateCompanyChecklistStatus(activeCompany.id, newStatuses);
     };
     
     const checklistYears = useMemo(() => {

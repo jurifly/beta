@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/auth";
 
 
 const ComplianceActivityChart = dynamic(
@@ -83,11 +84,12 @@ type DashboardChecklistItem = {
 // This is essentially the FounderDashboard, repurposed for viewing a single client.
 export default function ClientDashboardView({ userProfile }: { userProfile: UserProfile }) {
     const { toast } = useToast();
+    const { updateCompanyChecklistStatus } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     
-    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+    const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -110,11 +112,10 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                 
                 const processedFilings = response.filings.filter(f => f.date && !isNaN(new Date(f.date).getTime()));
                 
-                const storageKey = `dashboard-checklist-${activeCompany.id}`;
-                const savedStatuses: Record<string, boolean> = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                const savedStatuses = activeCompany.checklistStatus || {};
                 
                 const checklistItems = processedFilings.map((filing) => {
-                    const uniqueId = `${filing.title}-${filing.date}`;
+                    const uniqueId = `${filing.title}-${filing.date}`.replace(/[.*~/[\]()]/g, '_');
                     const isCompleted = savedStatuses[uniqueId] ?? false;
 
                     return {
@@ -150,13 +151,12 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         );
         setChecklist(newChecklist);
 
-        const storageKey = `dashboard-checklist-${activeCompany.id}`;
         const newStatuses = newChecklist.reduce((acc, item) => {
             acc[item.id] = item.completed;
             return acc;
         }, {} as Record<string, boolean>);
         
-        localStorage.setItem(storageKey, JSON.stringify(newStatuses));
+        updateCompanyChecklistStatus(activeCompany.id, newStatuses);
     };
 
     const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {

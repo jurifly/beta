@@ -79,6 +79,7 @@ export interface Company {
         monthlyExpenses: number;
     };
     founderUid?: string;
+    checklistStatus?: Record<string, boolean>;
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';

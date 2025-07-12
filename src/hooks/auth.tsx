@@ -21,6 +21,7 @@ export interface AuthContextType {
   isDevMode: boolean;
   setDevMode: (enabled: boolean) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateCompanyChecklistStatus: (companyId: string, newStatus: Record<string, boolean>) => Promise<void>;
   deductCredits: (amount: number) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
@@ -251,6 +252,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [user]);
   
+  const updateCompanyChecklistStatus = useCallback(async (companyId: string, newStatus: Record<string, boolean>) => {
+    if (!user || !userProfile) return;
+    
+    // Determine the correct user document to update (either the founder's or the CA's)
+    const company = userProfile.companies.find(c => c.id === companyId);
+    if (!company) return; // Should not happen
+
+    const targetUserId = userProfile.role === 'CA' ? company.founderUid : user.uid;
+    if (!targetUserId) {
+        console.error("Could not find owner of the company to update checklist.");
+        return;
+    }
+
+    const userToUpdateRef = doc(db, "users", targetUserId);
+    
+    // Fetch the latest profile to avoid overwriting other changes
+    const userToUpdateDoc = await getDoc(userToUpdateRef);
+    if (!userToUpdateDoc.exists()) return;
+
+    const profileToUpdate = userToUpdateDoc.data() as UserProfile;
+    
+    const updatedCompanies = profileToUpdate.companies.map(c => {
+        if (c.id === companyId) {
+            // Sanitize keys before saving to prevent Firestore errors
+            const sanitizedStatus: Record<string, boolean> = {};
+            for (const key in newStatus) {
+                const sanitizedKey = key.replace(/[.*~/[\]]/g, '_');
+                sanitizedStatus[sanitizedKey] = newStatus[key];
+            }
+            return { ...c, checklistStatus: sanitizedStatus };
+        }
+        return c;
+    });
+
+    await updateDoc(userToUpdateRef, { companies: updatedCompanies });
+
+    // If the current user is the one being updated, refresh their local profile state
+    if(targetUserId === user.uid) {
+        setUserProfile(prev => prev ? { ...prev, companies: updatedCompanies } : null);
+    }
+  }, [user, userProfile]);
+
   const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
@@ -482,7 +525,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetchUserProfile(user); // Refresh CA's profile
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
