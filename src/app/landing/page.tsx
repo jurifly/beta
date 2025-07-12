@@ -18,6 +18,7 @@ import {
   Building2,
   TrendingUp,
   Loader2,
+  ChevronLeft,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import {
@@ -144,36 +145,59 @@ const ValueSection = () => {
 const ProductGlimpseSection = () => {
     const glimpses = [
         { title: "Launchpad", description: "Get your company started in 5 clicks.", image: "https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724398188339.png?alt=media&token=487d7b30-e889-4074-b773-fcb33b8a3e77", hint: "company setup" },
-        { title: "Cap Table Preview", description: "See your dilution before it dilutes.", image: "https://placehold.co/600x400.png", hint: "cap table graph" },
-        { title: "Compliance Status", description: "Legal Hygiene Score: 93/100 ✅", image: "https://placehold.co/600x400.png", hint: "compliance dashboard" },
-        { title: "Document Vault", description: "Board Resolution.pdf uploaded via AI", image: "https://placehold.co/600x400.png", hint: "document list" },
+        { title: "Cap Table Preview", description: "See your dilution before it dilutes.", image: "https://placehold.co/1200x800.png", hint: "cap table graph" },
+        { title: "Compliance Status", description: "Legal Hygiene Score: 93/100 ✅", image: "https://placehold.co/1200x800.png", hint: "compliance dashboard" },
+        { title: "Document Vault", description: "Board Resolution.pdf uploaded via AI", image: "https://placehold.co/1200x800.png", hint: "document list" },
     ];
+    
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const nextGlimpse = () => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % glimpses.length);
+    };
+
+    const prevGlimpse = () => {
+        setCurrentIndex((prevIndex) => (prevIndex - 1 + glimpses.length) % glimpses.length);
+    };
+
 
     return (
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This is not software. It's sanity.</h2>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {glimpses.map((glimpse, index) => (
-                        <Card key={index} className="p-4 bg-card/30 interactive-lift overflow-hidden">
-                            <CardContent className="p-0">
-                                <Image
-                                    alt={glimpse.title}
-                                    data-ai-hint={glimpse.hint}
-                                    loading="lazy"
-                                    width={600}
-                                    height={400}
-                                    className="rounded-lg border shadow-md"
-                                    src={glimpse.image}
-                                />
-                                <div className="p-4 text-left">
-                                    <h3 className="font-semibold">{glimpse.title}</h3>
-                                    <p className="text-sm text-muted-foreground">{glimpse.description}</p>
+                <div className="relative group">
+                     <Card className="p-4 bg-card/30 interactive-lift overflow-hidden">
+                        <CardContent className="p-0">
+                             <div className="relative overflow-hidden rounded-lg">
+                                <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+                                    {glimpses.map((glimpse) => (
+                                        <div key={glimpse.title} className="w-full flex-shrink-0">
+                                            <Image
+                                                alt={glimpse.title}
+                                                data-ai-hint={glimpse.hint}
+                                                loading="lazy"
+                                                width={1200}
+                                                height={800}
+                                                className="w-full object-cover aspect-[3/2] border shadow-md"
+                                                src={glimpse.image}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                 </div>
+                            </div>
+                            <div className="p-4 text-left">
+                                <h3 className="font-semibold">{glimpses[currentIndex].title}</h3>
+                                <p className="text-sm text-muted-foreground">{glimpses[currentIndex].description}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Button onClick={prevGlimpse} variant="outline" size="icon" className="absolute left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-10 w-10">
+                        <ChevronLeft />
+                    </Button>
+                    <Button onClick={nextGlimpse} variant="outline" size="icon" className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-10 w-10">
+                        <ChevronRight />
+                    </Button>
+                </div>
             </div>
         </section>
     );
