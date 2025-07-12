@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Loader2,
   ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import {
