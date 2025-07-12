@@ -63,9 +63,8 @@ import { addDays, format, startOfToday, differenceInDays, formatDistanceToNow } 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { Language, Translations } from "./layout";
 
 const ComplianceActivityChart = dynamic(
   () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -124,7 +123,7 @@ const StatCard = ({ title, value, subtext, icon, colorClass, isLoading }: { titl
     </Card>
 );
 
-const QuickLinkCard = ({ title, description, href, icon }: { title: string, description: string, href: string, icon: React.ReactNode }) => (
+const QuickLinkCard = ({ title, description, href, icon, translations, lang }: { title: string, description: string, href: string, icon: React.ReactNode, translations: Translations, lang: Language }) => (
     <Card className="interactive-lift hover:border-primary/50 transition-colors h-full">
         <Link href={href} className="block h-full">
             <CardHeader>
@@ -135,7 +134,7 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
             </CardHeader>
             <CardFooter>
                  <Button variant="link" className="p-0 h-auto">
-                    Go to {title} <ArrowRight className="ml-2 h-4 w-4" />
+                    {translations.goTo[lang]} {title} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
             </CardFooter>
         </Link>
@@ -157,7 +156,7 @@ type DashboardChecklistItem = {
     penalty: string;
 };
 
-function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: UserProfile, onAddCompanyClick: () => void }) {
+function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }: { userProfile: UserProfile, onAddCompanyClick: () => void, translations: Translations, lang: Language }) {
     const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     const { toast } = useToast();
     const { updateCompanyChecklistStatus } = useAuth();
@@ -322,7 +321,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
       }, {} as Record<string, boolean>);
       
       updateCompanyChecklistStatus(activeCompany.id, updatedStatuses);
-      toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
+      toast({ title: translations.toastComplianceUpdatedTitle[lang], description: `${translations.toastComplianceUpdatedDesc[lang]} ${year}.` });
     };
 
     const { checklistYears, overdueYears, yearCompletionStatus } = useMemo(() => {
@@ -460,13 +459,13 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
         return (
             <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
                 <Building2 className="w-16 h-16 text-primary/20 mb-4"/>
-                <p className="font-semibold text-lg">Welcome to your workspace!</p>
+                <p className="font-semibold text-lg">{translations.welcomeWorkspace[lang]}</p>
                 <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                Add your first company to create a compliance calendar and access AI tools.
+                 {translations.addCompanyPrompt[lang]}
                 </p>
                 <Button onClick={onAddCompanyClick}>
                 <Plus className="mr-2 h-4 w-4"/>
-                Add Company
+                 {translations.addCompany[lang]}
                 </Button>
             </div>
         );
@@ -475,16 +474,16 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
-                <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/analytics" className="block"><StatCard title={translations.hygieneScore[lang]} value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/ca-connect" className="block"><StatCard title={translations.upcomingFilings[lang]} value={`${upcomingFilingsCount}`} subtext={translations.inNext30Days[lang]} icon={<Calendar />} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/cap-table" className="block"><StatCard title={translations.equityIssued[lang]} value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/ca-connect" className="block"><StatCard title={translations.alerts[lang]} value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? translations.overdueTasks[lang] : translations.noOverdueTasks[lang]} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
             </div>
             
             <Card className="interactive-lift">
                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Suggestions</CardTitle>
-                    <CardDescription>Timely advice from our AI to help you stay ahead.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> {translations.proactiveAISuggestions[lang]}</CardTitle>
+                    <CardDescription>{translations.timelyAdvice[lang]}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {insightsLoading ? (
@@ -496,7 +495,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                        insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
-                            <p>No special insights at the moment. You're all set!</p>
+                            <p>{translations.noSpecialInsights[lang]}</p>
                         </div>
                     )}
                 </CardContent>
@@ -508,8 +507,8 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 <Card className="interactive-lift">
                     <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center">
                         <div>
-                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                            <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
+                            <CardTitle className="flex items-center gap-2"><ListChecks /> {translations.complianceChecklist[lang]}</CardTitle>
+                            <CardDescription>{translations.keyComplianceItems[lang]}</CardDescription>
                         </div>
                         {checklistYears.length > 0 && (
                             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -540,7 +539,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                         />
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Complete all past tasks for {year}</p>
+                                                        <p>{translations.completeAllTasksFor[lang]} {year}</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -580,7 +579,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                             <CalendarClock className="h-4 w-4 text-primary" />
                                                             </TooltipTrigger>
                                                             <TooltipContent>
-                                                                <p>Current Month</p>
+                                                                <p>{translations.currentMonth[lang]}</p>
                                                             </TooltipContent>
                                                         </Tooltip>
                                                     </TooltipProvider>
@@ -617,20 +616,20 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                                                 <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                                                             </TooltipTrigger>
                                                                             <TooltipContent className="max-w-xs p-3">
-                                                                                <p className="font-semibold mb-2">About this task:</p>
+                                                                                <p className="font-semibold mb-2">{translations.aboutThisTask[lang]}</p>
                                                                                 <p className="text-xs mb-3">{item.description}</p>
-                                                                                <p className="font-semibold mb-2">Penalty for non-compliance:</p>
+                                                                                <p className="font-semibold mb-2">{translations.penaltyForNonCompliance[lang]}</p>
                                                                                 <p className="text-xs text-destructive">{item.penalty}</p>
                                                                             </TooltipContent>
                                                                         </Tooltip>
                                                                     </TooltipProvider>
                                                                 </div>
                                                                 <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-                                                                Due: {format(dueDate, 'do MMM, yyyy')}
+                                                                {translations.due[lang]}: {format(dueDate, 'do MMM, yyyy')}
                                                                 </span>
                                                             </div>
                                                             {isItemOverdue && (
-                                                                <Badge variant="destructive" className="self-center">Overdue</Badge>
+                                                                <Badge variant="destructive" className="self-center">{translations.overdue[lang]}</Badge>
                                                             )}
                                                         </div>
                                                     )
@@ -643,7 +642,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                             </Accordion>
                         ) : (
                             <div className="text-center text-muted-foreground p-8">
-                                <p>No items for {selectedYear}. Select another year or check back later.</p>
+                                <p>{translations.noItemsForYear[lang]} {selectedYear}. {translations.selectAnotherYear[lang]}</p>
                             </div>
                         )}
                     </CardContent>
@@ -653,7 +652,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
     );
 }
 
-function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfile, onAddClientClick: () => void }) {
+function CADashboard({ userProfile, onAddClientClick, translations, lang }: { userProfile: UserProfile, onAddClientClick: () => void, translations: Translations, lang: Language }) {
     const { toast } = useToast();
     const router = useRouter();
     const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
@@ -722,16 +721,16 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
      return (
         <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
             <Users className="w-16 h-16 text-primary/20 mb-4"/>
-            <p className="font-semibold text-lg">Welcome, Advisor!</p>
+            <p className="font-semibold text-lg">{translations.welcomeAdvisor[lang]}</p>
             <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                Add your first client company to get started, or accept a pending invitation.
+                 {translations.addFirstClientPrompt[lang]}
             </p>
             <div className="flex gap-4">
                 <Button onClick={onAddClientClick}>
-                    <Plus className="mr-2 h-4 w-4"/> Add Client
+                    <Plus className="mr-2 h-4 w-4"/> {translations.addClient[lang]}
                 </Button>
                 <Button variant="outline" asChild>
-                    <Link href="/dashboard/invitations">View Invitations</Link>
+                    <Link href="/dashboard/invitations">{translations.viewInvitations[lang]}</Link>
                 </Button>
             </div>
         </div>
@@ -741,15 +740,15 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
    return (
     <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed`} icon={<Users className="h-4 w-4" />} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Clients at Risk" value={`${highRiskClientCount}`} subtext="Clients with low health scores" icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Analytics" value="View" subtext="Deep dive into client health" icon={<LineChart className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/clients" className="block"><StatCard title={translations.totalClients[lang]} value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed`} icon={<Users className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title={translations.clientsAtRisk[lang]} value={`${highRiskClientCount}`} subtext={translations.clientsWithLowHealth[lang]} icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title={translations.portfolioAnalytics[lang]} value={translations.view[lang]} subtext={translations.deepDive[lang]} icon={<LineChart className="h-4 w-4" />} /></Link>
         </div>
         
         <Card className="interactive-lift">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Suggestions</CardTitle>
-                <CardDescription>Timely advice to help you manage your practice.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> {translations.proactiveAISuggestions[lang]}</CardTitle>
+                <CardDescription>{translations.timelyAdvicePractice[lang]}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
                 {insightsLoading ? (
@@ -761,7 +760,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                    insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
                 ) : (
                     <div className="text-center text-muted-foreground p-8">
-                        <p>No special insights at the moment. You're all set!</p>
+                        <p>{translations.noSpecialInsights[lang]}</p>
                     </div>
                 )}
             </CardContent>
@@ -770,8 +769,8 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CalendarClock/> Portfolio Deadlines</CardTitle>
-                    <CardDescription>Upcoming key dates across all your clients.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><CalendarClock/> {translations.portfolioDeadlines[lang]}</CardTitle>
+                    <CardDescription>{translations.upcomingKeyDates[lang]}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {portfolioDeadlines.length > 0 ? (
@@ -781,18 +780,18 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                                     <div className="p-2 bg-muted rounded-full text-primary"><FileText className="w-5 h-5"/></div>
                                     <div>
                                         <p className="font-medium text-sm">{item.title}</p>
-                                        <p className="text-xs text-muted-foreground">{item.clientName} &bull; <span className="font-semibold">Due {formatDistanceToNow(new Date(item.dueDate), { addSuffix: true })}</span></p>
+                                        <p className="text-xs text-muted-foreground">{item.clientName} &bull; <span className="font-semibold">{translations.due[lang]} {formatDistanceToNow(new Date(item.dueDate), { addSuffix: true })}</span></p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    ) : <p className="text-sm text-muted-foreground">No upcoming deadlines.</p>}
+                    ) : <p className="text-sm text-muted-foreground">{translations.noUpcomingDeadlines[lang]}</p>}
                 </CardContent>
             </Card>
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CheckCircle/> Recent Activity</CardTitle>
-                    <CardDescription>The latest actions from your portfolio.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><CheckCircle/> {translations.recentActivity[lang]}</CardTitle>
+                    <CardDescription>{translations.latestActions[lang]}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {activityLog.length > 0 ? (
@@ -807,7 +806,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                                 </div>
                             ))}
                         </div>
-                    ) : <p className="text-sm text-muted-foreground">No recent activity.</p>}
+                    ) : <p className="text-sm text-muted-foreground">{translations.noRecentActivity[lang]}</p>}
                 </CardContent>
             </Card>
         </div>
@@ -815,43 +814,43 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
   )
 }
 
-function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
+function LegalAdvisorDashboard({ userProfile, translations, lang }: { userProfile: UserProfile, translations: Translations, lang: Language }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
              <div className="md:col-span-4 lg:col-span-4">
-                <QuickLinkCard title="AI Document Analyzer" description="Instantly upload a contract to identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
+                <QuickLinkCard title={translations.aiDocAnalyzer[lang]} description={translations.aiDocAnalyzerDesc[lang]} href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} translations={translations} lang={lang}/>
              </div>
-             <Link href="/dashboard/clients" className="block"><StatCard title="Active Matters" value={userProfile.companies.reduce((acc, c) => acc + (c.matters?.length || 0), 0).toString()} subtext="Across all clients" icon={<Briefcase />} /></Link>
-             <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title="Contracts Analyzed" value="0" subtext="This month" icon={<ListChecks />} /></Link>
-             <Link href="/dashboard/documents" className="block"><StatCard title="Pending Redlines" value="0" subtext="Awaiting your review" icon={<FileSignature />} /></Link>
-             <Link href="/dashboard/ai-toolkit?tab=research" className="block"><StatCard title="Legal Research" value="0" subtext="Queries this month" icon={<Scale />} /></Link>
+             <Link href="/dashboard/clients" className="block"><StatCard title={translations.activeMatters[lang]} value={userProfile.companies.reduce((acc, c) => acc + (c.matters?.length || 0), 0).toString()} subtext={translations.acrossAllClients[lang]} icon={<Briefcase />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title={translations.contractsAnalyzed[lang]} value="0" subtext={translations.thisMonth[lang]} icon={<ListChecks />} /></Link>
+             <Link href="/dashboard/documents" className="block"><StatCard title={translations.pendingRedlines[lang]} value="0" subtext={translations.awaitingReview[lang]} icon={<FileSignature />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=research" className="block"><StatCard title={translations.legalResearch[lang]} value="0" subtext={translations.queriesThisMonth[lang]} icon={<Scale />} /></Link>
              <div className="md:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
         </div>
     );
 }
 
-function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
+function EnterpriseDashboard({ userProfile, translations, lang }: { userProfile: UserProfile, translations: Translations, lang: Language }) {
     const entityCount = userProfile.companies.length;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-             <Link href="/dashboard/team" className="block"><StatCard title="Managed Entities" value={`${entityCount}`} subtext="Across the organization" icon={<Building2 />} /></Link>
-             <Link href="/dashboard/analytics" className="block"><StatCard title="Overall Risk Score" value="N/A" subtext="Connect data sources" icon={<ShieldCheck />} /></Link>
-             <Link href="/dashboard/team" className="block"><StatCard title="Pending Approvals" value="0" subtext="In your workflows" icon={<Users />} /></Link>
-             <Link href="/dashboard/ai-toolkit?tab=audit" className="block"><StatCard title="Dataroom Readiness" value="N/A" subtext="For upcoming M&A" icon={<GanttChartSquare />} /></Link>
+             <Link href="/dashboard/team" className="block"><StatCard title={translations.managedEntities[lang]} value={`${entityCount}`} subtext={translations.acrossOrganization[lang]} icon={<Building2 />} /></Link>
+             <Link href="/dashboard/analytics" className="block"><StatCard title={translations.overallRiskScore[lang]} value="N/A" subtext={translations.connectDataSources[lang]} icon={<ShieldCheck />} /></Link>
+             <Link href="/dashboard/team" className="block"><StatCard title={translations.pendingApprovals[lang]} value="0" subtext={translations.inYourWorkflows[lang]} icon={<Users />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=audit" className="block"><StatCard title={translations.dataroomReadiness[lang]} value="N/A" subtext={translations.forUpcomingMA[lang]} icon={<GanttChartSquare />} /></Link>
              
              <div className="lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
 
              <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title="AI Audit Assistant" description="Prepare for SOC2, ISO, or internal audits by validating your documents against compliance checklists." href="/dashboard/ai-toolkit?tab=audit" icon={<Sparkles className="text-primary"/>} />
+                <QuickLinkCard title={translations.aiAuditAssistant[lang]} description={translations.aiAuditAssistantDesc[lang]} href="/dashboard/ai-toolkit?tab=audit" icon={<Sparkles className="text-primary"/>} translations={translations} lang={lang}/>
              </div>
              <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title="Workflow Automation" description="Create powerful automations to streamline compliance processes and approvals." href="/dashboard/ai-toolkit?tab=workflows" icon={<Zap className="text-primary"/>} />
+                <QuickLinkCard title={translations.workflowAutomation[lang]} description={translations.workflowAutomationDesc[lang]} href="/dashboard/ai-toolkit?tab=workflows" icon={<Zap className="text-primary"/>} translations={translations} lang={lang}/>
              </div>
         </div>
     );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ translations, lang }: { translations: Translations, lang: Language }) {
   const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
 
@@ -874,15 +873,15 @@ export default function Dashboard() {
     }
     switch (userProfile.role) {
       case 'Founder':
-        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} />;
+        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={translations} lang={lang}/>;
       case 'CA':
-        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} />;
+        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} translations={translations} lang={lang}/>;
       case 'Legal Advisor':
-        return <LegalAdvisorDashboard userProfile={userProfile} />;
+        return <LegalAdvisorDashboard userProfile={userProfile} translations={translations} lang={lang}/>;
       case 'Enterprise':
-        return <EnterpriseDashboard userProfile={userProfile} />;
+        return <EnterpriseDashboard userProfile={userProfile} translations={translations} lang={lang}/>;
       default:
-        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} />;
+        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={translations} lang={lang}/>;
     }
   };
   
@@ -892,9 +891,9 @@ export default function Dashboard() {
 
   const getAddButtonText = () => {
       if (userProfile?.role === 'CA' || userProfile?.role === 'Legal Advisor') {
-          return 'Add Client';
+          return translations.addClient[lang];
       }
-      return 'Add Company';
+      return translations.addCompany[lang];
   }
 
   return (
@@ -905,10 +904,10 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">
-                Welcome, {userProfile?.name.split(" ")[0]}!
+                {translations.welcome[lang]}, {userProfile?.name.split(" ")[0]}!
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                Here's an overview of your {userProfile?.role} workspace {userProfile?.role === 'Founder' && activeCompany ? `for ${activeCompany.name}` : ''}.
+                {translations.workspaceOverview[lang]} {userProfile?.role === 'Founder' && activeCompany ? `${translations.for[lang]} ${activeCompany.name}` : ''}.
               </p>
             </div>
               <div className="flex items-center gap-4">

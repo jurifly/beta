@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode, useMemo } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -91,8 +91,8 @@ import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
 
-type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt';
-type Translations = Record<string, Record<Language, string>>;
+export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt';
+export type Translations = Record<string, Record<Language, string>>;
 
 const languages: { code: Language; name: string }[] = [
     { code: 'en', name: 'English' },
@@ -104,7 +104,8 @@ const languages: { code: Language; name: string }[] = [
     { code: 'pt', name: 'Português' },
 ];
 
-const translations: Translations = {
+export const translations: Translations = {
+    // Nav Items
     dashboard: { en: "Dashboard", hi: "डैशबोर्ड", es: "Panel", zh: "仪表板", fr: "Tableau de bord", de: "Dashboard", pt: "Painel" },
     advisorHub: { en: "Advisor Hub", hi: "सलाहकार हब", es: "Centro de Asesores", zh: "顾问中心", fr: "Pôle Conseiller", de: "Berater-Hub", pt: "Hub de Consultores" },
     aiToolkit: { en: "AI Toolkit", hi: "AI टूलकिट", es: "Herramientas de IA", zh: "AI工具箱", fr: "Outils d'IA", de: "KI-Werkzeugkasten", pt: "Kit de Ferramentas de IA" },
@@ -130,6 +131,8 @@ const translations: Translations = {
     aiPracticeSuite: { en: "AI Practice Suite", hi: "AI प्रैक्टिस सुइट", es: "Suite de Práctica de IA", zh: "AI实践套件", fr: "Suite Pratique IA", de: "KI-Praxis-Suite", pt: "Suíte de Prática de IA" },
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA" },
+    
+    // Global UI
     more: { en: "More", hi: "अन्य", es: "Más", zh: "更多", fr: "Plus", de: "Mehr", pt: "Mais" },
     moreOptions: { en: "More Options", hi: "अन्य विकल्प", es: "Más Opciones", zh: "更多选项", fr: "Plus d'Options", de: "Weitere Optionen", pt: "Mais Opções" },
     notifications: { en: "Notifications", hi: "सूचनाएं", es: "Notificaciones", zh: "通知", fr: "Notifications", de: "Benachrichtigungen", pt: "Notificações" },
@@ -137,6 +140,75 @@ const translations: Translations = {
     youAreCaughtUp: { en: "You're all caught up!", hi: "आप पूरी तरह से अपडेट हैं!", es: "¡Estás al día!", zh: "您已处理所有通知！", fr: "Vous êtes à jour !", de: "Du bist auf dem Laufenden!", pt: "Você está em dia!" },
     unlimitedCredits: { en: "Unlimited Credits", hi: "असीमित क्रेडिट", es: "Créditos Ilimitados", zh: "无限信用", fr: "Crédits Illimités", de: "Unbegrenzte Kredite", pt: "Créditos Ilimitados" },
     creditsLeft: { en: "credits left", hi: "क्रेडिट शेष", es: "créditos restantes", zh: "剩余信用", fr: "crédits restants", de: "Kredite übrig", pt: "créditos restantes" },
+    goTo: { en: "Go to", hi: "पर जाएँ", es: "Ir a", zh: "前往", fr: "Aller à", de: "Gehe zu", pt: "Ir para" },
+    
+    // Dashboard Page
+    welcome: { en: "Welcome", hi: "स्वागत है", es: "Bienvenido", zh: "欢迎", fr: "Bienvenue", de: "Willkommen", pt: "Bem-vindo" },
+    workspaceOverview: { en: "Here's an overview of your workspace", hi: "यहाँ आपके कार्यक्षेत्र का अवलोकन है", es: "Aquí tienes un resumen de tu espacio de trabajo", zh: "这是您的工作区概览", fr: "Voici un aperçu de votre espace de travail", de: "Hier ist eine Übersicht über Ihren Arbeitsbereich", pt: "Aqui está uma visão geral do seu espaço de trabalho" },
+    for: { en: "for", hi: "के लिए", es: "para", zh: "为", fr: "pour", de: "für", pt: "para" },
+    addClient: { en: "Add Client", hi: "क्लाइंट जोड़ें", es: "Añadir Cliente", zh: "添加客户", fr: "Ajouter un Client", de: "Kunde hinzufügen", pt: "Adicionar Cliente" },
+    addCompany: { en: "Add Company", hi: "कंपनी जोड़ें", es: "Añadir Empresa", zh: "添加公司", fr: "Ajouter une Entreprise", de: "Unternehmen hinzufügen", pt: "Adicionar Empresa" },
+    welcomeWorkspace: { en: "Welcome to your workspace!", hi: "आपके कार्यक्षेत्र में स्वागत है!", es: "¡Bienvenido a tu espacio de trabajo!", zh: "欢迎来到您的工作区！", fr: "Bienvenue dans votre espace de travail !", de: "Willkommen in deinem Arbeitsbereich!", pt: "Bem-vindo ao seu espaço de trabalho!" },
+    addCompanyPrompt: { en: "Add your first company to create a compliance calendar and access AI tools.", hi: "अनुपालन कैलेंडर बनाने और AI टूल तक पहुंचने के लिए अपनी पहली कंपनी जोड़ें।", es: "Añade tu primera empresa para crear un calendario de cumplimiento y acceder a las herramientas de IA.", zh: "添加您的第一家公司以创建合规日历并访问AI工具。", fr: "Ajoutez votre première entreprise pour créer un calendrier de conformité et accéder aux outils d'IA.", de: "Fügen Sie Ihr erstes Unternehmen hinzu, um einen Compliance-Kalender zu erstellen und auf KI-Tools zuzugreifen.", pt: "Adicione sua primeira empresa para criar um calendário de conformidade e acessar as ferramentas de IA." },
+    welcomeAdvisor: { en: "Welcome, Advisor!", hi: "स्वागत है, सलाहकार!", es: "¡Bienvenido, Asesor!", zh: "欢迎，顾问！", fr: "Bienvenue, Conseiller !", de: "Willkommen, Berater!", pt: "Bem-vindo, Consultor!" },
+    addFirstClientPrompt: { en: "Add your first client company to get started, or accept a pending invitation.", hi: "शुरू करने के लिए अपनी पहली क्लाइंट कंपनी जोड़ें, या एक लंबित निमंत्रण स्वीकार करें।", es: "Añade tu primera empresa cliente para empezar, o acepta una invitación pendiente.", zh: "添加您的第一个客户公司以开始，或接受待定的邀请。", fr: "Ajoutez votre première entreprise cliente pour commencer, ou acceptez une invitation en attente.", de: "Fügen Sie Ihr erstes Kundenunternehmen hinzu, um loszulegen, oder nehmen Sie eine ausstehende Einladung an.", pt: "Adicione sua primeira empresa cliente para começar ou aceite um convite pendente." },
+    viewInvitations: { en: "View Invitations", hi: "निमंत्रण देखें", es: "Ver Invitaciones", zh: "查看邀请", fr: "Voir les Invitations", de: "Einladungen anzeigen", pt: "Ver Convites" },
+    hygieneScore: { en: "Legal Hygiene Score", hi: "कानूनी स्वच्छता स्कोर", es: "Puntuación de Higiene Legal", zh: "法律卫生评分", fr: "Score d'Hygiène Juridique", de: "Rechtshygiene-Score", pt: "Pontuação de Higiene Jurídica" },
+    upcomingFilings: { en: "Upcoming Filings", hi: "आगामी फाइलिंग", es: "Próximas Presentaciones", zh: "即将提交", fr: "Dépôts à Venir", de: "Anstehende Einreichungen", pt: "Próximos Registros" },
+    inNext30Days: { en: "In next 30 days", hi: "अगले 30 दिनों में", es: "En los próximos 30 días", zh: "未来30天内", fr: "Dans les 30 prochains jours", de: "In den nächsten 30 Tagen", pt: "Nos próximos 30 dias" },
+    equityIssued: { en: "Equity Issued", hi: "इक्विटी जारी", es: "Capital Emitido", zh: "已发行股权", fr: "Capitaux Propres Émis", de: "Ausgegebenes Eigenkapital", pt: "Capital Emitido" },
+    alerts: { en: "Alerts", hi: "अलर्ट", es: "Alertas", zh: "警报", fr: "Alertes", de: "Warnungen", pt: "Alertas" },
+    overdueTasks: { en: "Overdue tasks", hi: "अतिदेय कार्य", es: "Tareas atrasadas", zh: "逾期任务", fr: "Tâches en retard", de: "Überfällige Aufgaben", pt: "Tarefas atrasadas" },
+    noOverdueTasks: { en: "No overdue tasks", hi: "कोई अतिदेय कार्य नहीं", es: "No hay tareas atrasadas", zh: "无逾期任务", fr: "Aucune tâche en retard", de: "Keine überfälligen Aufgaben", pt: "Nenhuma tarefa atrasada" },
+    proactiveAISuggestions: { en: "Proactive AI Suggestions", hi: "सक्रिय AI सुझाव", es: "Sugerencias Proactivas de IA", zh: "主动式AI建议", fr: "Suggestions Proactives de l'IA", de: "Proaktive KI-Vorschläge", pt: "Sugestões Proativas de IA" },
+    timelyAdvice: { en: "Timely advice from our AI to help you stay ahead.", hi: "हमारे AI से समय पर सलाह ताकि आप आगे रहें।", es: "Consejos oportunos de nuestra IA para ayudarte a mantenerte a la vanguardia.", zh: "我们AI的及时建议，助您保持领先。", fr: "Conseils opportuns de notre IA pour vous aider à garder une longueur d'avance.", de: "Rechtzeitige Ratschläge von unserer KI, um Ihnen zu helfen, immer einen Schritt voraus zu sein.", pt: "Conselhos oportunos da nossa IA para ajudá-lo a se manter à frente." },
+    noSpecialInsights: { en: "No special insights at the moment. You're all set!", hi: "फिलहाल कोई विशेष अंतर्दृष्टि नहीं है। आप पूरी तरह से तैयार हैं!", es: "No hay ideas especiales en este momento. ¡Estás listo!", zh: "目前没有特别的见解。一切就绪！", fr: "Pas d'aperçus spéciaux pour le moment. Vous êtes prêt !", de: "Im Moment keine besonderen Einblicke. Alles bestens!", pt: "Nenhuma visão especial no momento. Está tudo pronto!" },
+    complianceChecklist: { en: "Compliance Checklist", hi: "अनुपालन चेकलिस्ट", es: "Lista de Verificación de Cumplimiento", zh: "合规清单", fr: "Liste de Contrôle de Conformité", de: "Compliance-Checkliste", pt: "Lista de Verificação de Conformidade" },
+    keyComplianceItems: { en: "Key compliance items for your company, grouped by month.", hi: "आपकी कंपनी के लिए महीने के अनुसार समूहित प्रमुख अनुपालन आइटम।", es: "Elementos clave de cumplimiento para su empresa, agrupados por mes.", zh: "贵公司的关键合规项，按月分组。", fr: "Éléments clés de conformité pour votre entreprise, groupés par mois.", de: "Wichtige Compliance-Elemente für Ihr Unternehmen, nach Monat gruppiert.", pt: "Itens chave de conformidade para sua empresa, agrupados por mês." },
+    completeAllTasksFor: { en: "Complete all past tasks for", hi: "के लिए सभी पिछले कार्यों को पूरा करें", es: "Completar todas las tareas pasadas para", zh: "完成所有过去的任务", fr: "Terminer toutes les tâches passées pour", de: "Alle vergangenen Aufgaben für", pt: "Concluir todas as tarefas passadas para" },
+    currentMonth: { en: "Current Month", hi: "चालू माह", es: "Mes Actual", zh: "本月", fr: "Mois en Cours", de: "Aktueller Monat", pt: "Mês Atual" },
+    aboutThisTask: { en: "About this task:", hi: "इस कार्य के बारे में:", es: "Acerca de esta tarea:", zh: "关于此任务：", fr: "À propos de cette tâche :", de: "Über diese Aufgabe:", pt: "Sobre esta tarefa:" },
+    penaltyForNonCompliance: { en: "Penalty for non-compliance:", hi: "गैर-अनुपालन के लिए जुर्माना:", es: "Penalización por incumplimiento:", zh: "不合规的处罚：", fr: "Pénalité pour non-conformité :", de: "Strafe bei Nichteinhaltung:", pt: "Penalidade por não conformidade:" },
+    due: { en: "Due", hi: "देय", es: "Vence", zh: "到期", fr: "Échéance", de: "Fällig", pt: "Vence" },
+    overdue: { en: "Overdue", hi: "अतिदेय", es: "Vencido", zh: "逾期", fr: "En retard", de: "Überfällig", pt: "Atrasado" },
+    noItemsForYear: { en: "No items for", hi: "के लिए कोई आइटम नहीं", es: "No hay elementos para", zh: "没有项目", fr: "Aucun élément pour", de: "Keine Einträge für", pt: "Nenhum item para" },
+    selectAnotherYear: { en: "Select another year or check back later.", hi: "दूसरा वर्ष चुनें या बाद में जांचें।", es: "Seleccione otro año o vuelva a consultar más tarde.", zh: "选择另一年或稍后再查看。", fr: "Sélectionnez une autre année ou revenez plus tard.", de: "Wählen Sie ein anderes Jahr oder schauen Sie später wieder vorbei.", pt: "Selecione outro ano ou verifique mais tarde." },
+    totalClients: { en: "Total Clients", hi: "कुल क्लाइंट", es: "Total de Clientes", zh: "客户总数", fr: "Total des Clients", de: "Kunden insgesamt", pt: "Total de Clientes" },
+    clientsAtRisk: { en: "Clients at Risk", hi: "जोखिम में क्लाइंट", es: "Clientes en Riesgo", zh: "风险客户", fr: "Clients à Risque", de: "Gefährdete Kunden", pt: "Clientes em Risco" },
+    clientsWithLowHealth: { en: "Clients with low health scores", hi: "कम स्वास्थ्य स्कोर वाले क्लाइंट", es: "Clientes con bajas puntuaciones de salud", zh: "健康评分低的客户", fr: "Clients avec de faibles scores de santé", de: "Kunden mit niedrigen Gesundheitswerten", pt: "Clientes com baixas pontuações de saúde" },
+    view: { en: "View", hi: "देखें", es: "Ver", zh: "查看", fr: "Voir", de: "Ansehen", pt: "Ver" },
+    deepDive: { en: "Deep dive into client health", hi: "क्लाइंट स्वास्थ्य में गहराई से देखें", es: "Análisis profundo de la salud del cliente", zh: "深入了解客户健康状况", fr: "Plongez dans la santé des clients", de: "Tiefer Einblick in die Kundengesundheit", pt: "Análise aprofundada da saúde do cliente" },
+    timelyAdvicePractice: { en: "Timely advice to help you manage your practice.", hi: "आपकी प्रैक्टिस को प्रबंधित करने में मदद करने के लिए समय पर सलाह।", es: "Consejos oportunos para ayudarte a gestionar tu práctica.", zh: "及时建议，助您管理业务。", fr: "Conseils opportuns pour vous aider à gérer votre cabinet.", de: "Rechtzeitiger Rat zur Verwaltung Ihrer Praxis.", pt: "Conselhos oportunos para ajudar a gerir sua prática." },
+    portfolioDeadlines: { en: "Portfolio Deadlines", hi: "पोर्टफोलियो की समय-सीमा", es: "Fechas Límite de la Cartera", zh: "投资组合截止日期", fr: "Échéances du Portefeuille", de: "Portfolio-Fristen", pt: "Prazos do Portfólio" },
+    upcomingKeyDates: { en: "Upcoming key dates across all your clients.", hi: "आपके सभी क्लाइंट्स के लिए आगामी महत्वपूर्ण तिथियां।", es: "Próximas fechas clave para todos sus clientes.", zh: "所有客户的即将到来的关键日期。", fr: "Prochaines dates clés pour tous vos clients.", de: "Anstehende wichtige Termine für alle Ihre Kunden.", pt: "Próximas datas importantes para todos os seus clientes." },
+    noUpcomingDeadlines: { en: "No upcoming deadlines.", hi: "कोई आगामी समय-सीमा नहीं।", es: "No hay plazos próximos.", zh: "没有即将到来的截止日期。", fr: "Aucune échéance à venir.", de: "Keine anstehenden Fristen.", pt: "Nenhum prazo próximo." },
+    recentActivity: { en: "Recent Activity", hi: "हाल की गतिविधि", es: "Actividad Reciente", zh: "最近活动", fr: "Activité Récente", de: "Letzte Aktivitäten", pt: "Atividade Recente" },
+    latestActions: { en: "The latest actions from your portfolio.", hi: "आपके पोर्टफोलियो से नवीनतम कार्रवाइयां।", es: "Las últimas acciones de su cartera.", zh: "您投资组合的最新动态。", fr: "Les dernières actions de votre portefeuille.", de: "Die neuesten Aktionen aus Ihrem Portfolio.", pt: "As últimas ações do seu portfólio." },
+    noRecentActivity: { en: "No recent activity.", hi: "कोई हाल की गतिविधि नहीं।", es: "No hay actividad reciente.", zh: "没有最近的活动。", fr: "Aucune activité récente.", de: "Keine kürzlichen Aktivitäten.", pt: "Nenhuma atividade recente." },
+    aiDocAnalyzer: { en: "AI Document Analyzer", hi: "AI दस्तावेज़ विश्लेषक", es: "Analizador de Documentos IA", zh: "AI文档分析器", fr: "Analyseur de Documents IA", de: "KI-Dokumentenanalysator", pt: "Analisador de Documentos IA" },
+    aiDocAnalyzerDesc: { en: "Instantly upload a contract to identify risks, find missing clauses, and get redline suggestions.", hi: "जोखिमों की पहचान करने, गुम क्लॉज़ खोजने, और रेडलाइन सुझाव प्राप्त करने के लिए तुरंत एक अनुबंध अपलोड करें।", es: "Cargue un contrato al instante para identificar riesgos, encontrar cláusulas faltantes y obtener sugerencias de revisión.", zh: "立即上传合同以识别风险、查找缺失条款并获取红线建议。", fr: "Téléchargez instantanément un contrat pour identifier les risques, trouver les clauses manquantes et obtenir des suggestions de révision.", de: "Laden Sie sofort einen Vertrag hoch, um Risiken zu identifizieren, fehlende Klauseln zu finden und Redline-Vorschläge zu erhalten.", pt: "Carregue um contrato instantaneamente para identificar riscos, encontrar cláusulas ausentes e obter sugestões de revisão." },
+    activeMatters: { en: "Active Matters", hi: "सक्रिय मामले", es: "Asuntos Activos", zh: "活跃事项", fr: "Dossiers Actifs", de: "Aktive Angelegenheiten", pt: "Assuntos Ativos" },
+    acrossAllClients: { en: "Across all clients", hi: "सभी क्लाइंट्स में", es: "En todos los clientes", zh: "所有客户", fr: "Tous clients confondus", de: "Über alle Kunden hinweg", pt: "Em todos os clientes" },
+    contractsAnalyzed: { en: "Contracts Analyzed", hi: "विश्लेषित अनुबंध", es: "Contratos Analizados", zh: "已分析合同", fr: "Contrats Analysés", de: "Analysierte Verträge", pt: "Contratos Analisados" },
+    thisMonth: { en: "This month", hi: "इस महीने", es: "Este mes", zh: "本月", fr: "Ce mois-ci", de: "Diesen Monat", pt: "Este mês" },
+    pendingRedlines: { en: "Pending Redlines", hi: "लंबित रेडलाइन", es: "Revisiones Pendientes", zh: "待处理的红线", fr: "Révisions en Attente", de: "Ausstehende Redlines", pt: "Revisões Pendentes" },
+    awaitingReview: { en: "Awaiting your review", hi: "आपकी समीक्षा की प्रतीक्षा में", es: "Esperando su revisión", zh: "等待您的审核", fr: "En attente de votre relecture", de: "Wartet auf Ihre Überprüfung", pt: "Aguardando sua revisão" },
+    legalResearch: { en: "Legal Research", hi: "कानूनी अनुसंधान", es: "Investigación Legal", zh: "法律研究", fr: "Recherche Juridique", de: "Rechtsrecherche", pt: "Pesquisa Jurídica" },
+    queriesThisMonth: { en: "Queries this month", hi: "इस महीने की पूछताछ", es: "Consultas este mes", zh: "本月查询", fr: "Requêtes ce mois-ci", de: "Anfragen diesen Monat", pt: "Consultas este mês" },
+    managedEntities: { en: "Managed Entities", hi: "प्रबंधित इकाइयाँ", es: "Entidades Gestionadas", zh: "受管实体", fr: "Entités Gérées", de: "Verwaltete Einheiten", pt: "Entidades Gerenciadas" },
+    acrossOrganization: { en: "Across the organization", hi: "संगठन भर में", es: "En toda la organización", zh: "整个组织", fr: "Dans toute l'organisation", de: "In der gesamten Organisation", pt: "Em toda a organização" },
+    overallRiskScore: { en: "Overall Risk Score", hi: "समग्र जोखिम स्कोर", es: "Puntuación de Riesgo General", zh: "总体风险评分", fr: "Score de Risque Global", de: "Gesamtrisikobewertung", pt: "Pontuação de Risco Geral" },
+    connectDataSources: { en: "Connect data sources", hi: "डेटा स्रोत कनेक्ट करें", es: "Conectar fuentes de datos", zh: "连接数据源", fr: "Connecter les sources de données", de: "Datenquellen verbinden", pt: "Conectar fontes de dados" },
+    pendingApprovals: { en: "Pending Approvals", hi: "लंबित अनुमोदन", es: "Aprobaciones Pendientes", zh: "待审批", fr: "Approbations en Attente", de: "Ausstehende Genehmigungen", pt: "Aprovações Pendentes" },
+    inYourWorkflows: { en: "In your workflows", hi: "आपके वर्कफ़्लो में", es: "En sus flujos de trabajo", zh: "在您的工作流中", fr: "Dans vos flux de travail", de: "In Ihren Workflows", pt: "Nos seus fluxos de trabalho" },
+    dataroomReadiness: { en: "Dataroom Readiness", hi: "डेटा रूम तैयारी", es: "Preparación de Dataroom", zh: "数据室准备情况", fr: "Préparation de la Dataroom", de: "Dataroom-Bereitschaft", pt: "Prontidão do Dataroom" },
+    forUpcomingMA: { en: "For upcoming M&A", hi: "आगामी M&A के लिए", es: "Para futuras fusiones y adquisiciones", zh: "为即将到来的并购", fr: "Pour les futures fusions et acquisitions", de: "Für bevorstehende M&A", pt: "Para futuras fusões e aquisições" },
+    aiAuditAssistant: { en: "AI Audit Assistant", hi: "AI ऑडिट सहायक", es: "Asistente de Auditoría IA", zh: "AI审计助手", fr: "Assistant d'Audit IA", de: "KI-Audit-Assistent", pt: "Assistente de Auditoria IA" },
+    aiAuditAssistantDesc: { en: "Prepare for SOC2, ISO, or internal audits by validating your documents against compliance checklists.", hi: "अनुपालन चेकलिस्ट के खिलाफ अपने दस्तावेज़ों को मान्य करके SOC2, ISO, या आंतरिक ऑडिट की तैयारी करें।", es: "Prepárese para auditorías SOC2, ISO o internas validando sus documentos contra listas de verificación de cumplimiento.", zh: "通过对照合规清单验证您的文档，为SOC2、ISO或内部审计做准备。", fr: "Préparez-vous aux audits SOC2, ISO ou internes en validant vos documents par rapport aux listes de contrôle de conformité.", de: "Bereiten Sie sich auf SOC2-, ISO- oder interne Audits vor, indem Sie Ihre Dokumente anhand von Compliance-Checklisten validieren.", pt: "Prepare-se para auditorias SOC2, ISO ou internas, validando seus documentos em listas de verificação de conformidade." },
+    workflowAutomation: { en: "Workflow Automation", hi: "वर्कफ़्लो ऑटोमेशन", es: "Automatización de Flujos de Trabajo", zh: "工作流自动化", fr: "Automatisation des Flux de Travail", de: "Workflow-Automatisierung", pt: "Automação de Fluxos de Trabalho" },
+    workflowAutomationDesc: { en: "Create powerful automations to streamline compliance processes and approvals.", hi: "अनुपालन प्रक्रियाओं और अनुमोदनों को सुव्यवस्थित करने के लिए शक्तिशाली ऑटोमेशन बनाएं।", es: "Cree potentes automatizaciones para agilizar los procesos de cumplimiento и las aprobaciones.", zh: "创建强大的自动化以简化合规流程和审批。", fr: "Créez de puissantes automatisations pour rationaliser les processus de conformité et les approbations.", de: "Erstellen Sie leistungsstarke Automatisierungen, um Compliance-Prozesse und Genehmigungen zu optimieren.", pt: "Crie automações poderosas para agilizar os processos de conformidade e as aprovações." },
+    toastComplianceUpdatedTitle: { en: "Compliance Updated", hi: "अनुपालन अपडेट किया गया", es: "Cumplimiento Actualizado", zh: "合规性已更新", fr: "Conformité Mise à Jour", de: "Compliance aktualisiert", pt: "Conformidade Atualizada" },
+    toastComplianceUpdatedDesc: { en: "All past tasks for", hi: "के लिए सभी पिछले कार्य", es: "Todas las tareas pasadas para", zh: "所有过去的任务", fr: "Toutes les tâches passées pour", de: "Alle vergangenen Aufgaben für", pt: "Todas as tarefas passadas para" },
 };
 
 type NavItemConfig = {
@@ -470,6 +542,14 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const totalCreditsRemaining = bonusCredits + dailyRemaining;
 
   const isPro = planHierarchy[userProfile.plan] > 0;
+  
+  // Pass language to children
+  const childrenWithLang = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+        return React.cloneElement(child, { lang: language, translations: translations } as any);
+    }
+    return child;
+  });
 
   return (
       <>
@@ -630,7 +710,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto"
             >
                 <BetaBanner />
-                {children}
+                {childrenWithLang}
             </main>
             <BottomNavBar lang={language} setLang={handleLanguageChange}/>
             </div>
