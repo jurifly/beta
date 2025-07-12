@@ -169,20 +169,22 @@ export default function DocumentsPage() {
         </DialogContent>
       </Dialog>
       <div className="space-y-6">
-        <div className="flex justify-between items-start flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight font-headline">
-              Document Vault
-            </h1>
-            <p className="text-muted-foreground">
-              Your one-stop shop for secure document storage via Google Drive.
-            </p>
-          </div>
-          {isLoggedIn && (
-            <Button variant="outline" onClick={logOut}>
-                <PowerOff className="mr-2"/> Disconnect Drive
-            </Button>
-          )}
+        <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+            <div className="flex justify-between items-start flex-wrap gap-4">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">
+                  Document Vault
+                </h1>
+                <p className="text-muted-foreground">
+                  Your one-stop shop for secure document storage via Google Drive.
+                </p>
+              </div>
+              {isLoggedIn && (
+                <Button variant="outline" onClick={logOut}>
+                    <PowerOff className="mr-2"/> Disconnect Drive
+                </Button>
+              )}
+            </div>
         </div>
         <Card
           {...getRootProps()}

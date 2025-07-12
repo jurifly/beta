@@ -219,12 +219,14 @@ export default function CaConnectPage() {
         )}
         <InviteAdvisorModal isOpen={inviteModalOpen} onOpenChange={setInviteModalOpen} />
         <div className="space-y-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-                <h1 className="text-2xl font-bold font-headline">{pageTitle}</h1>
-                <p className="text-muted-foreground">{pageDescription}</p>
-            </div>
-            {!isFounder && <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>}
+            <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">{pageTitle}</h1>
+                        <p className="text-muted-foreground">{pageDescription}</p>
+                    </div>
+                    {!isFounder && <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>}
+                </div>
             </div>
 
             <AdvisorConnectCard onInvite={() => setInviteModalOpen(true)} />

@@ -50,8 +50,8 @@ export default function CommunityPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Founder & Expert Community</h2>
+      <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+        <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Founder & Expert Community</h2>
         <p className="text-muted-foreground">
           Ask questions, share knowledge, and connect with fellow founders and professionals.
         </p>

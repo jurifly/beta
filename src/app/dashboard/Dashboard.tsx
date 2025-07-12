@@ -797,7 +797,7 @@ export default function Dashboard() {
     <>
       <AddCompanyModal isOpen={isAddCompanyModalOpen} onOpenChange={setAddCompanyModalOpen} deductCredits={deductCredits} />
       <div className="space-y-6">
-        <Card className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+        <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">
@@ -814,7 +814,7 @@ export default function Dashboard() {
                   </Button>
               </div>
           </div>
-        </Card>
+        </div>
         {renderDashboardByRole()}
       </div>
     </>

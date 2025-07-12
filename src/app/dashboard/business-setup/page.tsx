@@ -131,8 +131,8 @@ export default function BusinessSetupPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Launch Pad</h1>
+      <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+        <h1 className="text-3xl font-bold tracking-tight font-headline text-[var(--feature-color,hsl(var(--primary)))]">Launch Pad</h1>
         <p className="text-muted-foreground">Your AI-guided journey to launching your company.</p>
       </div>
 

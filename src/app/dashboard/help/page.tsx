@@ -55,8 +55,8 @@ const faqs = [
 export default function HelpPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight font-headline">Help & Support</h2>
+      <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+        <h2 className="text-3xl font-bold tracking-tight font-headline text-[var(--feature-color,hsl(var(--primary)))]">Help & Support</h2>
         <p className="text-muted-foreground mt-1">
           Find answers to common questions. If you can't find what you're looking for, feel free to contact us.
         </p>

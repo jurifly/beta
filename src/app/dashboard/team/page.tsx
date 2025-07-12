@@ -51,8 +51,8 @@ export default function TeamPage() {
         <>
             <InviteMemberModal isOpen={isInviteModalOpen} onOpenChange={setInviteModalOpen} />
             <div className="space-y-6">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Team Workspace</h2>
+                <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+                    <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Team Workspace</h2>
                     <p className="text-muted-foreground">
                         Invite and manage your team members, assign roles, and track activity.
                     </p>

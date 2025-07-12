@@ -122,15 +122,17 @@ export default function ClientDetailPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => router.push('/dashboard/clients')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{clientCompany.name}</h1>
-          <p className="text-muted-foreground">Viewing client workspace.</p>
-        </div>
-      </div>
+       <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" onClick={() => router.push('/dashboard/clients')}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">{clientCompany.name}</h1>
+                  <p className="text-muted-foreground">Viewing client workspace.</p>
+                </div>
+            </div>
+       </div>
       <Tabs defaultValue="dashboard">
           <TabsList>
               <TabsTrigger value="dashboard"><LayoutDashboard className="mr-2"/>Dashboard</TabsTrigger>
