@@ -9,7 +9,7 @@ import BillingForm from "./billing-form";
 import NotificationsForm from "./notifications-form";
 import FeedbackForm from "./feedback-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, CreditCard, Bell, Lock, KeyRound, Loader2, MessageCircle, BookLock } from 'lucide-react';
+import { User, CreditCard, Bell, Lock, KeyRound, Loader2, MessageCircle, BookLock, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ import { cn } from "@/lib/utils";
 import { Bug, Lightbulb, Palette, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { auth } from "@/lib/firebase/config";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // --- Policies Tab Content ---
 const policies = {
@@ -101,12 +103,39 @@ const SecurityTab = () => {
     );
 };
 
+const settingsItems = [
+    { key: 'profile', title: 'Profile', description: 'Manage personal and company information', icon: User, component: SettingsForm },
+    { key: 'subscription', title: 'Subscription', description: 'Manage your plan and billing details', icon: CreditCard, component: BillingForm },
+    { key: 'notifications', title: 'Notifications', description: 'Choose how you get notified', icon: Bell, component: NotificationsForm },
+    { key: 'security', title: 'Security', description: 'Change password and manage access', icon: Lock, component: SecurityTab },
+    { key: 'policies', title: 'Legal & Policies', description: 'Our terms, privacy, and disclaimers', icon: BookLock, component: PoliciesTab },
+    { key: 'feedback', title: 'Feedback', description: 'Help us improve the product', icon: MessageCircle, component: FeedbackForm },
+];
+
 export default function SettingsPage() {
+  const isMobile = useIsMobile();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  
+  const [activeView, setActiveView] = useState<string | null>(tabParam || (isMobile ? null : 'profile'));
+
   const [isModalOpen, setModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null);
   const { userProfile, deductCredits } = useAuth();
-  const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'profile';
+  
+  // Update activeView if tabParam changes
+  useState(() => {
+    setActiveView(tabParam || (isMobile ? null : 'profile'));
+  }, [tabParam, isMobile]);
+  
+  // Set default view based on device
+  useState(() => {
+    if (tabParam) {
+      setActiveView(tabParam);
+    } else {
+      setActiveView(isMobile ? null : 'profile');
+    }
+  }, [isMobile]);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -129,6 +158,65 @@ export default function SettingsPage() {
     }
   };
 
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    const initials = names.map(n => n[0]).join('');
+    return initials.slice(0, 2).toUpperCase();
+  }
+
+  const activeComponent = settingsItems.find(item => item.key === activeView);
+
+  if (isMobile) {
+    if (activeComponent) {
+      const Component = activeComponent.component as any;
+      return (
+        <div className="space-y-4">
+          <Button variant="ghost" onClick={() => setActiveView(null)} className="flex items-center gap-2 text-muted-foreground">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Settings
+          </Button>
+          <Component 
+            onAddCompanyClick={handleAddCompanyClick}
+            onEditCompanyClick={handleEditCompanyClick}
+          />
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        <AddCompanyModal isOpen={isModalOpen} onOpenChange={onModalOpenChange} companyToEdit={companyToEdit} deductCredits={deductCredits} />
+        <div className="space-y-4">
+            <div className="flex items-center gap-4 p-2">
+                <Avatar className="h-16 w-16 border-2 border-primary/20">
+                    <AvatarFallback className="text-2xl">{getInitials(userProfile.name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                    <h1 className="text-xl font-bold">{userProfile.name}</h1>
+                    <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+                </div>
+            </div>
+            <div className="space-y-2">
+              {settingsItems.map(item => (
+                <button 
+                  key={item.key} 
+                  onClick={() => setActiveView(item.key)}
+                  className="w-full flex items-center gap-4 p-4 text-left rounded-lg hover:bg-muted"
+                >
+                  <item.icon className="w-6 h-6 text-muted-foreground"/>
+                  <div className="flex-1">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground"/>
+                </button>
+              ))}
+            </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <AddCompanyModal 
@@ -142,15 +230,12 @@ export default function SettingsPage() {
             <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Settings</h2>
             <p className="text-muted-foreground">Manage your personal, billing, and company information.</p>
         </div>
-        <Tabs defaultValue={tab} className="space-y-6">
+        <Tabs value={activeView || 'profile'} onValueChange={setActiveView} className="space-y-6">
           <ScrollArea className="w-full sm:w-auto -mx-4 px-4 sm:mx-0 sm:px-0" orientation="horizontal">
               <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
-                <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
-                <TabsTrigger value="subscription"><CreditCard className="mr-2 h-4 w-4"/>Subscription</TabsTrigger>
-                <TabsTrigger value="notifications"><Bell className="mr-2 h-4 w-4"/>Notifications</TabsTrigger>
-                <TabsTrigger value="security"><Lock className="mr-2 h-4 w-4"/>Security</TabsTrigger>
-                <TabsTrigger value="policies"><BookLock className="mr-2 h-4 w-4"/>Policies</TabsTrigger>
-                <TabsTrigger value="feedback"><MessageCircle className="mr-2 h-4 w-4"/>Feedback</TabsTrigger>
+                {settingsItems.map(item => (
+                    <TabsTrigger value={item.key} key={item.key}><item.icon className="mr-2 h-4 w-4"/>{item.title}</TabsTrigger>
+                ))}
               </TabsList>
           </ScrollArea>
           <TabsContent value="profile" className="space-y-6">
