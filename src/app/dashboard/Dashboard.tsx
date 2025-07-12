@@ -63,6 +63,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ComplianceActivityChart = dynamic(
   () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -223,7 +224,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 const savedStatuses = activeCompany.checklistStatus || {};
                 
                 const checklistItems = processedFilings.map((filing) => {
-                    const uniqueId = `${filing.title}-${filing.date}`.replace(/[.*~/[\]()]/g, '_');
+                    const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
                     const isCompleted = savedStatuses[uniqueId] ?? false;
                     
                     return {
@@ -321,9 +322,24 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
         toast({ title: `Past tasks for ${year} completed!` });
     };
     
-    const checklistYears = useMemo(() => {
-        const years = new Set(checklist.map(item => new Date(item.dueDate + 'T00:00:00').getFullYear().toString()));
-        return Array.from(years).sort((a,b) => Number(b) - Number(a));
+    const { checklistYears, overdueYears } = useMemo(() => {
+        const years = new Set<string>();
+        const overdue = new Set<string>();
+        const today = startOfToday();
+
+        checklist.forEach(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            const year = dueDate.getFullYear().toString();
+            years.add(year);
+            if (dueDate < today && !item.completed) {
+                overdue.add(year);
+            }
+        });
+
+        return {
+            checklistYears: Array.from(years).sort((a, b) => Number(b) - Number(a)),
+            overdueYears: overdue
+        };
     }, [checklist]);
 
     useEffect(() => {
@@ -474,49 +490,28 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                         <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
                             <div>
                                 <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
                                 <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
                             </div>
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                {checklistYears.length > 0 && (
-                                     <Select
-                                        value={selectedYear}
-                                        onValueChange={(value) => {
-                                            if (value.startsWith('complete_')) {
-                                                const yearToComplete = value.split('_')[1];
-                                                handleCompleteYear(yearToComplete);
-                                            } else {
-                                                setSelectedYear(value);
-                                            }
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full sm:w-auto">
-                                            <SelectValue placeholder="Select year..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {checklistYears.map(year => (
-                                                <SelectItem key={year} value={year}>
-                                                    View {year}
-                                                </SelectItem>
-                                            ))}
-                                            {checklistYears.length > 0 && (
-                                                <>
-                                                    <div className="my-1 border-t"></div>
-                                                    <SelectItem value={`complete_${selectedYear}`}>
-                                                        <span className="flex items-center gap-2 text-primary">
-                                                            <CheckCircle className="h-4 w-4" />
-                                                            Complete all for {selectedYear}
-                                                        </span>
-                                                    </SelectItem>
-                                                </>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            </div>
+                            <Button variant="outline" size="sm" onClick={() => handleCompleteYear(selectedYear)}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-primary" />
+                                Complete Past for {selectedYear}
+                            </Button>
                         </div>
+                        {checklistYears.length > 0 && (
+                            <Tabs value={selectedYear} onValueChange={setSelectedYear} className="w-full mt-4">
+                                <TabsList>
+                                    {checklistYears.map(year => (
+                                        <TabsTrigger key={year} value={year} className="flex items-center gap-2">
+                                            {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                            {year}
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                            </Tabs>
+                        )}
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {isLoading ? (
