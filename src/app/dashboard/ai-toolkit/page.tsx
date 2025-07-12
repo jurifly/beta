@@ -1550,10 +1550,17 @@ const PenaltyPredictorTab = () => {
 export default function AiToolkitPage() {
     const { userProfile, isDevMode } = useAuth();
     const searchParams = useSearchParams();
-    const tab = searchParams.get('tab') || 'assistant';
+    const tabParam = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(tabParam || 'assistant');
     
+    useEffect(() => {
+        if(tabParam) {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
+
     if (!userProfile) {
-        return <Loader2 className="animate-spin" />;
+        return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;
     }
     
     const isPro = planHierarchy[userProfile.plan] > 0;
@@ -1592,6 +1599,9 @@ export default function AiToolkitPage() {
         { value: 'watcher', label: 'Watcher', icon: RadioTower, content: showWatcher ? <RegulationWatcherTab /> : <UpgradePrompt /> },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);
+    
+    const currentTab = tabs.find(t => t.value === activeTab);
+    const CurrentIcon = currentTab?.icon || Sparkles;
 
     return (
         <div className="space-y-6 md:flex md:flex-col md:h-full md:gap-6">
@@ -1599,9 +1609,29 @@ export default function AiToolkitPage() {
                 <h1 className="text-3xl font-bold font-headline">{pageTitle}</h1>
                 <p className="text-muted-foreground">{pageDescription}</p>
             </div>
-            <Tabs defaultValue={tab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
-                <ScrollArea className="w-full sm:w-auto -mx-4 px-4 sm:mx-0 sm:px-0" orientation="horizontal">
-                    <TabsList className="inline-flex h-auto sm:h-10 items-center justify-start w-max">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:flex md:flex-col md:flex-1 md:min-h-0">
+                <div className="md:hidden mb-4">
+                    <Select value={activeTab} onValueChange={setActiveTab}>
+                        <SelectTrigger className="w-full">
+                           <div className="flex items-center gap-2">
+                               <CurrentIcon className="w-4 h-4" />
+                               <span>{currentTab?.label}</span>
+                           </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {tabs.map(tab => (
+                                <SelectItem key={tab.value} value={tab.value}>
+                                   <div className="flex items-center gap-2">
+                                     <tab.icon className="w-4 h-4" />
+                                     {tab.label}
+                                   </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <ScrollArea orientation="horizontal" className="hidden md:block w-full">
+                    <TabsList className="inline-flex">
                         {tabs.map(t => (
                             <TabsTrigger key={t.value} value={t.value} className="interactive-lift">
                                 <t.icon className="mr-2"/>{t.label}

@@ -4,7 +4,7 @@
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import type { TaxAdvisorOutput } from "@/ai/flows/tax-advisor-flow";
@@ -758,6 +758,9 @@ export default function FinancialsPage() {
     ];
     
     if (!userProfile) return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    
+    const currentTab = tabs.find(t => t.value === activeTab);
+    const CurrentIcon = currentTab?.icon || Sparkles;
 
     return (
         <div className="space-y-6">
@@ -767,13 +770,21 @@ export default function FinancialsPage() {
             </div>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                  <div className="md:hidden">
-                    <Select onValueChange={setActiveTab} value={activeTab}>
+                    <Select value={activeTab} onValueChange={setActiveTab}>
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a calculator..." />
+                            <div className="flex items-center gap-2">
+                                <CurrentIcon className="w-4 h-4" />
+                                <span>{currentTab?.label}</span>
+                           </div>
                         </SelectTrigger>
                         <SelectContent>
                             {tabs.map(tab => (
-                                <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
+                                <SelectItem key={tab.value} value={tab.value}>
+                                    <div className="flex items-center gap-2">
+                                        <tab.icon className="w-4 h-4" />
+                                        {tab.label}
+                                    </div>
+                                </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
