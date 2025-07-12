@@ -60,9 +60,9 @@ const LandingHeader = () => {
         </button>
         <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="link" onClick={() => router.push('/login')} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-            Sign In
+            साइन इन करें
           </Button>
-          <Button onClick={() => router.push('/register')}>Join Beta</Button>
+          <Button onClick={() => router.push('/register')}>बीटा से जुड़ें</Button>
           <ThemeToggle />
         </nav>
       </div>
@@ -78,17 +78,17 @@ const HeroSection = () => {
             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary)/0.05),transparent)]"></div>
             <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
-                Clarity for Founders. Finally.
+                संस्थापकों के लिए स्पष्टता। आखिरकार।
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-                Not another cluttered dashboard. Just the clarity you need — for your company’s documents, taxes, and compliance — in one clean space.
+                कोई और अव्यवस्थित डैशबोर्ड नहीं। बस वही स्पष्टता जिसकी आपको आवश्यकता है - आपकी कंपनी के दस्तावेज़ों, करों और अनुपालन के लिए - एक साफ-सुथरी जगह पर।
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" onClick={() => router.push('/register')}>
-                    Join Beta
+                    बीटा से जुड़ें
                 </Button>
                 <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" variant="ghost" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Explore Features
+                    विशेषताएँ देखें
                 </Button>
             </div>
              <div className="mt-16 group interactive-lift">
@@ -110,10 +110,10 @@ const HeroSection = () => {
 // Value Props Section
 const ValueSection = () => {
     const valueProps = [
-        { text: "Auto-Generate Documents", description: "From founder letters to legal forms, done in seconds.", icon: FileText },
-        { text: "Visualize Your Finances", description: "Burn rate, runway, tax overview — always up to date.", icon: BarChart },
-        { text: "Sync, Store, Share", description: "All your docs + filings stored on your drive, always ready.", icon: DatabaseZap },
-        { text: "Founder <> Advisor Mode", description: "Share workspaces with your CA or investor in one click.", icon: HeartHandshake },
+        { text: "दस्तावेज़ ऑटो-जेनरेट करें", description: "संस्थापक पत्रों से लेकर कानूनी रूपों तक, सेकंडों में किया जाता है।", icon: FileText },
+        { text: "अपने वित्त की कल्पना करें", description: "बर्न रेट, रनवे, टैक्स अवलोकन - हमेशा अप टू डेट।", icon: BarChart },
+        { text: "सिंक, स्टोर, शेयर", description: "आपके सभी दस्तावेज़ + फाइलिंग आपके ड्राइव पर संग्रहीत हैं, हमेशा तैयार।", icon: DatabaseZap },
+        { text: "संस्थापक <> सलाहकार मोड", description: "एक क्लिक में अपने CA या निवेशक के साथ कार्यक्षेत्र साझा करें।", icon: HeartHandshake },
     ];
 
     return (
@@ -121,7 +121,7 @@ const ValueSection = () => {
           <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                    Everything You Hoped a CA Would Do — Without the Wait.
+                    वह सब कुछ जो आपने एक CA से करने की उम्मीद की थी - बिना इंतजार किए।
                 </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -143,16 +143,16 @@ const ValueSection = () => {
 // Product Glimpse Section
 const ProductGlimpseSection = () => {
     const glimpses = [
-        { title: "Launchpad", description: "Start your company in 5 clicks.", image: "https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724398188339.png?alt=media&token=487d7b30-e889-4074-b773-fcb33b8a3e77", hint: "company setup" },
-        { title: "Cap Table Preview", description: "See your dilution before it happens.", image: "https://placehold.co/600x400.png", hint: "cap table graph" },
-        { title: "Compliance Status", description: "Legal hygiene score: 93/100 ✅", image: "https://placehold.co/600x400.png", hint: "compliance dashboard" },
-        { title: "Document Vault", description: "Board Resolution.pdf uploaded via AI", image: "https://placehold.co/600x400.png", hint: "document list" },
+        { title: "लॉन्चपैड", description: "5 क्लिक में अपनी कंपनी शुरू करें।", image: "https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724398188339.png?alt=media&token=487d7b30-e889-4074-b773-fcb33b8a3e77", hint: "company setup" },
+        { title: "कैप टेबल पूर्वावलोकन", description: "पतला होने से पहले अपने कमजोर पड़ने को देखें।", image: "https://placehold.co/600x400.png", hint: "cap table graph" },
+        { title: "अनुपालन स्थिति", description: "कानूनी स्वच्छता स्कोर: 93/100 ✅", image: "https://placehold.co/600x400.png", hint: "compliance dashboard" },
+        { title: "दस्तावेज़ वॉल्ट", description: "AI के माध्यम से बोर्ड संकल्प.pdf अपलोड किया गया", image: "https://placehold.co/600x400.png", hint: "document list" },
     ];
 
     return (
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This Isn’t Software. It’s Sanity.</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">यह सॉफ्टवेयर नहीं है। यह विवेक है।</h2>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {glimpses.map((glimpse, index) => (
                         <Card key={index} className="p-4 bg-card/30 interactive-lift overflow-hidden">
@@ -183,17 +183,17 @@ const ProductGlimpseSection = () => {
 // How It Works Section
 const HowItWorksSection = () => {
     const steps = [
-        { title: "Sign up & choose role", description: "Select Founder or Advisor – we personalize everything." },
-        { title: "Add your company", description: "Basic info → We fetch docs, structure your workspace." },
-        { title: "Let the AI Assist", description: "Generate docs, review tax view, share workspace with CA." }
+        { title: "साइन अप करें और भूमिका चुनें", description: "संस्थापक या सलाहकार चुनें - हम सब कुछ व्यक्तिगत करते हैं।" },
+        { title: "अपनी कंपनी जोड़ें", description: "बुनियादी जानकारी → हम दस्तावेज़ लाते हैं, आपके कार्यक्षेत्र की संरचना करते हैं।" },
+        { title: "AI को सहायता करने दें", description: "दस्तावेज़ बनाएं, कर दृश्य की समीक्षा करें, CA के साथ कार्यक्षेत्र साझा करें।" }
     ];
     return (
         <section className="w-full py-20 md:py-32 bg-card/50">
             <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4">
-                    How You Start Using It In &lt; 3 Minutes
+                    आप &lt; 3 मिनट में इसका उपयोग कैसे शुरू करते हैं
                 </h2>
-                <p className="text-lg text-muted-foreground">“From chaos to clarity in 180 seconds.”</p>
+                <p className="text-lg text-muted-foreground">"180 सेकंड में अराजकता से स्पष्टता तक।"</p>
                 <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                     {steps.map((step, index) => (
                         <div key={index} className="relative flex flex-col items-center gap-4 text-center">
@@ -225,16 +225,16 @@ const SocialValidationSection = () => {
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
                 <Card className="p-6 md:p-10 max-w-2xl mx-auto bg-card/50 text-center interactive-lift">
-                    <p className="text-2xl font-medium leading-snug">“Before this, I had legal docs in Gmail, tax reminders in WhatsApp, and burn rate in Notion. Now, it’s all here — in one clean view.”</p>
-                    <p className="font-semibold mt-4">— Beta Founder #47</p>
+                    <p className="text-2xl font-medium leading-snug">"इससे पहले, मेरे पास जीमेल में कानूनी दस्तावेज़ थे, व्हाट्सएप में टैक्स रिमाइंडर थे, और नोशन में बर्न रेट था। अब, यह सब यहाँ है - एक साफ दृश्य में।"</p>
+                    <p className="font-semibold mt-4">— बीटा संस्थापक #47</p>
                 </Card>
                 
-                <h3 className="text-lg text-muted-foreground mt-16 mb-4">Built alongside 100+ founders, CAs, and early-stage advisors from communities like:</h3>
+                <h3 className="text-lg text-muted-foreground mt-16 mb-4">100+ संस्थापकों, सीए, और शुरुआती चरण के सलाहकारों के साथ बनाया गया, जैसे समुदायों से:</h3>
                 <div className="my-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
                    {brandLogos.map(logo => <div key={logo.name}>{logo.component}</div>)}
                 </div>
                 <Button className="w-full md:w-auto text-lg interactive-lift mt-8" size="lg" onClick={() => router.push('/register')}>
-                    Join Beta
+                    बीटा से जुड़ें
                 </Button>
             </div>
         </section>
@@ -250,13 +250,13 @@ const LandingFooter = () => {
         <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:h-24 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
             <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
-              This is a beta product. Your feedback shapes it.
+              यह एक बीटा उत्पाद है। आपकी प्रतिक्रिया इसे आकार देती है।
             </p>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">Terms of Use</Button>
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">Privacy Policy</Button>
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">AI Disclaimer</Button>
+             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">उपयोग की शर्तें</Button>
+             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">गोपनीयता नीति</Button>
+             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">AI अस्वीकरण</Button>
           </div>
         </div>
       </footer>

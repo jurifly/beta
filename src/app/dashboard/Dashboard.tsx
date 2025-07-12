@@ -135,7 +135,7 @@ const QuickLinkCard = ({ title, description, href, icon }: { title: string, desc
             </CardHeader>
             <CardFooter>
                  <Button variant="link" className="p-0 h-auto">
-                    Go to {title} <ArrowRight className="ml-2 h-4 w-4" />
+                    {title} पर जाएं <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
             </CardFooter>
         </Link>
@@ -243,8 +243,8 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
             } catch (error) {
                 console.error("Failed to fetch AI-generated dashboard data:", error);
                  toast({
-                    title: "Could not fetch filings",
-                    description: "There was an error generating the compliance checklist.",
+                    title: "फाइलिंग लोड नहीं हो सकी",
+                    description: "अनुपालन चेकलिस्ट बनाने में एक त्रुटि हुई।",
                     variant: "destructive"
                 });
             } finally {
@@ -278,7 +278,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 setInsights(response.insights);
             } catch (error: any) {
                 console.error("Could not fetch insights", error);
-                toast({ title: 'AI Insights Failed', description: error.message, variant: 'destructive' });
+                toast({ title: 'AI सुझाव विफल', description: error.message, variant: 'destructive' });
             } finally {
                 setInsightsLoading(false);
             }
@@ -322,7 +322,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
       }, {} as Record<string, boolean>);
       
       updateCompanyChecklistStatus(activeCompany.id, updatedStatuses);
-      toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
+      toast({ title: "अनुपालन अपडेट किया गया", description: `${year} के लिए सभी पिछले कार्यों को पूर्ण के रूप में चिह्नित किया गया है।` });
     };
 
     const { checklistYears, overdueYears, yearCompletionStatus } = useMemo(() => {
@@ -442,16 +442,16 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
 
     const { equityIssued, equityIssuedSubtext } = useMemo(() => {
         const capTable = activeCompany?.capTable;
-        if (!capTable || capTable.length === 0) return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
+        if (!capTable || capTable.length === 0) return { equityIssued: "0%", equityIssuedSubtext: "कोई शेयर जारी नहीं किया गया" };
         
         const totalShares = capTable.reduce((acc, entry) => acc + entry.shares, 0);
-        if (totalShares === 0) return { equityIssued: "0%", equityIssuedSubtext: "No shares issued" };
+        if (totalShares === 0) return { equityIssued: "0%", equityIssuedSubtext: "कोई शेयर जारी नहीं किया गया" };
         
         const esopPoolShares = capTable.find(e => e.type === 'ESOP' && e.holder.toLowerCase().includes('pool'))?.shares || 0;
         const issuedShares = totalShares - esopPoolShares;
         const percentage = (issuedShares / totalShares) * 100;
         
-        return { equityIssued: `${percentage.toFixed(0)}%`, equityIssuedSubtext: `of total shares issued (excl. pool)` };
+        return { equityIssued: `${percentage.toFixed(0)}%`, equityIssuedSubtext: `कुल जारी किए गए शेयरों का (पूल को छोड़कर)` };
     }, [activeCompany]);
 
     const scoreColor = hygieneScore > 80 ? 'text-green-600' : hygieneScore > 60 ? 'text-yellow-600' : 'text-red-600';
@@ -460,13 +460,13 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
         return (
             <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
                 <Building2 className="w-16 h-16 text-primary/20 mb-4"/>
-                <p className="font-semibold text-lg">Welcome to your workspace!</p>
+                <p className="font-semibold text-lg">आपके कार्यक्षेत्र में आपका स्वागत है!</p>
                 <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                Add your first company to generate a compliance calendar and access AI tools.
+                एक अनुपालन कैलेंडर बनाने और AI टूल तक पहुंचने के लिए अपनी पहली कंपनी जोड़ें।
                 </p>
                 <Button onClick={onAddCompanyClick}>
                 <Plus className="mr-2 h-4 w-4"/>
-                Add Company
+                कंपनी जोड़ें
                 </Button>
             </div>
         );
@@ -475,16 +475,16 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
-                <Link href="/dashboard/analytics" className="block"><StatCard title="Legal Hygiene Score" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/ca-connect" className="block"><StatCard title="Upcoming Filings" value={`${upcomingFilingsCount}`} subtext="In next 30 days" icon={<Calendar />} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/cap-table" className="block"><StatCard title="Equity Issued" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/ca-connect" className="block"><StatCard title="Alerts" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "Overdue tasks" : "No overdue tasks"} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/analytics" className="block"><StatCard title="कानूनी स्वच्छता स्कोर" value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'उत्कृष्ट' : 'अच्छा'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/ca-connect" className="block"><StatCard title="आगामी फाइलिंग" value={`${upcomingFilingsCount}`} subtext="अगले 30 दिनों में" icon={<Calendar />} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/cap-table" className="block"><StatCard title="जारी इक्विटी" value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/ca-connect" className="block"><StatCard title="अलर्ट" value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? "अतिदेय कार्य" : "कोई अतिदेय कार्य नहीं"} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
             </div>
             
             <Card className="interactive-lift">
                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
-                    <CardDescription>Timely suggestions from our AI to help you stay ahead.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> सक्रिय AI सुझाव</CardTitle>
+                    <CardDescription>आपको आगे रहने में मदद करने के लिए हमारे AI से समय पर सुझाव।</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {insightsLoading ? (
@@ -496,7 +496,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                        insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
                     ) : (
                         <div className="text-center text-muted-foreground p-8">
-                            <p>No special insights at the moment. You're all set!</p>
+                            <p>फिलहाल कोई विशेष जानकारी नहीं है। आप पूरी तरह तैयार हैं!</p>
                         </div>
                     )}
                 </CardContent>
@@ -508,8 +508,8 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                 <Card className="interactive-lift">
                     <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center">
                         <div>
-                            <CardTitle className="flex items-center gap-2"><ListChecks /> Compliance Checklist</CardTitle>
-                            <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
+                            <CardTitle className="flex items-center gap-2"><ListChecks /> अनुपालन चेकलिस्ट</CardTitle>
+                            <CardDescription>आपकी कंपनी के लिए महीने के हिसाब से समूहीकृत मुख्य अनुपालन आइटम।</CardDescription>
                         </div>
                         {checklistYears.length > 0 && (
                             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -540,7 +540,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                         />
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Complete all past tasks for {year}</p>
+                                                        <p>{year} के लिए सभी पिछले कार्यों को पूरा करें</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -580,7 +580,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                             <CalendarClock className="h-4 w-4 text-primary" />
                                                             </TooltipTrigger>
                                                             <TooltipContent>
-                                                                <p>Current Month</p>
+                                                                <p>चालू महीना</p>
                                                             </TooltipContent>
                                                         </Tooltip>
                                                     </TooltipProvider>
@@ -617,20 +617,20 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                                                                 <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                                                                             </TooltipTrigger>
                                                                             <TooltipContent className="max-w-xs p-3">
-                                                                                <p className="font-semibold mb-2">About this task:</p>
+                                                                                <p className="font-semibold mb-2">इस कार्य के बारे में:</p>
                                                                                 <p className="text-xs mb-3">{item.description}</p>
-                                                                                <p className="font-semibold mb-2">Penalty for non-compliance:</p>
+                                                                                <p className="font-semibold mb-2">गैर-अनुपालन के लिए जुर्माना:</p>
                                                                                 <p className="text-xs text-destructive">{item.penalty}</p>
                                                                             </TooltipContent>
                                                                         </Tooltip>
                                                                     </TooltipProvider>
                                                                 </div>
                                                                 <span className={cn("text-xs", isItemOverdue ? "text-destructive/80" : "text-muted-foreground")}>
-                                                                Due: {format(dueDate, 'do MMM, yyyy')}
+                                                                देय: {format(dueDate, 'do MMM, yyyy')}
                                                                 </span>
                                                             </div>
                                                             {isItemOverdue && (
-                                                                <Badge variant="destructive" className="self-center">Overdue</Badge>
+                                                                <Badge variant="destructive" className="self-center">अतिदेय</Badge>
                                                             )}
                                                         </div>
                                                     )
@@ -643,7 +643,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                             </Accordion>
                         ) : (
                             <div className="text-center text-muted-foreground p-8">
-                                <p>No items for {selectedYear}. Select another year or check back later.</p>
+                                <p>{selectedYear} के लिए कोई आइटम नहीं। दूसरा वर्ष चुनें या बाद में जांचें।</p>
                             </div>
                         )}
                     </CardContent>
@@ -707,7 +707,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                 setInsights(response.insights);
             } catch (error: any) {
                 console.error("Could not fetch insights", error);
-                toast({ title: 'AI Insights Failed', description: error.message, variant: 'destructive' });
+                toast({ title: 'AI सुझाव विफल', description: error.message, variant: 'destructive' });
             } finally {
                 setInsightsLoading(false);
             }
@@ -722,16 +722,16 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
      return (
         <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] border-2 border-dashed rounded-md bg-muted/40 h-full">
             <Users className="w-16 h-16 text-primary/20 mb-4"/>
-            <p className="font-semibold text-lg">Welcome, Advisor!</p>
+            <p className="font-semibold text-lg">स्वागत है, सलाहकार!</p>
             <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                Add your first client company to get started, or accept pending invitations.
+                शुरू करने के लिए अपनी पहली क्लाइंट कंपनी जोड़ें, या लंबित आमंत्रण स्वीकार करें।
             </p>
             <div className="flex gap-4">
                 <Button onClick={onAddClientClick}>
-                    <Plus className="mr-2 h-4 w-4"/> Add Client
+                    <Plus className="mr-2 h-4 w-4"/> क्लाइंट जोड़ें
                 </Button>
                 <Button variant="outline" asChild>
-                    <Link href="/dashboard/invitations">View Invitations</Link>
+                    <Link href="/dashboard/invitations">आमंत्रण देखें</Link>
                 </Button>
             </div>
         </div>
@@ -741,15 +741,15 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
    return (
     <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Link href="/dashboard/clients" className="block"><StatCard title="Total Clients" value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed`} icon={<Users className="h-4 w-4" />} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Clients at Risk" value={`${highRiskClientCount}`} subtext="Clients with low health scores" icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title="Portfolio Analytics" value="View" subtext="Deep dive into client health" icon={<LineChart className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/clients" className="block"><StatCard title="कुल क्लाइंट" value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'क्लाइंट' : 'क्लाइंट'} प्रबंधित`} icon={<Users className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title="जोखिम वाले क्लाइंट" value={`${highRiskClientCount}`} subtext="कम स्वास्थ्य स्कोर वाले क्लाइंट" icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title="पोर्टफोलियो एनालिटिक्स" value="देखें" subtext="क्लाइंट स्वास्थ्य में गहराई से जाएं" icon={<LineChart className="h-4 w-4" />} /></Link>
         </div>
         
         <Card className="interactive-lift">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> Proactive AI Insights</CardTitle>
-                <CardDescription>Timely suggestions to help you manage your practice.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> सक्रिय AI सुझाव</CardTitle>
+                <CardDescription>आपके अभ्यास को प्रबंधित करने में मदद करने के लिए समय पर सुझाव।</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
                 {insightsLoading ? (
@@ -761,7 +761,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                    insights.map((insight, index) => <InsightCard key={index} insight={insight} onCtaClick={(href) => router.push(href)} />)
                 ) : (
                     <div className="text-center text-muted-foreground p-8">
-                        <p>No special insights at the moment. You're all set!</p>
+                        <p>फिलहाल कोई विशेष जानकारी नहीं है। आप पूरी तरह तैयार हैं!</p>
                     </div>
                 )}
             </CardContent>
@@ -770,8 +770,8 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CalendarClock/> Portfolio Deadlines</CardTitle>
-                    <CardDescription>Upcoming key dates across all your clients.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><CalendarClock/> पोर्टफोलियो डेडलाइन</CardTitle>
+                    <CardDescription>आपके सभी क्लाइंट्स के लिए आने वाली महत्वपूर्ण तिथियां।</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {portfolioDeadlines.length > 0 ? (
@@ -781,18 +781,18 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                                     <div className="p-2 bg-muted rounded-full text-primary"><FileText className="w-5 h-5"/></div>
                                     <div>
                                         <p className="font-medium text-sm">{item.title}</p>
-                                        <p className="text-xs text-muted-foreground">{item.clientName} &bull; <span className="font-semibold">Due {formatDistanceToNow(new Date(item.dueDate), { addSuffix: true })}</span></p>
+                                        <p className="text-xs text-muted-foreground">{item.clientName} &bull; <span className="font-semibold">देय {formatDistanceToNow(new Date(item.dueDate), { addSuffix: true })}</span></p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    ) : <p className="text-sm text-muted-foreground">No upcoming deadlines.</p>}
+                    ) : <p className="text-sm text-muted-foreground">कोई आगामी समय सीमा नहीं।</p>}
                 </CardContent>
             </Card>
             <Card className="interactive-lift">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CheckCircle/> Recent Activity</CardTitle>
-                    <CardDescription>The latest actions from across your portfolio.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><CheckCircle/> हाल की गतिविधि</CardTitle>
+                    <CardDescription>आपके पोर्टफोलियो से नवीनतम कार्रवाइयां।</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {activityLog.length > 0 ? (
@@ -807,7 +807,7 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                                 </div>
                             ))}
                         </div>
-                    ) : <p className="text-sm text-muted-foreground">No recent activity.</p>}
+                    ) : <p className="text-sm text-muted-foreground">कोई हाल की गतिविधि नहीं।</p>}
                 </CardContent>
             </Card>
         </div>
@@ -819,12 +819,12 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
              <div className="md:col-span-4 lg:col-span-4">
-                <QuickLinkCard title="AI Document Analyzer" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
+                <QuickLinkCard title="AI दस्तावेज़ विश्लेषक" description="जोखिमों की पहचान करने, गुम हुए खंडों को खोजने और रेडलाइन सुझाव प्राप्त करने के लिए तुरंत एक अनुबंध अपलोड करें।" href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
              </div>
-             <Link href="/dashboard/clients" className="block"><StatCard title="Active Matters" value={userProfile.companies.reduce((acc, c) => acc + (c.matters?.length || 0), 0).toString()} subtext="Across all clients" icon={<Briefcase />} /></Link>
-             <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title="Contracts Analyzed" value="0" subtext="This month" icon={<ListChecks />} /></Link>
-             <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Awaiting your review" icon={<FileSignature />} /></Link>
-             <Link href="/dashboard/ai-toolkit?tab=research" className="block"><StatCard title="Legal Research" value="0" subtext="Queries this month" icon={<Scale />} /></Link>
+             <Link href="/dashboard/clients" className="block"><StatCard title="सक्रिय मामले" value={userProfile.companies.reduce((acc, c) => acc + (c.matters?.length || 0), 0).toString()} subtext="सभी क्लाइंट्स में" icon={<Briefcase />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title="विश्लेषित अनुबंध" value="0" subtext="इस महीने" icon={<ListChecks />} /></Link>
+             <Link href="/dashboard/documents" className="block"><StatCard title="लंबित रेडलाइन" value="0" subtext="आपकी समीक्षा की प्रतीक्षा में" icon={<FileSignature />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=research" className="block"><StatCard title="कानूनी अनुसंधान" value="0" subtext="इस महीने के प्रश्न" icon={<Scale />} /></Link>
              <div className="md:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
         </div>
     );
@@ -834,18 +834,18 @@ function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
     const entityCount = userProfile.companies.length;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-             <Link href="/dashboard/team" className="block"><StatCard title="Managed Entities" value={`${entityCount}`} subtext="Across the organization" icon={<Building2 />} /></Link>
-             <Link href="/dashboard/analytics" className="block"><StatCard title="Overall Risk Score" value="N/A" subtext="Connect data sources" icon={<ShieldCheck />} /></Link>
-             <Link href="/dashboard/team" className="block"><StatCard title="Pending Approvals" value="0" subtext="In your workflows" icon={<Users />} /></Link>
-             <Link href="/dashboard/ai-toolkit?tab=audit" className="block"><StatCard title="Data Room Readiness" value="N/A" subtext="For upcoming M&A" icon={<GanttChartSquare />} /></Link>
+             <Link href="/dashboard/team" className="block"><StatCard title="प्रबंधित इकाइयां" value={`${entityCount}`} subtext="संगठन भर में" icon={<Building2 />} /></Link>
+             <Link href="/dashboard/analytics" className="block"><StatCard title="समग्र जोखिम स्कोर" value="N/A" subtext="डेटा स्रोत कनेक्ट करें" icon={<ShieldCheck />} /></Link>
+             <Link href="/dashboard/team" className="block"><StatCard title="लंबित स्वीकृतियां" value="0" subtext="आपके वर्कफ़्लो में" icon={<Users />} /></Link>
+             <Link href="/dashboard/ai-toolkit?tab=audit" className="block"><StatCard title="डेटा रूम तैयारी" value="N/A" subtext="आगामी M&A के लिए" icon={<GanttChartSquare />} /></Link>
              
              <div className="lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
 
              <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title="AI Audit Assistant" description="Prepare for SOC2, ISO, or internal audits by validating your documents against compliance checklists." href="/dashboard/ai-toolkit?tab=audit" icon={<Sparkles className="text-primary"/>} />
+                <QuickLinkCard title="AI ऑडिट सहायक" description="अनुपालन चेकलिस्ट के विरुद्ध अपने दस्तावेज़ों को मान्य करके SOC2, ISO, या आंतरिक ऑडिट की तैयारी करें।" href="/dashboard/ai-toolkit?tab=audit" icon={<Sparkles className="text-primary"/>} />
              </div>
              <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title="Workflow Automation" description="Create powerful automations to streamline compliance processes and approvals." href="/dashboard/ai-toolkit?tab=workflows" icon={<Zap className="text-primary"/>} />
+                <QuickLinkCard title="वर्कफ़्लो ऑटोमेशन" description="अनुपालन प्रक्रियाओं और अनुमोदनों को सुव्यवस्थित करने के लिए शक्तिशाली ऑटोमेशन बनाएं।" href="/dashboard/ai-toolkit?tab=workflows" icon={<Zap className="text-primary"/>} />
              </div>
         </div>
     );
@@ -892,9 +892,9 @@ export default function Dashboard() {
 
   const getAddButtonText = () => {
       if (userProfile?.role === 'CA' || userProfile?.role === 'Legal Advisor') {
-          return 'Add Client';
+          return 'क्लाइंट जोड़ें';
       }
-      return 'Add Company';
+      return 'कंपनी जोड़ें';
   }
 
   return (
@@ -905,10 +905,10 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">
-                Welcome, {userProfile?.name.split(" ")[0]}!
+                स्वागत है, {userProfile?.name.split(" ")[0]}!
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                Here&apos;s your {userProfile?.role} overview {userProfile?.role === 'Founder' && activeCompany ? `for ${activeCompany.name}` : ''}.
+                यहाँ आपके {userProfile?.role} का अवलोकन है {userProfile?.role === 'Founder' && activeCompany ? `${activeCompany.name} के लिए` : ''}.
               </p>
             </div>
               <div className="flex items-center gap-4">

@@ -101,25 +101,25 @@ type NavItemConfig = {
 }
 
 const navItemConfig: NavItemConfig = {
-  dashboard: { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", label: "Advisor Hub", icon: Users, locked: true },
-  aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI Toolkit", icon: Sparkles },
-  launchPad: { href: "/dashboard/business-setup", label: "Launch Pad", icon: Network },
-  playbook: { href: "/dashboard/learn", label: "The Playbook", icon: BookOpenCheck },
-  capTable: { href: "/dashboard/cap-table", label: "Cap Table", icon: PieChart },
-  financials: { href: "/dashboard/financials", label: "Financials", icon: Receipt },
-  documents: { href: "/dashboard/documents", label: "Document Vault", icon: Archive },
-  analytics: { href: "/dashboard/analytics", label: "Portfolio Analytics", icon: LineChart },
-  community: { href: "/dashboard/community", label: "Community", icon: MessageSquare, locked: true },
-  clients: { href: "/dashboard/clients", label: "Clients", icon: FolderKanban },
-  team: { href: "/dashboard/team", label: "Team", icon: Users, locked: true },
-  clauseLibrary: { href: "/dashboard/clause-library", label: "Clause Library", icon: Library },
-  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "Workflows", icon: Workflow, locked: true },
-  invitations: { href: "/dashboard/invitations", label: "Invitations", icon: Mail, locked: true },
-  reportCenter: { href: "/dashboard/report-center", label: "Report Center", icon: FileText, locked: true },
-  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "Reconciliation", icon: Scale, locked: true },
-  settings: { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  help: { href: "/dashboard/help", label: "Help & FAQ", icon: LifeBuoy },
+  dashboard: { href: "/dashboard", label: "डैशबोर्ड", icon: LayoutDashboard },
+  caConnect: { href: "/dashboard/ca-connect", label: "सलाहकार हब", icon: Users, locked: true },
+  aiToolkit: { href: "/dashboard/ai-toolkit", label: "AI टूलकिट", icon: Sparkles },
+  launchPad: { href: "/dashboard/business-setup", label: "लॉन्च पैड", icon: Network },
+  playbook: { href: "/dashboard/learn", label: "प्लेबुक", icon: BookOpenCheck },
+  capTable: { href: "/dashboard/cap-table", label: "कैप टेबल", icon: PieChart },
+  financials: { href: "/dashboard/financials", label: "वित्तीय", icon: Receipt },
+  documents: { href: "/dashboard/documents", label: "दस्तावेज़ वॉल्ट", icon: Archive },
+  analytics: { href: "/dashboard/analytics", label: "पोर्टफोलियो एनालिटिक्स", icon: LineChart },
+  community: { href: "/dashboard/community", label: "समुदाय", icon: MessageSquare, locked: true },
+  clients: { href: "/dashboard/clients", label: "क्लाइंट", icon: FolderKanban },
+  team: { href: "/dashboard/team", label: "टीम", icon: Users, locked: true },
+  clauseLibrary: { href: "/dashboard/clause-library", label: "क्लॉज लाइब्रेरी", icon: Library },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", label: "वर्कफ़्लो", icon: Workflow, locked: true },
+  invitations: { href: "/dashboard/invitations", label: "आमंत्रण", icon: Mail, locked: true },
+  reportCenter: { href: "/dashboard/report-center", label: "रिपोर्ट केंद्र", icon: FileText, locked: true },
+  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", label: "समाधान", icon: Scale, locked: true },
+  settings: { href: "/dashboard/settings", label: "सेटिंग्स", icon: Settings },
+  help: { href: "/dashboard/help", label: "मदद और FAQ", icon: LifeBuoy },
 } as const;
 
 
@@ -134,24 +134,24 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.analytics, label: "Analytics" },
+  { ...navItemConfig.analytics, label: "एनालिटिक्स" },
   { ...navItemConfig.playbook },
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.community },
-  { ...navItemConfig.team, label: "Team Management", locked: true },
+  { ...navItemConfig.team, label: "टीम प्रबंधन", locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.dashboard },
-  { ...navItemConfig.clients, label: "Client Management", icon: Briefcase },
-  { ...navItemConfig.team, label: "Team Management", locked: true },
-  { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
+  { ...navItemConfig.clients, label: "क्लाइंट प्रबंधन", icon: Briefcase },
+  { ...navItemConfig.team, label: "टीम प्रबंधन", locked: true },
+  { ...navItemConfig.aiToolkit, label: "AI प्रैक्टिस सुइट" },
   { ...navItemConfig.analytics },
-  { ...navItemConfig.caConnect, label: 'Advisor Hub', icon: Users },
+  { ...navItemConfig.caConnect, label: 'सलाहकार हब', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.workflows, label: "Workflows", locked: true },
+  { ...navItemConfig.workflows, label: "वर्कफ़्लो", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
   { ...navItemConfig.clauseLibrary, locked: true },
@@ -161,7 +161,7 @@ const caNavItems: ThemedNavItem[] = [
 const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
-  { ...navItemConfig.aiToolkit, label: "AI Counsel Tools" },
+  { ...navItemConfig.aiToolkit, label: "AI काउंसिल टूल्स" },
   navItemConfig.clauseLibrary,
   navItemConfig.analytics,
   navItemConfig.playbook,
@@ -169,7 +169,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.team, label: "Team Management", locked: false }, // Unlocked for Enterprise
+  { ...navItemConfig.team, label: "टीम प्रबंधन", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.caConnect,
   navItemConfig.analytics,
@@ -220,14 +220,14 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label: "AI Suite" },
+        { ...navItemConfig.aiToolkit, label: "AI सुइट" },
         navItemConfig.caConnect,
       ];
     case 'Legal Advisor':
       return [
         navItemConfig.dashboard,
         navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label: "AI Tools" },
+        { ...navItemConfig.aiToolkit, label: "AI टूल्स" },
         navItemConfig.clauseLibrary,
       ];
     case 'Enterprise':
@@ -282,7 +282,7 @@ const MoreMenuSheet = () => {
             </SheetTrigger>
             <SheetContent side="bottom" className="h-3/4 rounded-t-lg">
                 <SheetHeader>
-                    <SheetTitle>More Options</SheetTitle>
+                    <SheetTitle>अन्य विकल्प</SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100%-4rem)]">
                     <nav className="flex flex-col gap-1 p-4">
@@ -307,7 +307,7 @@ const MoreMenuSheet = () => {
                             <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted mt-4 border-t">
                                 <div className="flex items-center gap-4">
                                     <Settings className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">Settings</span>
+                                    <span className="font-medium">सेटिंग्स</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -316,7 +316,7 @@ const MoreMenuSheet = () => {
                             <Link href="/dashboard/help" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
                                 <div className="flex items-center gap-4">
                                     <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">Help &amp; FAQ</span>
+                                    <span className="font-medium">मदद और FAQ</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </Link>
@@ -430,7 +430,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             <Logo />
                             <span className="flex items-center">
                                 Claari
-                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
+                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">बीटा</Badge>
                             </span>
                             </Link>
                         </div>
@@ -483,20 +483,20 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="hidden sm:inline-flex">
                             <Globe className="mr-2 h-4 w-4" />
-                            English
+                            हिंदी
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuRadioGroup value="en">
+                        <DropdownMenuRadioGroup value="hi">
                             <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="hi" disabled>Hindi (coming soon)</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="hi">हिंदी</DropdownMenuRadioItem>
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <Link href="/dashboard/settings?tab=subscription" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{isDevMode ? 'Unlimited Credits' : `${totalCreditsRemaining} Credits Left`}</span>
+                    <span className="text-muted-foreground">{isDevMode ? 'असीमित क्रेडिट' : `${totalCreditsRemaining} क्रेडिट शेष`}</span>
                 </Link>
                 <ThemeToggle />
                 <DropdownMenu>
@@ -514,10 +514,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[90vw] max-w-sm md:w-[380px] p-0">
                         <DropdownMenuLabel className="flex items-center justify-between p-3 border-b">
-                            <span className="font-semibold">Notifications</span>
+                            <span className="font-semibold">सूचनाएं</span>
                             {unreadCount > 0 && (
                             <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={markAllNotificationsAsRead}>
-                                Mark all as read
+                                सभी को पढ़ा हुआ चिह्नित करें
                             </Button>
                             )}
                         </DropdownMenuLabel>
@@ -541,7 +541,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             ))
                             ) : (
                             <div className="text-center text-sm text-muted-foreground py-10">
-                                You're all caught up!
+                                आप पूरी तरह से अपडेट हैं!
                             </div>
                             )}
                         </ScrollArea>
@@ -612,7 +612,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
               <Logo />
               <span className="flex items-center">
                 Claari
-                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">BETA</Badge>
+                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">बीटा</Badge>
               </span>
             </Link>
           </div>
@@ -650,7 +650,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <Settings className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">Settings</p>
+                       <p className="font-semibold">सेटिंग्स</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>
@@ -659,7 +659,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <LifeBuoy className="h-5 w-5" />
                     <div className="flex-1">
-                       <p className="font-semibold">Help & FAQ</p>
+                       <p className="font-semibold">मदद और FAQ</p>
                     </div>
                      <ChevronRight className="h-4 w-4" />
                 </div>

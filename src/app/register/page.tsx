@@ -21,27 +21,27 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  legalRegion: z.string({ required_error: "Please select a region." }).min(1, "Please select a region."),
-  role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"], { required_error: "Please select a role." }),
+  name: z.string().min(2, "नाम आवश्यक है"),
+  email: z.string().email("अमान्य ईमेल पता"),
+  password: z.string().min(6, "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए"),
+  legalRegion: z.string({ required_error: "कृपया एक क्षेत्र चुनें।" }).min(1, "कृपया एक क्षेत्र चुनें।"),
+  role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"], { required_error: "कृपया एक भूमिका चुनें।" }),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const legalRegions = [
-    { value: 'India', label: 'India' },
-    { value: 'USA', label: 'United States' },
-    { value: 'UK', label: 'United Kingdom' },
-    { value: 'Singapore', label: 'Singapore' },
-    { value: 'Australia', label: 'Australia' },
-    { value: 'Canada', label: 'Canada' },
+    { value: 'India', label: 'भारत' },
+    { value: 'USA', label: 'संयुक्त राज्य अमेरिका' },
+    { value: 'UK', label: 'यूनाइटेड किंगडम' },
+    { value: 'Singapore', label: 'सिंगापुर' },
+    { value: 'Australia', label: 'ऑस्ट्रेलिया' },
+    { value: 'Canada', label: 'कनाडा' },
 ]
 
 const betaRoles: { id: UserRole, label: string }[] = [
-    { id: "Founder", label: "Founder" },
-    { id: "CA", label: "Chartered Accountant" },
+    { id: "Founder", label: "संस्थापक" },
+    { id: "CA", label: "चार्टर्ड एकाउंटेंट" },
 ];
 
 const Logo = () => (
@@ -95,8 +95,8 @@ export default function RegisterPage() {
     } catch (error: any) {
         toast({
             variant: "destructive",
-            title: "Registration Failed",
-            description: error.message || "An unknown error occurred.",
+            title: "पंजीकरण विफल",
+            description: error.message || "एक अज्ञात त्रुटि हुई।",
         });
     }
   };
@@ -114,13 +114,13 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Logo />
-          <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Get started with Claari today.</CardDescription>
+          <CardTitle className="text-2xl font-headline">खाता बनाएं</CardTitle>
+          <CardDescription>आज ही Claari के साथ शुरुआत करें।</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-                <Label>I am a...</Label>
+                <Label>मैं एक...</Label>
                 <Controller
                     name="role"
                     control={control}
@@ -138,29 +138,29 @@ export default function RegisterPage() {
                  {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">पूरा नाम</Label>
               <Input id="name" {...register("name")} />
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
              <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">ईमेल</Label>
               <Input id="email" type="email" {...register("email")} />
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">पासवर्ड</Label>
               <Input id="password" type="password" {...register("password")} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
              <div className="space-y-1">
-              <Label>Legal Region</Label>
+              <Label>कानूनी क्षेत्र</Label>
                 <Controller
                     name="legalRegion"
                     control={control}
                     render={({ field }) => (
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select your country..." />
+                                <SelectValue placeholder="अपना देश चुनें..." />
                             </SelectTrigger>
                             <SelectContent>
                                 {legalRegions.map(region => (
@@ -176,24 +176,24 @@ export default function RegisterPage() {
                 <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />
                 <div className="grid gap-1.5 leading-none">
                   <label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    I agree to the 
-                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Terms of Service </Link> 
-                    and 
-                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Privacy Policy</Link>.
+                    मैं 
+                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> सेवा की शर्तों </Link> 
+                    और 
+                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> गोपनीयता नीति</Link> से सहमत हूं।
                   </label>
                 </div>
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting || !agreedToTerms}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              खाता बनाएं
             </Button>
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm">
           <p className="w-full">
-            Already have an account?{" "}
+            पहले से ही खाता है?{" "}
             <Link href="/login" className="font-semibold text-primary hover:underline">
-              Log in
+              लॉग इन करें
             </Link>
           </p>
         </CardFooter>

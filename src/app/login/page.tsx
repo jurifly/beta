@@ -17,8 +17,8 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().email("अमान्य ईमेल पता"),
+  password: z.string().min(1, "पासवर्ड आवश्यक है"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -79,8 +79,8 @@ export default function LoginPage() {
     } catch (error: any) {
         toast({
             variant: "destructive",
-            title: "Login Failed",
-            description: error.message || "An unknown error occurred.",
+            title: "लॉगिन विफल",
+            description: error.message || "एक अज्ञात त्रुटि हुई।",
         });
     }
   };
@@ -98,21 +98,21 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Logo />
-          <CardTitle className="text-2xl font-headline">Welcome back</CardTitle>
-          <CardDescription>Sign in to continue to Claari</CardDescription>
+          <CardTitle className="text-2xl font-headline">वापस स्वागत है</CardTitle>
+          <CardDescription>Claari में जारी रखने के लिए साइन इन करें</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">ईमेल</Label>
               <Input id="email" type="email" {...register("email")} />
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-1">
                 <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">पासवर्ड</Label>
                     <Link href="/forgot-password" className="ml-auto inline-block text-xs underline">
-                        Forgot your password?
+                        अपना पासवर्ड भूल गए?
                     </Link>
                 </div>
               <Input id="password" type="password" {...register("password")} />
@@ -120,7 +120,7 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              साइन इन करें
             </Button>
           </form>
           <div className="relative">
@@ -128,19 +128,19 @@ export default function LoginPage() {
                   <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  <span className="bg-background px-2 text-muted-foreground">या इसके साथ जारी रखें</span>
               </div>
           </div>
           <Button className="w-full" variant="outline" onClick={signInWithGoogle} disabled={isSubmitting}>
               <GoogleIcon className="mr-2 h-5 w-5"/>
-              Sign in with Google
+              Google के साथ साइन इन करें
           </Button>
         </CardContent>
          <CardFooter className="text-center text-sm">
           <p className="w-full">
-            Don&apos;t have an account?{" "}
+            खाता नहीं है?{" "}
             <Link href="/register" className="font-semibold text-primary hover:underline">
-              Sign up
+              साइन अप करें
             </Link>
           </p>
         </CardFooter>
