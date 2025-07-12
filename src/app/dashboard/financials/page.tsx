@@ -748,6 +748,15 @@ const FinancialsTab = () => {
 
 export default function FinancialsPage() {
     const { userProfile } = useAuth();
+    const [activeTab, setActiveTab] = useState('financials');
+
+    const tabs = [
+        { value: 'financials', label: 'Financials', icon: BarChartIcon },
+        { value: 'payroll', label: 'Payroll Calculator', icon: User },
+        { value: 'personal', label: 'Personal Tax', icon: User },
+        { value: 'corporate', label: 'Corporate Tax', icon: Building },
+    ];
+    
     if (!userProfile) return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
     return (
@@ -756,12 +765,25 @@ export default function FinancialsPage() {
                 <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Financials & Tax</h1>
                 <p className="text-muted-foreground">Tools to calculate taxes and manage your startup's financial health.</p>
             </div>
-            <Tabs defaultValue="financials" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="financials"><BarChartIcon className="mr-2"/>Financials</TabsTrigger>
-                    <TabsTrigger value="payroll"><User className="mr-2"/>Payroll Calculator</TabsTrigger>
-                    <TabsTrigger value="personal"><User className="mr-2"/>Personal Tax</TabsTrigger>
-                    <TabsTrigger value="corporate"><Building className="mr-2"/>Corporate Tax</TabsTrigger>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                 <div className="md:hidden">
+                    <Select onValueChange={setActiveTab} value={activeTab}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a calculator..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {tabs.map(tab => (
+                                <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                <TabsList className="hidden md:grid w-full grid-cols-4">
+                    {tabs.map(tab => (
+                        <TabsTrigger key={tab.value} value={tab.value}>
+                            <tab.icon className="mr-2"/>{tab.label}
+                        </TabsTrigger>
+                    ))}
                 </TabsList>
                 <TabsContent value="financials" className="mt-6"><FinancialsTab /></TabsContent>
                 <TabsContent value="payroll" className="mt-6"><PayrollCalculator /></TabsContent>
