@@ -136,7 +136,6 @@ export const translations: Translations = {
     aiPracticeSuite: { en: "AI Practice Suite", hi: "AI प्रैक्टिस सुइट", es: "Suite de Práctica de IA", zh: "AI实践套件", fr: "Suite Pratique IA", de: "KI-Praxis-Suite", pt: "Suíte de Prática de IA", ja: "AI実務スイート" },
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
-    legalNews: { en: "Legal News", hi: "कानूनी समाचार", es: "Noticias Legales", zh: "法律新闻", fr: "Actualités Juridiques", de: "Rechtsnachrichten", pt: "Notícias Jurídicas", ja: "リーガルニュース" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
     
     // Global UI
@@ -232,14 +231,12 @@ type NavItemConfig = {
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
   caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users },
-  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
   playbook: { href: "/dashboard/learn", translationKey: "playbook", icon: BookOpenCheck },
-  legalNews: { href: "/dashboard/news", translationKey: "legalNews", icon: Newspaper },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
@@ -271,7 +268,6 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.playbook },
   { ...navItemConfig.community },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
-  { ...navItemConfig.legalNews },
 ];
 
 const caNavItems: ThemedNavItem[] = [
@@ -287,7 +283,6 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.documents },
   { ...navItemConfig.playbook },
   { ...navItemConfig.clauseLibrary, locked: true },
-  { ...navItemConfig.legalNews },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
@@ -296,7 +291,6 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
   navItemConfig.portfolioAnalytics,
-  navItemConfig.legalNews,
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
@@ -305,7 +299,6 @@ const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   navItemConfig.portfolioAnalytics,
   navItemConfig.documents,
-  navItemConfig.legalNews,
 ];
 
 const getSidebarNavItems = (role: UserRole) => {
@@ -578,7 +571,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                                 ? usePathname() === item.href 
                                 : usePathname().startsWith(item.href);
                                 const isLocked = item.locked && !isPro && !isDevMode;
-                                const label = translations[item.label_override_key || item.translationKey][language];
+                                const label = translations[item.label_override_key || item.translationKey][lang];
 
                                 return (
                                     <Link
