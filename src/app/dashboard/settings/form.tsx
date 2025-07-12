@@ -106,7 +106,9 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
     );
   }
 
-  const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+  const activeCompany = Array.isArray(userProfile.companies)
+    ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
+    : null;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
