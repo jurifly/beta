@@ -8,28 +8,28 @@ html {
 
 @layer base {
   :root {
-    --background: 220 13% 97%; /* Light Gray */
+    --background: 210 17% 98%;
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 217 91% 60%; /* Vivid Blue */
+    --primary: 222 65% 33%;
     --primary-foreground: 210 40% 98%;
     --secondary: 220 13% 91%;
     --secondary-foreground: 224 71% 4%;
     --muted: 220 13% 91%;
     --muted-foreground: 224 71% 25%;
-    --accent: 14 90% 61%; /* Energetic Orange */
+    --accent: 199 96% 58%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 13% 88%;
     --input: 220 13% 88%;
-    --ring: 217 91% 60%;
+    --ring: 222 65% 33%;
     --radius: 0.75rem;
-    --chart-1: 217 91% 60%;
-    --chart-2: 14 90% 61%;
+    --chart-1: 222 65% 33%;
+    --chart-2: 199 96% 58%;
     --chart-3: 341 91% 55%;
     --chart-4: 39 92% 55%;
     --chart-5: 262 82% 60%;
@@ -48,7 +48,7 @@ html {
     --secondary-foreground: 210 40% 98%;
     --muted: 215 28% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 14 90% 61%;
+    --accent: 199 96% 58%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -56,7 +56,7 @@ html {
     --input: 215 28% 20%;
     --ring: 217 91% 60%;
     --chart-1: 217 91% 60%;
-    --chart-2: 14 90% 61%;
+    --chart-2: 199 96% 58%;
     --chart-3: 341 81% 65%;
     --chart-4: 39 92% 65%;
     --chart-5: 262 82% 70%;
