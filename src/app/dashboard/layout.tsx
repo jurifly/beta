@@ -128,35 +128,35 @@ type ThemedNavItem = (typeof navItemConfig)[keyof typeof navItemConfig] & {
 }
 
 const founderNavItems: ThemedNavItem[] = [
-  { ...navItemConfig.dashboard, color: "#4F46E5" },
-  { ...navItemConfig.aiToolkit, color: "#4F46E5" },
-  { ...navItemConfig.capTable, color: "#7C3AED" },
-  { ...navItemConfig.financials, color: "#1D4ED8" },
-  { ...navItemConfig.launchPad, color: "#F97316" },
-  { ...navItemConfig.reportCenter, color: "#10B981", locked: true },
-  { ...navItemConfig.analytics, label: "Analytics", color: "#06B6D4" },
-  { ...navItemConfig.playbook, color: "#EAB308" },
-  { ...navItemConfig.caConnect, color: "#F43F5E", locked: true },
-  { ...navItemConfig.documents, color: "#64748B" },
-  { ...navItemConfig.community, color: "#A855F7" },
-  { ...navItemConfig.team, label: "Team Management", color: "#9333EA", locked: true },
+  { ...navItemConfig.dashboard },
+  { ...navItemConfig.aiToolkit },
+  { ...navItemConfig.capTable },
+  { ...navItemConfig.financials },
+  { ...navItemConfig.launchPad },
+  { ...navItemConfig.reportCenter, locked: true },
+  { ...navItemConfig.analytics, label: "Analytics" },
+  { ...navItemConfig.playbook },
+  { ...navItemConfig.caConnect, locked: true },
+  { ...navItemConfig.documents },
+  { ...navItemConfig.community },
+  { ...navItemConfig.team, label: "Team Management", locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
-  { ...navItemConfig.dashboard, color: "#0F766E" },
-  { ...navItemConfig.clients, label: "Client Management", color: "#2563EB", icon: Briefcase },
-  { ...navItemConfig.team, label: "Team Management", color: "#0D9488", locked: true },
-  { ...navItemConfig.aiToolkit, label: "AI Practice Suite", color: "#8B5CF6" },
-  { ...navItemConfig.analytics, color: "#14B8A6" },
-  { ...navItemConfig.caConnect, label: 'Compliance Hub', color: "#EC4899", icon: Users },
-  { ...navItemConfig.launchPad, color: "#F97316" },
-  { ...navItemConfig.reportCenter, color: "#10B981", locked: true },
-  { ...navItemConfig.workflows, label: "Workflows", color: "#22D3EE", locked: true },
-  { ...navItemConfig.reconciliation, color: "#A3E635", locked: true },
-  { ...navItemConfig.documents, color: "#6B7280" },
-  { ...navItemConfig.clauseLibrary, color: "#9333EA", locked: true },
-  { ...navItemConfig.playbook, color: "#FACC15" },
-  { ...navItemConfig.invitations, color: "#EC4899" },
+  { ...navItemConfig.dashboard },
+  { ...navItemConfig.clients, label: "Client Management", icon: Briefcase },
+  { ...navItemConfig.team, label: "Team Management", locked: true },
+  { ...navItemConfig.aiToolkit, label: "AI Practice Suite" },
+  { ...navItemConfig.analytics },
+  { ...navItemConfig.caConnect, label: 'Compliance Hub', icon: Users },
+  { ...navItemConfig.launchPad },
+  { ...navItemConfig.reportCenter, locked: true },
+  { ...navItemConfig.workflows, label: "Workflows", locked: true },
+  { ...navItemConfig.reconciliation, locked: true },
+  { ...navItemConfig.documents },
+  { ...navItemConfig.clauseLibrary, locked: true },
+  { ...navItemConfig.playbook },
+  { ...navItemConfig.invitations },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
@@ -389,15 +389,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   }
   
   const navItems = getSidebarNavItems(userProfile.role);
-  
-  const activeNavItem = useMemo(() => {
-    return [...navItems, ...getBottomNavItems(userProfile.role), ...Object.values(navItemConfig)]
-      .sort((a, b) => b.href.length - a.href.length)
-      .find(item => pathname.startsWith(item.href));
-  }, [pathname, navItems, userProfile.role]);
-
-  const activeThemeColor = activeNavItem?.color || 'hsl(var(--primary))';
-
 
   const bonusCredits = userProfile.creditBalance ?? 0;
   const dailyCreditsUsed = userProfile.dailyCreditsUsed ?? 0;
@@ -562,7 +553,6 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             </header>
             <main 
                 className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto"
-                style={{ '--feature-color': activeThemeColor } as React.CSSProperties}
             >
                 <BetaBanner />
                 {children}
@@ -641,35 +631,16 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick }: { navIt
                       href={item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all relative interactive-lift",
-                          "hover:text-primary",
-                          isActive && "text-primary font-semibold",
+                          "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all relative interactive-lift hover:bg-muted",
+                          isActive && "text-primary font-semibold bg-muted",
                           isLocked && "cursor-not-allowed"
                       )}
-                       style={{
-                            '--item-color': item.color || 'transparent',
-                            '--item-hover-bg': item.color ? `${item.color}1A` : 'hsl(var(--muted))'
-                        } as React.CSSProperties}
                     >
-                      <div className={cn(
-                          "absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-[var(--item-color)] transition-all",
-                          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
-                      )}></div>
-
-                      <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-[var(--item-color)]")} />
+                      <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
                       {item.label}
                       {isLocked && (
                         <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                       )}
-                       <style jsx>{`
-                        a:hover {
-                            background-color: var(--item-hover-bg);
-                        }
-                        a[data-active="true"] {
-                           background-color: var(--item-hover-bg);
-                        }
-                       `}</style>
-                       <div data-active={isActive ? 'true' : 'false'}></div>
                     </Link>
                 )
               })}
