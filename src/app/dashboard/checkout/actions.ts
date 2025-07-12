@@ -4,6 +4,7 @@
 import { db } from '@/lib/firebase/config';
 import { addDoc, collection } from "firebase/firestore";
 import { add } from 'date-fns';
+import type { Transaction } from '@/lib/types';
 
 // This interface defines what the client will send.
 // It contains all possible fields.
@@ -28,7 +29,7 @@ export async function saveUpiTransaction(data: TransactionInput): Promise<{succe
 
   // 2. Build the base record with properties common to all transactions.
   //    Crucially, use a new object, don't modify the input `data`.
-  const baseRecord = {
+  const baseRecord: Omit<Transaction, 'id'> = {
       userId: data.userId,
       userEmail: data.userEmail,
       upiTransactionId: data.upiTransactionId,
@@ -39,7 +40,7 @@ export async function saveUpiTransaction(data: TransactionInput): Promise<{succe
       createdAt: new Date().toISOString(),
   };
 
-  let finalRecord;
+  let finalRecord: Omit<Transaction, 'id'>;
 
   // 3. Create the final record based on the transaction type.
   //    This ensures no 'undefined' fields from other types are included.

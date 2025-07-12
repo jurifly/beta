@@ -67,9 +67,13 @@ export interface TeamMember {
 
 export interface Invite {
     id: string;
-    email: string;
-    role: 'Admin' | 'Member' | 'Viewer' | 'Billing';
-    invitedAt: string;
+    caEmail: string;
+    founderId: string;
+    founderName: string;
+    companyId: string;
+    companyName: string;
+    status: 'pending' | 'accepted' | 'revoked';
+    createdAt: string;
 }
 
 export interface ActivityLog {
@@ -204,17 +208,18 @@ export type ActivityLogItem = {
 export interface Transaction {
   id?: string;
   userId: string;
+  userEmail: string;
   type: 'plan' | 'credit_pack';
   name: string;
   amount: number;
-  status: 'initiated' | 'pending_verification' | 'verified' | 'failed';
+  status: 'pending_verification' | 'verified' | 'failed';
   createdAt: string;
-  upiTransactionId?: string;
-  // Plan specific
+  upiTransactionId: string;
   plan?: string;
   cycle?: 'monthly' | 'yearly';
-  // Credit pack specific
   credits?: number;
+  planStartDate?: string;
+  planEndDate?: string;
 }
 
 export type ChatMessage = {

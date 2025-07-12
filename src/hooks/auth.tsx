@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLog, Invite } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -242,7 +242,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUserProfile, fetchNotifications]);
   
   useEffect(() => {
-    setIsPlanActive(userProfile?.plan !== 'Starter');
+    if (userProfile && userProfile.planExpiryDate) {
+      setIsPlanActive(new Date(userProfile.planExpiryDate) > new Date());
+    } else {
+      setIsPlanActive(false);
+    }
   }, [userProfile]);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
@@ -496,8 +500,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Only founders can send invites.' };
     }
     const invitesRef = collection(db, 'invites');
-    const newInvite: Invite = {
-        id: '', // Firestore will generate this
+    const newInvite: Omit<Invite, 'id'> = {
         caEmail,
         founderId: user.uid,
         founderName: userProfile.name,
@@ -506,14 +509,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: 'pending',
         createdAt: new Date().toISOString(),
     };
-    const userUpdates: Partial<UserProfile> = {
-        invites: [...(userProfile.invites || []), newInvite],
-        invitedCaEmail: caEmail, // also keep the legacy field for now
-    };
 
     try {
         const inviteDocRef = await addDoc(invitesRef, newInvite);
-        // Also update the user's profile to reflect the sent invite
+        const userUpdates: Partial<UserProfile> = {
+            invites: [...(userProfile.invites || []), { ...newInvite, id: inviteDocRef.id }],
+            invitedCaEmail: caEmail, // also keep the legacy field for now
+        };
         await updateUserProfile(userUpdates);
         return { success: true, message: 'Invitation sent successfully!' };
     } catch (error) {
