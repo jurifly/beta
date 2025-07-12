@@ -341,7 +341,6 @@ const getIcon = (iconName?: string) => {
 }
 
 const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
-  const allItemsForRole = getSidebarNavItems(role);
   // Define a static order/priority for the bottom nav
   const priorityOrder = [
     "/dashboard",
@@ -356,7 +355,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
   ];
 
   // Filter and sort the role's items based on priority
-  return allItemsForRole
+  return getSidebarNavItems(role)
     .filter(item => priorityOrder.includes(item.href))
     .sort((a, b) => priorityOrder.indexOf(a.href) - priorityOrder.indexOf(b.href))
     .slice(0, 4);
@@ -473,13 +472,13 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
-  const [language, setLanguage] = useState<Language>('en');
+  const [lang, setLang] = useState<Language>('en');
 
   useEffect(() => {
     try {
       const savedLang = localStorage.getItem('claari-lang') as Language;
       if (savedLang && languages.some(l => l.code === savedLang)) {
-        setLanguage(savedLang);
+        setLang(savedLang);
       }
     } catch (error) {
       console.error('Could not access localStorage for language settings.', error);
@@ -488,7 +487,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
 
   const handleLanguageChange = (langCode: string) => {
     const newLang = langCode as Language;
-    setLanguage(newLang);
+    setLang(newLang);
     try {
       localStorage.setItem('claari-lang', newLang);
     } catch (error) {
@@ -526,7 +525,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
   // Pass language to children
   const childrenWithLang = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
-        return React.cloneElement(child, { lang: language, translations: translations } as any);
+        return React.cloneElement(child, { lang: lang, translations: translations } as any);
     }
     return child;
   });
@@ -543,7 +542,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             notification={selectedNotification}
         />
         <div className="flex h-screen w-full">
-            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
+            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <Sheet>
@@ -610,21 +609,21 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="hidden sm:inline-flex">
                             <Globe className="mr-2 h-4 w-4" />
-                            {languages.find(l => l.code === language)?.name || 'Language'}
+                            {languages.find(l => l.code === lang)?.name || 'Language'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuRadioGroup value={language} onValueChange={handleLanguageChange}>
-                            {languages.map(lang => (
-                                <DropdownMenuRadioItem key={lang.code} value={lang.code}>{lang.name}</DropdownMenuRadioItem>
+                        <DropdownMenuRadioGroup value={lang} onValueChange={handleLanguageChange}>
+                            {languages.map(l => (
+                                <DropdownMenuRadioItem key={l.code} value={l.code}>{l.name}</DropdownMenuRadioItem>
                             ))}
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <Link href="/dashboard/settings?tab=subscription" className="hidden md:flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors interactive-lift">
                     <Bolt className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{isDevMode ? translations.unlimitedCredits[language] : `${totalCreditsRemaining} ${translations.creditsLeft[language]}`}</span>
+                    <span className="text-muted-foreground">{isDevMode ? translations.unlimitedCredits[lang] : `${totalCreditsRemaining} ${translations.creditsLeft[lang]}`}</span>
                 </Link>
                 <ThemeToggle />
                 <DropdownMenu>
@@ -642,10 +641,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[90vw] max-w-sm md:w-[380px] p-0">
                         <DropdownMenuLabel className="flex items-center justify-between p-3 border-b">
-                            <span className="font-semibold">{translations['notifications'][language]}</span>
+                            <span className="font-semibold">{translations['notifications'][lang]}</span>
                             {unreadCount > 0 && (
                             <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={markAllNotificationsAsRead}>
-                                {translations['markAllAsRead'][language]}
+                                {translations['markAllAsRead'][lang]}
                             </Button>
                             )}
                         </DropdownMenuLabel>
@@ -669,7 +668,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                             ))
                             ) : (
                             <div className="text-center text-sm text-muted-foreground py-10">
-                                {translations['youAreCaughtUp'][language]}
+                                {translations['youAreCaughtUp'][lang]}
                             </div>
                             )}
                         </ScrollArea>
@@ -684,7 +683,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                 <BetaBanner />
                 {childrenWithLang}
             </main>
-            <BottomNavBar lang={language} setLang={handleLanguageChange}/>
+            <BottomNavBar lang={lang} setLang={handleLanguageChange}/>
             </div>
         </div>
     </>
