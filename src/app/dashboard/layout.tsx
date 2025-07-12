@@ -294,7 +294,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
   navItemConfig.portfolioAnalytics,
-  navItemConfig.legalNews },
+  navItemConfig.legalNews,
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
