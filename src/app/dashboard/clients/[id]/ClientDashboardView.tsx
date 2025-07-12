@@ -363,13 +363,14 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-4" align="end">
                                         <div className="space-y-4">
-                                            <div className="grid grid-cols-3 gap-2">
+                                            <div className="flex flex-wrap gap-2">
                                                 {checklistYears.map(year => (
                                                     <div key={year} className="flex flex-col gap-2">
                                                         <Button 
+                                                            size="sm"
                                                             variant={selectedYear === year ? "default" : "outline"}
                                                             onClick={() => setSelectedYear(year)}
-                                                            className="flex-1 justify-center gap-2 aspect-square p-2 h-auto"
+                                                            className="justify-center gap-2"
                                                         >
                                                           <div className="flex items-center gap-1">
                                                             {overdueYears.has(year) && <AlertTriangle className="h-3 w-3 text-destructive" />}
