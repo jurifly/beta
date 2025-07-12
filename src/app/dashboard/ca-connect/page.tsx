@@ -146,7 +146,8 @@ export default function CaConnectPage() {
   const [selectedRequest, setSelectedRequest] = useState<DocumentRequest | null>(null);
 
   const activeCompany = useMemo(() => {
-    return userProfile?.companies.find(c => c.id === userProfile.activeCompanyId)
+    if (!userProfile) return null;
+    return userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
   }, [userProfile]);
   
   const handleAddRequest = (data: Omit<DocumentRequest, 'id' | 'status'>) => {
