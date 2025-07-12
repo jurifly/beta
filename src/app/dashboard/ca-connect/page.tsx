@@ -133,120 +133,6 @@ const FounderAdvisorHub = ({ onInvite }: { onInvite: () => void }) => {
   )
 }
 
-const CATabsView = ({ onAddRequest, onProvideDoc, pendingRequests, overdueRequests, completedRequests }: any) => {
-    const { userProfile, getPendingInvites, acceptInvite } = useAuth();
-    const [invites, setInvites] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [acceptingId, setAcceptingId] = useState<string | null>(null);
-    const [isInviteClientModalOpen, setInviteClientModalOpen] = useState(false);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        getPendingInvites().then(setInvites).finally(() => setLoading(false));
-    }, [getPendingInvites]);
-    
-    const handleAccept = async (inviteId: string) => {
-        setAcceptingId(inviteId);
-        try {
-            await acceptInvite(inviteId);
-            setInvites(prev => prev.filter(i => i.id !== inviteId));
-            toast({ title: 'Connection Successful!', description: 'You can now manage the new client.' });
-        } catch(e: any) {
-            toast({ title: 'Error', description: e.message, variant: 'destructive' });
-        } finally {
-            setAcceptingId(null);
-        }
-    }
-
-    return (
-        <>
-            <InviteClientModal isOpen={isInviteClientModalOpen} onOpenChange={setInviteClientModalOpen} />
-            <Tabs defaultValue="requests" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="requests">Document Requests</TabsTrigger>
-                    <TabsTrigger value="invitations">Invitations</TabsTrigger>
-                    <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-                </TabsList>
-                <TabsContent value="requests" className="mt-4">
-                    <Card className="interactive-lift">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Document Requests</CardTitle>
-                            <Button onClick={onAddRequest}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>
-                        </CardHeader>
-                        <CardContent>
-                            <Tabs defaultValue="pending">
-                                <TabsList className="grid w-full sm:w-auto grid-cols-2">
-                                    <TabsTrigger value="pending">Pending ({pendingRequests.length + overdueRequests.length})</TabsTrigger>
-                                    <TabsTrigger value="completed">Completed ({completedRequests.length})</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="pending" className="mt-4 space-y-3">
-                                    {overdueRequests.length > 0 ? overdueRequests.map((req:any) => <RequestItem key={req.id} request={req} onProvide={onProvideDoc} />) : null}
-                                    {pendingRequests.length > 0 ? pendingRequests.map((req:any) => <RequestItem key={req.id} request={req} onProvide={onProvideDoc} />) : null}
-                                    {overdueRequests.length === 0 && pendingRequests.length === 0 && <p className="text-sm text-muted-foreground text-center p-4">No pending requests. Great work!</p>}
-                                </TabsContent>
-                                <TabsContent value="completed" className="mt-4 space-y-3">
-                                    {completedRequests.length > 0 ? completedRequests.map((req:any) => <RequestItem key={req.id} request={req} onProvide={onProvideDoc} />) : <p className="text-sm text-muted-foreground text-center p-4">No completed requests yet.</p>}
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="invitations" className="mt-4">
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Client Invitations</CardTitle>
-                             <Button variant="outline" onClick={() => setInviteClientModalOpen(true)}><UserPlus className="mr-2 h-4 w-4"/>Invite a Client</Button>
-                        </CardHeader>
-                        <CardContent>
-                            {loading ? <Loader2 className="animate-spin mx-auto"/> : invites.length > 0 ? (
-                                <div className="space-y-4">
-                                {invites.map(invite => (
-                                    <Card key={invite.id}>
-                                        <CardContent className="p-4 flex items-center justify-between">
-                                            <div>
-                                                <p className="font-semibold">{invite.companyName}</p>
-                                                <p className="text-sm text-muted-foreground">Invited by: {invite.founderName}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}</p>
-                                                <Button size="sm" onClick={() => handleAccept(invite.id)} disabled={!!acceptingId}>
-                                                    {acceptingId === invite.id && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Accept
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                                </div>
-                            ) : <p className="text-center text-sm text-muted-foreground p-4">No pending invitations.</p>}
-                        </CardContent>
-                     </Card>
-                </TabsContent>
-                <TabsContent value="marketplace" className="mt-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Advisor Marketplace</CardTitle>
-                            <CardDescription>Find other verified professionals to collaborate with.</CardDescription>
-                        </CardHeader>
-                         <CardContent className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                            <Building className="w-16 h-16 text-primary/20"/>
-                            <p className="font-semibold text-lg">Marketplace Coming Soon</p>
-                            <p className="text-sm max-w-sm">Soon you'll be able to browse and connect with other CAs and Legal Experts.</p>
-                        </CardContent>
-                    </Card>
-                     <Card className="interactive-lift bg-primary/10 border-primary/20 mt-6">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Building className="text-primary"/> Are you an Advisor?</CardTitle>
-                            <CardDescription>Want to get listed on our marketplace and connect with high-growth startups?</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                        <Button variant="outline" className="w-full bg-background" disabled>Apply for Verification (Coming Soon)</Button>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        </>
-    )
-}
 
 export default function CaConnectPage() {
   const { userProfile, updateUserProfile } = useAuth();
@@ -329,49 +215,55 @@ export default function CaConnectPage() {
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
                 <h1 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Advisor Hub</h1>
-                <p className="text-muted-foreground">{isFounder ? "Manage your connection with your advisor and handle document requests." : "Manage client requests, invitations, and explore the professional marketplace."}</p>
+                <p className="text-muted-foreground">{isFounder ? "Manage your connection with your advisor and handle document requests." : "Manage document requests for your active client."}</p>
             </div>
 
             {isFounder ? (
-              <>
-                <FounderAdvisorHub onInvite={() => setInviteModalOpen(true)} />
-                <Card className="interactive-lift">
-                    <CardHeader>
-                        <CardTitle>Document Requests from Advisor</CardTitle>
-                        <CardDescription>for {activeCompany?.name || 'your company'}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {allRequests.length > 0 ? (
-                           <Tabs defaultValue="pending" className="w-full">
-                                <TabsList className="grid w-full sm:w-auto grid-cols-2">
-                                    <TabsTrigger value="pending">Pending ({pendingRequests.length + overdueRequests.length})</TabsTrigger>
-                                    <TabsTrigger value="completed">Completed ({completedRequests.length})</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="pending" className="mt-4 space-y-3">
-                                    {overdueRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />)}
-                                    {pendingRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />)}
-                                    {overdueRequests.length === 0 && pendingRequests.length === 0 && <p className="text-sm text-muted-foreground text-center p-4">No pending requests. Great work!</p>}
-                                </TabsContent>
-                                 <TabsContent value="completed" className="mt-4 space-y-3">
-                                     {completedRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />)}
-                                     {completedRequests.length === 0 && <p className="text-sm text-muted-foreground text-center p-4">No completed requests yet.</p>}
-                                </TabsContent>
-                            </Tabs>
-                        ) : (
-                            <EmptyState onAddRequest={() => {}} />
-                        )}
-                    </CardContent>
-                </Card>
-              </>
+              <FounderAdvisorHub onInvite={() => setInviteModalOpen(true)} />
             ) : (
-              <CATabsView
-                  onAddRequest={() => setAddRequestModalOpen(true)}
-                  onProvideDoc={handleProvideDocument}
-                  pendingRequests={pendingRequests}
-                  overdueRequests={overdueRequests}
-                  completedRequests={completedRequests}
-              />
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Client Actions</CardTitle>
+                            <CardDescription>Manage interactions for {activeCompany?.name || 'your client'}.</CardDescription>
+                        </div>
+                        <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>
+                    </CardHeader>
+                </Card>
             )}
+
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle>Document Requests</CardTitle>
+                    <CardDescription>
+                        {isFounder 
+                            ? `Requested from your advisor for ${activeCompany?.name || 'your company'}`
+                            : `Requested for your client ${activeCompany?.name || ''}`
+                        }
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {allRequests.length > 0 ? (
+                       <Tabs defaultValue="pending" className="w-full">
+                            <TabsList className="grid w-full sm:w-auto grid-cols-2">
+                                <TabsTrigger value="pending">Pending ({pendingRequests.length + overdueRequests.length})</TabsTrigger>
+                                <TabsTrigger value="completed">Completed ({completedRequests.length})</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="pending" className="mt-4 space-y-3">
+                                {overdueRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />)}
+                                {pendingRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />)}
+                                {overdueRequests.length === 0 && pendingRequests.length === 0 && <p className="text-sm text-muted-foreground text-center p-4">No pending requests. Great work!</p>}
+                            </TabsContent>
+                             <TabsContent value="completed" className="mt-4 space-y-3">
+                                 {completedRequests.map(req => <RequestItem key={req.id} request={req} onProvide={handleProvideDocument} />)}
+                                 {completedRequests.length === 0 && <p className="text-sm text-muted-foreground text-center p-4">No completed requests yet.</p>}
+                            </TabsContent>
+                        </Tabs>
+                    ) : (
+                        <EmptyState onAddRequest={() => setAddRequestModalOpen(true)} />
+                    )}
+                </CardContent>
+            </Card>
         </div>
     </>
   );

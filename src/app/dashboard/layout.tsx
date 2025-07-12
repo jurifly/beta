@@ -136,6 +136,7 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     legalNews: { en: "Legal News", hi: "कानूनी समाचार", es: "Noticias Legales", zh: "法律新闻", fr: "Actualités Juridiques", de: "Rechtsnachrichten", pt: "Notícias Jurídicas", ja: "リーガルニュース" },
+    invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
     
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
@@ -230,6 +231,7 @@ type NavItemConfig = {
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
   caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users },
+  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
@@ -263,7 +265,8 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
-  { ...navItemConfig.caConnect, locked: true },
+  { ...navItemConfig.caConnect },
+  { ...navItemConfig.invitations },
   { ...navItemConfig.documents },
   { ...navItemConfig.playbook },
   { ...navItemConfig.community },
@@ -277,7 +280,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.portfolioAnalytics },
-  { ...navItemConfig.caConnect, label_override_key: 'advisorHub', icon: Users },
+  { ...navItemConfig.invitations },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
@@ -295,13 +298,14 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clauseLibrary,
   navItemConfig.portfolioAnalytics,
   navItemConfig.legalNews,
+  { ...navItemConfig.invitations },
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
-  navItemConfig.caConnect,
+  { ...navItemConfig.invitations },
   navItemConfig.portfolioAnalytics,
   navItemConfig.documents,
   navItemConfig.legalNews,
@@ -340,6 +344,7 @@ const getIcon = (iconName?: string) => {
         AlertTriangle: <AlertTriangle className="h-5 w-5 text-destructive" />,
         RadioTower: <RadioTower className="h-5 w-5 text-primary" />,
         FileClock: <FileClock className="h-5 w-5 text-green-500" />,
+        CheckCircle: <CheckCircle className="h-5 w-5 text-green-500" />,
         Default: <Bell className="h-5 w-5 text-muted-foreground" />,
     };
     return icons[iconName || 'Default'] || icons.Default;
@@ -355,6 +360,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
     "/dashboard/cap-table",
     "/dashboard/financials",
     "/dashboard/ca-connect",
+    "/dashboard/invitations",
     "/dashboard/clause-library",
     "/dashboard/learn"
   ];
