@@ -126,6 +126,7 @@ export const translations: Translations = {
     settings: { en: "Settings", hi: "सेटिंग्स", es: "Configuración", zh: "设置", fr: "Paramètres", de: "Einstellungen", pt: "Configurações" },
     help: { en: "Help & FAQ", hi: "मदद और FAQ", es: "Ayuda y Preguntas", zh: "帮助与常见问题", fr: "Aide & FAQ", de: "Hilfe & FAQ", pt: "Ajuda & FAQ" },
     analytics: { en: "Analytics", hi: "एनालिटिक्स", es: "Análisis", zh: "分析", fr: "Analytique", de: "Analytik", pt: "Análises" },
+    playbook: { en: "Playbook", hi: "प्लेबुक", es: "Manual", zh: "手册", fr: "Guide", de: "Spielbuch", pt: "Manual" },
     teamManagement: { en: "Team Management", hi: "टीम प्रबंधन", es: "Gestión de Equipo", zh: "团队管理", fr: "Gestion d'Équipe", de: "Team-Management", pt: "Gestão de Equipe" },
     clientManagement: { en: "Client Management", hi: "क्लाइंट प्रबंधन", es: "Gestión de Clientes", zh: "客户管理", fr: "Gestion des Clients", de: "Kundenverwaltung", pt: "Gestão de Clientes" },
     aiPracticeSuite: { en: "AI Practice Suite", hi: "AI प्रैक्टिस सुइट", es: "Suite de Práctica de IA", zh: "AI实践套件", fr: "Suite Pratique IA", de: "KI-Praxis-Suite", pt: "Suíte de Prática de IA" },
@@ -229,13 +230,13 @@ const navItemConfig: NavItemConfig = {
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
+  playbook: { href: "/dashboard/learn", translationKey: "playbook", icon: BookOpenCheck },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
   team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: true },
   clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: true },
-  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail, locked: true },
   reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: true },
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
@@ -258,6 +259,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.documents },
+  { ...navItemConfig.playbook },
   { ...navItemConfig.community },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
 ];
@@ -274,6 +276,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
+  { ...navItemConfig.playbook },
   { ...navItemConfig.clauseLibrary, locked: true },
 ];
 
@@ -333,37 +336,24 @@ const getIcon = (iconName?: string) => {
 }
 
 const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
-  switch (role) {
-    case 'CA':
-      return [
-        navItemConfig.dashboard,
-        navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
-        navItemConfig.caConnect,
-      ];
-    case 'Legal Advisor':
-      return [
-        navItemConfig.dashboard,
-        navItemConfig.clients,
-        { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
-        navItemConfig.clauseLibrary,
-      ];
-    case 'Enterprise':
-      return [
-        navItemConfig.dashboard,
-        {...navItemConfig.team, locked: false},
-        navItemConfig.caConnect,
-        navItemConfig.portfolioAnalytics,
-      ];
-    case 'Founder':
-    default:
-      return [
-        navItemConfig.dashboard,
-        navItemConfig.financials,
-        navItemConfig.aiToolkit,
-        navItemConfig.capTable,
-      ];
-  }
+  const allItemsForRole = getSidebarNavItems(role);
+  // Define a static order/priority for the bottom nav
+  const priorityOrder = [
+    "/dashboard",
+    "/dashboard/clients",
+    "/dashboard/financials",
+    "/dashboard/ai-toolkit",
+    "/dashboard/cap-table",
+    "/dashboard/ca-connect",
+    "/dashboard/clause-library",
+    "/dashboard/learn"
+  ];
+
+  // Filter and sort the role's items based on priority
+  return allItemsForRole
+    .filter(item => priorityOrder.includes(item.href))
+    .sort((a, b) => priorityOrder.indexOf(a.href) - priorityOrder.indexOf(b.href))
+    .slice(0, 4);
 };
 
 const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
@@ -374,19 +364,11 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
     const bottomItemsHrefs = getBottomNavItems(userProfile.role).map(item => item.href);
 
     const allNavItems = { ...navItemConfig };
-    const menuItems = Object.values(allNavItems).filter(item => 
-        !mainItemsHrefs.includes(item.href) && 
-        !bottomItemsHrefs.includes(item.href) &&
-        item.href !== '/dashboard/settings' &&
-        item.href !== '/dashboard/help'
-    ) as ThemedNavItem[];
     
-    if (userProfile.role === 'Founder' && !menuItems.some(i => i.href === '/dashboard/analytics')) {
-        menuItems.push({ ...navItemConfig.portfolioAnalytics, label_override_key: 'analytics' });
-    }
-    if (userProfile.role === 'CA' && !menuItems.some(i => i.href === '/dashboard/documents')) {
-        menuItems.push(navItemConfig.documents);
-    }
+    // Items for the 'More' menu are those that are in the role's nav list but not in the bottom bar
+    const menuItems = getSidebarNavItems(userProfile.role).filter(item => 
+        !bottomItemsHrefs.includes(item.href)
+    );
     
     return (
         <Sheet>
@@ -575,7 +557,7 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                     </SheetTrigger>
                     <SheetContent side="left" className="flex flex-col p-0">
                          <SheetHeader className="h-14 flex flex-row items-center border-b px-4 lg:h-[60px] lg:px-6">
-                            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                            <SheetTitle>Navigation Menu</SheetTitle>
                             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
                             {isPro && <Flame className="h-6 w-6 text-accent" />}
                             <Logo />
