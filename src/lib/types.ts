@@ -58,6 +58,28 @@ export interface BoardMeeting {
     meetingLink?: string;
 }
 
+export interface TeamMember {
+    id: string;
+    name: string;
+    email: string;
+    role: 'Admin' | 'Member' | 'Viewer' | 'Billing';
+}
+
+export interface Invite {
+    id: string;
+    email: string;
+    role: 'Admin' | 'Member' | 'Viewer' | 'Billing';
+    invitedAt: string;
+}
+
+export interface ActivityLog {
+    id: string;
+    userId: string;
+    userName: string;
+    action: string;
+    timestamp: string;
+}
+
 export interface Company {
     id: string;
     name: string;
@@ -104,6 +126,11 @@ export interface UserProfile {
   email: string;
   legalRegion: string;
   phone?: string;
+  
+  // Team Management
+  teamMembers?: TeamMember[];
+  invites?: Invite[];
+  activityLog?: ActivityLog[];
 
   // Beta AI Credit System
   signupIndex?: number;

@@ -660,17 +660,34 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
     const [insightsLoading, setInsightsLoading] = useState(true);
 
     const clientCount = userProfile.companies.length;
-    const { highRiskClientCount } = useMemo(() => {
-        if (clientCount === 0) return { highRiskClientCount: 0 };
+    const { highRiskClientCount, portfolioDeadlines } = useMemo(() => {
+        if (clientCount === 0) return { highRiskClientCount: 0, portfolioDeadlines: [] };
         
         let highRisk = 0;
+        let deadlines: any[] = [];
+        
         userProfile.companies.forEach(company => {
-            const overdueTasks = Math.floor(Math.random() * 5); 
+            const overdueTasks = company.docRequests?.filter(r => r.status === 'Pending' && new Date(r.dueDate) < startOfToday()).length || 0;
             const filingPerf = Math.max(0, 100 - (overdueTasks * 20));
-            const healthScore = Math.round(filingPerf);
+            
+            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+            const profileCompleteness = (filledFields / requiredFields.length) * 100;
+            
+            const healthScore = Math.round((filingPerf * 0.5) + (profileCompleteness * 0.5));
             if (healthScore < 60) highRisk++;
+
+            const upcomingRequests = company.docRequests
+                ?.filter(r => r.status === 'Pending' && new Date(r.dueDate) >= startOfToday())
+                .map(r => ({ client: company.name, task: r.title, due: formatDistanceToNow(new Date(r.dueDate), { addSuffix: true }), icon: <FileText className="w-5 h-5"/> })) || [];
+
+            deadlines = [...deadlines, ...upcomingRequests];
         });
-        return { highRiskClientCount: highRisk };
+
+        return {
+            highRiskClientCount: highRisk,
+            portfolioDeadlines: deadlines.sort((a,b) => a.due.localeCompare(b.due)).slice(0, 3)
+        };
     }, [userProfile.companies, clientCount]);
 
     useEffect(() => {
@@ -697,12 +714,6 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
         fetchInsights();
     }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast]);
 
-    const mockDeadlines = userProfile.companies.length > 0 ? [
-       { client: userProfile.companies[0 % userProfile.companies.length].name, task: 'GSTR-3B Filing', due: 'in 2 days', icon: <Receipt className="w-5 h-5"/> },
-       { client: userProfile.companies[Math.min(1, userProfile.companies.length-1)].name, task: 'ADT-1 Auditor Appointment', due: 'in 5 days', icon: <Briefcase className="w-5 h-5"/> },
-       { client: userProfile.companies[Math.min(2, userProfile.companies.length-1)].name, task: 'ROC Annual Return (MGT-7)', due: 'in 1 week', icon: <FileText className="w-5 h-5"/> },
-   ] : [];
-   
    const mockActivities = userProfile.companies.length > 0 ? [
        { client: userProfile.companies[0 % userProfile.companies.length].name, action: 'uploaded "Bank Statement.pdf"', time: '2h ago', icon: <FileUp className="w-5 h-5"/> },
        { client: userProfile.companies[Math.min(1, userProfile.companies.length-1)].name, action: 'updated their PAN details', time: '1 day ago', icon: <Users className="w-5 h-5"/> },
@@ -765,9 +776,9 @@ function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfi
                     <CardDescription>Upcoming key dates across all your clients.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {mockDeadlines.length > 0 ? (
+                    {portfolioDeadlines.length > 0 ? (
                         <div className="space-y-4">
-                            {mockDeadlines.map((item, index) => (
+                            {portfolioDeadlines.map((item, index) => (
                                 <div key={index} className="flex items-center gap-4">
                                     <div className="p-2 bg-muted rounded-full text-primary">{item.icon}</div>
                                     <div>
@@ -812,7 +823,7 @@ function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
              <div className="md:col-span-4 lg:col-span-4">
                 <QuickLinkCard title="AI Document Analyzer" description="Upload a contract to instantly identify risks, find missing clauses, and get redline suggestions." href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} />
              </div>
-             <Link href="/dashboard/clients" className="block"><StatCard title="Active Matters" value="0" subtext="Across all clients" icon={<Briefcase />} /></Link>
+             <Link href="/dashboard/clients" className="block"><StatCard title="Active Matters" value={userProfile.companies.reduce((acc, c) => acc + (c.matters?.length || 0), 0).toString()} subtext="Across all clients" icon={<Briefcase />} /></Link>
              <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title="Contracts Analyzed" value="0" subtext="This month" icon={<ListChecks />} /></Link>
              <Link href="/dashboard/documents" className="block"><StatCard title="Redlines Pending" value="0" subtext="Awaiting your review" icon={<FileSignature />} /></Link>
              <Link href="/dashboard/ai-toolkit?tab=research" className="block"><StatCard title="Legal Research" value="0" subtext="Queries this month" icon={<Scale />} /></Link>
@@ -888,7 +899,7 @@ export default function Dashboard() {
         <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">
+              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">
                 Welcome, {userProfile?.name.split(" ")[0]}!
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">

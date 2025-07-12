@@ -28,7 +28,7 @@ type ReportData = {
 };
 
 const ReportTemplate = ({ data }: { data: ReportData }) => {
-    const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+    const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
     return (
@@ -168,12 +168,16 @@ export default function ReportCenterPage() {
             const thirtyDaysFromNow = new Date();
             thirtyDaysFromNow.setDate(today.getDate() + 30);
             
-            const checklistItems = filingResponse.filings.map((filing) => ({
-                id: `${filing.title}-${filing.date}`,
-                text: filing.title,
-                dueDate: filing.date,
-                completed: false
-            }));
+            const savedStatuses = client.checklistStatus || {};
+            const checklistItems = filingResponse.filings.map((filing) => {
+                const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+                return {
+                    id: uniqueId,
+                    text: filing.title,
+                    dueDate: filing.date,
+                    completed: savedStatuses[uniqueId] ?? false,
+                };
+            });
             
             const upcomingFilings = checklistItems.filter(item => {
                 const dueDate = new Date(item.dueDate + 'T00:00:00');

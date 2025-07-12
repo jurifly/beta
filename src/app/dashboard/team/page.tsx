@@ -1,6 +1,6 @@
 
 "use client"
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,17 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InviteMemberModal } from "@/components/dashboard/invite-member-modal";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-
-const mockMembers = [
-    { id: '1', name: 'Alia Bhatt', email: 'alia@example.com', role: 'Admin', avatar: 'AB' },
-    { id: '2', name: 'Ranbir Kapoor', email: 'ranbir@example.com', role: 'Member', avatar: 'RK' },
-    { id: '3', name: 'Deepika Padukone', email: 'deepika@example.com', role: 'Member', avatar: 'DP' },
-];
-
-const mockInvites = [
-    { id: '1', email: 'ranveer@example.com', role: 'Billing', invitedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
-    { id: '2', email: 'siddhant@example.com', role: 'Member', invitedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
-];
+import type { TeamMember, Invite } from '@/lib/types';
 
 
 const mockRoles = [
@@ -32,16 +22,28 @@ const mockRoles = [
     { name: 'Viewer', description: 'Can only view documents and data. Cannot make any changes.', permissions: 3, icon: Eye },
 ];
 
-const mockActivity = [
-    { id: '1', user: 'Alia Bhatt', action: 'Invited ranbir@example.com', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) },
-    { id: '2', user: 'Ranbir Kapoor', action: 'Uploaded "Series A SHA.pdf"', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    { id: '3', user: 'Alia Bhatt', action: 'Changed the role of Deepika Padukone to "Member"', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
-];
-
 export default function TeamPage() {
-    const { userProfile } = useAuth();
+    const { userProfile, updateUserProfile } = useAuth();
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
     const { toast } = useToast();
+
+    const teamMembers = useMemo(() => userProfile?.teamMembers || [], [userProfile]);
+    const pendingInvites = useMemo(() => userProfile?.invites || [], [userProfile]);
+    const activityLog = useMemo(() => userProfile?.activityLog || [], [userProfile]);
+
+    const handleRevokeInvite = async (inviteId: string) => {
+        if (!userProfile) return;
+        const updatedInvites = pendingInvites.filter(inv => inv.id !== inviteId);
+        await updateUserProfile({ invites: updatedInvites });
+        toast({ title: "Invite Revoked", description: "The invitation has been successfully revoked." });
+    };
+
+    const handleRemoveMember = async (memberId: string) => {
+         if (!userProfile) return;
+        const updatedMembers = teamMembers.filter(mem => mem.id !== memberId);
+        await updateUserProfile({ teamMembers: updatedMembers });
+        toast({ title: "Member Removed", description: "The team member has been removed from the workspace." });
+    };
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -52,7 +54,7 @@ export default function TeamPage() {
             <InviteMemberModal isOpen={isInviteModalOpen} onOpenChange={setInviteModalOpen} />
             <div className="space-y-6">
                 <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
-                    <h2 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Team Workspace</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-primary">Team Workspace</h2>
                     <p className="text-muted-foreground">
                         Invite and manage your team members, assign roles, and track activity.
                     </p>
@@ -60,8 +62,8 @@ export default function TeamPage() {
                 <Tabs defaultValue="members">
                     <div className="flex justify-between items-center flex-wrap gap-4">
                        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
-                        <TabsTrigger value="members" className="interactive-lift"><Users className="mr-2 h-4 w-4"/>Members</TabsTrigger>
-                        <TabsTrigger value="invitations" className="interactive-lift"><Mail className="mr-2 h-4 w-4"/>Invitations</TabsTrigger>
+                        <TabsTrigger value="members" className="interactive-lift"><Users className="mr-2 h-4 w-4"/>Members ({teamMembers.length})</TabsTrigger>
+                        <TabsTrigger value="invitations" className="interactive-lift"><Mail className="mr-2 h-4 w-4"/>Invitations ({pendingInvites.length})</TabsTrigger>
                         <TabsTrigger value="roles" className="interactive-lift"><Shield className="mr-2 h-4 w-4"/>Roles</TabsTrigger>
                         <TabsTrigger value="activity" className="interactive-lift"><Activity className="mr-2 h-4 w-4"/>Activity</TabsTrigger>
                        </TabsList>
@@ -71,18 +73,30 @@ export default function TeamPage() {
                     </div>
                    <TabsContent value="members" className="mt-6">
                        <Card>
-                           <CardHeader><CardTitle>Team Members ({mockMembers.length})</CardTitle><CardDescription>Manage who has access to your workspace.</CardDescription></CardHeader>
+                           <CardHeader><CardTitle>Team Members</CardTitle><CardDescription>Manage who has access to your workspace.</CardDescription></CardHeader>
                            <CardContent>
                                <Table>
                                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                                    <TableBody>
-                                       {mockMembers.map(member => (
-                                           <TableRow key={member.id}>
-                                               <TableCell className="flex items-center gap-3"><Avatar><AvatarFallback>{member.avatar}</AvatarFallback></Avatar><div><p className="font-medium">{member.name}</p><p className="text-xs text-muted-foreground">{member.email}</p></div></TableCell>
-                                               <TableCell><Badge variant="outline">{member.role}</Badge></TableCell>
-                                               <TableCell className="text-right"><Button variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-destructive"/></Button></TableCell>
-                                           </TableRow>
-                                       ))}
+                                    {teamMembers.length > 0 ? teamMembers.map(member => (
+                                        <TableRow key={member.id}>
+                                            <TableCell className="flex items-center gap-3">
+                                                <Avatar><AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback></Avatar>
+                                                <div>
+                                                    <p className="font-medium">{member.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell><Badge variant="outline">{member.role}</Badge></TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(member.id)}>
+                                                    <Trash2 className="w-4 h-4 text-destructive"/>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow><TableCell colSpan={3} className="text-center h-24">No team members yet.</TableCell></TableRow>
+                                    )}
                                    </TableBody>
                                </Table>
                            </CardContent>
@@ -90,22 +104,24 @@ export default function TeamPage() {
                    </TabsContent>
                    <TabsContent value="invitations" className="mt-6">
                        <Card>
-                           <CardHeader><CardTitle>Pending Invitations ({mockInvites.length})</CardTitle><CardDescription>These people have been invited but have not yet joined.</CardDescription></CardHeader>
+                           <CardHeader><CardTitle>Pending Invitations</CardTitle><CardDescription>These people have been invited but have not yet joined.</CardDescription></CardHeader>
                            <CardContent>
                                <Table>
                                    <TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead>Invited</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                                    <TableBody>
-                                       {mockInvites.map(invite => (
+                                       {pendingInvites.length > 0 ? pendingInvites.map(invite => (
                                            <TableRow key={invite.id}>
                                                <TableCell className="font-medium">{invite.email}</TableCell>
                                                <TableCell><Badge variant="secondary">{invite.role}</Badge></TableCell>
-                                               <TableCell>{formatDistanceToNow(invite.invitedAt, { addSuffix: true })}</TableCell>
+                                               <TableCell>{formatDistanceToNow(new Date(invite.invitedAt), { addSuffix: true })}</TableCell>
                                                <TableCell className="text-right space-x-2">
                                                    <Button variant="ghost" size="sm" onClick={() => toast({ title: "Invite Resent", description: `An invitation has been resent to ${invite.email}`})}><Send className="mr-2"/> Resend</Button>
-                                                   <Button variant="ghost" size="sm" className="text-destructive"><Trash2 className="mr-2"/>Revoke</Button>
+                                                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRevokeInvite(invite.id)}><Trash2 className="mr-2"/>Revoke</Button>
                                                </TableCell>
                                            </TableRow>
-                                       ))}
+                                       )) : (
+                                        <TableRow><TableCell colSpan={4} className="text-center h-24">No pending invitations.</TableCell></TableRow>
+                                       )}
                                    </TableBody>
                                </Table>
                            </CardContent>
@@ -113,7 +129,7 @@ export default function TeamPage() {
                    </TabsContent>
                    <TabsContent value="roles" className="mt-6">
                         <Card>
-                            <CardHeader className="flex flex-row justify-between items-center"><div><CardTitle>Access Roles</CardTitle><CardDescription>Define permissions for your team members.</CardDescription></div><Button variant="outline"><PlusCircle className="mr-2"/>New Role</Button></CardHeader>
+                            <CardHeader className="flex flex-row justify-between items-center"><div><CardTitle>Access Roles</CardTitle><CardDescription>Define permissions for your team members.</CardDescription></div><Button variant="outline" disabled><PlusCircle className="mr-2"/>New Role</Button></CardHeader>
                             <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {mockRoles.map(role => (
                                     <Card key={role.name}>
@@ -129,14 +145,14 @@ export default function TeamPage() {
                         <Card>
                             <CardHeader><CardTitle>Activity Log</CardTitle><CardDescription>An audit trail of all actions taken in your workspace.</CardDescription></CardHeader>
                             <CardContent>
-                                {mockActivity.length > 0 ? (
+                                {activityLog.length > 0 ? (
                                 <div className="space-y-4">
-                                {mockActivity.map(log => (
+                                {activityLog.map(log => (
                                     <div key={log.id} className="flex items-center gap-4">
-                                        <Avatar><AvatarFallback>{log.user.split(' ').map(n => n[0]).join('')}</AvatarFallback></Avatar>
+                                        <Avatar><AvatarFallback>{log.userName.split(' ').map(n => n[0]).join('')}</AvatarFallback></Avatar>
                                         <div>
-                                            <p className="text-sm"><span className="font-medium">{log.user}</span> {log.action.toLowerCase()}.</p>
-                                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(log.timestamp, { addSuffix: true })}</p>
+                                            <p className="text-sm"><span className="font-medium">{log.userName}</span> {log.action.toLowerCase()}.</p>
+                                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}</p>
                                         </div>
                                     </div>
                                 ))}
