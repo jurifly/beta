@@ -14,7 +14,8 @@ import {
   PieChart,
   Info,
   CalendarClock,
-  CheckCircle
+  CheckCircle,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +36,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
 
 const ComplianceActivityChart = dynamic(
   () => import('../../ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -202,7 +204,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         
         const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
         if (activeCompany.legalRegion === 'India') requiredFields.push('cin');
-        const filledFields = requiredFields.filter(field => activeCompany[field] && String(activeCompany[field]).trim() !== '').length;
+        const filledFields = requiredFields.filter(field => activeCompany[field] && (activeCompany[field] as string).trim() !== '').length;
         const profileCompleteness = (filledFields / requiredFields.length) * 100;
         
         const score = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
@@ -352,28 +354,37 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                                 <CardDescription>Key compliance items for the client, grouped by month.</CardDescription>
                             </div>
                             {checklistYears.length > 0 && (
-                                <Select onValueChange={(value) => {
-                                    if(value.startsWith('complete-')) {
-                                        handleCompleteYear(value.replace('complete-', ''));
-                                    } else {
-                                        setSelectedYear(value);
-                                    }
-                                }}>
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder={selectedYear} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {checklistYears.map(year => (
-                                            <SelectItem key={year} value={year}>
-                                                <div className="flex items-center gap-2">
-                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                                    {year}
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                        {checklistYears.includes(selectedYear) && <SelectItem value={`complete-${selectedYear}`} className="text-primary">Complete Past for {selectedYear}</SelectItem>}
-                                    </SelectContent>
-                                </Select>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full sm:w-auto">
+                                            {selectedYear}
+                                            <ChevronDown className="ml-2 h-4 w-4"/>
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-4">
+                                        <div className="space-y-4">
+                                            <div className="flex gap-2">
+                                                {checklistYears.map(year => (
+                                                    <Button 
+                                                        key={year}
+                                                        variant={selectedYear === year ? "default" : "outline"}
+                                                        onClick={() => setSelectedYear(year)}
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                                        {year}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center space-x-2 border-t pt-4">
+                                                <Checkbox id={`complete-${selectedYear}`} onCheckedChange={() => handleCompleteYear(selectedYear)} />
+                                                <Label htmlFor={`complete-${selectedYear}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                    Complete all past-due for {selectedYear}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             )}
                         </div>
                     </CardHeader>

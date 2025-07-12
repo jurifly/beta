@@ -33,7 +33,8 @@ import {
   CalendarClock,
   CheckCircle,
   FileUp,
-  LineChart
+  LineChart,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,8 +63,8 @@ import { addDays, format, startOfToday, differenceInDays } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
 
 const ComplianceActivityChart = dynamic(
   () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -496,28 +497,37 @@ function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: Use
                                 <CardDescription>Key compliance items for your company, grouped by month.</CardDescription>
                             </div>
                              {checklistYears.length > 0 && (
-                                <Select onValueChange={(value) => {
-                                    if(value.startsWith('complete-')) {
-                                        handleCompleteYear(value.replace('complete-', ''));
-                                    } else {
-                                        setSelectedYear(value);
-                                    }
-                                }}>
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder={selectedYear} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {checklistYears.map(year => (
-                                            <SelectItem key={year} value={year}>
-                                                <div className="flex items-center gap-2">
-                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                                                    {year}
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                        {checklistYears.includes(selectedYear) && <SelectItem value={`complete-${selectedYear}`} className="text-primary">Complete Past for {selectedYear}</SelectItem>}
-                                    </SelectContent>
-                                </Select>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full sm:w-auto">
+                                            {selectedYear}
+                                            <ChevronDown className="ml-2 h-4 w-4"/>
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-4">
+                                        <div className="space-y-4">
+                                            <div className="flex gap-2">
+                                                {checklistYears.map(year => (
+                                                    <Button 
+                                                        key={year}
+                                                        variant={selectedYear === year ? "default" : "outline"}
+                                                        onClick={() => setSelectedYear(year)}
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                                                        {year}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center space-x-2 border-t pt-4">
+                                                <Checkbox id={`complete-${selectedYear}`} onCheckedChange={() => handleCompleteYear(selectedYear)} />
+                                                <Label htmlFor={`complete-${selectedYear}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                    Complete all past-due for {selectedYear}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             )}
                         </div>
                     </CardHeader>
