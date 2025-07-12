@@ -28,7 +28,7 @@ service cloud.firestore {
     // In production, this should be handled by a server-side function (Cloud Function)
     // to prevent abuse. For now, we allow any signed-in user to increment it.
     match /counters/userCounter {
-      allow read: if true;
+      allow read: if true;a
       allow write: if isSignedIn();
     }
     

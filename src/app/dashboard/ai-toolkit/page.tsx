@@ -292,7 +292,15 @@ const DataroomAudit = () => {
 
   const checklistKey = `ddChecklistData-${userProfile.activeCompanyId}`;
 
-  useEffect(() => { try { const savedState = localStorage.getItem(checklistKey); if (savedState) setChecklistState(JSON.parse(savedState)); } catch (error) { console.error("Failed to parse checklist data from localStorage", error); localStorage.removeItem(checklistKey); } }, [checklistKey]);
+  useEffect(() => { 
+    try { 
+      const savedState = localStorage.getItem(checklistKey); 
+      if (savedState) setChecklistState(JSON.parse(savedState)); 
+    } catch (error) { 
+      console.error("Failed to parse checklist data from localStorage", error); 
+      localStorage.removeItem(checklistKey); 
+    } 
+  }, [checklistKey]);
   
   useEffect(() => {
     if (serverState.error) {
@@ -305,7 +313,7 @@ const DataroomAudit = () => {
       const newChecklistState: ChecklistState = { data: { reportTitle: rawData.title, checklist: groupedData }, timestamp: new Date().toISOString() };
       setChecklistState(newChecklistState);
     }
-  }, [serverState]);
+  }, [serverState, toast]);
 
   useEffect(() => { if (checklistKey && checklistState.data) localStorage.setItem(checklistKey, JSON.stringify(checklistState)); }, [checklistState, checklistKey]);
 

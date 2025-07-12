@@ -244,12 +244,12 @@ export default function SettingsPage() {
                 {settingsItems.map(item => (
                     <TabsTrigger value={item.key} key={item.key} asChild={!!item.href}>
                         {item.href ? (
-                            <Link href={item.href}>
-                                <item.icon className="mr-2 h-4 w-4"/>{item.title}
+                            <Link href={item.href} className="flex items-center gap-2">
+                                <item.icon className="w-4 h-4"/>{item.title}
                             </Link>
                         ) : (
-                            <span>
-                                <item.icon className="mr-2 h-4 w-4"/>{item.title}
+                            <span className="flex items-center gap-2">
+                                <item.icon className="w-4 h-4"/>{item.title}
                             </span>
                         )}
                     </TabsTrigger>

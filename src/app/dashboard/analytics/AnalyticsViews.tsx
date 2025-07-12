@@ -366,7 +366,7 @@ export function FounderAnalytics() {
              <CardFooter>
                 <Button asChild variant="link" className="p-0 h-auto">
                     <Link href="/dashboard/ca-connect">
-                        View Full Calendar <ArrowRight className="ml-2 h-4 w-4"/>
+                        View Full Checklist <ArrowRight className="ml-2 h-4 w-4"/>
                     </Link>
                 </Button>
             </CardFooter>

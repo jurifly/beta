@@ -127,7 +127,7 @@ export const translations: Translations = {
     reportCenter: { en: "Report Center", hi: "रिपोर्ट केंद्र", es: "Centro de Informes", zh: "报告中心", fr: "Centre de Rapports", de: "Berichtszentrum", pt: "Central de Relatórios", ja: "レポートセンター" },
     reconciliation: { en: "Reconciliation", hi: "समाधान", es: "Conciliación", zh: "对账", fr: "Rapprochement", de: "Abstimmung", pt: "Conciliação", ja: "照合" },
     settings: { en: "Settings", hi: "सेटिंग्स", es: "Configuración", zh: "设置", fr: "Paramètres", de: "Einstellungen", pt: "Configurações", ja: "設定" },
-    help: { en: "Help & FAQ", hi: "मदद और FAQ", es: "Ayuda y Preguntas", zh: "帮助与常见问题", fr: "Aide & FAQ", de: "Hilfe & FAQ", pt: "Ajuda & FAQ", ja: "ヘルプ & FAQ" },
+    help: { en: "Help & FAQ", hi: "मदद और FAQ", es: "Ayuda y Preguntas", zh: "帮助与常见问题", fr: "Aide & FAQ", de: "Hilfe & FAQ", pt: "ヘルプ & FAQ", ja: "ヘルプ & FAQ" },
     analytics: { en: "Analytics", hi: "एनालिटिक्स", es: "Análisis", zh: "分析", fr: "Analytique", de: "Analytik", pt: "Análises", ja: "分析" },
     playbook: { en: "Playbook", hi: "प्लेबुक", es: "Manual", zh: "手册", fr: "Guide", de: "Spielbuch", pt: "Manual", ja: "プレイブック" },
     teamManagement: { en: "Team Management", hi: "टीम प्रबंधन", es: "Gestión de Equipo", zh: "团队管理", fr: "Gestion d'Équipe", de: "Team-Management", pt: "Gestão de Equipe", ja: "チーム管理" },
@@ -261,7 +261,6 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
-  { ...navItemConfig.legalNews },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect, locked: true },
@@ -269,6 +268,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.playbook },
   { ...navItemConfig.community },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
+  { ...navItemConfig.legalNews },
 ];
 
 const caNavItems: ThemedNavItem[] = [
@@ -277,7 +277,6 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.portfolioAnalytics },
-  { ...navItemConfig.legalNews },
   { ...navItemConfig.caConnect, label_override_key: 'advisorHub', icon: Users },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
@@ -286,25 +285,26 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.documents },
   { ...navItemConfig.playbook },
   { ...navItemConfig.clauseLibrary, locked: true },
+  { ...navItemConfig.legalNews },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
-  navItemConfig.legalNews,
   navItemConfig.clauseLibrary,
   navItemConfig.portfolioAnalytics,
+  navItemConfig.legalNews },
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
-  navItemConfig.legalNews,
   navItemConfig.caConnect,
   navItemConfig.portfolioAnalytics,
   navItemConfig.documents,
+  navItemConfig.legalNews,
 ];
 
 const getSidebarNavItems = (role: UserRole) => {

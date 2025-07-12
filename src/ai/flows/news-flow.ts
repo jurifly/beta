@@ -49,7 +49,8 @@ export async function getNews(input: NewsInput): Promise<NewsOutput> {
     const apiKey = process.env.NEWS_API_KEY;
 
     if (!apiKey) {
-        throw new Error('News API key is not configured.');
+        console.error("NewsAPI key is not configured in .env file.");
+        throw new Error('News service is currently unavailable.');
     }
 
     const countryCode = regionToCountryCode[input.legalRegion] || 'us';
