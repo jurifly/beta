@@ -107,15 +107,6 @@ export default function CaMarketplacePage() {
                         </div>
                     </CardContent>
                 </Card>
-                 <Card className="interactive-lift bg-primary/10 border-primary/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Building2 className="text-primary"/> Are you an Advisor?</CardTitle>
-                        <CardDescription>Want to get listed on our marketplace and connect with high-growth startups?</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                       <Button variant="outline" className="w-full bg-background" disabled>Apply for Verification (Coming Soon)</Button>
-                    </CardContent>
-                </Card>
             </div>
             <div className="lg:col-span-3 space-y-4">
                 <div className="flex justify-between items-center">

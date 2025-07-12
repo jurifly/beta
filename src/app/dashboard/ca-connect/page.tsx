@@ -234,6 +234,15 @@ const CATabsView = ({ onAddRequest, onProvideDoc, pendingRequests, overdueReques
                              <Button variant="outline" disabled>Get Listed on Marketplace</Button>
                         </CardContent>
                     </Card>
+                     <Card className="interactive-lift bg-primary/10 border-primary/20 mt-6">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Building className="text-primary"/> Are you an Advisor?</CardTitle>
+                            <CardDescription>Want to get listed on our marketplace and connect with high-growth startups?</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                        <Button variant="outline" className="w-full bg-background" disabled>Apply for Verification (Coming Soon)</Button>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
         </>
