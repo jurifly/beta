@@ -120,7 +120,6 @@ export const translations: Translations = {
     team: { en: "Team", hi: "टीम", es: "Equipo", zh: "团队", fr: "Équipe", de: "Team", pt: "Equipe" },
     clauseLibrary: { en: "Clause Library", hi: "क्लॉज लाइब्रेरी", es: "Biblioteca de Cláusulas", zh: "条款库", fr: "Bibliothèque de Clauses", de: "Klauselbibliothek", pt: "Biblioteca de Cláusulas" },
     workflows: { en: "Workflows", hi: "वर्कफ़्लो", es: "Flujos de Trabajo", zh: "工作流", fr: "Flux de Travail", de: "Arbeitsabläufe", pt: "Fluxos de Trabalho" },
-    invitations: { en: "Invitations", hi: "आमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites" },
     reportCenter: { en: "Report Center", hi: "रिपोर्ट केंद्र", es: "Centro de Informes", zh: "报告中心", fr: "Centre de Rapports", de: "Berichtszentrum", pt: "Central de Relatórios" },
     reconciliation: { en: "Reconciliation", hi: "समाधान", es: "Conciliación", zh: "对账", fr: "Rapprochement", de: "Abstimmung", pt: "Conciliação" },
     settings: { en: "Settings", hi: "सेटिंग्स", es: "Configuración", zh: "设置", fr: "Paramètres", de: "Einstellungen", pt: "Configurações" },
@@ -224,7 +223,7 @@ type NavItemConfig = {
 
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users, locked: true },
+  caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
@@ -341,9 +340,9 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
   const priorityOrder = [
     "/dashboard",
     "/dashboard/clients",
-    "/dashboard/financials",
     "/dashboard/ai-toolkit",
     "/dashboard/cap-table",
+    "/dashboard/financials",
     "/dashboard/ca-connect",
     "/dashboard/clause-library",
     "/dashboard/learn"
@@ -360,11 +359,8 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
     const { userProfile } = useAuth();
     if (!userProfile) return null;
 
-    const mainItemsHrefs = getSidebarNavItems(userProfile.role).map(item => item.href);
     const bottomItemsHrefs = getBottomNavItems(userProfile.role).map(item => item.href);
 
-    const allNavItems = { ...navItemConfig };
-    
     // Items for the 'More' menu are those that are in the role's nav list but not in the bottom bar
     const menuItems = getSidebarNavItems(userProfile.role).filter(item => 
         !bottomItemsHrefs.includes(item.href)
@@ -403,24 +399,6 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
                                 </Link>
                             </SheetTrigger>
                         )})}
-                         <SheetTrigger asChild>
-                            <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted mt-4 border-t">
-                                <div className="flex items-center gap-4">
-                                    <Settings className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">{translations['settings'][lang]}</span>
-                                </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </Link>
-                        </SheetTrigger>
-                         <SheetTrigger asChild>
-                            <Link href="/dashboard/help" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
-                                <div className="flex items-center gap-4">
-                                    <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-                                    <span className="font-medium">{translations['help'][lang]}</span>
-                                </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </Link>
-                        </SheetTrigger>
                     </nav>
                 </ScrollArea>
             </SheetContent>
@@ -544,13 +522,11 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <div className="flex-1">
-                <div className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
-                    <Link href="/dashboard" className="flex items-center gap-2">
-                        {isPro && <Flame className="h-6 w-6 text-accent" />}
-                        <Logo />
-                        <span>Claari</span>
-                    </Link>
-                </div>
+                <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
+                    {isPro && <Flame className="h-6 w-6 text-accent" />}
+                    <Logo />
+                    <span>Claari</span>
+                </Link>
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-4">
