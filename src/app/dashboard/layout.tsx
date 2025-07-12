@@ -57,7 +57,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -403,6 +402,24 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
                                 </Link>
                             </SheetTrigger>
                         )})}
+                        <SheetTrigger asChild>
+                            <Link href="/dashboard/settings" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <div className="flex items-center gap-4">
+                                    <Settings className="h-5 w-5 text-muted-foreground" />
+                                    <span className="font-medium">{translations.settings[lang]}</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                        </SheetTrigger>
+                         <SheetTrigger asChild>
+                            <Link href="/dashboard/help" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted">
+                                <div className="flex items-center gap-4">
+                                    <LifeBuoy className="h-5 w-5 text-muted-foreground" />
+                                    <span className="font-medium">{translations.help[lang]}</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                        </SheetTrigger>
                     </nav>
                 </ScrollArea>
             </SheetContent>
@@ -525,7 +542,10 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={language} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                
+                <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary md:hidden">
+                    <Logo />
+                    <span className="sr-only">Claari</span>
+                </Link>
                 <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -720,5 +740,3 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
-
-
