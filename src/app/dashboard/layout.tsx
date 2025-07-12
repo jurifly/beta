@@ -139,12 +139,13 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.caConnect, color: "#F43F5E", locked: true },
   { ...navItemConfig.documents, color: "#64748B" },
   { ...navItemConfig.community, color: "#A855F7" },
-  { ...navItemConfig.team, color: "#9333EA", locked: true },
+  { ...navItemConfig.team, label: "Team Management", color: "#9333EA", locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.dashboard, color: "#0F766E" },
   { ...navItemConfig.clients, label: "Client Management", color: "#2563EB", icon: Briefcase },
+  { ...navItemConfig.team, label: "Team Management", color: "#0D9488", locked: true },
   { ...navItemConfig.aiToolkit, label: "AI Practice Suite", color: "#8B5CF6" },
   { ...navItemConfig.analytics, color: "#14B8A6" },
   { ...navItemConfig.caConnect, label: 'Compliance Hub', color: "#EC4899", icon: Users },
@@ -169,7 +170,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.team, locked: false }, // Unlocked for Enterprise
+  { ...navItemConfig.team, label: "Team Management", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.caConnect,
   navItemConfig.analytics,
@@ -580,6 +581,7 @@ export default function DashboardLayout({
 }) {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
