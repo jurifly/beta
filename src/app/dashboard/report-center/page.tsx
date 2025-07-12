@@ -1,20 +1,20 @@
 
 "use client";
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Download, PieChart, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
+import { Loader2, FileText, Download, Sparkles, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import type { Company, DocumentAnalysis } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
-import { format, startOfToday, formatDistanceToNow } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -36,7 +36,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
     return (
-        <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Manrope, sans-serif' }}>
+        <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Inter, sans-serif' }}>
             <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
                 <div className="flex items-center gap-3">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary">
