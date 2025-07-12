@@ -1,20 +1,23 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Download, PieChart, ShieldCheck } from 'lucide-react';
+import { Loader2, FileText, Download, PieChart, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
-import type { Company } from '@/lib/types';
+import type { Company, DocumentAnalysis } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
-import { format, startOfToday } from 'date-fns';
+import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
+import { format, startOfToday, formatDistanceToNow } from 'date-fns';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type ReportData = {
   client: Company;
@@ -25,9 +28,10 @@ type ReportData = {
   overdueFilings: any[];
   completedFilings: any[];
   ownershipData: { name: string; value: number }[];
+  executiveSummary?: string;
 };
 
-const ReportTemplate = ({ data }: { data: ReportData }) => {
+const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
     const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
@@ -51,6 +55,21 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
             </header>
 
             <main className="mt-8">
+                <section className="p-6 border border-blue-300 bg-blue-50 rounded-xl mb-8">
+                    <h3 className="text-base font-semibold text-blue-800 mb-2 flex items-center gap-2"><Sparkles/> Executive Summary</h3>
+                     {isGeneratingInsights ? (
+                        <div className="space-y-2">
+                           <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
+                           <div className="h-4 bg-blue-200 rounded w-5/6 animate-pulse"></div>
+                           <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
+                        </div>
+                    ) : (
+                         <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
+                            <ReactMarkdown>{data.executiveSummary || "No summary available."}</ReactMarkdown>
+                        </div>
+                    )}
+                </section>
+                
                 <section className="grid grid-cols-3 gap-6 mb-8">
                     <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
                         <p className="text-sm font-semibold text-gray-600">Legal Hygiene Score</p>
@@ -115,9 +134,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                         </div>
                     </div>
                 </div>
-
             </main>
-
             <footer className="text-center text-xs text-gray-400 mt-12 border-t border-gray-100 pt-4 flex flex-col items-center gap-2">
                 <div className="flex items-center gap-1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"><path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path></svg>
@@ -131,9 +148,10 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
 
 
 export default function ReportCenterPage() {
-    const { userProfile } = useAuth();
+    const { userProfile, deductCredits } = useAuth();
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
     const [reportData, setReportData] = useState<ReportData | null>(null);
     const reportRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
@@ -208,7 +226,7 @@ export default function ReportCenterPage() {
                 { name: 'ESOP Pool', value: esopPool },
             ].filter(d => d.value > 0);
 
-            setReportData({
+            const initialReportData = {
                 client,
                 hygieneScore,
                 filingPerformance: filingPerf,
@@ -217,12 +235,50 @@ export default function ReportCenterPage() {
                 overdueFilings,
                 completedFilings,
                 ownershipData,
+            };
+
+            setReportData(initialReportData);
+            setIsLoading(false);
+
+            // 5. Asynchronously generate AI insights
+            setIsGeneratingInsights(true);
+            
+            const docHistoryKey = 'documentIntelligenceHistory';
+            const savedHistory = localStorage.getItem(docHistoryKey);
+            const allAnalyzedDocs: DocumentAnalysis[] = savedHistory ? JSON.parse(savedHistory) : [];
+            const recentRisks = allAnalyzedDocs
+                .slice(0, 3)
+                .flatMap(doc => doc.riskFlags)
+                .filter(flag => flag.severity === 'High')
+                .map(flag => flag.risk)
+                .slice(0, 3);
+            
+            const burn = client.financials ? client.financials.monthlyExpenses - client.financials.monthlyRevenue : 0;
+            const runway = client.financials && burn > 0 ? `${Math.floor(client.financials.cashBalance / burn)} months` : "Profitable / N/A";
+
+
+            if(!await deductCredits(1)) {
+              setIsGeneratingInsights(false);
+              return;
+            };
+            
+            const insightsResponse = await generateReportInsights({
+                hygieneScore: hygieneScore,
+                overdueFilings: overdueFilings.length,
+                upcomingFilings: upcomingFilings.length,
+                burnRate: burn,
+                runwayInMonths: runway,
+                recentRiskFlags: recentRisks,
+                legalRegion: client.legalRegion
             });
+
+            setReportData(prevData => prevData ? { ...prevData, executiveSummary: insightsResponse.executiveSummary } : null);
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate report data. ' + error.message });
-        } finally {
             setIsLoading(false);
+        } finally {
+            setIsGeneratingInsights(false);
         }
     };
     
@@ -245,6 +301,12 @@ export default function ReportCenterPage() {
         return <Loader2 className="animate-spin" />;
     }
 
+    const reportTypes = [
+        { id: 'health', name: 'Client Compliance Health Report', description: 'A detailed summary of a client\'s compliance and corporate health.' },
+        { id: 'funding', name: 'Fundraising Readiness Report', description: 'Checks document readiness for a funding round. (Coming Soon)', disabled: true },
+        { id: 'tax', name: 'Annual Tax Summary', description: 'A consolidated report of tax filings and liabilities for the year. (Coming Soon)', disabled: true },
+    ];
+
     return (
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
@@ -254,16 +316,23 @@ export default function ReportCenterPage() {
             
             <Card>
                 <CardHeader>
-                    <CardTitle>Client Compliance Health Report</CardTitle>
-                    <CardDescription>Select a client to generate a detailed compliance and health summary PDF.</CardDescription>
+                    <CardTitle>Generate a New Report</CardTitle>
+                    <CardDescription>Select a report type and a client to begin.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="max-w-md space-y-2">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Report Type</Label>
+                        <Select defaultValue="health">
+                           <SelectTrigger><SelectValue/></SelectTrigger>
+                           <SelectContent>
+                            {reportTypes.map(r => <SelectItem key={r.id} value={r.id} disabled={r.disabled}>{r.name}</SelectItem>)}
+                           </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
                         <Label htmlFor="client-select">Select a Client</Label>
                         <Select onValueChange={setSelectedClientId} value={selectedClientId || undefined}>
-                            <SelectTrigger id="client-select">
-                                <SelectValue placeholder="Choose a client..." />
-                            </SelectTrigger>
+                            <SelectTrigger id="client-select"><SelectValue placeholder="Choose a client..." /></SelectTrigger>
                             <SelectContent>
                                 {userProfile.companies.map(company => (
                                     <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
@@ -275,7 +344,7 @@ export default function ReportCenterPage() {
                 <CardFooter>
                      <Button onClick={handleGenerateReport} disabled={!selectedClientId || isLoading}>
                         {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <FileText className="mr-2"/>}
-                        Generate Report
+                        Generate Report (1 Credit)
                     </Button>
                 </CardFooter>
             </Card>
@@ -287,13 +356,13 @@ export default function ReportCenterPage() {
                             <CardTitle>Report Preview</CardTitle>
                             <CardDescription>A preview of the generated report for {reportData.client.name}.</CardDescription>
                         </div>
-                        <Button onClick={handleDownloadPdf}>
+                        <Button onClick={handleDownloadPdf} disabled={isGeneratingInsights}>
                             <Download className="mr-2" /> Download PDF
                         </Button>
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-auto">
                         <div ref={reportRef}>
-                            <ReportTemplate data={reportData} />
+                            <ReportTemplate data={reportData} isGeneratingInsights={isGeneratingInsights} />
                         </div>
                     </CardContent>
                 </Card>
