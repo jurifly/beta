@@ -830,9 +830,9 @@ const DocumentGenerator = () => {
                 <CardTitle className="text-base">1. Select a Template</CardTitle>
             </CardHeader>
             <CardContent className="flex-1">
-                <ScrollArea className="h-full">
+                <ScrollArea className="h-[400px]">
                     <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                        <Accordion type="multiple" defaultValue={availableCategories.map(c => c.name)} className="w-full">
+                        <Accordion type="multiple" defaultValue={[]} className="w-full">
                             {availableCategories.map((category) => (
                                 <AccordionItem value={category.name} key={category.name}>
                                     <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
