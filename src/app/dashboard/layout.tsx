@@ -267,7 +267,6 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect },
-  { ...navItemConfig.invitations },
   { ...navItemConfig.documents },
   { ...navItemConfig.playbook },
   { ...navItemConfig.community },
@@ -281,7 +280,6 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.portfolioAnalytics },
-  { ...navItemConfig.invitations },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
@@ -299,14 +297,12 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clauseLibrary,
   navItemConfig.portfolioAnalytics,
   navItemConfig.legalNews,
-  { ...navItemConfig.invitations },
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
-  { ...navItemConfig.invitations },
   navItemConfig.portfolioAnalytics,
   navItemConfig.documents,
   navItemConfig.legalNews,
@@ -610,6 +606,12 @@ function DashboardApp({ children }: { children: React.ReactNode }) {
                         </ScrollArea>
                     </SheetContent>
                 </Sheet>
+                <div className="w-full flex-1">
+                    <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary font-headline md:hidden">
+                        <Logo />
+                        <span>Claari</span>
+                    </Link>
+                </div>
                 <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
