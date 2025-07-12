@@ -13,17 +13,18 @@ import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { Company } from "@/lib/types";
-import { startOfToday, format } from "date-fns";
+import { startOfToday, format, addDays } from "date-fns";
 import { generateFilings } from "@/ai/flows/filing-generator-flow";
 import { InviteClientModal } from "@/components/dashboard/invite-client-modal";
 
-type ClientHealthInfo = Company & {
+export type ClientHealthInfo = Company & {
   healthScore: number;
   riskLevel: 'Low' | 'Medium' | 'High';
+  upcomingDeadlines: { title: string; dueDate: string }[];
 };
 
 export default function ClientsPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, updateUserProfile } = useAuth();
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const router = useRouter();
   const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
@@ -57,7 +58,7 @@ export default function ClientsPage() {
             return dueDate < startOfToday() && !isCompleted;
           }).length;
           
-          const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
+          const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
           
           const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
           if (company.legalRegion === 'India') requiredFields.push('cin');
@@ -70,21 +71,35 @@ export default function ClientsPage() {
           if (healthScore < 60) riskLevel = 'High';
           else if (healthScore < 85) riskLevel = 'Medium';
           
-          return { ...company, healthScore, riskLevel };
+          const upcomingDeadlines = filingResponse.filings
+            .filter(f => {
+              const dueDate = new Date(f.date + 'T00:00:00');
+              return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30);
+            })
+            .map(f => ({ title: f.title, dueDate: f.date }));
+
+          return { ...company, healthScore, riskLevel, upcomingDeadlines };
         } catch (error) {
           console.error(`Failed to calculate health for ${company.name}`, error);
-          // Return company with a default/error state if calculation fails
-          return { ...company, healthScore: 0, riskLevel: 'High' as const };
+          return { ...company, healthScore: 0, riskLevel: 'High' as const, upcomingDeadlines: [] };
         }
       });
       
       const results = await Promise.all(healthPromises);
       setClientHealthData(results);
+      
+      // Save health data to the user profile for dashboard use
+      const updatedCompanies = userProfile.companies.map(c => {
+          const foundHealth = results.find(h => h.id === c.id);
+          return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
+      });
+      await updateUserProfile({ companies: updatedCompanies });
+
       setIsLoadingHealth(false);
     };
 
     calculateAllClientHealth();
-  }, [userProfile?.companies]);
+  }, [userProfile?.companies, updateUserProfile]);
 
   const highRiskClientCount = useMemo(() => {
     return clientHealthData.filter(client => client.riskLevel === 'High').length;

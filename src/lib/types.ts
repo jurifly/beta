@@ -105,6 +105,11 @@ export interface Company {
     };
     founderUid?: string;
     checklistStatus?: Record<string, boolean>;
+    health?: {
+      score: number;
+      risk: 'Low' | 'Medium' | 'High';
+      deadlines: { title: string; dueDate: string }[];
+    }
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';

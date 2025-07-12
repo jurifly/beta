@@ -666,25 +666,15 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
     
     const { highRiskClientCount, portfolioDeadlines } = useMemo(() => {
         let highRisk = 0;
-        let deadlines: any[] = [];
+        let deadlines: { title: string, dueDate: string, clientName: string }[] = [];
         
         userProfile.companies.forEach(company => {
-            const overdueTasks = company.docRequests?.filter(r => r.status === 'Pending' && new Date(r.dueDate) < startOfToday()).length || 0;
-            const filingPerf = Math.max(0, 100 - (overdueTasks * 20)); // Simplified health calc
-            
-            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-            if (company.legalRegion === 'India') requiredFields.push('cin');
-            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-            const profileCompleteness = (filledFields / requiredFields.length) * 100;
-            
-            const healthScore = Math.round((filingPerf * 0.5) + (profileCompleteness * 0.5));
-            if (healthScore < 60) highRisk++;
-
-            const upcomingRequests = company.docRequests
-                ?.filter(r => r.status === 'Pending' && new Date(r.dueDate) >= startOfToday())
-                .map(r => ({ ...r, clientName: company.name })) || [];
-            
-            deadlines = [...deadlines, ...upcomingRequests];
+            if (company.health) {
+                if (company.health.risk === 'High') highRisk++;
+                if (company.health.deadlines) {
+                    deadlines.push(...company.health.deadlines.map(d => ({ ...d, clientName: company.name })));
+                }
+            }
         });
         
         deadlines.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
