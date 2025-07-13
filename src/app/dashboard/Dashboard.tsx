@@ -162,7 +162,7 @@ type DashboardChecklistItem = {
 function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }: { userProfile: UserProfile, onAddCompanyClick: () => void, translations: Translations, lang: Language }) {
     const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     const { toast } = useToast();
-    const { updateCompanyChecklistStatus } = useAuth();
+    const { updateCompanyChecklistStatus, checkForAcceptedInvites } = useAuth();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
@@ -170,6 +170,13 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
     const [insightsLoading, setInsightsLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     const [popoverOpen, setPopoverOpen] = useState(false);
+
+    useEffect(() => {
+        // New logic to check for accepted invites when the founder dashboard loads
+        if (userProfile.role === 'Founder') {
+            checkForAcceptedInvites();
+        }
+    }, [checkForAcceptedInvites, userProfile.role]);
 
     const { upcomingFilingsCount, overdueFilingsCount, hygieneScore, profileCompleteness } = useMemo(() => {
         if (!checklist || !activeCompany) return { upcomingFilingsCount: 0, overdueFilingsCount: 0, hygieneScore: 0, profileCompleteness: 0 };

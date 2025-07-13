@@ -38,6 +38,7 @@ export interface AuthContextType {
   sendClientInvite: (clientEmail: string) => Promise<{ success: boolean; message: string }>;
   getPendingInvites: () => Promise<any[]>;
   acceptInvite: (inviteId: string) => Promise<void>;
+  checkForAcceptedInvites: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -518,46 +519,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const inviteRef = doc(db, 'invites', inviteId);
     
     try {
-      await runTransaction(db, async (transaction) => {
-        const inviteDoc = await transaction.get(inviteRef);
-        if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
-          throw new Error("Invite not found or has been processed.");
-        }
-        
-        const inviteData = inviteDoc.data() as Invite;
-        const { founderId, companyId } = inviteData;
-    
-        const founderRef = doc(db, 'users', founderId);
-        const founderDoc = await transaction.get(founderRef);
-        if (!founderDoc.exists()) throw new Error("Founder account not found.");
-        
-        const founderData = founderDoc.data() as UserProfile;
-        const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
-        if (!companyToAccept) throw new Error("Company not found in founder's profile.");
-    
-        const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
-    
-        const caRef = doc(db, 'users', user.uid);
-        
-        // 1. Update CA's profile with the new company
-        transaction.update(caRef, { companies: [...(userProfile.companies || []), companyForCa] });
-        
-        // 2. Update the founder's company with the connected CA's UID
-        const updatedFounderCompanies = founderData.companies.map(c => 
-            c.id === companyId ? { ...c, connectedCaUid: user.uid } : c
-        );
-        transaction.update(founderRef, { companies: updatedFounderCompanies });
-        
-        // 3. Update the invite status
-        transaction.update(inviteRef, { status: 'accepted' });
-      });
-
-      await fetchUserProfile(user);
+      const inviteDoc = await getDoc(inviteRef);
+      if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
+        throw new Error("Invite not found or has already been processed.");
+      }
       
-      const inviteData = (await getDoc(inviteRef)).data() as Invite;
+      const inviteData = inviteDoc.data() as Invite;
+      const { founderId, companyId } = inviteData;
+  
+      const founderRef = doc(db, 'users', founderId);
+      const founderDoc = await getDoc(founderRef);
+      if (!founderDoc.exists()) throw new Error("Founder account not found.");
+      
+      const founderData = founderDoc.data() as UserProfile;
+      const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
+      if (!companyToAccept) throw new Error("Company not found in founder's profile.");
+  
+      const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
+  
+      const caRef = doc(db, 'users', user.uid);
+      await updateDoc(caRef, { companies: [...(userProfile.companies || []), companyForCa] });
+      await updateDoc(inviteRef, { status: 'accepted', acceptedAt: new Date().toISOString(), caId: user.uid, caName: userProfile.name });
+
+      // This is now just a local state update for the CA, the real link happens on the founder side.
+      setUserProfile(prev => ({ ...prev!, companies: [...(prev!.companies || []), companyForCa] }));
+      
       await addNotification({
-        title: 'Invitation Accepted!',
-        description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
+        title: 'Invitation Sent',
+        description: `Your invitation to manage ${inviteData.companyName} was accepted by ${userProfile.name}.`,
         icon: 'CheckCircle',
         link: '/dashboard/ca-connect'
       }, inviteData.founderId);
@@ -568,7 +557,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite };
+  const checkForAcceptedInvites = useCallback(async () => {
+    if (!user || !userProfile || userProfile.role !== 'Founder') return;
+  
+    const invitesRef = collection(db, 'invites');
+    const q = query(invitesRef, where('founderId', '==', user.uid), where('status', '==', 'accepted'));
+    const querySnapshot = await getDocs(q);
+  
+    if (querySnapshot.empty) return;
+  
+    const batch = writeBatch(db);
+    let companiesUpdated = false;
+  
+    const updatedCompanies = [...userProfile.companies];
+  
+    querySnapshot.forEach(docSnap => {
+      const inviteData = docSnap.data() as Invite & { caId: string };
+      const companyIndex = updatedCompanies.findIndex(c => c.id === inviteData.companyId);
+  
+      if (companyIndex !== -1 && !updatedCompanies[companyIndex].connectedCaUid) {
+        updatedCompanies[companyIndex].connectedCaUid = inviteData.caId;
+        companiesUpdated = true;
+        // Mark the invite as processed by the founder to avoid re-processing.
+        batch.update(docSnap.ref, { status: 'processed' });
+      }
+    });
+  
+    if (companiesUpdated) {
+      const userDocRef = doc(db, 'users', user.uid);
+      batch.update(userDocRef, { companies: updatedCompanies });
+      await batch.commit();
+      setUserProfile(prev => ({ ...prev!, companies: updatedCompanies }));
+      toast({
+        title: 'Advisor Connected!',
+        description: 'An advisor has accepted your invitation. You can now collaborate in the Advisor Hub.',
+      });
+    }
+  }, [user, userProfile, toast]);
+
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

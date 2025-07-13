@@ -72,8 +72,11 @@ export interface Invite {
     founderName: string;
     companyId: string;
     companyName: string;
-    status: 'pending' | 'accepted' | 'revoked';
+    status: 'pending' | 'accepted' | 'revoked' | 'processed';
     createdAt: string;
+    caId?: string; // Add this
+    caName?: string; // Add this
+    acceptedAt?: string; // Add this
 }
 
 export interface ActivityLog {
@@ -109,7 +112,8 @@ export interface Company {
       score: number;
       risk: 'Low' | 'Medium' | 'High';
       deadlines: { title: string; dueDate: string }[];
-    }
+    };
+    connectedCaUid?: string;
 }
 
 export type UserRole = 'Founder' | 'CA' | 'Legal Advisor' | 'Enterprise';
@@ -238,7 +242,7 @@ export interface AppNotification {
   description: string;
   read: boolean;
   createdAt: string;
-  icon: 'AlertTriangle' | 'RadioTower' | 'FileClock' | 'Default';
+  icon: 'AlertTriangle' | 'RadioTower' | 'FileClock' | 'Default' | 'CheckCircle';
   link?: string;
 }
 
@@ -283,4 +287,10 @@ export interface DocumentAnalysis {
   reminder: ReminderSuggestion | null;
   redlineContent?: string;
   contractDetails?: ContractDetails | null;
+}
+
+export interface Deadline {
+  date: string;
+  title: string;
+  overdue: boolean;
 }

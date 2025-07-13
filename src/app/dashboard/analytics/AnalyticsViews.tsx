@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useMemo, useState, useCallback } from "react"
-import type { UserProfile, GenerateDDChecklistOutput, Company } from "@/lib/types"
+import type { UserProfile, GenerateDDChecklistOutput, Company, Deadline } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
@@ -10,22 +10,16 @@ import { useAuth } from "@/hooks/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { generateFilings } from "@/ai/flows/filing-generator-flow"
-import { format, formatDistanceToNowStrict, startOfToday, addDays } from "date-fns"
+import { format, formatDistanceToNowStrict, startOfToday, addDays, formatDistanceToNow } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare, Loader2 } from "lucide-react"
+import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare, Loader2, FileText } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
 import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, Bar as RechartsBar } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-
-type Deadline = {
-    date: string;
-    title: string;
-    overdue: boolean;
-};
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -505,12 +499,22 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
           
           const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
           
-          const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-          if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company'].includes(company.type)) {
-            requiredFields.push('cin');
-          }
-          const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-          const profileCompleteness = (filledFields / requiredFields.length) * 100;
+          const getRequiredFields = (company: Company) => {
+            const baseFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (company.legalRegion === 'India') {
+              if (['Private Limited Company', 'One Person Company'].includes(company.type)) {
+                return [...baseFields, 'cin'];
+              }
+            }
+            return baseFields;
+          };
+
+          const requiredFields = getRequiredFields(company);
+          const filledFields = requiredFields.filter(field => {
+              const value = company[field as keyof Company];
+              return value !== null && value !== undefined && String(value).trim() !== '';
+          }).length;
+          const profileCompleteness = requiredFields.length > 0 ? (filledFields / requiredFields.length) * 100 : 100;
 
           const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
 
@@ -521,9 +525,11 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
           const upcomingDeadlines = filingResponse.filings
             .filter(f => {
               const dueDate = new Date(f.date + 'T00:00:00');
-              return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30);
+              const uniqueId = `${f.title}-${f.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+              const isCompleted = savedStatuses[uniqueId] ?? false;
+              return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30) && !isCompleted;
             })
-            .map(f => ({ title: f.title, dueDate: f.date }));
+            .map(f => ({ clientName: company.name, title: f.title, dueDate: f.date }));
 
           return { ...company, health: { score: healthScore, risk: riskLevel, deadlines: upcomingDeadlines, profileCompleteness: profileCompleteness } };
         } catch (error) {
@@ -550,8 +556,8 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         }
     }, [userProfile.companies, calculateAllClientHealth]);
     
-    const { avgProfileCompleteness, riskDistribution, highRiskClientCount } = useMemo(() => {
-        if (clientCount === 0 || clientHealthData.length === 0) return { avgProfileCompleteness: 0, riskDistribution: [], highRiskClientCount: 0 };
+    const { avgProfileCompleteness, riskDistribution, highRiskClientCount, allUpcomingDeadlines } = useMemo(() => {
+        if (clientCount === 0 || clientHealthData.length === 0) return { avgProfileCompleteness: 0, riskDistribution: [], highRiskClientCount: 0, allUpcomingDeadlines: [] };
         
         const totalCompletenessScore = clientHealthData.reduce((acc, company) => {
             return acc + (company.health?.profileCompleteness || 0);
@@ -570,10 +576,15 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             { name: 'High', clients: riskCounts.high, fill: "var(--color-high)" },
         ].filter(d => d.clients > 0);
 
+        const deadlines = clientHealthData
+            .flatMap(c => c.health?.deadlines || [])
+            .sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
         return {
             avgProfileCompleteness: Math.round(totalCompletenessScore / clientCount),
             riskDistribution: riskChartData,
             highRiskClientCount: riskCounts.high,
+            allUpcomingDeadlines: deadlines
         };
     }, [clientHealthData, clientCount]);
     
@@ -611,7 +622,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             </Card>
         </div>
         
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-5 items-start">
             <div className="lg:col-span-2 space-y-6">
                 <Card className="interactive-lift">
                     <CardHeader>
@@ -628,6 +639,33 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                         </RechartsPieChart>
                         </ChartContainer>
                        )}
+                    </CardContent>
+                </Card>
+                 <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><CalendarClock/> Portfolio Deadlines</CardTitle>
+                        <CardDescription>Upcoming key dates across all your clients.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoadingHealth ? (
+                            <div className="space-y-4">
+                                <Skeleton className="h-12 w-full"/>
+                                <Skeleton className="h-12 w-full"/>
+                                <Skeleton className="h-12 w-full"/>
+                            </div>
+                        ) : allUpcomingDeadlines.length > 0 ? (
+                            <div className="space-y-3">
+                                {allUpcomingDeadlines.slice(0, 5).map((item, index) => (
+                                    <div key={index} className="flex items-center gap-3 p-2 bg-muted/50 border rounded-md">
+                                        <div className="p-2 bg-background rounded-full text-primary"><FileText className="w-5 h-5"/></div>
+                                        <div>
+                                            <p className="font-medium text-sm">{item.title}</p>
+                                            <p className="text-xs text-muted-foreground">{item.clientName} &bull; <span className="font-semibold">Due {formatDistanceToNow(new Date(item.dueDate), { addSuffix: true })}</span></p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="text-sm text-muted-foreground text-center p-4">No upcoming deadlines in the next 30 days.</p>}
                     </CardContent>
                 </Card>
             </div>
