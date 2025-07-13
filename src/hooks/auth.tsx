@@ -78,7 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const newExpiry = add(new Date(), { days: 30 });
     
-    // Logic to determine signupIndex
     const counterRef = doc(db, 'counters', 'userCounter');
     const newIndex = await runTransaction(db, async (transaction) => {
         const counterDoc = await transaction.get(counterRef);
@@ -135,7 +134,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     const newDocRef = await addDoc(notificationsRef, notification);
 
-    // If the notification is for the current user, update local state
     if (uid === user?.uid) {
         setNotifications(prev => [{ ...notification, id: newDocRef.id }, ...prev]);
     }
@@ -149,23 +147,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let profile = userDoc.data() as UserProfile;
       const updatesToApply: Partial<UserProfile> = {};
       
-      // Ensure companies is an array. Only update if it's not.
       if (!Array.isArray(profile.companies)) {
         profile.companies = [];
       }
 
-      // --- Backfill missing credit fields for older user profiles ---
-      if (profile.dailyCreditLimit === undefined) {
-        updatesToApply.dailyCreditLimit = 5; // Default daily credits
-      }
-      if (profile.dailyCreditsUsed === undefined) {
-        updatesToApply.dailyCreditsUsed = 0;
-      }
-      if (!profile.lastCreditReset) {
-        updatesToApply.lastCreditReset = new Date(0).toISOString();
-      }
+      if (profile.dailyCreditLimit === undefined) updatesToApply.dailyCreditLimit = 5;
+      if (profile.dailyCreditsUsed === undefined) updatesToApply.dailyCreditsUsed = 0;
+      if (!profile.lastCreditReset) updatesToApply.lastCreditReset = new Date(0).toISOString();
 
-      // --- Credit Reset Logic on Load ---
       const today = new Date();
       const lastResetDate = new Date(updatesToApply.lastCreditReset || profile.lastCreditReset!);
       
@@ -177,13 +166,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updatesToApply.lastCreditReset = today.toISOString();
       }
 
-      if (!profile.legalRegion) {
-        updatesToApply.legalRegion = 'India';
-      }
+      if (!profile.legalRegion) updatesToApply.legalRegion = 'India';
 
-      // If there are any backfill updates, write them to Firestore
       if (Object.keys(updatesToApply).length > 0) {
-        console.log("Backfilling user profile fields:", updatesToApply);
         await updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to backfill user profile fields:", e));
       }
 
@@ -254,11 +239,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     
-    // Initialize health property for new companies
     if (updates.companies && userProfile) {
         const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
-            if (!oldCompanyIds.has(company.id) && !company.health) { // Only add if new AND health is missing
+            if (!oldCompanyIds.has(company.id) && !company.health) {
                 company.health = { score: 0, risk: 'Low', deadlines: [] };
             }
         });
@@ -281,6 +265,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
   
+    // If CA is updating, target the founder's UID. Otherwise, use current user's UID.
     const targetUserId = company.founderUid || user.uid;
     
     if (!targetUserId) {
@@ -372,7 +357,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDocRef = doc(db, "users", firebaseUser.uid);
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
-                // If user doesn't exist in Firestore, it's a first-time Google sign-in
                 const newProfile = await createNewUserProfile(firebaseUser, 'India', 'Founder');
                 setUserProfile(newProfile);
             }
@@ -383,34 +367,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let description = "Could not sign in with Google. Please try again.";
         if (error.code) {
             switch (error.code) {
-                case 'auth/popup-closed-by-user':
-                    description = "The sign-in window was closed before completing. Please try again.";
-                    break;
-                case 'auth/popup-blocked':
-                    description = "The sign-in pop-up was blocked by your browser. Please allow pop-ups for this site.";
-                    break;
-                case 'auth/account-exists-with-different-credential':
-                    description = "An account already exists with this email address. Please sign in using the method you originally used.";
-                    break;
-                case 'permission-denied':
-                    description = "There was a problem setting up your profile due to database permissions. Please contact support.";
-                    break;
-                default:
-                    description = `An error occurred (${error.code}). Please try again or contact support.`;
+                case 'auth/popup-closed-by-user': description = "The sign-in window was closed before completing. Please try again."; break;
+                case 'auth/popup-blocked': description = "The sign-in pop-up was blocked by your browser. Please allow pop-ups for this site."; break;
+                case 'auth/account-exists-with-different-credential': description = "An account already exists with this email address. Please sign in using the method you originally used."; break;
+                case 'permission-denied': description = "There was a problem setting up your profile due to database permissions. Please contact support."; break;
+                default: description = `An error occurred (${error.code}). Please try again or contact support.`;
             }
         }
-
-        toast({
-            title: "Sign-In Failed",
-            description: description,
-            variant: "destructive"
-        });
+        toast({ title: "Sign-In Failed", description, variant: "destructive" });
     }
   };
 
-  const signOut = async () => {
-    await firebaseSignOut(auth);
-  };
+  const signOut = async () => { await firebaseSignOut(auth); };
 
  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (isDevMode) return true;
@@ -458,10 +426,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const userDocRef = doc(db, 'users', user.uid);
         updateDoc(userDocRef, finalUpdates)
-          .then(() => {
-            success = true;
-            resolve();
-          })
+          .then(() => { success = true; resolve(); })
           .catch(e => {
             console.error("Failed to update credits in Firestore:", e);
             setTimeout(() => toast({ variant: "destructive", title: "Network Error", description: "Could not save credit usage. Please try again." }), 0);
@@ -479,10 +444,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const saveChatHistory = async (chat: ChatMessage[]) => {
     if (!user) return;
     const historyCollectionRef = collection(db, `users/${user.uid}/chatHistory`);
-    await addDoc(historyCollectionRef, {
-        messages: chat,
-        createdAt: serverTimestamp(),
-    });
+    await addDoc(historyCollectionRef, { messages: chat, createdAt: serverTimestamp() });
   };
 
   const getChatHistory = async (): Promise<ChatMessage[][]> => {
@@ -494,16 +456,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addFeedback = async (category: string, message: string, sentiment?: 'positive' | 'negative') => {
-    if (!user) {
-      throw new Error("User not logged in");
-    }
-    const feedbackRef = collection(db, 'feedback');
-    await addDoc(feedbackRef, {
+    if (!user) throw new Error("User not logged in");
+    await addDoc(collection(db, 'feedback'), {
       userId: user.uid,
       userEmail: userProfile?.email,
-      category,
-      message,
-      sentiment,
+      category, message, sentiment,
       createdAt: new Date().toISOString(),
     });
   };
@@ -522,12 +479,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
         await addDoc(collection(db, "invites"), {
-            type: 'ca_to_client',
-            caId: user.uid,
-            caName: userProfile.name,
-            clientEmail: clientEmail,
-            status: 'pending',
-            createdAt: new Date().toISOString(),
+            type: 'ca_to_client', caId: user.uid, caName: userProfile.name,
+            clientEmail, status: 'pending', createdAt: new Date().toISOString(),
         });
         return { success: true, message: "Client invitation sent." };
     } catch (error) {
@@ -537,33 +490,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const sendCaInvite = async (caEmail: string, companyId: string, companyName: string): Promise<{ success: boolean; message: string }> => {
-    if (!user || !userProfile || userProfile.role !== 'Founder') {
-      return { success: false, message: 'Only founders can send invites.' };
-    }
+    if (!user || !userProfile || userProfile.role !== 'Founder') return { success: false, message: 'Only founders can send invites.' };
     
-    // Check if an invite already exists for this CA for this company
     const existingInvite = (userProfile.invites || []).find(inv => inv.caEmail === caEmail && inv.companyId === companyId && inv.status === 'pending');
-    if (existingInvite) {
-        return { success: false, message: "An invitation has already been sent to this advisor for this company." };
-    }
+    if (existingInvite) return { success: false, message: "An invitation has already been sent to this advisor for this company." };
 
     const newInviteData: Omit<Invite, 'id'> = {
-        caEmail,
-        founderId: user.uid,
-        founderName: userProfile.name,
-        companyId,
-        companyName,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
+        caEmail, founderId: user.uid, founderName: userProfile.name,
+        companyId, companyName, status: 'pending', createdAt: new Date().toISOString(),
     };
 
     try {
         const inviteDocRef = await addDoc(collection(db, 'invites'), newInviteData);
-        
-        const userUpdates: Partial<UserProfile> = {
-            invites: [...(userProfile.invites || []), { ...newInviteData, id: inviteDocRef.id }],
-        };
-        await updateUserProfile(userUpdates);
+        await updateUserProfile({ invites: [...(userProfile.invites || []), { ...newInviteData, id: inviteDocRef.id }] });
         return { success: true, message: 'Invitation sent successfully!' };
     } catch (error) {
         console.error('Error sending invite:', error);
@@ -577,58 +516,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   
     const inviteRef = doc(db, 'invites', inviteId);
-  
-    await runTransaction(db, async (transaction) => {
-      const inviteDoc = await transaction.get(inviteRef);
-      if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
-        throw new Error("Invite not found or has been processed.");
-      }
-      
-      const inviteData = inviteDoc.data() as Invite;
-      const { founderId, companyId } = inviteData;
-  
-      const founderRef = doc(db, 'users', founderId);
-      const founderDoc = await transaction.get(founderRef);
-      if (!founderDoc.exists()) throw new Error("Founder account not found.");
-      
-      const founderData = founderDoc.data() as UserProfile;
-      const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
-      if (!companyToAccept) throw new Error("Company not found in founder's profile.");
-  
-      // This is the key: we add founderUid to the company object for the CA
-      const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
-  
-      const caRef = doc(db, 'users', user.uid);
-      const caDoc = await transaction.get(caRef);
-      if (!caDoc.exists()) throw new Error("CA profile not found.");
-      const caProfile = caDoc.data() as UserProfile;
-  
-      // 1. Update CA's profile with the new company, including founderUid
-      transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
-      
-      // 2. Update the founder's company with the connected CA's UID
-      const updatedFounderCompanies = founderData.companies.map(c => 
-          c.id === companyId ? { ...c, connectedCaUid: user.uid } : c
-      );
-      transaction.update(founderRef, { companies: updatedFounderCompanies });
-      
-      // 3. Update the status of the invite in the top-level collection
-      transaction.update(inviteRef, { status: 'accepted' });
+    
+    try {
+      await runTransaction(db, async (transaction) => {
+        const inviteDoc = await transaction.get(inviteRef);
+        if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
+          throw new Error("Invite not found or has been processed.");
+        }
+        
+        const inviteData = inviteDoc.data() as Invite;
+        const { founderId, companyId } = inviteData;
+    
+        const founderRef = doc(db, 'users', founderId);
+        const founderDoc = await transaction.get(founderRef);
+        if (!founderDoc.exists()) throw new Error("Founder account not found.");
+        
+        const founderData = founderDoc.data() as UserProfile;
+        const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
+        if (!companyToAccept) throw new Error("Company not found in founder's profile.");
+    
+        const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
+    
+        const caRef = doc(db, 'users', user.uid);
+        
+        // 1. Update CA's profile with the new company
+        transaction.update(caRef, { companies: [...(userProfile.companies || []), companyForCa] });
+        
+        // 2. Update the founder's company with the connected CA's UID
+        const updatedFounderCompanies = founderData.companies.map(c => 
+            c.id === companyId ? { ...c, connectedCaUid: user.uid } : c
+        );
+        transaction.update(founderRef, { companies: updatedFounderCompanies });
+        
+        // 3. Update the invite status
+        transaction.update(inviteRef, { status: 'accepted' });
+      });
 
-    }).catch(error => {
-      console.error("Transaction failed: ", error);
-      throw error;
-    });
-  
-    await fetchUserProfile(user);
-    const inviteData = (await getDoc(inviteRef)).data() as Invite;
-  
-    await addNotification({
-      title: 'Invitation Accepted!',
-      description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
-      icon: 'CheckCircle',
-      link: '/dashboard/ca-connect'
-    }, inviteData.founderId);
+      await fetchUserProfile(user);
+      
+      const inviteData = (await getDoc(inviteRef)).data() as Invite;
+      await addNotification({
+        title: 'Invitation Accepted!',
+        description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
+        icon: 'CheckCircle',
+        link: '/dashboard/ca-connect'
+      }, inviteData.founderId);
+
+    } catch(error: any) {
+        console.error("Transaction failed: ", error);
+        throw error;
+    }
   };
 
   const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite };

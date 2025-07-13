@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import type { UserProfile, GenerateDDChecklistOutput, Company } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -10,10 +10,10 @@ import { useAuth } from "@/hooks/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { generateFilings } from "@/ai/flows/filing-generator-flow"
-import { format, formatDistanceToNowStrict, startOfToday } from "date-fns"
+import { format, formatDistanceToNowStrict, startOfToday, addDays } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare } from "lucide-react"
+import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare, Loader2 } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
 import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, Bar as RechartsBar } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -472,35 +472,98 @@ const riskChartConfig = {
 
 export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
    const clientCount = userProfile.companies.length;
-   
-    const { avgProfileCompleteness, riskDistribution, clientHealthData, highRiskClientCount } = useMemo(() => {
-        if (clientCount === 0) return { avgProfileCompleteness: 0, riskDistribution: [], clientHealthData: [], highRiskClientCount: 0 };
+   const [clientHealthData, setClientHealthData] = useState<Company[]>([]);
+   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
+
+   const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
+    if (companies.length === 0) {
+      setIsLoadingHealth(false);
+      setClientHealthData([]);
+      return;
+    }
+    setIsLoadingHealth(true);
+    try {
+      const healthPromises = companies.map(async (company) => {
+        try {
+          const filingResponse = await generateFilings({
+            companyType: company.type,
+            incorporationDate: company.incorporationDate,
+            currentDate: format(new Date(), 'yyyy-MM-dd'),
+            legalRegion: company.legalRegion,
+            gstin: company.gstin,
+          });
+
+          const totalFilings = filingResponse.filings.length;
+          const savedStatuses = company.checklistStatus || {};
+          
+          const overdueFilings = filingResponse.filings.filter(filing => {
+            const dueDate = new Date(filing.date + 'T00:00:00');
+            const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+            const isCompleted = savedStatuses[uniqueId] ?? false;
+            return dueDate < startOfToday() && !isCompleted;
+          }).length;
+          
+          const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
+          
+          const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+          if (company.legalRegion === 'India') requiredFields.push('cin');
+          const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+          const profileCompleteness = (filledFields / requiredFields.length) * 100;
+
+          const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+          let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+          if (healthScore < 60) riskLevel = 'High';
+          else if (healthScore < 85) riskLevel = 'Medium';
+          
+          const upcomingDeadlines = filingResponse.filings
+            .filter(f => {
+              const dueDate = new Date(f.date + 'T00:00:00');
+              return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30);
+            })
+            .map(f => ({ title: f.title, dueDate: f.date }));
+
+          return { ...company, health: { score: healthScore, risk: riskLevel, deadlines: upcomingDeadlines } };
+        } catch (error) {
+          console.error(`Failed to calculate health for ${company.name}`, error);
+          return { ...company, health: { score: 0, risk: 'High' as const, deadlines: [] } };
+        }
+      });
+      
+      const results = await Promise.all(healthPromises);
+      setClientHealthData(results);
+      
+    } catch (error) {
+      console.error("An error occurred while calculating client health:", error);
+    } finally {
+      setIsLoadingHealth(false);
+    }
+  }, []);
+    
+    useEffect(() => {
+        if (userProfile.companies) {
+            calculateAllClientHealth(userProfile.companies);
+        } else {
+            setIsLoadingHealth(false);
+        }
+    }, [userProfile.companies, calculateAllClientHealth]);
+    
+    const { avgProfileCompleteness, riskDistribution, highRiskClientCount } = useMemo(() => {
+        if (clientCount === 0 || clientHealthData.length === 0) return { avgProfileCompleteness: 0, riskDistribution: [], highRiskClientCount: 0 };
         
         let totalCompleteness = 0;
-        const healthData = userProfile.companies.map(company => {
+        const riskCounts = { low: 0, medium: 0, high: 0 };
+
+        clientHealthData.forEach(company => {
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
             if (company.legalRegion === 'India') requiredFields.push('cin');
             const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-            const completeness = (filledFields / requiredFields.length) * 100;
-            totalCompleteness += completeness;
+            totalCompleteness += (filledFields / requiredFields.length) * 100;
             
-            const overdueTasks = company.docRequests?.filter(r => new Date(r.dueDate) < startOfToday() && r.status === 'Pending').length || 0;
-            const filingPerf = Math.max(0, 100 - (overdueTasks * 20)); // Simplified health calc
-            const healthScore = Math.round((completeness * 0.7) + (filingPerf * 0.3));
-            
-            let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
-            if (healthScore < 60) riskLevel = 'High';
-            else if (healthScore < 85) riskLevel = 'Medium';
-
-            return { ...company, completeness, overdueTasks, healthScore, riskLevel };
+            if (company.health?.risk === 'Low') riskCounts.low++;
+            else if (company.health?.risk === 'Medium') riskCounts.medium++;
+            else if (company.health?.risk === 'High') riskCounts.high++;
         });
-
-        const riskCounts = healthData.reduce((acc, client) => {
-            if (client.riskLevel === 'Low') acc.low++;
-            else if (client.riskLevel === 'Medium') acc.medium++;
-            else if (client.riskLevel === 'High') acc.high++;
-            return acc;
-        }, { low: 0, medium: 0, high: 0 });
 
         const riskChartData = [
             { name: 'Low', clients: riskCounts.low, fill: "var(--color-low)" },
@@ -511,10 +574,9 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         return {
             avgProfileCompleteness: Math.round(totalCompleteness / clientCount),
             riskDistribution: riskChartData,
-            clientHealthData: healthData.sort((a,b) => a.healthScore - b.healthScore),
             highRiskClientCount: riskCounts.high,
         };
-    }, [userProfile.companies, clientCount]);
+    }, [clientHealthData, clientCount]);
     
    return (
     <div className="space-y-6">
@@ -537,13 +599,16 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                     <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-green-500">{avgProfileCompleteness}%</div>
+                    {isLoadingHealth ? <Loader2 className="animate-spin" /> : <div className="text-2xl font-bold text-green-500">{avgProfileCompleteness}%</div>}
                     <p className="text-xs text-muted-foreground">Average across all clients</p>
                 </CardContent>
             </Card>
              <Card className="interactive-lift">
                 <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Clients at Risk</CardTitle><FileWarning className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-destructive">{highRiskClientCount}</div><p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p></CardContent>
+                <CardContent>
+                    {isLoadingHealth ? <Loader2 className="animate-spin" /> : <div className="text-2xl font-bold text-destructive">{highRiskClientCount}</div>}
+                    <p className="text-xs text-muted-foreground">Clients with a 'High' risk score</p>
+                </CardContent>
             </Card>
         </div>
         
@@ -555,6 +620,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                         <CardDescription>Breakdown of client risk levels based on compliance health.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                       {isLoadingHealth ? <div className="h-52 flex items-center justify-center"><Loader2 className="animate-spin" /></div> : (
                         <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-52">
                         <RechartsPieChart>
                             <ChartTooltip content={<ChartTooltipContent nameKey="clients" hideLabel />} />
@@ -562,6 +628,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                             <ChartLegend content={<ChartTooltipContent nameKey="clients" hideLabel hideIndicator />} />
                         </RechartsPieChart>
                         </ChartContainer>
+                       )}
                     </CardContent>
                 </Card>
             </div>
@@ -571,19 +638,18 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                     <CardDescription>Prioritize your work by focusing on clients who need the most attention.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {clientHealthData.length > 0 ? (
+                    {isLoadingHealth ? <div className="h-64 flex items-center justify-center"><Loader2 className="animate-spin" /></div> : clientHealthData.length > 0 ? (
                         <Table>
-                            <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Profile</TableHead><TableHead>Health Score</TableHead><TableHead className="text-right">Risk Level</TableHead></TableRow></TableHeader>
+                            <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Health Score</TableHead><TableHead className="text-right">Risk Level</TableHead></TableRow></TableHeader>
                             <TableBody>
-                                {clientHealthData.map(client => (
+                                {clientHealthData.sort((a,b) => (a.health?.score || 0) - (b.health?.score || 0)).map(client => (
                                     <TableRow key={client.id}>
                                         <TableCell className="font-medium">{client.name}</TableCell>
-                                        <TableCell>{client.completeness.toFixed(0)}%</TableCell>
                                         <TableCell>
-                                            <Progress value={client.healthScore} className="w-24 h-2" />
+                                            <Progress value={client.health?.score || 0} className="w-24 h-2" />
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Badge variant={client.riskLevel === 'High' ? 'destructive' : client.riskLevel === 'Medium' ? 'default' : 'secondary'}>{client.riskLevel}</Badge>
+                                            <Badge variant={client.health?.risk === 'High' ? 'destructive' : client.health?.risk === 'Medium' ? 'default' : 'secondary'}>{client.health?.risk}</Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}
