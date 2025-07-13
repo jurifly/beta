@@ -8,58 +8,77 @@ html {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 96%; /* Light Gray */
     --foreground: 224 71% 4%;
+    
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
+    
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 262 82% 50%;
-    --primary-foreground: 210 40% 98%;
+    
+    --primary: 217 89% 61%; /* Vivid Blue */
+    --primary-foreground: 0 0% 100%;
+    
     --secondary: 220 13% 91%;
     --secondary-foreground: 224 71% 4%;
+    
     --muted: 220 13% 91%;
     --muted-foreground: 224 71% 25%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 16 100% 63%; /* Energetic Orange */
+    --accent-foreground: 0 0% 100%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
+    
     --border: 220 13% 88%;
     --input: 220 13% 88%;
-    --ring: 262 82% 50%;
+    --ring: 217 89% 61%; /* Vivid Blue */
+    
     --radius: 0.75rem;
-    --chart-1: 262 82% 50%;
-    --chart-2: 199 96% 58%;
-    --chart-3: 341 91% 55%;
-    --chart-4: 39 92% 55%;
-    --chart-5: 222 65% 33%;
+
+    --chart-1: 217 89% 61%; /* Vivid Blue */
+    --chart-2: 199 96% 58%; /* Bright Cyan */
+    --chart-3: 16 100% 63%; /* Energetic Orange */
+    --chart-4: 39 92% 55%; /* Bright Yellow */
+    --chart-5: 341 91% 55%; /* Bright Pink */
   }
  
   .dark {
-    --background: 222 47% 11%;
+    --background: 222 47% 11%; /* Dark Slate */
     --foreground: 210 40% 98%;
+    
     --card: 222 47% 14%;
     --card-foreground: 210 40% 98%;
+    
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 262 82% 60%;
+    
+    --primary: 217 90% 65%; /* Vivid Blue */
     --primary-foreground: 222 47% 11%;
+    
     --secondary: 215 28% 17%;
     --secondary-foreground: 210 40% 98%;
+    
     --muted: 215 28% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 215 28% 17%;
-    --accent-foreground: 210 40% 98%;
+
+    --accent: 16 100% 63%; /* Energetic Orange */
+    --accent-foreground: 0 0% 100%;
+    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    
     --border: 215 28% 20%;
     --input: 215 28% 20%;
-    --ring: 262 82% 60%;
-    --chart-1: 262 82% 60%;
-    --chart-2: 199 96% 58%;
-    --chart-3: 341 81% 65%;
-    --chart-4: 39 92% 65%;
-    --chart-5: 217 91% 60%;
+    --ring: 217 90% 65%; /* Vivid Blue */
+
+    --chart-1: 217 90% 65%; /* Vivid Blue */
+    --chart-2: 199 96% 58%; /* Bright Cyan */
+    --chart-3: 16 100% 63%; /* Energetic Orange */
+    --chart-4: 39 92% 65%; /* Bright Yellow */
+    --chart-5: 341 81% 65%; /* Bright Pink */
   }
 }
 
