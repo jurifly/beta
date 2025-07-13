@@ -167,36 +167,9 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   };
   
   const handleFetch = async () => {
-    const cin = getValues("cin");
-    const legalRegion = getValues("legalRegion");
-    if (!cin || cin.length !== 21) {
-      toast({
-        variant: "destructive",
-        title: "Invalid CIN",
-        description: "Please enter a valid 21-character CIN.",
-      });
-      return;
-    }
-
-    if (!await deductCredits(1)) return;
-
-    startFetchingTransition(async () => {
-      try {
-        toast({ title: "Fetching Company Details...", description: "Our AI is on the job." });
-        const details = await fetchCompanyDetailsFromCIN(cin, legalRegion);
-        setValue("name", details.name, { shouldValidate: true });
-        setValue("pan", details.pan, { shouldValidate: true });
-        setValue("incorporationDate", details.incorporationDate, { shouldValidate: true });
-        setValue("sector", details.sector, { shouldValidate: true });
-        setValue("location", details.location, { shouldValidate: true });
-        toast({ title: "Details Filled!", description: "Company details have been auto-filled." });
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Fetch Failed",
-          description: error.message,
-        });
-      }
+    toast({
+        title: "Coming Soon!",
+        description: "The AI-powered CIN fetch feature is currently under development.",
     });
   };
 
@@ -266,12 +239,12 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
                     <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button type="button" variant="outline" size="icon" onClick={handleFetch} disabled={!cinValue || cinValue.length !== 21 || isFetching}>
-                                  {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles />}
+                              <Button type="button" variant="outline" size="icon" onClick={handleFetch} disabled>
+                                  <Sparkles />
                                   <span className="sr-only">Fetch Details with AI</span>
                               </Button>
                           </TooltipTrigger>
-                          <TooltipContent><p>Auto-fill with AI (1 credit)</p></TooltipContent>
+                          <TooltipContent><p>Auto-fill with AI (Coming Soon)</p></TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>
