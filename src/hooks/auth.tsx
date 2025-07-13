@@ -110,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       teamMembers: [{ id: firebaseUser.uid, name: firebaseUser.displayName || 'Me', email: firebaseUser.email || '', role: 'Admin' }],
       invites: [],
       activityLog: [{ id: Date.now().toString(), userName: 'System', action: 'Created workspace', timestamp: new Date().toISOString() }],
+      health: { score: 0, risk: 'Low', deadlines: [] },
     };
     
     await setDoc(userDocRef, newProfile);
@@ -190,6 +191,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // If there are any backfill updates, write them to Firestore
       if (Object.keys(updatesToApply).length > 0) {
+        console.log("Backfilling user profile fields:", updatesToApply);
+        // Do not await this, let it run in the background
         updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to backfill user profile fields:", e));
       }
 
@@ -290,10 +293,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Determine the owner of the checklist. 
     // If it's an invited client, `founderUid` will exist.
     // If it's a CA's self-added client, `founderUid` will be null, and we write to the CA's own profile.
-    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') && company.founderUid
-      ? company.founderUid 
-      : user.uid;
-      
+    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') ? (company.founderUid || user.uid) : user.uid;
+    
     const userToUpdateRef = doc(db, "users", targetUserId);
     
     try {
@@ -351,7 +352,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: userCredential.user.email,
             displayName: name,
         };
-        await createNewUserProfile(userData, legalRegion, role, refId);
+        const newProfile = await createNewUserProfile(userData, legalRegion, role, refId);
+        // Explicitly set profile to avoid race condition on signup
+        setUserProfile(newProfile);
       }
   };
 
@@ -508,7 +511,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getPendingInvites = async () => {
-    if (!user || userProfile?.role !== 'CA') return [];
+    if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) return [];
     const invitesRef = collection(db, 'invites');
     const q = query(invitesRef, where('caEmail', '==', user.email), where('status', '==', 'pending'));
     const querySnapshot = await getDocs(q);
@@ -516,7 +519,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendClientInvite = async (clientEmail: string): Promise<{ success: boolean; message: string }> => {
-    if (!user || !userProfile || userProfile.role !== 'CA') {
+    if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) {
       return { success: false, message: 'Only CAs can invite clients.' };
     }
     try {
@@ -565,7 +568,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const acceptInvite = async (inviteId: string) => {
-    if (!user || !userProfile || userProfile.role !== 'CA') throw new Error("Only CAs can accept invites.");
+    if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) throw new Error("Only CAs can accept invites.");
     
     let founderData: UserProfile | null = null;
     let inviteData: Invite | null = null;
@@ -584,7 +587,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!founderDoc.exists()) throw new Error("Founder account not found.");
         founderData = founderDoc.data() as UserProfile;
 
-        const companyToAccept = founderData.companies.find(c => c.id === companyId);
+        const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
         if (!companyToAccept) throw new Error("Company not found in founder's profile.");
         
         const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
