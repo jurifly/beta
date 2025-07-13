@@ -29,11 +29,6 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         lines: ["You wanted to connect with your advisor?", "We wanted to connect with our sleep cycle. Neither is happening."],
         eta: "Unlocks on our Pro plans. For now, there's always email."
     },
-    "Compliance Hub": {
-        title: "Compliance Hub Offline",
-        lines: ["You wanted to connect with your clients here?", "We wanted to connect with our sleep cycle. Neither is happening."],
-        eta: "Unlocks on our Pro plans. For now, there's always email."
-    },
     "Community": {
         title: "Community Feature Missing",
         lines: [
