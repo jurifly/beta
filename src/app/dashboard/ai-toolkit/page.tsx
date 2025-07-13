@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
@@ -15,7 +16,7 @@ import * as AiActions from './actions';
 import type { AssistantOutput } from '@/ai/flows/assistant-flow';
 import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails, Clause } from "@/lib/types"
 import { planHierarchy } from "@/lib/types";
-import type { GenerateChecklistOutput as RawChecklistOutput } from "@/ai/flows/generate-checklist-flow"
+import type { GenerateChecklistOutput as RawChecklistOutput } from '@/ai/flows/generate-checklist-flow'
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
 import type { DocumentGeneratorOutput } from "@/ai/flows/document-generator-flow";
 import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
@@ -584,6 +585,10 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
     onSaveRedline(doc.id, editedContent);
     setIsEditing(false);
   }
+  
+  const isDateValid = (dateString: string | undefined): boolean => {
+    return !!dateString && !isNaN(new Date(dateString).getTime());
+  };
 
   return (
     <AccordionItem value={doc.id} className="border-b-0">
@@ -592,7 +597,9 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
               <div className="flex-1 flex items-center gap-4">
                   <div className="flex-1 space-y-1">
                       <p className="font-semibold truncate">{doc.fileName}</p>
-                      <p className="text-sm text-muted-foreground">{formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {isDateValid(doc.uploadedAt) ? formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true }) : 'Invalid date'}
+                      </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {highestSeverity && <Badge variant="outline" className={getRiskColor(highestSeverity)}>{highestSeverity} Risk</Badge>}
@@ -638,7 +645,9 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="p-3 border rounded-md bg-card">
                             <p className="text-xs text-muted-foreground">Effective Date</p>
-                            <p className="font-medium">{format(new Date(doc.contractDetails.effectiveDate), "PPP")}</p>
+                            <p className="font-medium">
+                                {isDateValid(doc.contractDetails.effectiveDate) ? format(new Date(doc.contractDetails.effectiveDate), "PPP") : 'N/A'}
+                            </p>
                           </div>
                           <div className="p-3 border rounded-md bg-card">
                             <p className="text-xs text-muted-foreground">Term</p>
@@ -646,7 +655,9 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
                           </div>
                           <div className="p-3 border rounded-md bg-card">
                             <p className="text-xs text-muted-foreground">Renewal Notice</p>
-                            <p className="font-medium">{doc.contractDetails.renewalNoticeDate ? format(new Date(doc.contractDetails.renewalNoticeDate), "PPP") : 'N/A'}</p>
+                            <p className="font-medium">
+                                {isDateValid(doc.contractDetails.renewalNoticeDate) ? format(new Date(doc.contractDetails.renewalNoticeDate!), "PPP") : 'N/A'}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -674,7 +685,7 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
                             <CalendarPlus className="w-5 h-5"/>
                             <div>
                                 <p className="font-semibold">{doc.reminder.title}</p>
-                                <p className="text-sm">Suggested Date: {doc.reminder.date}</p>
+                                <p className="text-sm">Suggested Date: {isDateValid(doc.reminder.date) ? format(new Date(doc.reminder.date), 'PPP') : 'Invalid Date'}</p>
                             </div>
                           </div>
                           <Button size="sm" onClick={() => toast({title:"Feature coming soon"})}>Add to Calendar</Button>
@@ -1582,3 +1593,4 @@ export default function AiToolkitPage() {
         </div>
     );
 }
+
