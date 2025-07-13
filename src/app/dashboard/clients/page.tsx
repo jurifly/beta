@@ -32,70 +32,80 @@ export default function ClientsPage() {
 
   useEffect(() => {
     const calculateAllClientHealth = async () => {
-      if (!userProfile?.companies || userProfile.companies.length === 0) {
+      if (!userProfile?.companies) {
+        setIsLoadingHealth(false);
+        return;
+      }
+      // Fix for perpetual loading if no clients exist
+      if (userProfile.companies.length === 0) {
         setIsLoadingHealth(false);
         return;
       }
 
       setIsLoadingHealth(true);
-      const healthPromises = userProfile.companies.map(async (company) => {
-        try {
-          const filingResponse = await generateFilings({
-            companyType: company.type,
-            incorporationDate: company.incorporationDate,
-            currentDate: format(new Date(), 'yyyy-MM-dd'),
-            legalRegion: company.legalRegion,
-            gstin: company.gstin,
-          });
+      try {
+        const healthPromises = userProfile.companies.map(async (company) => {
+          try {
+            const filingResponse = await generateFilings({
+              companyType: company.type,
+              incorporationDate: company.incorporationDate,
+              currentDate: format(new Date(), 'yyyy-MM-dd'),
+              legalRegion: company.legalRegion,
+              gstin: company.gstin,
+            });
 
-          const totalFilings = filingResponse.filings.length;
-          const savedStatuses = company.checklistStatus || {};
-          
-          const overdueFilings = filingResponse.filings.filter(filing => {
-            const dueDate = new Date(filing.date + 'T00:00:00');
-            const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
-            const isCompleted = savedStatuses[uniqueId] ?? false;
-            return dueDate < startOfToday() && !isCompleted;
-          }).length;
-          
-          const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
-          
-          const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-          if (company.legalRegion === 'India') requiredFields.push('cin');
-          const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-          const profileCompleteness = (filledFields / requiredFields.length) * 100;
+            const totalFilings = filingResponse.filings.length;
+            const savedStatuses = company.checklistStatus || {};
+            
+            const overdueFilings = filingResponse.filings.filter(filing => {
+              const dueDate = new Date(filing.date + 'T00:00:00');
+              const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+              const isCompleted = savedStatuses[uniqueId] ?? false;
+              return dueDate < startOfToday() && !isCompleted;
+            }).length;
+            
+            const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
+            
+            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+            if (company.legalRegion === 'India') requiredFields.push('cin');
+            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+            const profileCompleteness = (filledFields / requiredFields.length) * 100;
 
-          const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+            const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
 
-          let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
-          if (healthScore < 60) riskLevel = 'High';
-          else if (healthScore < 85) riskLevel = 'Medium';
-          
-          const upcomingDeadlines = filingResponse.filings
-            .filter(f => {
-              const dueDate = new Date(f.date + 'T00:00:00');
-              return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30);
-            })
-            .map(f => ({ title: f.title, dueDate: f.date }));
+            let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+            if (healthScore < 60) riskLevel = 'High';
+            else if (healthScore < 85) riskLevel = 'Medium';
+            
+            const upcomingDeadlines = filingResponse.filings
+              .filter(f => {
+                const dueDate = new Date(f.date + 'T00:00:00');
+                return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30);
+              })
+              .map(f => ({ title: f.title, dueDate: f.date }));
 
-          return { ...company, healthScore, riskLevel, upcomingDeadlines };
-        } catch (error) {
-          console.error(`Failed to calculate health for ${company.name}`, error);
-          return { ...company, healthScore: 0, riskLevel: 'High' as const, upcomingDeadlines: [] };
-        }
-      });
-      
-      const results = await Promise.all(healthPromises);
-      setClientHealthData(results);
-      
-      // Save health data to the user profile for dashboard use
-      const updatedCompanies = userProfile.companies.map(c => {
-          const foundHealth = results.find(h => h.id === c.id);
-          return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
-      });
-      await updateUserProfile({ companies: updatedCompanies });
+            return { ...company, healthScore, riskLevel, upcomingDeadlines };
+          } catch (error) {
+            console.error(`Failed to calculate health for ${company.name}`, error);
+            return { ...company, healthScore: 0, riskLevel: 'High' as const, upcomingDeadlines: [] };
+          }
+        });
+        
+        const results = await Promise.all(healthPromises);
+        setClientHealthData(results);
+        
+        // Save health data to the user profile for dashboard use
+        const updatedCompanies = userProfile.companies.map(c => {
+            const foundHealth = results.find(h => h.id === c.id);
+            return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
+        });
+        await updateUserProfile({ companies: updatedCompanies });
 
-      setIsLoadingHealth(false);
+      } catch (error) {
+        console.error("An error occurred while calculating client health:", error);
+      } finally {
+        setIsLoadingHealth(false);
+      }
     };
 
     calculateAllClientHealth();
