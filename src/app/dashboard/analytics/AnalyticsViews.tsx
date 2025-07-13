@@ -472,7 +472,7 @@ const riskChartConfig = {
 
 export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
    const clientCount = userProfile.companies.length;
-   const [clientHealthData, setClientHealthData] = useState<Company[]>([]);
+   const [clientHealthData, setClientHealthData] = useState<any[]>([]);
    const [isLoadingHealth, setIsLoadingHealth] = useState(true);
 
    const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
@@ -551,19 +551,20 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
     const { avgProfileCompleteness, riskDistribution, highRiskClientCount } = useMemo(() => {
         if (clientCount === 0 || clientHealthData.length === 0) return { avgProfileCompleteness: 0, riskDistribution: [], highRiskClientCount: 0 };
         
-        let totalCompleteness = 0;
-        const riskCounts = { low: 0, medium: 0, high: 0 };
-
-        clientHealthData.forEach(company => {
+        const totalCompletenessScore = clientHealthData.reduce((acc, company) => {
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
             if (company.legalRegion === 'India') requiredFields.push('cin');
             const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-            totalCompleteness += (filledFields / requiredFields.length) * 100;
-            
-            if (company.health?.risk === 'Low') riskCounts.low++;
-            else if (company.health?.risk === 'Medium') riskCounts.medium++;
-            else if (company.health?.risk === 'High') riskCounts.high++;
-        });
+            const completeness = (filledFields / requiredFields.length) * 100;
+            return acc + completeness;
+        }, 0);
+
+        const riskCounts = clientHealthData.reduce((acc, company) => {
+            if (company.health?.risk === 'Low') acc.low++;
+            else if (company.health?.risk === 'Medium') acc.medium++;
+            else if (company.health?.risk === 'High') acc.high++;
+            return acc;
+        }, { low: 0, medium: 0, high: 0 });
 
         const riskChartData = [
             { name: 'Low', clients: riskCounts.low, fill: "var(--color-low)" },
@@ -572,7 +573,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         ].filter(d => d.clients > 0);
 
         return {
-            avgProfileCompleteness: Math.round(totalCompleteness / clientCount),
+            avgProfileCompleteness: Math.round(totalCompletenessScore / clientCount),
             riskDistribution: riskChartData,
             highRiskClientCount: riskCounts.high,
         };
