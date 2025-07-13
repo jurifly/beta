@@ -110,7 +110,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       teamMembers: [{ id: firebaseUser.uid, name: firebaseUser.displayName || 'Me', email: firebaseUser.email || '', role: 'Admin' }],
       invites: [],
       activityLog: [{ id: Date.now().toString(), userName: 'System', action: 'Created workspace', timestamp: new Date().toISOString() }],
-      health: { score: 0, risk: 'Low', deadlines: [] },
     };
     
     await setDoc(userDocRef, newProfile);
@@ -557,7 +556,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const inviteDocRef = await addDoc(invitesRef, newInvite);
         const userUpdates: Partial<UserProfile> = {
             invites: [...(userProfile.invites || []), { ...newInvite, id: inviteDocRef.id }],
-            invitedCaEmail: caEmail, // also keep the legacy field for now
         };
         await updateUserProfile(userUpdates);
         return { success: true, message: 'Invitation sent successfully!' };
@@ -568,51 +566,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const acceptInvite = async (inviteId: string) => {
-    if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) throw new Error("Only CAs can accept invites.");
-    
-    let founderData: UserProfile | null = null;
-    let inviteData: Invite | null = null;
-
-    await runTransaction(db, async (transaction) => {
-        const inviteRef = doc(db, 'invites', inviteId);
-        const inviteDoc = await transaction.get(inviteRef);
-        if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') throw new Error("Invite not found or already accepted.");
-        
-        inviteData = inviteDoc.data() as Invite;
-        const { founderId, companyId } = inviteData;
-        const founderRef = doc(db, 'users', founderId);
-        const caRef = doc(db, 'users', user.uid);
-
-        const founderDoc = await transaction.get(founderRef);
-        if (!founderDoc.exists()) throw new Error("Founder account not found.");
-        founderData = founderDoc.data() as UserProfile;
-
-        const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
-        if (!companyToAccept) throw new Error("Company not found in founder's profile.");
-        
-        const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
-
-        const founderInvites = (founderData.invites || []).map(inv => 
-            inv.caEmail === user.email && inv.companyId === companyId ? { ...inv, status: 'accepted' as const } : inv
-        );
-        transaction.update(founderRef, { connectedCaUid: user.uid, invites: founderInvites });
-
-        const caProfile = (await transaction.get(caRef)).data() as UserProfile;
-        transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
-        
-        transaction.update(inviteRef, { status: 'accepted' });
-    });
-
-    if (founderData && inviteData) {
-        await addNotification({
-            title: 'Invitation Accepted!',
-            description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
-            icon: 'CheckCircle',
-            link: '/dashboard/ca-connect'
-        }, founderData.uid);
+    if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) {
+      throw new Error("Only advisors can accept invites.");
     }
 
-    await fetchUserProfile(user); // Refresh CA's profile
+    const inviteRef = doc(db, 'invites', inviteId);
+    const inviteDoc = await getDoc(inviteRef);
+
+    if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
+      throw new Error("Invite not found or already processed.");
+    }
+    
+    const inviteData = inviteDoc.data() as Invite;
+    const { founderId, companyId } = inviteData;
+
+    const founderRef = doc(db, 'users', founderId);
+    const founderDoc = await getDoc(founderRef);
+    if (!founderDoc.exists()) throw new Error("Founder account not found.");
+    
+    const founderData = founderDoc.data() as UserProfile;
+    const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
+    if (!companyToAccept) throw new Error("Company not found in founder's profile.");
+
+    // This is the data that will be added to the CA's profile.
+    const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
+
+    const caRef = doc(db, 'users', user.uid);
+    
+    // Atomically update the CA's profile and delete the invite
+    await runTransaction(db, async (transaction) => {
+        const caDoc = await transaction.get(caRef);
+        if (!caDoc.exists()) throw new Error("CA profile not found.");
+        const caProfile = caDoc.data() as UserProfile;
+
+        transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
+        transaction.delete(inviteRef); // Delete the invite after accepting
+    });
+
+    // Notify the founder that their invite was accepted
+    await addNotification({
+      title: 'Invitation Accepted!',
+      description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
+      icon: 'CheckCircle',
+      link: '/dashboard/ca-connect'
+    }, founderId);
+
+    // Refresh the CA's local profile data
+    await fetchUserProfile(user);
   };
 
   const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite };
