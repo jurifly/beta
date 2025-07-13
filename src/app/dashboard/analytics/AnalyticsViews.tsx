@@ -506,7 +506,9 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
           const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
           
           const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-          if (company.legalRegion === 'India') requiredFields.push('cin');
+          if (company.legalRegion === 'India' && ['Private Limited Company', 'One Person Company'].includes(company.type)) {
+            requiredFields.push('cin');
+          }
           const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
           const profileCompleteness = (filledFields / requiredFields.length) * 100;
 
@@ -523,10 +525,10 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             })
             .map(f => ({ title: f.title, dueDate: f.date }));
 
-          return { ...company, health: { score: healthScore, risk: riskLevel, deadlines: upcomingDeadlines } };
+          return { ...company, health: { score: healthScore, risk: riskLevel, deadlines: upcomingDeadlines, profileCompleteness: profileCompleteness } };
         } catch (error) {
           console.error(`Failed to calculate health for ${company.name}`, error);
-          return { ...company, health: { score: 0, risk: 'High' as const, deadlines: [] } };
+          return { ...company, health: { score: 0, risk: 'High' as const, deadlines: [], profileCompleteness: 0 } };
         }
       });
       
@@ -552,11 +554,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
         if (clientCount === 0 || clientHealthData.length === 0) return { avgProfileCompleteness: 0, riskDistribution: [], highRiskClientCount: 0 };
         
         const totalCompletenessScore = clientHealthData.reduce((acc, company) => {
-            const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
-            if (company.legalRegion === 'India') requiredFields.push('cin');
-            const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
-            const completeness = (filledFields / requiredFields.length) * 100;
-            return acc + completeness;
+            return acc + (company.health?.profileCompleteness || 0);
         }, 0);
 
         const riskCounts = clientHealthData.reduce((acc, company) => {
