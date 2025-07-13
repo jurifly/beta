@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import {
@@ -20,14 +19,14 @@ interface FeatureLockedModalProps {
 
 const wittyMessages: Record<string, { title: string; lines: string[]; eta: string }> = {
     "Team Management": {
-        title: "🧑‍💼 Team Management Feature Missing",
-        lines: ["Our PM said: “We need a proper team management tool.”", "The dev nodded, took a deep breath… and went on vacation.", "He’s been “working remotely” ever since. 🌴"],
-        eta: "Unlocks on our Pro & Enterprise plans."
+        title: "🧑‍💼 Team Management is... Spiritually Out of Office",
+        lines: ["The team tool was supposed to bring order.", "Instead, it brought a group chat full of emojis and confusion."],
+        eta: "ETA: After one townhall and a shared mental breakdown. 🫠"
     },
-     "Advisor Hub": {
-        title: "🧠 Advisor Hub Feature Missing",
-        lines: ["We onboarded advisors.", "They said, “You guys should build a proper hub.”", "We agreed.", "They left.", "So did our motivation. 😢"],
-        eta: "Unlocks on our Pro plans. For now, there's always email."
+    "Connections": {
+        title: "🔌 Connection is… on Airplane Mode",
+        lines: ["We built it to connect people.", "Turns out no one wants to talk unless there’s equity involved."],
+        eta: "ETA: After coffee, convincing, and emotional bribery. ☕💸"
     },
     "Community": {
         title: "Community Feature Missing",
@@ -38,9 +37,9 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         eta: "We’re filing a missing person report. 🕵️‍♂️"
     },
     "Report Center": {
-        title: "📊 Report Centre Feature Missing",
-        lines: ["We asked for advanced reporting.", "Dev said, “Give me 2 days.”", "It’s been 3 weeks.", "The only report we have is a message: “Working on it 🙏”"],
-        eta: "This feature is coming soon in a future beta update."
+        title: "📊 Report Centre is... in Witness Protection",
+        lines: ["It was last seen near a dashboard wireframe.", "No one’s heard from it since the analytics guy rage-quit."],
+        eta: "When the numbers agree to be seen. 📉"
     },
     "Clause Library": {
         title: "Clause Library is Checked Out",
@@ -48,9 +47,9 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         eta: "This is a premium feature available on our Pro plans."
     },
     "Reconciliation": {
-        title: "💸 Reconciliation Feature Missing",
-        lines: ["Our intern said: “I’ll build the reconciliation engine.”", "That was 41 days ago.", "He now flinches at the word “invoice.” We’re concerned. 😬"],
-        eta: "Unlocks on our Pro plans."
+        title: "💸 Reconciliation is... Having a Meltdown",
+        lines: ["It tried to match transactions and matched trauma instead.", "Now it just stares at the ledger whispering “why?”"],
+        eta: "Pending therapy and a bug fix. 🧾🧘‍♂️"
     },
     "Workflows": {
         title: "Workflow Engine is... Napping",
