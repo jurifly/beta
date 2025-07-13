@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -149,7 +150,7 @@ const AdvisorActionsCard = ({ onAddRequest, onInviteClient }: { onAddRequest: ()
 };
 
 
-export default function CaConnectPage() {
+export default function ConnectionsPage() {
   const { userProfile, updateUserProfile } = useAuth();
   const { toast } = useToast();
   
@@ -231,7 +232,7 @@ export default function CaConnectPage() {
         <InviteClientModal isOpen={inviteClientModalOpen} onOpenChange={setInviteClientModalOpen} />
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
-                <h1 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Advisor Hub</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Connections</h1>
                 <p className="text-muted-foreground">{isFounder ? "Manage your connection with your advisor and handle document requests." : "Manage document requests for your active client."}</p>
             </div>
 

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -79,7 +80,7 @@ const ArticleSkeleton = () => (
     </Card>
 );
 
-export default function LegalNewsPage() {
+export default function LatestNewsPage() {
     const { userProfile } = useAuth();
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +113,7 @@ export default function LegalNewsPage() {
     return (
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
-                <h1 className="text-3xl font-bold tracking-tight text-primary font-headline">Legal & Compliance News</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-primary font-headline">Latest News</h1>
                 <p className="text-muted-foreground">The latest headlines and updates relevant to you, powered by NewsAPI.</p>
             </div>
 

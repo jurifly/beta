@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from "next/link";
@@ -50,6 +51,7 @@ import {
   CheckCircle,
   Calculator,
   BookHeart,
+  Rss,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -115,7 +117,7 @@ const languages: { code: Language; name: string }[] = [
 export const translations: Translations = {
     // Nav Items
     dashboard: { en: "Dashboard", hi: "डैशबोर्ड", es: "Panel", zh: "仪表板", fr: "Tableau de bord", de: "Dashboard", pt: "Painel", ja: "ダッシュボード" },
-    advisorHub: { en: "Advisor Hub", hi: "सलाहकार हब", es: "Centro de Asesores", zh: "顾问中心", fr: "Pôle Conseiller", de: "Berater-Hub", pt: "Hub de Consultores", ja: "アドバイザーハブ" },
+    connections: { en: "Connections", hi: "कनेक्शन", es: "Conexiones", zh: "连接", fr: "Connexions", de: "Verbindungen", pt: "Conexões", ja: "接続" },
     aiToolkit: { en: "AI Toolkit", hi: "AI टूलकिट", es: "Herramientas de IA", zh: "AI工具箱", fr: "Outils d'IA", de: "KI-Werkzeugkasten", pt: "Kit de Ferramentas de IA", ja: "AIツールキット" },
     launchPad: { en: "Launch Pad", hi: "लॉन्च पैड", es: "Plataforma de Lanzamiento", zh: "启动台", fr: "Rampe de Lancement", de: "Startrampe", pt: "Plataforma de Lançamento", ja: "ローンチパッド" },
     capTable: { en: "Cap Table", hi: "कैप टेबल", es: "Tabla de Capitalización", zh: "股权结构表", fr: "Table de Capitalisation", de: "Kapitalisierungstabelle", pt: "Tabela de Capitalização", ja: "キャップテーブル" },
@@ -139,8 +141,9 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算", ja: "税金と計算" },
-    learn: { en: "Learn", hi: "सीखें", es: "Aprender", zh: "学习", fr: "Apprendre", de: "Lernen", pt: "Aprender", ja: "学ぶ" },
+    taxesAndCalc: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算", ja: "税金と計算" },
+    learnHub: { en: "Learn Hub", hi: "लर्न हब", es: "Centro de Aprendizaje", zh: "学习中心", fr: "Pôle d'Apprentissage", de: "Lern-Hub", pt: "Hub de Aprendizagem", ja: "学習ハブ" },
+    latestNews: { en: "Latest News", hi: "नवीनतम समाचार", es: "Últimas Noticias", zh: "最新消息", fr: "Dernières Nouvelles", de: "Aktuelle Nachrichten", pt: "Últimas Notícias", ja: "最新ニュース" },
 
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
@@ -234,7 +237,7 @@ type NavItemConfig = {
 
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
-  caConnect: { href: "/dashboard/ca-connect", translationKey: "advisorHub", icon: Users },
+  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
@@ -252,7 +255,8 @@ const navItemConfig: NavItemConfig = {
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
-  learn: { href: "/dashboard/learn", translationKey: "learn", icon: BookHeart },
+  learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
+  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss },
 } as const;
 
 
@@ -267,14 +271,15 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
-  { ...navItemConfig.learn },
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
-  { ...navItemConfig.caConnect },
+  { ...navItemConfig.connections },
   { ...navItemConfig.docVault },
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
+  { ...navItemConfig.latestNews },
 ];
 
 const caNavItems: ThemedNavItem[] = [
@@ -282,16 +287,16 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clients, label_override_key: "clientManagement", icon: Briefcase },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
-  { ...navItemConfig.invitations },
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
-  { ...navItemConfig.learn },
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.reportCenter },
-  { ...navItemConfig.caConnect, locked: true },
+  { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.docVault },
   { ...navItemConfig.clauseLibrary, locked: false },
+  { ...navItemConfig.latestNews },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
@@ -299,10 +304,11 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
-  navItemConfig.learn,
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.invitations },
-  { ...navItemConfig.caConnect, locked: true },
+  { ...navItemConfig.connections, locked: true },
   navItemConfig.portfolioAnalytics,
+  { ...navItemConfig.latestNews },
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
@@ -310,8 +316,9 @@ const enterpriseNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.portfolioAnalytics,
-  navItemConfig.learn,
+  { ...navItemConfig.learnHub },
   navItemConfig.docVault,
+  { ...navItemConfig.latestNews },
 ];
 
 const getSidebarNavItems = (role: UserRole) => {
@@ -365,6 +372,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
     "/dashboard/ca-connect",
     "/dashboard/invitations",
     "/dashboard/clause-library",
+    "/dashboard/news",
   ];
 
   // Filter and sort the role's items based on priority

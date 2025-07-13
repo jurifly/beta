@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { getAssistantResponse as getAssistantResponseFlow, type AssistantInput, type AssistantOutput } from '@/ai/flows/assistant-flow';
@@ -7,7 +8,6 @@ import { validateCompliance, type ComplianceValidatorInput, type ComplianceValid
 import { analyzeDocument, type DocumentIntelligenceInput, type DocumentIntelligenceOutput } from '@/ai/flows/document-intelligence-flow';
 import { generateDocument, type DocumentGeneratorInput, type DocumentGeneratorOutput } from '@/ai/flows/document-generator-flow';
 import { generateWiki, type WikiGeneratorInput, type WikiGeneratorOutput } from '@/ai/flows/wiki-generator-flow';
-import { watchRegulations, type WatcherInput, type WatcherOutput } from '@/ai/flows/regulation-watcher-flow';
 import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
 import { performLegalResearch, type LegalResearchInput, type LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 import { generateFinancialForecast, type FinancialForecasterInput, type FinancialForecasterOutput } from '@/ai/flows/financial-forecaster-flow';
@@ -81,23 +81,6 @@ export async function generateWikiAction(input: WikiGeneratorInput): Promise<Wik
   } catch (e: any) {
     console.error('AI Flow Error:', e);
     throw new Error(e.message || 'There was an error generating the wiki page.');
-  }
-}
-
-
-// --- Regulation Watcher Actions ---
-type WatcherFormState = { data: WatcherOutput | null; error: string | null; };
-export async function getRegulatoryUpdatesAction(previousState: WatcherFormState, formData: FormData): Promise<WatcherFormState> {
-  const portal = formData.get('portal') as string;
-  const frequency = formData.get('frequency') as string;
-  const legalRegion = formData.get('legalRegion') as string;
-  if (!portal || !frequency || !legalRegion) return { data: null, error: 'Portal, frequency, and legal region are required.' };
-  try {
-    const result = await watchRegulations({ portal, frequency, legalRegion });
-    return { data: result, error: null };
-  } catch (e: any) {
-    console.error('AI Flow Error:', e);
-    return { data: null, error: e.message || 'An unexpected error occurred.' };
   }
 }
 
