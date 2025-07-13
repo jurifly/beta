@@ -148,10 +148,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (userDoc.exists()) {
       let profile = userDoc.data() as UserProfile;
       const updatesToApply: Partial<UserProfile> = {};
-
-      // Ensure companies is an array
+      
+      // Ensure companies is an array IN MEMORY, without triggering a DB write
       if (!Array.isArray(profile.companies)) {
-        updatesToApply.companies = [];
         profile.companies = [];
       }
 
@@ -165,7 +164,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile.dailyCreditsUsed = 0;
       }
       if (!profile.lastCreditReset) {
-        // Set to epoch to force a reset on the next check
         const epoch = new Date(0).toISOString();
         updatesToApply.lastCreditReset = epoch;
         profile.lastCreditReset = epoch;
@@ -184,17 +182,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile.dailyCreditsUsed = 0;
         profile.lastCreditReset = today.toISOString();
       }
-      // --- End of Reset Logic ---
-
 
       if (!profile.legalRegion) {
         updatesToApply.legalRegion = 'India';
         profile.legalRegion = 'India';
       }
 
-      // If there are any updates, write them to Firestore
+      // If there are any backfill updates, write them to Firestore
       if (Object.keys(updatesToApply).length > 0) {
-        updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to update user profile with new fields:", e));
+        updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to backfill user profile fields:", e));
       }
 
       setUserProfile(profile);
