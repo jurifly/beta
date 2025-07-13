@@ -275,7 +275,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.learnHub },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
-  { ...navItemConfig.connections },
+  { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.docVault },
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
@@ -569,19 +569,6 @@ function AppShell({ children }: { children: ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="shrink-0 md:hidden"
-                        >
-                            <Menu className="h-5 w-5" />
-                            <span className="sr-only">Toggle navigation menu</span>
-                        </Button>
-                    </SheetTrigger>
-                    <MobileSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
-                </Sheet>
                 <div className="w-full flex-1">
                     <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary font-headline md:hidden">
                         <Logo />
