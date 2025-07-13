@@ -30,8 +30,11 @@ export default function ClientsPage() {
   const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
 
-  useEffect(() => {
-    const calculateAllClientHealth = async (companies: Company[]) => {
+  const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
+      if (companies.length === 0) {
+        setIsLoadingHealth(false);
+        return;
+      }
       try {
         const healthPromises = companies.map(async (company) => {
           try {
@@ -88,15 +91,16 @@ export default function ClientsPage() {
       } finally {
         setIsLoadingHealth(false);
       }
-    };
+    }, []);
     
+  useEffect(() => {
     const companies = userProfile?.companies;
-    if (companies && companies.length > 0) {
+    if (companies) {
         calculateAllClientHealth(companies);
     } else {
         setIsLoadingHealth(false);
     }
-  }, [userProfile?.companies]);
+  }, [userProfile?.companies, calculateAllClientHealth]);
 
   const highRiskClientCount = useMemo(() => {
     return clientHealthData.filter(client => client.riskLevel === 'High').length;
@@ -121,7 +125,7 @@ export default function ClientsPage() {
 
   return (
     <>
-      <InviteClientModal isOpen={isInviteModalOpen} onOpenChange={setInviteClientModalOpen} />
+      <InviteClientModal isOpen={isInviteModalOpen} onOpenChange={setInviteModalOpen} />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
