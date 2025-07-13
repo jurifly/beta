@@ -30,7 +30,9 @@ import {
   Rss,
   Briefcase,
   Calculator,
-  ChevronRight
+  ChevronRight,
+  Scale,
+  FileText,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -532,10 +534,6 @@ function AppShell({ children }: { children: ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary font-headline md:hidden">
-                    <Logo />
-                    <span className="sr-only">Claari</span>
-                </Link>
                 <div className="w-full flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
