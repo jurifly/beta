@@ -94,6 +94,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -137,7 +138,7 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算" },
+    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算", ja: "税金と計算" },
 
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
@@ -267,7 +268,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect },
-  { ...navItemConfig.documents },
+  { ...navItemConfig.docVault },
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
@@ -286,7 +287,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
-  { ...navItemConfig.documents },
+  { ...navItemConfig.docVault },
   { ...navItemConfig.clauseLibrary, locked: false },
 ];
 
@@ -305,7 +306,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.portfolioAnalytics,
-  navItemConfig.documents,
+  navItemConfig.docVault,
 ];
 
 const getSidebarNavItems = (role: UserRole) => {
@@ -782,7 +783,9 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                 const isActive = (item.href === '/dashboard' && pathname === item.href) ||
                                  (item.href !== '/dashboard' && pathname.startsWith(item.href));
                 const isLocked = item.locked && !isPro && !isDevMode;
-                const label = translations[item.label_override_key || item.translationKey][lang];
+                const labelKey = item.label_override_key || item.translationKey;
+                const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
+
 
                 return (
                     <Link
