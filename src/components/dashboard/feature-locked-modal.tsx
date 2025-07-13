@@ -20,13 +20,13 @@ interface FeatureLockedModalProps {
 
 const wittyMessages: Record<string, { title: string; lines: string[]; eta: string }> = {
     "Team Management": {
-        title: "Team? What Team?",
-        lines: ["This feature is for managing your team.", "Right now, it's just you. And our AI. And the AI is on a coffee break."],
+        title: "🧑‍💼 Team Management Feature Missing",
+        lines: ["Our PM said: “We need a proper team management tool.”", "The dev nodded, took a deep breath… and went on vacation.", "He’s been “working remotely” ever since. 🌴"],
         eta: "Unlocks on our Pro & Enterprise plans."
     },
      "Advisor Hub": {
-        title: "Advisor Connection Offline",
-        lines: ["You wanted to connect with your advisor?", "We wanted to connect with our sleep cycle. Neither is happening."],
+        title: "🧠 Advisor Hub Feature Missing",
+        lines: ["We onboarded advisors.", "They said, “You guys should build a proper hub.”", "We agreed.", "They left.", "So did our motivation. 😢"],
         eta: "Unlocks on our Pro plans. For now, there's always email."
     },
     "Community": {
@@ -38,8 +38,8 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         eta: "We’re filing a missing person report. 🕵️‍♂️"
     },
     "Report Center": {
-        title: "Report Center Under Construction",
-        lines: ["Our AI is currently learning how to use a PDF generator.", "It's surprisingly difficult. For the AI, we mean. Not for you."],
+        title: "📊 Report Centre Feature Missing",
+        lines: ["We asked for advanced reporting.", "Dev said, “Give me 2 days.”", "It’s been 3 weeks.", "The only report we have is a message: “Working on it 🙏”"],
         eta: "This feature is coming soon in a future beta update."
     },
     "Clause Library": {
@@ -48,8 +48,8 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         eta: "This is a premium feature available on our Pro plans."
     },
     "Reconciliation": {
-        title: "AI Reconciliation is Reconciling Its Feelings",
-        lines: ["Automate the painful process of matching financial documents.", "Our AI is currently trying to reconcile its code with its purpose."],
+        title: "💸 Reconciliation Feature Missing",
+        lines: ["Our intern said: “I’ll build the reconciliation engine.”", "That was 41 days ago.", "He now flinches at the word “invoice.” We’re concerned. 😬"],
         eta: "Unlocks on our Pro plans."
     },
     "Workflows": {
