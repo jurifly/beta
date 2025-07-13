@@ -266,8 +266,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
   
-    // If CA is updating, target the founder's UID. Otherwise, use current user's UID.
-    const targetUserId = company.founderUid || user.uid;
+    const isUpdatingOwnProfile = userProfile.role === 'Founder' || !company.founderUid;
+    const targetUserId = isUpdatingOwnProfile ? user.uid : company.founderUid;
     
     if (!targetUserId) {
         console.error("Could not find owner of the company to update checklist.");
