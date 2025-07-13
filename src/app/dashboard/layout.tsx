@@ -141,7 +141,7 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "Impostos e Cálculo", ja: "税金と計算" },
+    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算" },
     learnHub: { en: "Learn Hub", hi: "लर्न हब", es: "Centro de Aprendizaje", zh: "学习中心", fr: "Pôle d'Apprentissage", de: "Lern-Hub", pt: "Hub de Aprendizagem", ja: "学習ハブ" },
     latestNews: { en: "Latest News", hi: "नवीनतम समाचार", es: "Últimas Noticias", zh: "最新消息", fr: "Dernières Nouvelles", de: "Aktuelle Nachrichten", pt: "Últimas Notícias", ja: "最新ニュース" },
 
@@ -238,7 +238,7 @@ type NavItemConfig = {
 
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
-  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, badge: "Beta" },
+  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, locked: true },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
