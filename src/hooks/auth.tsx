@@ -30,7 +30,7 @@ export interface AuthContextType {
   sendPasswordResetLink: (email: string) => Promise<void>;
   saveChatHistory: (chat: ChatMessage[]) => Promise<void>;
   getChatHistory: () => Promise<ChatMessage[][]>;
-  addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => Promise<void>;
+  addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>, targetUserId?: string) => Promise<void>;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   addFeedback: (category: string, message: string, sentiment?: 'positive' | 'negative') => Promise<void>;
@@ -152,26 +152,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Ensure companies is an array IN MEMORY, without triggering a DB write
       if (!Array.isArray(profile.companies)) {
         profile.companies = [];
+        updatesToApply.companies = [];
       }
 
       // --- Backfill missing credit fields for older user profiles ---
       if (profile.dailyCreditLimit === undefined) {
         updatesToApply.dailyCreditLimit = 5; // Default daily credits
-        profile.dailyCreditLimit = 5;
       }
       if (profile.dailyCreditsUsed === undefined) {
         updatesToApply.dailyCreditsUsed = 0;
-        profile.dailyCreditsUsed = 0;
       }
       if (!profile.lastCreditReset) {
-        const epoch = new Date(0).toISOString();
-        updatesToApply.lastCreditReset = epoch;
-        profile.lastCreditReset = epoch;
+        updatesToApply.lastCreditReset = new Date(0).toISOString();
       }
 
       // --- Credit Reset Logic on Load ---
       const today = new Date();
-      const lastResetDate = new Date(profile.lastCreditReset!);
+      const lastResetDate = new Date(updatesToApply.lastCreditReset || profile.lastCreditReset!);
       
       const lastResetDay = Date.UTC(lastResetDate.getUTCFullYear(), lastResetDate.getUTCMonth(), lastResetDate.getUTCDate());
       const todayDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
@@ -179,13 +176,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (todayDay > lastResetDay) {
         updatesToApply.dailyCreditsUsed = 0;
         updatesToApply.lastCreditReset = today.toISOString();
-        profile.dailyCreditsUsed = 0;
-        profile.lastCreditReset = today.toISOString();
       }
 
       if (!profile.legalRegion) {
         updatesToApply.legalRegion = 'India';
-        profile.legalRegion = 'India';
       }
 
       // If there are any backfill updates, write them to Firestore
@@ -195,7 +189,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to backfill user profile fields:", e));
       }
 
-      setUserProfile(profile);
+      setUserProfile({ ...profile, ...updatesToApply});
     }
   }, []);
 
@@ -262,7 +256,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     
-    // Initialize company health if adding a new company
     if (updates.companies && userProfile) {
         const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
@@ -285,14 +278,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updates: { itemId: string; completed: boolean }[]
   ) => {
     if (!user || !userProfile || updates.length === 0) return;
-
+  
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
-
-    // Determine the owner of the checklist. 
-    // If it's an invited client, `founderUid` will exist.
-    // If it's a CA's self-added client, `founderUid` will be null, and we write to the CA's own profile.
+  
     const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') ? (company.founderUid || user.uid) : user.uid;
+    
+    if (!targetUserId) {
+        console.error("Could not find owner of the company to update checklist.");
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: "Could not identify the company owner.",
+        });
+        return;
+    }
     
     const userToUpdateRef = doc(db, "users", targetUserId);
     
@@ -352,7 +352,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             displayName: name,
         };
         const newProfile = await createNewUserProfile(userData, legalRegion, role, refId);
-        // Explicitly set profile to avoid race condition on signup
         setUserProfile(newProfile);
       }
   };
@@ -556,6 +555,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const inviteDocRef = await addDoc(invitesRef, newInvite);
         const userUpdates: Partial<UserProfile> = {
             invites: [...(userProfile.invites || []), { ...newInvite, id: inviteDocRef.id }],
+            // Set the invited email on the founder's profile.
+            invitedCaEmail: caEmail,
         };
         await updateUserProfile(userUpdates);
         return { success: true, message: 'Invitation sent successfully!' };
@@ -571,45 +572,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const inviteRef = doc(db, 'invites', inviteId);
-    const inviteDoc = await getDoc(inviteRef);
-
-    if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
-      throw new Error("Invite not found or already processed.");
-    }
-    
-    const inviteData = inviteDoc.data() as Invite;
-    const { founderId, companyId } = inviteData;
-
-    const founderRef = doc(db, 'users', founderId);
-    const founderDoc = await getDoc(founderRef);
-    if (!founderDoc.exists()) throw new Error("Founder account not found.");
-    
-    const founderData = founderDoc.data() as UserProfile;
-    const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
-    if (!companyToAccept) throw new Error("Company not found in founder's profile.");
-
-    // This is the data that will be added to the CA's profile.
-    const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
-
     const caRef = doc(db, 'users', user.uid);
-    
-    // Atomically update the CA's profile and delete the invite
+
     await runTransaction(db, async (transaction) => {
+        const inviteDoc = await transaction.get(inviteRef);
+        if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
+          throw new Error("Invite not found or already processed.");
+        }
+        
+        const inviteData = inviteDoc.data() as Invite;
+        const { founderId, companyId } = inviteData;
+    
+        const founderRef = doc(db, 'users', founderId);
+        const founderDoc = await transaction.get(founderRef);
+        if (!founderDoc.exists()) throw new Error("Founder account not found.");
+        
+        const founderData = founderDoc.data() as UserProfile;
+        const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
+        if (!companyToAccept) throw new Error("Company not found in founder's profile.");
+    
+        const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
+    
         const caDoc = await transaction.get(caRef);
         if (!caDoc.exists()) throw new Error("CA profile not found.");
         const caProfile = caDoc.data() as UserProfile;
 
+        // 1. Update CA's profile with the new company
         transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
-        transaction.delete(inviteRef); // Delete the invite after accepting
+        // 2. Mark the invitation as accepted
+        transaction.update(inviteRef, { status: 'accepted' });
     });
 
-    // Notify the founder that their invite was accepted
+    // Notify the founder AFTER the transaction is successful
+    const inviteData = (await getDoc(inviteRef)).data() as Invite;
     await addNotification({
       title: 'Invitation Accepted!',
       description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
       icon: 'CheckCircle',
       link: '/dashboard/ca-connect'
-    }, founderId);
+    }, inviteData.founderId);
 
     // Refresh the CA's local profile data
     await fetchUserProfile(user);
