@@ -142,7 +142,6 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
     const companyData: Company = {
         id: companyToEdit?.id || Date.now().toString(),
         ...data,
-        health: companyToEdit?.health || { score: 0, risk: 'Low', deadlines: [] },
     };
 
     if (isEditMode && companyToEdit) {

@@ -140,7 +140,8 @@ export default function CaConnectPage() {
   
   const [addRequestModalOpen, setAddRequestModalOpen] = useState(false);
   const [provideDocModalOpen, setProvideDocModalOpen] = useState(false);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteAdvisorModalOpen, setInviteAdvisorModalOpen] = useState(false);
+  const [inviteClientModalOpen, setInviteClientModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DocumentRequest | null>(null);
 
   const activeCompany = useMemo(() => {
@@ -211,7 +212,8 @@ export default function CaConnectPage() {
                 docRequest={selectedRequest}
             />
         )}
-        <InviteAdvisorModal isOpen={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+        <InviteAdvisorModal isOpen={inviteAdvisorModalOpen} onOpenChange={setInviteAdvisorModalOpen} />
+        <InviteClientModal isOpen={inviteClientModalOpen} onOpenChange={setInviteClientModalOpen} />
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
                 <h1 className="text-2xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Advisor Hub</h1>
@@ -219,7 +221,7 @@ export default function CaConnectPage() {
             </div>
 
             {isFounder ? (
-              <FounderAdvisorHub onInvite={() => setInviteModalOpen(true)} />
+              <FounderAdvisorHub onInvite={() => setInviteAdvisorModalOpen(true)} />
             ) : (
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -227,7 +229,10 @@ export default function CaConnectPage() {
                             <CardTitle>Client Actions</CardTitle>
                             <CardDescription>Manage interactions for {activeCompany?.name || 'your client'}.</CardDescription>
                         </div>
-                        <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>
+                        <div className='flex gap-2'>
+                           <Button variant="outline" onClick={() => setInviteClientModalOpen(true)}><UserPlus className="mr-2 h-4 w-4"/>Invite a Client</Button>
+                           <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>
+                        </div>
                     </CardHeader>
                 </Card>
             )}
