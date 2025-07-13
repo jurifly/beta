@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,22 +29,12 @@ export default function ClientsPage() {
   const router = useRouter();
   const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
+  const [healthCalculated, setHealthCalculated] = useState(false);
 
-  useEffect(() => {
-    const calculateAllClientHealth = async () => {
-      if (!userProfile?.companies) {
-        setIsLoadingHealth(false);
-        return;
-      }
-      // Fix for perpetual loading if no clients exist
-      if (userProfile.companies.length === 0) {
-        setIsLoadingHealth(false);
-        return;
-      }
-
+  const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
       setIsLoadingHealth(true);
       try {
-        const healthPromises = userProfile.companies.map(async (company) => {
+        const healthPromises = companies.map(async (company) => {
           try {
             const filingResponse = await generateFilings({
               companyType: company.type,
@@ -94,8 +84,7 @@ export default function ClientsPage() {
         const results = await Promise.all(healthPromises);
         setClientHealthData(results);
         
-        // Save health data to the user profile for dashboard use
-        const updatedCompanies = userProfile.companies.map(c => {
+        const updatedCompanies = companies.map(c => {
             const foundHealth = results.find(h => h.id === c.id);
             return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
         });
@@ -105,11 +94,18 @@ export default function ClientsPage() {
         console.error("An error occurred while calculating client health:", error);
       } finally {
         setIsLoadingHealth(false);
+        setHealthCalculated(true);
       }
-    };
-
-    calculateAllClientHealth();
-  }, [userProfile?.companies, updateUserProfile]);
+    }, [updateUserProfile]);
+    
+    useEffect(() => {
+        const companies = userProfile?.companies;
+        if (companies && companies.length > 0 && !healthCalculated) {
+            calculateAllClientHealth(companies);
+        } else if (!companies || companies.length === 0) {
+            setIsLoadingHealth(false);
+        }
+    }, [userProfile?.companies, healthCalculated, calculateAllClientHealth]);
 
   const highRiskClientCount = useMemo(() => {
     return clientHealthData.filter(client => client.riskLevel === 'High').length;
