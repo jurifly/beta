@@ -663,29 +663,84 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
     const router = useRouter();
     const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
     const [insightsLoading, setInsightsLoading] = useState(true);
+    const [clientHealthData, setClientHealthData] = useState<any[]>([]);
+    const [isLoadingHealth, setIsLoadingHealth] = useState(true);
 
     const clientCount = userProfile.companies.length;
     
-    const { highRiskClientCount, portfolioDeadlines } = useMemo(() => {
-        let highRisk = 0;
-        let deadlines: { title: string, dueDate: string, clientName: string }[] = [];
-        
-        userProfile.companies.forEach(company => {
-            if (company.health) {
-                if (company.health.risk === 'High') highRisk++;
-                if (company.health.deadlines) {
-                    deadlines.push(...company.health.deadlines.map(d => ({ ...d, clientName: company.name })));
-                }
+    useEffect(() => {
+        const calculateHealth = async () => {
+            if (userProfile.companies.length === 0) {
+                setIsLoadingHealth(false);
+                return;
             }
-        });
-        
-        deadlines.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+            setIsLoadingHealth(true);
+            try {
+                const healthPromises = userProfile.companies.map(async (company) => {
+                    const filingResponse = await generateFilings({
+                        companyType: company.type,
+                        incorporationDate: company.incorporationDate,
+                        currentDate: format(new Date(), 'yyyy-MM-dd'),
+                        legalRegion: company.legalRegion,
+                        gstin: company.gstin,
+                    });
+                    
+                    const savedStatuses = company.checklistStatus || {};
+                    const overdueTasks = filingResponse.filings.filter(filing => {
+                        const dueDate = new Date(filing.date + 'T00:00:00');
+                        const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+                        const isCompleted = savedStatuses[uniqueId] ?? false;
+                        return dueDate < startOfToday() && !isCompleted;
+                    }).length;
+                    
+                    const filingPerf = filingResponse.filings.length > 0 ? ((filingResponse.filings.length - overdueTasks) / filingResponse.filings.length) * 100 : 100;
+                    
+                    const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
+                    if (company.legalRegion === 'India') requiredFields.push('cin');
+                    const filledFields = requiredFields.filter(field => company[field] && (company[field] as string).trim() !== '').length;
+                    const profileCompleteness = (filledFields / requiredFields.length) * 100;
+
+                    const healthScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
+
+                    let riskLevel: 'Low' | 'Medium' | 'High' = 'Low';
+                    if (healthScore < 60) riskLevel = 'High';
+                    else if (healthScore < 85) riskLevel = 'Medium';
+
+                    const upcomingDeadlines = filingResponse.filings
+                        .filter(f => {
+                            const dueDate = new Date(f.date + 'T00:00:00');
+                            return dueDate >= startOfToday() && dueDate <= addDays(startOfToday(), 30);
+                        })
+                        .map(f => ({ title: f.title, dueDate: f.date }));
+                    
+                    return { ...company, healthScore, riskLevel, upcomingDeadlines };
+                });
+
+                const results = await Promise.all(healthPromises);
+                setClientHealthData(results);
+
+            } catch (error) {
+                console.error("Error calculating client health data", error);
+            } finally {
+                setIsLoadingHealth(false);
+            }
+        };
+
+        calculateHealth();
+    }, [userProfile.companies]);
+
+
+    const { highRiskClientCount, portfolioDeadlines } = useMemo(() => {
+        const highRisk = clientHealthData.filter(c => c.riskLevel === 'High').length;
+        const deadlines = clientHealthData
+            .flatMap(c => c.upcomingDeadlines.map((d: any) => ({ ...d, clientName: c.name })))
+            .sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
         return {
             highRiskClientCount: highRisk,
             portfolioDeadlines: deadlines.slice(0, 3)
         };
-    }, [userProfile.companies]);
+    }, [clientHealthData]);
 
     const activityLog = useMemo(() => {
         const allLogs: (ActivityLogItem & { clientName: string })[] = [];
@@ -699,6 +754,7 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
 
     useEffect(() => {
         const fetchInsights = async () => {
+            if (isLoadingHealth) return;
             setInsightsLoading(true);
             try {
                 const response = await getProactiveInsights({
@@ -719,7 +775,7 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
         };
 
         fetchInsights();
-    }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast]);
+    }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast, isLoadingHealth]);
 
    if (clientCount === 0) {
      return (
@@ -744,9 +800,9 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
    return (
     <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Link href="/dashboard/clients" className="block"><StatCard title={translations.totalClients[lang]} value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed`} icon={<Users className="h-4 w-4" />} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title={translations.clientsAtRisk[lang]} value={`${highRiskClientCount}`} subtext={translations.clientsWithLowHealth[lang]} icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} /></Link>
-            <Link href="/dashboard/analytics" className="block"><StatCard title={translations.portfolioAnalytics[lang]} value={translations.view[lang]} subtext={translations.deepDive[lang]} icon={<LineChart className="h-4 w-4" />} /></Link>
+            <Link href="/dashboard/clients" className="block"><StatCard title={translations.totalClients[lang]} value={`${clientCount}`} subtext={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} managed`} icon={<Users className="h-4 w-4" />} isLoading={isLoadingHealth} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title={translations.clientsAtRisk[lang]} value={`${highRiskClientCount}`} subtext={translations.clientsWithLowHealth[lang]} icon={<FileWarning className="h-4 w-4" />} colorClass={highRiskClientCount > 0 ? "text-red-600" : ""} isLoading={isLoadingHealth} /></Link>
+            <Link href="/dashboard/analytics" className="block"><StatCard title={translations.portfolioAnalytics[lang]} value={translations.view[lang]} subtext={translations.deepDive[lang]} icon={<LineChart className="h-4 w-4" />} isLoading={isLoadingHealth} /></Link>
         </div>
         
         <Card className="interactive-lift">
@@ -777,7 +833,13 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
                     <CardDescription>{translations.upcomingKeyDates[lang]}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {portfolioDeadlines.length > 0 ? (
+                    {isLoadingHealth ? (
+                        <div className="space-y-4">
+                            <Skeleton className="h-12 w-full"/>
+                            <Skeleton className="h-12 w-full"/>
+                            <Skeleton className="h-12 w-full"/>
+                        </div>
+                    ) : portfolioDeadlines.length > 0 ? (
                         <div className="space-y-4">
                             {portfolioDeadlines.map((item, index) => (
                                 <div key={index} className="flex items-center gap-4">

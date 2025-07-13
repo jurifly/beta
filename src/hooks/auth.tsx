@@ -258,7 +258,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (updates.companies && userProfile) {
         const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
-            if (!oldCompanyIds.has(company.id)) {
+            if (!oldCompanyIds.has(company.id) && !company.health) { // Only add if new AND health is missing
                 company.health = { score: 0, risk: 'Low', deadlines: [] };
             }
         });
@@ -281,8 +281,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
   
-    // If CA is updating, founderUid should exist for invited clients.
-    // If CA added client manually, founderUid will be undefined.
     const targetUserId = company.founderUid || user.uid;
     
     if (!targetUserId) {
@@ -579,12 +577,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   
     const inviteRef = doc(db, 'invites', inviteId);
-    const caRef = doc(db, 'users', user.uid);
   
     await runTransaction(db, async (transaction) => {
       const inviteDoc = await transaction.get(inviteRef);
       if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
-        throw new Error("Invite not found or already processed.");
+        throw new Error("Invite not found or has been processed.");
       }
       
       const inviteData = inviteDoc.data() as Invite;
@@ -601,6 +598,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // This is the key: we add founderUid to the company object for the CA
       const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
   
+      const caRef = doc(db, 'users', user.uid);
       const caDoc = await transaction.get(caRef);
       if (!caDoc.exists()) throw new Error("CA profile not found.");
       const caProfile = caDoc.data() as UserProfile;
@@ -614,9 +612,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       transaction.update(founderRef, { companies: updatedFounderCompanies });
       
-       // 3. Mark the invite as accepted
+      // 3. Update the status of the invite in the top-level collection
       transaction.update(inviteRef, { status: 'accepted' });
 
+    }).catch(error => {
+      console.error("Transaction failed: ", error);
+      throw error;
     });
   
     await fetchUserProfile(user);
