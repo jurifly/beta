@@ -32,6 +32,10 @@ export default function ClientsPage() {
   const [healthCalculated, setHealthCalculated] = useState(false);
 
   const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
+      if (companies.length === 0) {
+        setIsLoadingHealth(false);
+        return;
+      }
       setIsLoadingHealth(true);
       try {
         const healthPromises = companies.map(async (company) => {
@@ -84,28 +88,29 @@ export default function ClientsPage() {
         const results = await Promise.all(healthPromises);
         setClientHealthData(results);
         
-        const updatedCompanies = companies.map(c => {
-            const foundHealth = results.find(h => h.id === c.id);
-            return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
-        });
-        await updateUserProfile({ companies: updatedCompanies });
-
+        if (userProfile) {
+            const updatedCompanies = userProfile.companies.map(c => {
+                const foundHealth = results.find(h => h.id === c.id);
+                return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
+            });
+            await updateUserProfile({ companies: updatedCompanies });
+        }
       } catch (error) {
         console.error("An error occurred while calculating client health:", error);
       } finally {
         setIsLoadingHealth(false);
         setHealthCalculated(true);
       }
-    }, [updateUserProfile]);
+    }, [updateUserProfile, userProfile]);
     
     useEffect(() => {
         const companies = userProfile?.companies;
-        if (companies && companies.length > 0 && !healthCalculated) {
+        if (companies && companies.length > 0) {
             calculateAllClientHealth(companies);
-        } else if (!companies || companies.length === 0) {
+        } else {
             setIsLoadingHealth(false);
         }
-    }, [userProfile?.companies, healthCalculated, calculateAllClientHealth]);
+    }, [userProfile?.companies, calculateAllClientHealth]);
 
   const highRiskClientCount = useMemo(() => {
     return clientHealthData.filter(client => client.riskLevel === 'High').length;

@@ -259,13 +259,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
+    
+    // Initialize company health if adding a new company
+    if (updates.companies && userProfile) {
+        const oldCompanyIds = new Set(userProfile.companies.map(c => c.id));
+        updates.companies.forEach(company => {
+            if (!oldCompanyIds.has(company.id) && !company.health) {
+                company.health = { score: 0, risk: 'Low', deadlines: [] };
+            }
+        });
+    }
+
     await updateDoc(userDocRef, updates);
     setUserProfile(prev => {
         if (!prev) return null;
         const newProfile = { ...prev, ...updates };
         return newProfile;
     });
-  }, [user]);
+  }, [user, userProfile]);
   
   const updateCompanyChecklistStatus = useCallback(async (
     companyId: string,
@@ -279,7 +290,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Determine the owner of the checklist. If a CA is acting, it's the company's founder.
     // Otherwise, it's the current user (the founder).
     // **DEV MODE FIX**: If founderUid is missing in CA mode, fallback to the current user's UID.
-    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor')
+    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') 
       ? (company.founderUid || user.uid) 
       : user.uid;
       
