@@ -277,7 +277,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter },
-  { ...navItemConfig.caConnect, locked: false },
+  { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
   { ...navItemConfig.reconciliation, locked: true },
   { ...navItemConfig.documents },
@@ -289,7 +289,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
-  navItemConfig.caConnect,
+  { ...navItemConfig.caConnect, locked: true },
   navItemConfig.portfolioAnalytics,
 ];
 
