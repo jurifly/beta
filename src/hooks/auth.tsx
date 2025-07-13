@@ -149,11 +149,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let profile = userDoc.data() as UserProfile;
       const updatesToApply: Partial<UserProfile> = {};
       
-      // THIS IS THE FIX: Ensure `companies` is always an array in the application state.
-      // Do not write this back to the database, as that can cause data loss.
-      // This handles profiles created before `companies` was a default field.
       if (!Array.isArray(profile.companies)) {
         profile.companies = [];
+        updatesToApply.companies = [];
       }
 
       // --- Backfill missing credit fields for older user profiles ---
@@ -186,8 +184,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // If there are any backfill updates, write them to Firestore
       if (Object.keys(updatesToApply).length > 0) {
         console.log("Backfilling user profile fields:", updatesToApply);
-        // Do not await this, let it run in the background
-        updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to backfill user profile fields:", e));
+        await updateDoc(userDocRef, updatesToApply).catch(e => console.error("Failed to backfill user profile fields:", e));
       }
 
       setUserProfile({ ...profile, ...updatesToApply});
@@ -257,7 +254,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     
-    // THIS IS THE FIX: When adding a company, ensure it has a default health object.
     if (updates.companies && userProfile) {
         const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
@@ -284,9 +280,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
   
-    // THIS IS THE FIX: Determine the owner of the record.
-    // If it's an invited client, `founderUid` exists.
-    // If it's a CA's manually added client, founderUid is null/undefined, so the owner is the CA.
     const targetUserId = company.founderUid || user.uid;
     
     if (!targetUserId) {
@@ -299,46 +292,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     
-    // Use the determined owner's ID to build the document reference
     const userToUpdateRef = doc(db, "users", targetUserId);
     
     try {
+      const remoteUserDoc = await getDoc(userToUpdateRef);
+      if (!remoteUserDoc.exists()) throw new Error("Target user profile does not exist.");
+
+      const remoteProfile = remoteUserDoc.data() as UserProfile;
+      const remoteCompanies = remoteProfile.companies || [];
+      const remoteCompanyIndex = remoteCompanies.findIndex(c => c.id === companyId);
+      if (remoteCompanyIndex === -1) throw new Error("Company not found in target user's profile.");
+      
       const batch = writeBatch(db);
       updates.forEach(update => {
         const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
-        
-        // Construct the path to the specific checklist item status inside the companies array.
-        // This is tricky in Firestore SDK v9. A deep merge is required.
-        const pathPrefix = `companies`;
-        const companyIndex = (userProfile.companies || []).findIndex(c => c.id === companyId);
-        if (companyIndex === -1 && targetUserId !== user.uid) {
-            // This is a safety check for a complex scenario where the CA's local profile
-            // might not yet have the full founder's profile. We skip this update
-            // if we can't find the company index on the founder's profile when needed.
-            console.warn("Could not find company index on remote profile. Skipping checklist update for now.");
-            return;
-        }
-
-        const updatesForFirestore: any = {};
-        const fieldPath = `companies.${companyId}.checklistStatus.${sanitizedKey}`;
-        updatesForFirestore[fieldPath] = update.completed;
-
-        // Use a set with mergeFields for deep updates in an array if possible,
-        // otherwise, we fall back to a less ideal but working deep merge structure.
-        batch.set(userToUpdateRef, { 
-          companies: { 
-            [companyId]: { 
-              checklistStatus: { 
-                [sanitizedKey]: update.completed 
-              } 
-            } 
-          } 
-        }, { merge: true });
-
+        const fieldPath = `companies.${remoteCompanyIndex}.checklistStatus.${sanitizedKey}`;
+        batch.update(userToUpdateRef, { [fieldPath]: update.completed });
       });
+
       await batch.commit();
 
-      // Optimistically update local state if the current user was the target
       if (targetUserId === user.uid) {
         setUserProfile(prev => {
             if (!prev) return null;
@@ -362,7 +335,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({
             variant: "destructive",
             title: "Update Failed",
-            description: "Could not save checklist changes. Please try again.",
+            description: "Could not save checklist changes. " + e.message,
         });
     }
   }, [user, userProfile, toast]);
@@ -377,7 +350,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             displayName: name,
         };
         const newProfile = await createNewUserProfile(userData, legalRegion, role, refId);
-        // THIS IS THE FIX: Immediately set the local profile state after creation
         setUserProfile(newProfile);
       }
   };
@@ -574,7 +546,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, message: "An invitation has already been sent to this advisor." };
     }
 
-    const newInvite: Omit<Invite, 'id'> = {
+    const newInviteData: Omit<Invite, 'id'> = {
         caEmail,
         founderId: user.uid,
         founderName: userProfile.name,
@@ -585,10 +557,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     try {
-        const inviteDocRef = await addDoc(collection(db, 'invites'), newInvite);
+        const inviteDocRef = await addDoc(collection(db, 'invites'), newInviteData);
+        
         const userUpdates: Partial<UserProfile> = {
-            invites: [...(userProfile.invites || []), { ...newInvite, id: inviteDocRef.id }],
-            connectedCaUid: undefined, // Explicitly set connected UID here if needed for pending state
+            invites: [...(userProfile.invites || []), { ...newInviteData, id: inviteDocRef.id }],
         };
         await updateUserProfile(userUpdates);
         return { success: true, message: 'Invitation sent successfully!' };
@@ -623,8 +595,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
       if (!companyToAccept) throw new Error("Company not found in founder's profile.");
   
-      // Add the founder's UID to the company object for the CA
-      // This is the key for linking profiles.
       const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
   
       const caDoc = await transaction.get(caRef);
@@ -633,21 +603,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
       // 1. Update CA's profile with the new company
       transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
-      // 2. Update invitation status in invites collection
-      transaction.update(inviteRef, { status: 'accepted' });
-      // 3. Update the founder's company with the connected CA's UID
+      
+      // 2. Update the founder's company with the connected CA's UID
       const updatedFounderCompanies = founderData.companies.map(c => 
           c.id === companyId ? { ...c, connectedCaUid: user.uid } : c
       );
       transaction.update(founderRef, { companies: updatedFounderCompanies });
+      
+       // 3. Mark the invite as accepted
+      transaction.update(inviteRef, { status: 'accepted' });
 
     });
   
-    // Fetch fresh data for the CA after the transaction
     await fetchUserProfile(user);
     const inviteData = (await getDoc(inviteRef)).data() as Invite;
   
-    // Notify the founder AFTER the transaction is successful
     await addNotification({
       title: 'Invitation Accepted!',
       description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,

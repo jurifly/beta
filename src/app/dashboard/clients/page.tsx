@@ -57,7 +57,7 @@ export default function ClientsPage() {
               return dueDate < startOfToday() && !isCompleted;
             }).length;
             
-            const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
+            const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
             
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
             if (company.legalRegion === 'India') requiredFields.push('cin');
