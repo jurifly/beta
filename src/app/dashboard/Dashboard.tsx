@@ -926,6 +926,11 @@ function EnterpriseDashboard({ userProfile, translations, lang }: { userProfile:
 export default function Dashboard({ translations, lang }: { translations: Translations, lang: Language }) {
   const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const renderDashboardByRole = () => {
     if (!userProfile) {
@@ -958,6 +963,23 @@ export default function Dashboard({ translations, lang }: { translations: Transl
     }
   };
   
+  if (!isMounted) {
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <Skeleton className="h-32 w-full rounded-lg" />
+                <Skeleton className="h-32 w-full rounded-lg" />
+                <Skeleton className="h-32 w-full rounded-lg" />
+                <Skeleton className="h-32 w-full rounded-lg" />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Skeleton className="h-[450px] w-full rounded-lg" />
+                <Skeleton className="h-[450px] w-full rounded-lg" />
+            </div>
+        </div>
+    );
+  }
+
   const activeCompany = Array.isArray(userProfile?.companies)
     ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
     : null;
