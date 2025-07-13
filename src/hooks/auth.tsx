@@ -274,7 +274,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
 
-    const targetUserId = userProfile.role === 'CA' ? company.founderUid : user.uid;
+    // Determine the owner of the checklist. If a CA is acting, it's the company's founder.
+    // Otherwise, it's the current user (the founder).
+    // **DEV MODE FIX**: If founderUid is missing in CA mode, fallback to the current user's UID.
+    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor')
+      ? (company.founderUid || user.uid) 
+      : user.uid;
+      
     if (!targetUserId) {
         console.error("Could not find owner of the company to update checklist.");
         return;
@@ -283,49 +289,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userToUpdateRef = doc(db, "users", targetUserId);
     
     try {
-        await runTransaction(db, async (transaction) => {
-            const userToUpdateDoc = await transaction.get(userToUpdateRef);
-            if (!userToUpdateDoc.exists()) {
-                throw new Error("User profile to update does not exist.");
-            }
+      const batch = writeBatch(db);
+      updates.forEach(update => {
+        const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+        const fieldPath = `companies.${companyId}.checklistStatus.${sanitizedKey}`;
+        batch.set(userToUpdateRef, { 
+          companies: { 
+            [companyId]: { 
+              checklistStatus: { 
+                [sanitizedKey]: update.completed 
+              } 
+            } 
+          } 
+        }, { merge: true });
+      });
+      await batch.commit();
 
-            const profileToUpdate = userToUpdateDoc.data() as UserProfile;
-            const companyIndex = profileToUpdate.companies.findIndex(c => c.id === companyId);
-            if (companyIndex === -1) {
-                throw new Error("Company not found in profile.");
-            }
-
-            const newChecklistStatus = { ...profileToUpdate.companies[companyIndex].checklistStatus };
-            updates.forEach(update => {
-                const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
-                newChecklistStatus[sanitizedKey] = update.completed;
+      // Optimistically update local state if the current user was the target
+      if (targetUserId === user.uid) {
+        setUserProfile(prev => {
+            if (!prev) return null;
+            const newCompanies = prev.companies.map(c => {
+                if (c.id === companyId) {
+                    const newChecklistStatus = { ...c.checklistStatus };
+                     updates.forEach(update => {
+                        const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+                        newChecklistStatus[sanitizedKey] = update.completed;
+                    });
+                    return { ...c, checklistStatus: newChecklistStatus };
+                }
+                return c;
             });
-            
-            const fieldPath = `companies.${companyIndex}.checklistStatus`;
-            transaction.update(userToUpdateRef, { [fieldPath]: newChecklistStatus });
+            return { ...prev, companies: newCompanies };
         });
-
-        // Optimistically update local state if the current user was the target
-        if (targetUserId === user.uid) {
-             setUserProfile(prev => {
-                if (!prev) return null;
-                const newCompanies = prev.companies.map(c => {
-                    if (c.id === companyId) {
-                        const newChecklistStatus = { ...c.checklistStatus };
-                         updates.forEach(update => {
-                            const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
-                            newChecklistStatus[sanitizedKey] = update.completed;
-                        });
-                        return { ...c, checklistStatus: newChecklistStatus };
-                    }
-                    return c;
-                });
-                return { ...prev, companies: newCompanies };
-            });
-        }
+      }
 
     } catch (e: any) {
-        console.error("Checklist update transaction failed:", e);
+        console.error("Checklist update batch write failed:", e);
         toast({
             variant: "destructive",
             title: "Update Failed",
