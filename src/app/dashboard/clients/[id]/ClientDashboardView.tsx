@@ -149,39 +149,41 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
     const handleToggleComplete = (itemId: string) => {
         if (!activeCompany) return;
 
-        const newChecklist = checklist.map(item =>
+        const updatedChecklist = checklist.map(item =>
             item.id === itemId ? { ...item, completed: !item.completed } : item
         );
-        setChecklist(newChecklist);
+        setChecklist(updatedChecklist);
 
-        const newStatuses = newChecklist.reduce((acc, item) => {
-            acc[item.id] = item.completed;
-            return acc;
-        }, {} as Record<string, boolean>);
-        
-        updateCompanyChecklistStatus(activeCompany.id, newStatuses);
+        const updatedItem = updatedChecklist.find(item => item.id === itemId);
+        if (updatedItem) {
+            updateCompanyChecklistStatus(activeCompany.id, [{
+                itemId: updatedItem.id,
+                completed: updatedItem.completed
+            }]);
+        }
     };
 
     const handleCompleteYear = (year: string) => {
       if (!activeCompany) return;
       const today = startOfToday();
       
+      const updates: { itemId: string; completed: boolean }[] = [];
       const updatedChecklist = checklist.map(item => {
         const dueDate = new Date(item.dueDate + 'T00:00:00');
-        if (dueDate.getFullYear().toString() === year && dueDate <= today) {
+        if (dueDate.getFullYear().toString() === year && dueDate <= today && !item.completed) {
+          updates.push({ itemId: item.id, completed: true });
           return { ...item, completed: true };
         }
         return item;
       });
-      setChecklist(updatedChecklist);
 
-      const updatedStatuses = updatedChecklist.reduce((acc, item) => {
-          acc[item.id] = item.completed;
-          return acc;
-      }, {} as Record<string, boolean>);
-      
-      updateCompanyChecklistStatus(activeCompany.id, updatedStatuses);
-      toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
+      if (updates.length > 0) {
+        setChecklist(updatedChecklist);
+        updateCompanyChecklistStatus(activeCompany.id, updates);
+        toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
+      } else {
+        toast({ title: "No tasks to update", description: `All past tasks for ${year} were already complete.` });
+      }
     };
 
     const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
