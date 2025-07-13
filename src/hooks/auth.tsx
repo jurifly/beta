@@ -263,12 +263,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     if (!user || !userProfile || updates.length === 0) return;
   
+    // Determine the target user ID first.
+    let targetUserId: string | undefined;
     const company = userProfile.companies.find(c => c.id === companyId);
-    if (!company) return;
-  
-    const isUpdatingOwnProfile = userProfile.role === 'Founder' || !company.founderUid;
-    const targetUserId = isUpdatingOwnProfile ? user.uid : company.founderUid;
     
+    if (userProfile.role === 'Founder') {
+      targetUserId = user.uid; // Founder always updates their own profile.
+    } else if (company?.founderUid) {
+      targetUserId = company.founderUid; // CA updates the client's profile.
+    } else {
+      targetUserId = user.uid; // CA updates a company they created themselves.
+    }
+
     if (!targetUserId) {
         console.error("Could not find owner of the company to update checklist.");
         toast({
@@ -282,23 +288,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userToUpdateRef = doc(db, "users", targetUserId);
     
     try {
-      const remoteUserDoc = await getDoc(userToUpdateRef);
-      if (!remoteUserDoc.exists()) throw new Error("Target user profile does not exist.");
-
-      const remoteProfile = remoteUserDoc.data() as UserProfile;
-      const remoteCompanies = Array.isArray(remoteProfile.companies) ? remoteProfile.companies : [];
-      const remoteCompanyIndex = remoteCompanies.findIndex(c => c.id === companyId);
-      if (remoteCompanyIndex === -1) throw new Error("Company not found in target user's profile.");
-      
-      const batch = writeBatch(db);
-      updates.forEach(update => {
-        const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
-        const fieldPath = `companies.${remoteCompanyIndex}.checklistStatus.${sanitizedKey}`;
-        batch.update(userToUpdateRef, { [fieldPath]: update.completed });
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userToUpdateRef);
+        if (!userDoc.exists()) {
+          throw new Error("Target user profile does not exist.");
+        }
+  
+        const profile = userDoc.data() as UserProfile;
+        const companies = Array.isArray(profile.companies) ? profile.companies : [];
+        const companyIndex = companies.findIndex(c => c.id === companyId);
+  
+        if (companyIndex === -1) {
+          throw new Error("Company not found in target user's profile.");
+        }
+  
+        // Create updates object for Firestore transaction
+        const firestoreUpdates: { [key: string]: any } = {};
+        updates.forEach(update => {
+          const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+          const fieldPath = `companies.${companyIndex}.checklistStatus.${sanitizedKey}`;
+          firestoreUpdates[fieldPath] = update.completed;
+        });
+  
+        transaction.update(userToUpdateRef, firestoreUpdates);
       });
-
-      await batch.commit();
-
+  
+      // If the update was for the currently logged-in user, update local state
       if (targetUserId === user.uid) {
         setUserProfile(prev => {
             if (!prev) return null;
@@ -316,9 +331,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return { ...prev, companies: newCompanies };
         });
       }
-
     } catch (e: any) {
-        console.error("Checklist update batch write failed:", e);
+        console.error("Checklist update transaction failed:", e);
         toast({
             variant: "destructive",
             title: "Update Failed",
