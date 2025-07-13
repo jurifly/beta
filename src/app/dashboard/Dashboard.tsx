@@ -297,21 +297,16 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
         fetchInsights();
     }, [isLoading, activeCompany, hygieneScore, overdueFilingsCount, upcomingFilingsCount, userProfile, toast, profileCompleteness]);
     
-    const handleToggleComplete = (itemId: string) => {
+    const handleToggleComplete = (itemId: string, newStatus: boolean) => {
         if (!activeCompany) return;
 
-        const updatedChecklist = checklist.map(item =>
-            item.id === itemId ? { ...item, completed: !item.completed } : item
-        );
-        setChecklist(updatedChecklist);
-
-        const updatedItem = updatedChecklist.find(item => item.id === itemId);
-        if (updatedItem) {
-            updateCompanyChecklistStatus(activeCompany.id, [{
-                itemId: updatedItem.id,
-                completed: updatedItem.completed
-            }]);
-        }
+        // Optimistically update UI
+        setChecklist(prev => prev.map(item =>
+            item.id === itemId ? { ...item, completed: newStatus } : item
+        ));
+        
+        // Push update to backend
+        updateCompanyChecklistStatus(activeCompany.id, [{ itemId, completed: newStatus }]);
     };
 
     const handleCompleteYear = (year: string) => {
@@ -329,8 +324,8 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
       });
 
       if (updates.length > 0) {
-        setChecklist(updatedChecklist);
-        updateCompanyChecklistStatus(activeCompany.id, updates);
+        setChecklist(updatedChecklist); // Optimistic update
+        updateCompanyChecklistStatus(activeCompany.id, updates); // Backend update
         toast({ title: translations.toastComplianceUpdatedTitle[lang], description: `${translations.toastComplianceUpdatedDesc[lang]} ${year}.` });
       } else {
         toast({ title: "No tasks to update", description: `All past tasks for ${year} were already complete.` });
@@ -488,9 +483,9 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
                 <Link href="/dashboard/analytics" className="block"><StatCard title={translations.hygieneScore[lang]} value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/ca-connect" className="block"><StatCard title={translations.upcomingFilings[lang]} value={`${upcomingFilingsCount}`} subtext={translations.inNext30Days[lang]} icon={<Calendar />} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/connections" className="block"><StatCard title={translations.upcomingFilings[lang]} value={`${upcomingFilingsCount}`} subtext={translations.inNext30Days[lang]} icon={<Calendar />} isLoading={isLoading} /></Link>
                 <Link href="/dashboard/cap-table" className="block"><StatCard title={translations.equityIssued[lang]} value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/ca-connect" className="block"><StatCard title={translations.alerts[lang]} value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? translations.overdueTasks[lang] : translations.noOverdueTasks[lang]} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/connections" className="block"><StatCard title={translations.alerts[lang]} value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? translations.overdueTasks[lang] : translations.noOverdueTasks[lang]} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
             </div>
             
             <Card className="interactive-lift">
@@ -614,7 +609,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
                                                             <Checkbox
                                                                 id={item.id}
                                                                 checked={item.completed}
-                                                                onCheckedChange={() => handleToggleComplete(item.id)}
+                                                                onCheckedChange={(checked) => handleToggleComplete(item.id, !!checked)}
                                                                 className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
                                                                 disabled={isFuture}
                                                             />

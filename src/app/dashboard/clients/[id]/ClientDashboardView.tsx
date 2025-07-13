@@ -146,44 +146,33 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
         fetchDashboardData();
     }, [activeCompany, toast]);
     
-    const handleToggleComplete = (itemId: string) => {
+    const handleToggleComplete = (itemId: string, newStatus: boolean) => {
         if (!activeCompany) return;
-
-        const updatedChecklist = checklist.map(item =>
-            item.id === itemId ? { ...item, completed: !item.completed } : item
-        );
-        setChecklist(updatedChecklist);
-
-        const updatedItem = updatedChecklist.find(item => item.id === itemId);
-        if (updatedItem) {
-            updateCompanyChecklistStatus(activeCompany.id, [{
-                itemId: updatedItem.id,
-                completed: updatedItem.completed
-            }]);
-        }
+        setChecklist(prev => prev.map(item => item.id === itemId ? { ...item, completed: newStatus } : item));
+        updateCompanyChecklistStatus(activeCompany.id, [{ itemId, completed: newStatus }]);
     };
 
     const handleCompleteYear = (year: string) => {
-      if (!activeCompany) return;
-      const today = startOfToday();
-      
-      const updates: { itemId: string; completed: boolean }[] = [];
-      const updatedChecklist = checklist.map(item => {
-        const dueDate = new Date(item.dueDate + 'T00:00:00');
-        if (dueDate.getFullYear().toString() === year && dueDate <= today && !item.completed) {
-          updates.push({ itemId: item.id, completed: true });
-          return { ...item, completed: true };
-        }
-        return item;
-      });
+        if (!activeCompany) return;
+        const today = startOfToday();
+        
+        const updates: { itemId: string; completed: boolean }[] = [];
+        const updatedChecklist = checklist.map(item => {
+            const dueDate = new Date(item.dueDate + 'T00:00:00');
+            if (dueDate.getFullYear().toString() === year && dueDate <= today && !item.completed) {
+            updates.push({ itemId: item.id, completed: true });
+            return { ...item, completed: true };
+            }
+            return item;
+        });
 
-      if (updates.length > 0) {
-        setChecklist(updatedChecklist);
-        updateCompanyChecklistStatus(activeCompany.id, updates);
-        toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
-      } else {
-        toast({ title: "No tasks to update", description: `All past tasks for ${year} were already complete.` });
-      }
+        if (updates.length > 0) {
+            setChecklist(updatedChecklist); // Optimistic update
+            updateCompanyChecklistStatus(activeCompany.id, updates); // Backend update
+            toast({ title: "Compliance Updated", description: `All past tasks for ${year} have been marked as complete.` });
+        } else {
+            toast({ title: "No tasks to update", description: `All past tasks for ${year} were already complete.` });
+        }
     };
 
     const { upcomingFilingsCount, overdueFilingsCount, hygieneScore } = useMemo(() => {
@@ -458,7 +447,7 @@ export default function ClientDashboardView({ userProfile }: { userProfile: User
                                                             <Checkbox
                                                                 id={item.id}
                                                                 checked={item.completed}
-                                                                onCheckedChange={() => handleToggleComplete(item.id)}
+                                                                onCheckedChange={(checked) => handleToggleComplete(item.id, !!checked)}
                                                                 className={cn("mt-1", isItemOverdue && "border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive")}
                                                                 disabled={isFuture}
                                                             />

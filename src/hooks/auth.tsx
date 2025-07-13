@@ -262,75 +262,74 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updates: { itemId: string; completed: boolean }[]
   ) => {
     if (!user || !userProfile || updates.length === 0) return;
-  
-    // Determine the target user ID first.
-    let targetUserId: string | undefined;
+    
+    const isCaUpdatingClient = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor';
     const company = userProfile.companies.find(c => c.id === companyId);
     
-    if (userProfile.role === 'Founder') {
-      targetUserId = user.uid; // Founder always updates their own profile.
-    } else if (company?.founderUid) {
-      targetUserId = company.founderUid; // CA updates the client's profile.
+    // 1. Determine the correct user document to update
+    let targetUserId: string | undefined;
+    if (isCaUpdatingClient) {
+        // If CA is updating, the target is the founder of that company
+        targetUserId = company?.founderUid;
+        if (!targetUserId) {
+            console.error("CA is updating a company without a founderUid. Updating CA's own profile as a fallback.");
+            targetUserId = user.uid; // Fallback to self
+        }
     } else {
-      targetUserId = user.uid; // CA updates a company they created themselves.
+        // Founder is updating their own company
+        targetUserId = user.uid;
     }
 
-    if (!targetUserId) {
-        console.error("Could not find owner of the company to update checklist.");
-        toast({
-          variant: "destructive",
-          title: "Update Failed",
-          description: "Could not identify the company owner.",
-        });
-        return;
-    }
-    
     const userToUpdateRef = doc(db, "users", targetUserId);
-    
+
     try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userToUpdateRef);
-        if (!userDoc.exists()) {
-          throw new Error("Target user profile does not exist.");
-        }
-  
-        const profile = userDoc.data() as UserProfile;
-        const companies = Array.isArray(profile.companies) ? profile.companies : [];
-        const companyIndex = companies.findIndex(c => c.id === companyId);
-  
-        if (companyIndex === -1) {
-          throw new Error("Company not found in target user's profile.");
-        }
-  
-        // Create updates object for Firestore transaction
-        const firestoreUpdates: { [key: string]: any } = {};
-        updates.forEach(update => {
-          const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
-          const fieldPath = `companies.${companyIndex}.checklistStatus.${sanitizedKey}`;
-          firestoreUpdates[fieldPath] = update.completed;
-        });
-  
-        transaction.update(userToUpdateRef, firestoreUpdates);
-      });
-  
-      // If the update was for the currently logged-in user, update local state
-      if (targetUserId === user.uid) {
-        setUserProfile(prev => {
-            if (!prev) return null;
-            const newCompanies = prev.companies.map(c => {
-                if (c.id === companyId) {
-                    const newChecklistStatus = { ...c.checklistStatus };
-                     updates.forEach(update => {
-                        const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
-                        newChecklistStatus[sanitizedKey] = update.completed;
-                    });
-                    return { ...c, checklistStatus: newChecklistStatus };
-                }
-                return c;
+        await runTransaction(db, async (transaction) => {
+            const userDoc = await transaction.get(userToUpdateRef);
+            if (!userDoc.exists()) {
+                throw new Error("Target user profile does not exist.");
+            }
+        
+            const remoteProfile = userDoc.data() as UserProfile;
+            const companies = Array.isArray(remoteProfile.companies) ? remoteProfile.companies : [];
+            const companyIndex = companies.findIndex(c => c.id === companyId);
+        
+            if (companyIndex === -1) {
+                throw new Error(`Company with ID ${companyId} not found in profile of user ${targetUserId}.`);
+            }
+        
+            // This is the correct, safe way to update a nested object in an array
+            const newCompanies = [...companies];
+            const oldChecklistStatus = newCompanies[companyIndex].checklistStatus || {};
+            const newChecklistStatus = { ...oldChecklistStatus };
+            updates.forEach(update => {
+                const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+                newChecklistStatus[sanitizedKey] = update.completed;
             });
-            return { ...prev, companies: newCompanies };
+            newCompanies[companyIndex].checklistStatus = newChecklistStatus;
+
+            transaction.update(userToUpdateRef, { companies: newCompanies });
         });
-      }
+
+        // If the CA updated a client, we also need to update the local state of the CA's profile
+        // to reflect the change in the nested company object.
+        if (isCaUpdatingClient) {
+            setUserProfile(prev => {
+                if (!prev) return null;
+                const newCompanies = prev.companies.map(c => {
+                    if (c.id === companyId) {
+                        const newChecklistStatus = { ...c.checklistStatus };
+                        updates.forEach(update => {
+                            const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+                            newChecklistStatus[sanitizedKey] = update.completed;
+                        });
+                        return { ...c, checklistStatus: newChecklistStatus };
+                    }
+                    return c;
+                });
+                return { ...prev, companies: newCompanies };
+            });
+        }
+    
     } catch (e: any) {
         console.error("Checklist update transaction failed:", e);
         toast({
@@ -565,7 +564,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: 'Invitation Accepted',
         description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
         icon: 'CheckCircle',
-        link: '/dashboard/ca-connect'
+        link: '/dashboard/connections'
       }, inviteData.founderId);
 
     } catch(error: any) {
@@ -607,7 +606,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUserProfile(prev => ({ ...prev!, companies: updatedCompanies }));
       toast({
         title: 'Advisor Connected!',
-        description: 'An advisor has accepted your invitation. You can now collaborate in the Advisor Hub.',
+        description: 'An advisor has accepted your invitation. You can now collaborate in the Connections Hub.',
       });
     }
   }, [user, userProfile, toast]);
