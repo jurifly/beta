@@ -287,18 +287,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
 
-    // Determine the owner of the checklist. If a CA is acting, it's the company's founder.
-    // Otherwise, it's the current user (the founder).
-    // **DEV MODE FIX**: If founderUid is missing in CA mode, fallback to the current user's UID.
-    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') 
-      ? (company.founderUid || user.uid) 
+    // Determine the owner of the checklist. 
+    // If it's an invited client, `founderUid` will exist.
+    // If it's a CA's self-added client, `founderUid` will be null, and we write to the CA's own profile.
+    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') && company.founderUid
+      ? company.founderUid 
       : user.uid;
       
-    if (!targetUserId) {
-        console.error("Could not find owner of the company to update checklist.");
-        return;
-    }
-
     const userToUpdateRef = doc(db, "users", targetUserId);
     
     try {

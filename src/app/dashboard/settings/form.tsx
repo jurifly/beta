@@ -110,7 +110,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
     ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId)
     : null;
 
-  const addButtonText = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor' ? 'Invite New Client' : 'Add New Company';
+  const addButtonText = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor' ? 'Add New Client' : 'Add New Company';
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
@@ -231,7 +231,7 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
             <div>
                 <CardTitle>Company Information</CardTitle>
                 <CardDescription>
-                  Manage your companies here.
+                  Manage your companies or clients here.
                 </CardDescription>
             </div>
             <Button variant="outline" type="button" onClick={onAddCompanyClick}>

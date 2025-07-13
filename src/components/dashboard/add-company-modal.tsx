@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Progress } from "@/components/ui/progress";
 import { fetchCompanyDetailsFromCIN } from "@/app/dashboard/settings/actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { InviteClientModal } from "./invite-client-modal";
 
 const companyTypes = [
     { id: "pvt_ltd", name: "Private Limited Company" },
@@ -88,6 +89,8 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   const { toast } = useToast();
   const isEditMode = !!companyToEdit;
   const [isFetching, startFetchingTransition] = useTransition();
+  const [isInviteClientModalOpen, setInviteClientModalOpen] = useState(false);
+
 
   const { control, handleSubmit, trigger, formState: { errors, isSubmitting }, reset, getValues, setValue } = useForm<FormData>({
     resolver: zodResolver(companySchema),
@@ -100,6 +103,8 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   const cinValue = useWatch({ control, name: 'cin' });
   const selectedCompanyType = useWatch({ control, name: 'type' });
   const selectedRegion = useWatch({ control, name: 'legalRegion' });
+  
+  const isCA = userProfile?.role === 'CA' || userProfile?.role === 'Legal Advisor';
 
   useEffect(() => {
     if (isOpen) {
@@ -133,19 +138,21 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
 
     let updatedCompanies: Company[];
     let activeCompanyId = userProfile.activeCompanyId;
+    
+    const companyData: Company = {
+        id: companyToEdit?.id || Date.now().toString(),
+        ...data,
+        health: companyToEdit?.health || { score: 0, risk: 'Low', deadlines: [] },
+    };
 
     if (isEditMode && companyToEdit) {
       updatedCompanies = userProfile.companies.map(c => 
-        c.id === companyToEdit.id ? { ...c, ...data } : c
+        c.id === companyToEdit.id ? companyData : c
       );
     } else {
-      const newCompany: Company = {
-        id: Date.now().toString(),
-        ...data
-      };
       const existingCompanies = Array.isArray(userProfile.companies) ? userProfile.companies : [];
-      updatedCompanies = [...existingCompanies, newCompany];
-      activeCompanyId = newCompany.id;
+      updatedCompanies = [...existingCompanies, companyData];
+      activeCompanyId = companyData.id;
     }
     
     await updateUserProfile({
@@ -154,7 +161,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
     });
     
     toast({
-      title: isEditMode ? "Company Updated!" : "Company Added!",
+      title: isEditMode ? "Company Updated!" : (isCA ? "Client Added!" : "Company Added!"),
       description: `${data.name} has been successfully ${isEditMode ? 'updated' : 'added'}.`,
     });
     onOpenChange(false);
@@ -206,14 +213,14 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
         <div className="space-y-6">
           <Controller name="name" control={control} render={({ field }) => (
               <div className="space-y-2">
-                  <Label htmlFor="name">Company Legal Name</Label>
+                  <Label htmlFor="name">{isCA ? "Client's Legal Name" : "Company Legal Name"}</Label>
                   <Input id="name" placeholder="e.g., Acme Innovations Pvt. Ltd." {...field} />
                   {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
               </div>
           )}/>
           <Controller name="type" control={control} render={({ field }) => (
             <div className="space-y-3">
-              <Label>What is the type of your company?</Label>
+              <Label>What is the type of the company?</Label>
               <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {companyTypes.map((type) => (
                       <Label key={type.id} htmlFor={type.id} className="flex items-start space-x-3 border rounded-md p-3 hover:bg-muted has-[input:checked]:border-primary has-[input:checked]:bg-primary/10 transition-colors cursor-pointer text-sm font-medium">
@@ -324,7 +331,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
     <div className="space-y-4">
       <Controller name="name" control={control} render={({ field }) => (
         <div className="space-y-2">
-          <Label htmlFor="name">Company Legal Name</Label>
+          <Label htmlFor="name">{isCA ? "Client's Legal Name" : "Company Legal Name"}</Label>
           <Input id="name" {...field} />
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
         </div>
@@ -394,45 +401,54 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[625px] flex flex-col max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="font-headline">{isEditMode ? "Edit Company Information" : "Add a New Company"}</DialogTitle>
-          <DialogDescription>
-            {isEditMode ? "Update your company's details." : "Let's get your company's legal information set up."}
-          </DialogDescription>
-        </DialogHeader>
-        
-        {!isEditMode && <Progress value={progressValue} className="w-full h-2" />}
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto pr-2 -mr-4 pl-1">
-          <div className="space-y-6 py-4 pr-4">
-            {isEditMode ? renderEditForm() : renderAddForm()}
-          </div>
-        </form>
-        
-        <DialogFooter className="pt-4 border-t">
-          {isEditMode ? (
-            <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="w-full">
-              {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-              Save Changes
-            </Button>
-          ) : (
-            <>
-              {step > 1 && <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>}
-              <div className="flex-1"></div>
-              {step < STEPS.length ? (
-                  <Button type="button" onClick={nextStep} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
-              ) : (
-                  <Button type="button" onClick={handleSubmit(onSubmit)} className="w-full sm:w-auto" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                    Add Company
-                  </Button>
-              )}
-            </>
+    <>
+      <InviteClientModal isOpen={isInviteClientModalOpen} onOpenChange={setInviteClientModalOpen} />
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[625px] flex flex-col max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="font-headline">{isEditMode ? "Edit Client Information" : (isCA ? "Add New Client" : "Add a New Company")}</DialogTitle>
+            <DialogDescription>
+              {isEditMode ? "Update the client's details." : `Let's get the ${isCA ? 'client' : 'company'}'s legal information set up.`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {!isEditMode && <Progress value={progressValue} className="w-full h-2" />}
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto pr-2 -mr-4 pl-1">
+            <div className="space-y-6 py-4 pr-4">
+              {isEditMode ? renderEditForm() : renderAddForm()}
+            </div>
+          </form>
+          
+          {isCA && !isEditMode && (
+            <div className="text-center text-sm text-muted-foreground p-2">
+              Want to invite your client to collaborate? <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => { onOpenChange(false); setInviteClientModalOpen(true); }}>Send an invite instead.</Button>
+            </div>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          
+          <DialogFooter className="pt-4 border-t">
+            {isEditMode ? (
+              <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="w-full">
+                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save Changes
+              </Button>
+            ) : (
+              <>
+                {step > 1 && <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>}
+                <div className="flex-1"></div>
+                {step < STEPS.length ? (
+                    <Button type="button" onClick={nextStep} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
+                ) : (
+                    <Button type="button" onClick={handleSubmit(onSubmit)} className="w-full sm:w-auto" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                      {isCA ? "Add Client" : "Add Company"}
+                    </Button>
+                )}
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
