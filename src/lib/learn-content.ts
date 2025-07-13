@@ -122,12 +122,16 @@ export const learningTerms: Term[] = terms.map(term => ({
 }));
 
 // Helper to group terms by category
-export const categorizedTerms = learningTerms.reduce((acc, term) => {
+export const categorizedTerms = terms.reduce((acc, term) => {
   const termWithCategory = terms.find(t => t.title === term.title)!;
   const category = termWithCategory.category;
   if (!acc[category]) {
     acc[category] = [];
   }
-  acc[category].push(term);
+  acc[category].push({
+    slug: term.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    title: term.title,
+    summary: term.summary,
+  });
   return acc;
 }, {} as Record<Category, Term[]>);

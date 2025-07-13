@@ -54,6 +54,9 @@ type CorporateFormData = z.infer<typeof corporateTaxCalculatorSchema>;
 const payrollSchema = z.object({
     ctc: z.coerce.number().min(1, "CTC must be greater than zero."),
     employeeName: z.string().optional(),
+    basicPercentage: z.coerce.number().min(30).max(60).default(40),
+    hraPercentage: z.coerce.number().min(0).max(100).default(50),
+    otherAllowances: z.coerce.number().min(0).default(0),
 });
 type PayrollFormData = z.infer<typeof payrollSchema>;
 
@@ -357,14 +360,14 @@ const PayrollCalculator = () => {
 
     const calculatePayroll = (data: PayrollFormData) => {
         const ctc = data.ctc;
-        const basic = ctc * 0.40;
-        const hra = basic * 0.50;
-        const specialAllowance = ctc - basic - hra;
+        const basic = ctc * (data.basicPercentage / 100);
+        const hra = basic * (data.hraPercentage / 100);
+        const specialAllowance = ctc - basic - hra - data.otherAllowances;
 
-        const grossMonthly = (basic + hra + specialAllowance) / 12;
+        const grossMonthly = (basic + hra + specialAllowance + data.otherAllowances) / 12;
 
-        const pfEmployee = Math.min(basic, 15000) * 0.12;
-        const pfEmployer = Math.min(basic, 15000) * 0.12;
+        const pfEmployee = Math.min(basic, 1800 * 12) * 0.12 / 12; // 12% of basic, capped at 1800/mo
+        const pfEmployer = pfEmployee;
         const esiEmployee = grossMonthly <= 21000 ? grossMonthly * 0.0075 : 0;
         const esiEmployer = grossMonthly <= 21000 ? grossMonthly * 0.0325 : 0;
         const totalDeductions = pfEmployee + esiEmployee;
@@ -377,6 +380,7 @@ const PayrollCalculator = () => {
             breakdown: [
                 { item: 'Basic Salary', amount: basic / 12, type: 'earning' },
                 { item: 'House Rent Allowance (HRA)', amount: hra / 12, type: 'earning' },
+                { item: 'Other Allowances', amount: data.otherAllowances / 12, type: 'earning' },
                 { item: 'Special Allowance', amount: specialAllowance / 12, type: 'earning' },
             ],
             deductions: [
@@ -404,13 +408,25 @@ const PayrollCalculator = () => {
                 <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle>Payroll Calculator</CardTitle>
-                        <CardDescription>Estimate monthly take-home salary from CTC.</CardDescription>
+                        <CardDescription>Estimate monthly take-home salary from CTC with more detailed inputs.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="ctc">Annual CTC (Cost to Company)</Label>
                             <Controller name="ctc" control={control} render={({ field }) => <Input id="ctc" type="number" placeholder="e.g. 1200000" {...field} onChange={e => field.onChange(Number(e.target.value))}/>} />
                              {errors.ctc && <p className="text-sm text-destructive">{errors.ctc.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Basic Salary (% of CTC)</Label>
+                            <Controller name="basicPercentage" control={control} render={({ field }) => <Input type="number" placeholder="40" {...field} onChange={e => field.onChange(Number(e.target.value))} />} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label>HRA (% of Basic)</Label>
+                            <Controller name="hraPercentage" control={control} render={({ field }) => <Input type="number" placeholder="50" {...field} onChange={e => field.onChange(Number(e.target.value))} />} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Other Allowances (Annual)</Label>
+                            <Controller name="otherAllowances" control={control} render={({ field }) => <Input type="number" placeholder="e.g. 24000" {...field} onChange={e => field.onChange(Number(e.target.value))} />} />
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="employeeName">Employee Name (Optional)</Label>
@@ -450,15 +466,15 @@ const PayrollCalculator = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsDown className="text-green-500"/>Earnings</h4>
-                                        <dl className="space-y-2">{result.breakdown.map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
+                                        <dl className="space-y-2">{result.breakdown.filter((i:any) => i.amount > 0).map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsUp className="text-red-500"/>Deductions</h4>
-                                        <dl className="space-y-2">{result.deductions.map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
+                                        <dl className="space-y-2">{result.deductions.filter((i:any) => i.amount > 0).map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
                                     </div>
                                     <div className="md:col-span-2">
                                         <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsLeftRight className="text-blue-500"/>Employer Contributions</h4>
-                                        <dl className="space-y-2">{result.employerContributions.map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
+                                        <dl className="space-y-2">{result.employerContributions.filter((i:any) => i.amount > 0).map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
                                     </div>
                                 </div>
                             </div>

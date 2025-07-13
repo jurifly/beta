@@ -49,6 +49,7 @@ import {
   BookUser,
   CheckCircle,
   Calculator,
+  BookHeart,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -139,6 +140,7 @@ export const translations: Translations = {
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
     taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算", ja: "税金と計算" },
+    learn: { en: "Learn", hi: "सीखें", es: "Aprender", zh: "学习", fr: "Apprendre", de: "Lernen", pt: "Aprender", ja: "学ぶ" },
 
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
@@ -185,7 +187,6 @@ export const translations: Translations = {
     totalClients: { en: "Total Clients", hi: "कुल क्लाइंट", es: "Total de Clientes", zh: "客户总数", fr: "Total des Clients", de: "Kunden insgesamt", pt: "Total de Clientes", ja: "総クライアント数" },
     clientsAtRisk: { en: "Clients at Risk", hi: "जोखिम में क्लाइंट", es: "Clientes en Riesgo", zh: "风险客户", fr: "Clients à Risque", de: "Gefährdete Kunden", pt: "Clientes em Risco", ja: "リスクのあるクライアント" },
     clientsWithLowHealth: { en: "Clients with low health scores", hi: "कम स्वास्थ्य स्कोर वाले क्लाइंट", es: "Clientes con bajas puntuaciones de salud", zh: "健康评分低的客户", fr: "Clients avec de faibles scores de santé", de: "Kunden mit niedrigen Gesundheitswerten", pt: "Clientes com baixas pontuações de saúde", ja: "健全性スコアが低いクライアント" },
-    portfolioAnalytics: { en: "Portfolio Analytics", hi: "पोर्टफोलियो एनालिटिक्स", es: "Análisis de Cartera", zh: "投资组合分析", fr: "Analyse de Portefeuille", de: "Portfolio-Analyse", pt: "Análise de Portfólio", ja: "ポートフォリオ分析" },
     view: { en: "View", hi: "देखें", es: "Ver", zh: "查看", fr: "Voir", de: "Ansehen", pt: "Ver", ja: "表示" },
     deepDive: { en: "Deep dive into client health", hi: "क्लाइंट स्वास्थ्य में गहराई से देखें", es: "Análisis profundo de la salud del cliente", zh: "深入了解客户健康状况", fr: "Plongez dans la santé des clients", de: "Tiefer Einblick in die Kundengesundheit", pt: "Análise aprofundada da saúde do cliente", ja: "クライアントの健全性を深掘り" },
     timelyAdvicePractice: { en: "Timely advice to help you manage your practice.", hi: "आपकी प्रैक्टिस को प्रबंधित करने में मदद करने के लिए समय पर सलाह।", es: "Consejos oportunos para ayudarte a gestionar tu práctica.", zh: "及时建议，助您管理业务。", fr: "Conseils opportuns pour vous aider à gérer votre cabinet.", de: "Rechtzeitiger Rat zur Verwaltung Ihrer Praxis.", pt: "Conselhos oportunos para ajudar a gerir sua prática.", ja: "実務管理に役立つタイムリーなアドバイス。" },
@@ -251,6 +252,7 @@ const navItemConfig: NavItemConfig = {
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
+  learn: { href: "/dashboard/learn", translationKey: "learn", icon: BookHeart },
 } as const;
 
 
@@ -265,6 +267,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
+  { ...navItemConfig.learn },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.caConnect },
@@ -282,7 +285,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.invitations },
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
-  { ...navItemConfig.launchPad },
+  { ...navItemConfig.learn },
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.caConnect, locked: true },
   { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
@@ -296,6 +299,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
+  navItemConfig.learn,
   { ...navItemConfig.invitations },
   { ...navItemConfig.caConnect, locked: true },
   navItemConfig.portfolioAnalytics,
@@ -306,6 +310,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.portfolioAnalytics,
+  navItemConfig.learn,
   navItemConfig.docVault,
 ];
 
@@ -354,12 +359,12 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
     "/dashboard",
     "/dashboard/clients",
     "/dashboard/ai-toolkit",
+    "/dashboard/learn",
     "/dashboard/cap-table",
     "/dashboard/financials",
     "/dashboard/ca-connect",
     "/dashboard/invitations",
     "/dashboard/clause-library",
-    "/dashboard/learn"
   ];
 
   // Filter and sort the role's items based on priority

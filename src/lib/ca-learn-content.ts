@@ -112,6 +112,10 @@ export const caCategorizedTerms = terms.reduce((acc, term) => {
   if (!acc[category]) {
     acc[category] = [];
   }
-  acc[category].push(term);
+  acc[category].push({
+      slug: term.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: term.title,
+      summary: term.summary,
+  });
   return acc;
 }, {} as Record<Category, Term[]>);
