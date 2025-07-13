@@ -246,6 +246,7 @@ const navItemConfig: NavItemConfig = {
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
+  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
 } as const;
 
 
@@ -262,7 +263,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
-  { ...navItemConfig.caConnect, locked: true },
+  { ...navItemConfig.caConnect },
   { ...navItemConfig.documents },
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
@@ -274,6 +275,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clients, label_override_key: "clientManagement", icon: Briefcase },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
+  { ...navItemConfig.invitations },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter },
@@ -289,6 +291,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
+  { ...navItemConfig.invitations },
   { ...navItemConfig.caConnect, locked: true },
   navItemConfig.portfolioAnalytics,
 ];
