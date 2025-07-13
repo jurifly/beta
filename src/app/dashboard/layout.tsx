@@ -232,12 +232,13 @@ type NavItemConfig = {
         icon: React.ElementType;
         locked?: boolean;
         label?: string; // For overrides
+        badge?: string; // For "Beta", "New", etc.
     }
 }
 
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
-  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users },
+  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, badge: "Beta" },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
@@ -745,7 +746,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/landing");
     }
   }, [user, loading, router]);
 
@@ -819,6 +820,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                     >
                       <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
                       {label}
+                      {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50">{item.badge}</Badge>}
                       {isLocked && (
                         <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
                       )}
@@ -851,4 +853,3 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
-
