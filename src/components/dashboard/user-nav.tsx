@@ -39,17 +39,22 @@ export function UserNav() {
     }
   };
   
-  const handleRoleChange = (role: UserRole) => {
+  const handleRoleChange = async (role: UserRole) => {
     if (userProfile && role !== userProfile.role) {
-      updateUserProfile({ role }).then(() => {
-        toast({
-            title: "Role Switched",
-            description: `You are now viewing the app as a ${role}.`,
-        });
-        window.location.reload();
+      await updateUserProfile({ role });
+      toast({
+        title: "Role Switched",
+        description: `You are now viewing the app as a ${role}. Page will now reload.`,
       });
+      // Use a timeout to allow the toast to be seen before reload
+      setTimeout(() => window.location.reload(), 1500);
     }
   };
+
+  const handleDevModeToggle = (enabled: boolean) => {
+      setDevMode(enabled);
+  };
+
 
   if (!user || !userProfile) {
     return null;
@@ -107,7 +112,7 @@ export function UserNav() {
             <Switch
                 id="dev-mode-switch"
                 checked={isDevMode}
-                onCheckedChange={setDevMode}
+                onCheckedChange={handleDevModeToggle}
             />
           </DropdownMenuItem>
            <DropdownMenuSub>
@@ -116,7 +121,7 @@ export function UserNav() {
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
-                 <DropdownMenuRadioGroup value={userProfile.role} onValueChange={handleRoleChange as (value: string) => void}>
+                 <DropdownMenuRadioGroup value={userProfile.role} onValueChange={(value) => handleRoleChange(value as UserRole)}>
                     <DropdownMenuRadioItem value="Founder">Founder</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="CA">Chartered Accountant</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="Legal Advisor">Legal Advisor</DropdownMenuRadioItem>

@@ -1,7 +1,7 @@
 
+
 'use server';
 
-// This file's contents have been deprecated.
-// The tax calculation logic has been moved to the client-side
-// in /dashboard/financials/page.tsx for instant, free calculations.
-// The AI financial report feature has been removed.
+// This file is no longer used and is kept to avoid breaking imports in a real-world scenario.
+// The new logic is handled directly in the page component.
+

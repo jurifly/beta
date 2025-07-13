@@ -70,7 +70,7 @@ const complianceValidatorFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-      throw new Error('The AI failed to generate a compliance analysis.');
+      throw new Error("The AI failed to generate a compliance analysis. Please try again.");
     }
     return output;
   }

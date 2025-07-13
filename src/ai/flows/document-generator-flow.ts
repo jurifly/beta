@@ -68,6 +68,9 @@ const documentGeneratorFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("The AI failed to generate the document. Please try again.");
+    }
+    return output;
   }
 );

@@ -59,7 +59,7 @@ const wikiGeneratorFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-      throw new Error('The AI failed to generate a wiki page.');
+      throw new Error("The AI failed to generate a wiki page. Please try again.");
     }
     return output;
   }

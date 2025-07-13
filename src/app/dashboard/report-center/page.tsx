@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -155,6 +156,13 @@ export default function ReportCenterPage() {
     const [reportData, setReportData] = useState<ReportData | null>(null);
     const reportRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        // If there's only one company, pre-select it.
+        if (userProfile?.companies && userProfile.companies.length === 1) {
+            setSelectedClientId(userProfile.companies[0].id);
+        }
+    }, [userProfile?.companies]);
     
     const handleGenerateReport = async () => {
         if (!selectedClientId || !userProfile) return;
@@ -349,7 +357,15 @@ export default function ReportCenterPage() {
                 </CardFooter>
             </Card>
 
-            {reportData && (
+            {isLoading ? (
+                <Card className="flex items-center justify-center p-12">
+                    <div className="text-center space-y-2">
+                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                        <p className="font-semibold">Generating Report Data...</p>
+                        <p className="text-sm text-muted-foreground">This can take a few moments.</p>
+                    </div>
+                </Card>
+            ) : reportData && (
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                          <div>

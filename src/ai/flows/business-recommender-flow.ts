@@ -66,7 +66,7 @@ const businessRecommenderFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-        throw new Error("The AI failed to generate a business recommendation.");
+      throw new Error("The AI failed to generate a business recommendation. Please try again.");
     }
     return output;
   }

@@ -10,60 +10,32 @@ import {
   AlertTriangle,
   Bell,
   Bolt,
-  Building,
-  CreditCard,
-  FileClock,
-  FileText,
-  FolderKanban,
   LayoutDashboard,
   Library,
   LineChart,
   Loader2,
   Lock,
-  Menu,
   MessageSquare,
   Network,
-  RadioTower,
-  Scale,
   Settings,
   Sparkles,
   Users,
-  Zap,
-  Archive,
-  Globe,
-  LifeBuoy,
-  PenSquare,
-  PieChart,
   Workflow,
-  Gavel,
-  ClipboardCheck,
-  Flame,
+  Archive,
+  LifeBuoy,
+  PieChart,
   Receipt,
   Mail,
-  BookLock,
-  BookOpenCheck,
-  User,
-  MoreHorizontal,
-  ChevronRight,
-  ChevronDown,
-  Briefcase,
-  BookUser,
-  CheckCircle,
-  Calculator,
   BookHeart,
   Rss,
+  Briefcase,
+  Calculator,
+  ChevronRight
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,22 +54,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
-import type { UserProfile, UserPlan, AppNotification, UserRole } from "@/lib/types";
+import type { UserProfile, UserRole, AppNotification } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "./beta-banner";
-import { useToast } from "@/hooks/use-toast";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
+import { MoreHorizontal, Globe, ChevronDown, CheckCircle, Flame } from "lucide-react";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -246,7 +212,7 @@ const navItemConfig: NavItemConfig = {
   docVault: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
-  clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
+  clients: { href: "/dashboard/clients", translationKey: "clients", icon: Briefcase },
   team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: true },
   clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: true },
@@ -285,17 +251,15 @@ const founderNavItems: ThemedNavItem[] = [
 
 const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.dashboard },
-  { ...navItemConfig.clients, label_override_key: "clientManagement", icon: Briefcase },
-  { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
+  { ...navItemConfig.clients },
+  { ...navItemConfig.team, locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.learnHub },
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.connections, locked: true },
-  { ...navItemConfig.workflows, label_override_key: "workflows", locked: true },
-  { ...navItemConfig.reconciliation, locked: true },
-  { ...navItemConfig.docVault },
+  { ...navItemConfig.workflows, locked: true },
   { ...navItemConfig.clauseLibrary, locked: false },
   { ...navItemConfig.latestNews },
 ];
@@ -314,7 +278,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
 
 const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.dashboard,
-  { ...navItemConfig.team, label_override_key: "teamManagement", locked: false }, // Unlocked for Enterprise
+  { ...navItemConfig.team, locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.portfolioAnalytics,
   { ...navItemConfig.learnHub },
@@ -354,7 +318,6 @@ const getIcon = (iconName?: string) => {
     const icons: { [key: string]: React.ReactNode } = {
         AlertTriangle: <AlertTriangle className="h-5 w-5 text-destructive" />,
         RadioTower: <RadioTower className="h-5 w-5 text-primary" />,
-        FileClock: <FileClock className="h-5 w-5 text-green-500" />,
         CheckCircle: <CheckCircle className="h-5 w-5 text-green-500" />,
         Default: <Bell className="h-5 w-5 text-muted-foreground" />,
     };
@@ -569,13 +532,11 @@ function AppShell({ children }: { children: ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <div className="w-full flex-1">
-                    <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary font-headline md:hidden">
-                        <Logo />
-                        <span>Claari</span>
-                    </Link>
-                </div>
-                <div className="flex-1 flex items-center gap-2 md:gap-4 justify-end">
+                <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary font-headline md:hidden">
+                    <Logo />
+                    <span className="sr-only">Claari</span>
+                </Link>
+                <div className="w-full flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="hidden sm:inline-flex">

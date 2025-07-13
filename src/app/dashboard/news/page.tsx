@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button';
 import { getNews, type NewsArticle } from '@/ai/flows/news-flow';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const newsCategories = {
     'India': [
@@ -84,6 +84,7 @@ export default function LatestNewsPage() {
     const { userProfile } = useAuth();
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     
     const legalRegion = userProfile?.legalRegion || 'India';
     const categories = newsCategories[legalRegion as keyof typeof newsCategories] || newsCategories['India'];
@@ -93,11 +94,14 @@ export default function LatestNewsPage() {
         const fetchNews = async () => {
             if (!userProfile) return;
             setIsLoading(true);
+            setError(null);
             try {
                 const newsResult = await getNews({ topic: activeCategory, legalRegion: userProfile.legalRegion });
                 setArticles(newsResult.articles);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Failed to fetch news:", error);
+                setError(error.message || "Could not fetch news. The API service may be temporarily unavailable.");
+                setArticles([]);
             } finally {
                 setIsLoading(false);
             }
@@ -130,12 +134,19 @@ export default function LatestNewsPage() {
                 </Select>
             </div>
             
+            {error && (
+                <Alert variant="destructive">
+                    <AlertTitle>Error Fetching News</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                     [...Array(6)].map((_, i) => <ArticleSkeleton key={i} />)
                 ) : articles.length > 0 ? (
                     articles.map((article, index) => <ArticleCard key={article.url + index} article={article} />)
-                ) : (
+                ) : !error && (
                     <div className="md:col-span-2 lg:col-span-3">
                          <Card className="flex items-center justify-center min-h-[400px]">
                             <CardContent className="text-center p-8">
