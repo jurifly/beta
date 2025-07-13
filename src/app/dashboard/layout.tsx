@@ -141,7 +141,7 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    taxesAndCalc: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算", ja: "税金と計算" },
+    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "Impostos e Cálculo", ja: "税金と計算" },
     learnHub: { en: "Learn Hub", hi: "लर्न हब", es: "Centro de Aprendizaje", zh: "学习中心", fr: "Pôle d'Apprentissage", de: "Lern-Hub", pt: "Hub de Aprendizagem", ja: "学習ハブ" },
     latestNews: { en: "Latest News", hi: "नवीनतम समाचार", es: "Últimas Noticias", zh: "最新消息", fr: "Dernières Nouvelles", de: "Aktuelle Nachrichten", pt: "Últimas Notícias", ja: "最新ニュース" },
 
@@ -194,7 +194,7 @@ export const translations: Translations = {
     deepDive: { en: "Deep dive into client health", hi: "क्लाइंट स्वास्थ्य में गहराई से देखें", es: "Análisis profundo de la salud del cliente", zh: "深入了解客户健康状况", fr: "Plongez dans la santé des clients", de: "Tiefer Einblick in die Kundengesundheit", pt: "Análise aprofundada da saúde do cliente", ja: "クライアントの健全性を深掘り" },
     timelyAdvicePractice: { en: "Timely advice to help you manage your practice.", hi: "आपकी प्रैक्टिस को प्रबंधित करने में मदद करने के लिए समय पर सलाह।", es: "Consejos oportunos para ayudarte a gestionar tu práctica.", zh: "及时建议，助您管理业务。", fr: "Conseils opportuns pour vous aider à gérer votre cabinet.", de: "Rechtzeitiger Rat zur Verwaltung Ihrer Praxis.", pt: "Conselhos oportunos para ajudar a gerir sua prática.", ja: "実務管理に役立つタイムリーなアドバイス。" },
     portfolioDeadlines: { en: "Portfolio Deadlines", hi: "पोर्टफोलियो की समय-सीमा", es: "Fechas Límite de la Cartera", zh: "投资组合截止日期", fr: "Échéances du Portefeuille", de: "Portfolio-Fristen", pt: "Prazos do Portfólio", ja: "ポートフォリオの締め切り" },
-    upcomingKeyDates: { en: "Upcoming key dates across all your clients.", hi: "आपके सभी क्लाइंट्स के लिए आगामी महत्वपूर्ण तिथियां।", es: "Próximas fechas clave para todos sus clientes.", zh: "所有客户的即将到来的关键日期。", fr: "Prochaines dates clés pour tous vos clients.", de: "Anstehende wichtige Termine für alle Ihre Kunden.", pt: "Próximas datas importantes para todos os seus clientes.", ja: "全クライアントの今後の主要な日程。" },
+    upcomingKeyDates: { en: "Upcoming key dates across all your clients.", hi: "आपके सभी क्लाइंट्स के लिए आगामी महत्वपूर्ण तिथियां।", es: "Próximas fechas clave para todos sus clientes.", zh: "所有客户的即将到来的关键日期。", fr: "Prochaines dates clés pour tous vos clients.", de: "Anstehende wichtige Termine für alle Ihre Kunden.", pt: "Próximos datas importantes para todos os seus clientes.", ja: "全クライアントの今後の主要な日程。" },
     noUpcomingDeadlines: { en: "No upcoming deadlines.", hi: "कोई आगामी समय-सीमा नहीं।", es: "No hay plazos próximos.", zh: "没有即将到来的截止日期。", fr: "Aucune échéance à venir.", de: "Keine anstehenden Fristen.", pt: "Nenhum prazo próximo.", ja: "今後の締め切りはありません。" },
     recentActivity: { en: "Recent Activity", hi: "हाल की गतिविधि", es: "Actividad Reciente", zh: "最近活动", fr: "Activité Récente", de: "Letzte Aktivitäten", pt: "Atividade Recente", ja: "最近のアクティビティ" },
     latestActions: { en: "The latest actions from your portfolio.", hi: "आपके पोर्टफोलियो से नवीनतम कार्रवाइयां।", es: "Las últimas acciones de su cartera.", zh: "您投资组合的最新动态。", fr: "Les dernières actions de votre portefeuille.", de: "Die neuesten Aktionen aus Ihrem Portfolio.", pt: "As últimas ações do seu portfólio.", ja: "ポートフォリオの最新アクション。" },
@@ -408,7 +408,8 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
                 <ScrollArea className="h-[calc(100%-4rem)]">
                     <nav className="flex flex-col gap-1 p-4">
                         {menuItems.map(item => {
-                            const label = translations[item.label_override_key || item.translationKey][lang];
+                            const labelKey = item.label_override_key || item.translationKey;
+                            const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
                             return (
                              <SheetTrigger asChild key={item.href}>
                                 <Link
@@ -466,7 +467,8 @@ const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language
                     const isActive = (item.href === '/dashboard' && pathname === item.href) ||
                                      (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     
-                    const label = translations[item.label_override_key || item.translationKey][lang];
+                    const labelKey = item.label_override_key || item.translationKey;
+                    const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
 
                     return (
                         <Link
@@ -677,7 +679,8 @@ const MobileSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { 
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
-        const label = translations[item.label_override_key || item.translationKey][lang];
+        const labelKey = item.label_override_key || item.translationKey;
+        const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
         if (item.locked && !isPro && !isDevMode) {
             e.preventDefault();
             onLockedFeatureClick(label);
@@ -698,7 +701,9 @@ const MobileSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { 
                     const isActive = (item.href === '/dashboard' && pathname === item.href) ||
                                      (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     const isLocked = item.locked && !isPro && !isDevMode;
-                    const label = translations[item.label_override_key || item.translationKey][lang];
+                    const labelKey = item.label_override_key || item.translationKey;
+                    const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
+
 
                     return (
                         <SheetTrigger asChild key={item.href}>
@@ -770,7 +775,8 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
-        const label = translations[item.label_override_key || item.translationKey][lang];
+        const labelKey = item.label_override_key || item.translationKey;
+        const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
         if (item.locked && !isPro && !isDevMode) {
             e.preventDefault();
             onLockedFeatureClick(label);
@@ -845,3 +851,4 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
+
