@@ -149,6 +149,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let profile = userDoc.data() as UserProfile;
       const updatesToApply: Partial<UserProfile> = {};
 
+      // Ensure companies is an array
+      if (!Array.isArray(profile.companies)) {
+        updatesToApply.companies = [];
+        profile.companies = [];
+      }
+
       // --- Backfill missing credit fields for older user profiles ---
       if (profile.dailyCreditLimit === undefined) {
         updatesToApply.dailyCreditLimit = 5; // Default daily credits
@@ -557,7 +563,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const acceptInvite = async (inviteId: string) => {
-    if (!user || userProfile?.role !== 'CA') throw new Error("Only CAs can accept invites.");
+    if (!user || !userProfile || userProfile.role !== 'CA') throw new Error("Only CAs can accept invites.");
     
     let founderData: UserProfile | null = null;
     let inviteData: Invite | null = null;
