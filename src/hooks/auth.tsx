@@ -479,10 +479,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Only CAs can invite clients.' };
     }
     try {
-        await addDoc(collection(db, "invites"), {
+        const newInviteData = {
             type: 'ca_to_client', caId: user.uid, caName: userProfile.name,
+            caEmail: userProfile.email, // Using CA's email for querying invites
             clientEmail, status: 'pending', createdAt: new Date().toISOString(),
-        });
+        };
+        const inviteDocRef = await addDoc(collection(db, "invites"), newInviteData);
+        // Add invite to CA's own profile to update the UI
+        await updateUserProfile({ invites: [...(userProfile.invites || []), { ...newInviteData, id: inviteDocRef.id }] });
         return { success: true, message: "Client invitation sent." };
     } catch (error) {
         console.error("Error sending client invite:", error);
@@ -541,12 +545,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await updateDoc(caRef, { companies: [...(userProfile.companies || []), companyForCa] });
       await updateDoc(inviteRef, { status: 'accepted', acceptedAt: new Date().toISOString(), caId: user.uid, caName: userProfile.name });
 
-      // This is now just a local state update for the CA, the real link happens on the founder side.
       setUserProfile(prev => ({ ...prev!, companies: [...(prev!.companies || []), companyForCa] }));
       
       await addNotification({
-        title: 'Invitation Sent',
-        description: `Your invitation to manage ${inviteData.companyName} was accepted by ${userProfile.name}.`,
+        title: 'Invitation Accepted',
+        description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
         icon: 'CheckCircle',
         link: '/dashboard/ca-connect'
       }, inviteData.founderId);

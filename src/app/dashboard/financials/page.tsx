@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, ChevronsDown, ChevronsUp, ChevronsLeftRight } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, ChevronsDown, ChevronsUp, ChevronsLeftRight, AreaChart as AreaChartIcon } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -746,29 +746,92 @@ const FinancialsTab = () => {
     )
 }
 
+const FinancialAnalysisTab = () => {
+    const data = [
+      { year: '2022', revenue: 4500000, expenses: 3200000 },
+      { year: '2023', revenue: 7800000, expenses: 5100000 },
+      { year: '2024', revenue: 9500000, expenses: 6800000 },
+    ];
+  
+    const insights = [
+      "Revenue grew by 73% from 2022 to 2023, a significant jump likely due to new market entry or product launch.",
+      "Expense growth from 2023 to 2024 (33%) was higher than revenue growth (22%), indicating a potential decrease in operational efficiency.",
+      "Profit margin improved from 28.9% in 2022 to 34.6% in 2023, but slightly decreased to 28.4% in 2024.",
+    ];
+  
+    return (
+      <Card className="interactive-lift">
+        <CardHeader>
+          <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
+          <CardDescription>Compare financial performance across the last three years.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
+            <BarChart data={data} accessibilityLayer>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="year" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
+              <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+              <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+              <Legend />
+              <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4} />
+              <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4} />
+            </BarChart>
+          </ChartContainer>
+          <Card>
+             <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> AI-Generated Insights</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ul className="space-y-3">
+                    {insights.map((insight, index) => (
+                        <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
+                            <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                            <span>{insight}</span>
+                        </li>
+                    ))}
+                </ul>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    );
+  };
+
 export default function FinancialsPage() {
     const { userProfile } = useAuth();
     const [activeTab, setActiveTab] = useState('financials');
 
-    const tabs = [
-        { value: 'financials', label: 'Financials', icon: BarChartIcon },
-        { value: 'payroll', label: 'Payroll Calculator', icon: User },
-        { value: 'personal', label: 'Personal Tax', icon: User },
-        { value: 'corporate', label: 'Corporate Tax', icon: Building },
+    if (!userProfile) return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+    const isCA = userProfile.role === 'CA';
+
+    const founderTabs = [
+        { value: 'financials', label: 'Financials', icon: BarChartIcon, component: <FinancialsTab /> },
+        { value: 'analysis', label: 'Analysis', icon: AreaChartIcon, component: <FinancialAnalysisTab /> },
+        { value: 'payroll', label: 'Payroll Calculator', icon: User, component: <PayrollCalculator /> },
+        { value: 'personal', label: 'Personal Tax', icon: User, component: <PersonalTaxCalculator /> },
+        { value: 'corporate', label: 'Corporate Tax', icon: Building, component: <CorporateTaxCalculator /> },
     ];
     
-    if (!userProfile) return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-    
-    const currentTab = tabs.find(t => t.value === activeTab);
+    const caTabs = [
+        { value: 'payroll', label: 'Payroll Calculator', icon: User, component: <PayrollCalculator /> },
+        { value: 'personal', label: 'Personal Tax', icon: User, component: <PersonalTaxCalculator /> },
+        { value: 'corporate', label: 'Corporate Tax', icon: Building, component: <CorporateTaxCalculator /> },
+    ];
+
+    const tabs = isCA ? caTabs : founderTabs;
+    const defaultTab = isCA ? 'payroll' : 'financials';
+
+    const currentTab = tabs.find(t => t.value === activeTab) || tabs[0];
     const CurrentIcon = currentTab?.icon || Sparkles;
 
     return (
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
-                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">Financials & Tax</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">{isCA ? 'Taxes & Calculation' : 'Financials & Tax'}</h1>
                 <p className="text-muted-foreground">Tools to calculate taxes and manage your startup's financial health.</p>
             </div>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue={defaultTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
                  <div className="md:hidden">
                     <Select value={activeTab} onValueChange={setActiveTab}>
                         <SelectTrigger className="w-full">
@@ -789,18 +852,20 @@ export default function FinancialsPage() {
                         </SelectContent>
                     </Select>
                  </div>
-                <TabsList className="hidden md:grid w-full grid-cols-4">
+                <TabsList className="hidden md:grid w-full" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`}}>
                     {tabs.map(tab => (
                         <TabsTrigger key={tab.value} value={tab.value}>
                             <tab.icon className="mr-2"/>{tab.label}
                         </TabsTrigger>
                     ))}
                 </TabsList>
-                <TabsContent value="financials" className="mt-6"><FinancialsTab /></TabsContent>
-                <TabsContent value="payroll" className="mt-6"><PayrollCalculator /></TabsContent>
-                <TabsContent value="personal" className="mt-6"><PersonalTaxCalculator /></TabsContent>
-                <TabsContent value="corporate" className="mt-6"><CorporateTaxCalculator /></TabsContent>
+                {tabs.map(tab => (
+                    <TabsContent key={tab.value} value={tab.value} className="mt-6">
+                        {tab.component}
+                    </TabsContent>
+                ))}
             </Tabs>
         </div>
     );
 }
+

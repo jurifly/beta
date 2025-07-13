@@ -48,6 +48,7 @@ import {
   Briefcase,
   BookUser,
   CheckCircle,
+  Calculator,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -136,7 +137,8 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    
+    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "Impostos & Cálculo", ja: "税金と計算" },
+
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
     more: { en: "More", hi: "अन्य", es: "Más", zh: "更多", fr: "Plus", de: "Mehr", pt: "Mais", ja: "その他" },
@@ -247,6 +249,7 @@ const navItemConfig: NavItemConfig = {
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
+  taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
 } as const;
 
 
@@ -276,6 +279,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.invitations },
+  { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.reportCenter },
@@ -713,7 +717,7 @@ export default function DashboardLayout({
   }, [user, loading, router]);
 
 
-  if (!isMounted || loading) {
+  if (!isMounted) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
