@@ -51,7 +51,7 @@ const ContractDetailsSchema = z.object({
 
 const DocumentIntelligenceOutputSchema = z.object({
   documentType: DocumentTypeEnum.describe("The detected type of the document."),
-  summary: z.string().describe("A concise, bullet-point summary of the document's key points, purpose, and obligations, in layman's terms."),
+  summary: z.string().describe("A concise, markdown-formatted summary of the document's key points. It MUST use bullet points."),
   riskFlags: z.array(RiskFlagSchema).describe("A list of potential risks, liabilities, or unfavorable terms identified in the document."),
   replySuggestion: ReplySuggestionSchema.optional().nullable().describe("If the document is a notice that requires a response, provide a suggested draft reply here. Otherwise, omit this field."),
   reminder: ReminderSuggestionSchema.optional().nullable().describe("If a deadline or follow-up date is mentioned, suggest a reminder. Otherwise, omit this field."),
@@ -79,7 +79,10 @@ Perform the following steps and provide the output in the specified JSON format:
 
 1.  **Classify Document Type**: First, determine the type of document from the following options: 'Legal Contract', 'Government Notice', 'Termination/Warning Letter', 'Compliance Filing', 'Other'.
 
-2.  **Generate a Smart Summary**: Create a concise, easy-to-understand summary of the document. Explain what it's about, its purpose, and any key takeaways in simple bullet points.
+2.  **Generate a Smart Summary**: Create a concise, easy-to-understand summary of the document. YOU MUST USE MARKDOWN BULLET POINTS for readability. For example:
+    *   This is a Term Sheet for a Series A funding round.
+    *   Key terms include a $5M investment at a $20M post-money valuation.
+    *   The investor receives a 1x liquidation preference and pro-rata rights.
 
 3.  **Identify Risk Flags**: Scrutinize the document for any potential risks, liabilities, or unfavorable terms relevant to {{legalRegion}}. Be highly specific.
     *   For a 'Legal Contract', look for penalty clauses, unilateral indemnity clauses, ambiguous termination conditions, restrictive non-compete clauses, unfavorable jurisdiction, or long lock-in periods.
