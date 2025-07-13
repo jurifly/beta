@@ -262,7 +262,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Initialize company health if adding a new company
     if (updates.companies && userProfile) {
-        const oldCompanyIds = new Set(userProfile.companies.map(c => c.id));
+        const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
             if (!oldCompanyIds.has(company.id) && !company.health) {
                 company.health = { score: 0, risk: 'Low', deadlines: [] };

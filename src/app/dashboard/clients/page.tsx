@@ -29,14 +29,9 @@ export default function ClientsPage() {
   const router = useRouter();
   const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
-  const [healthCalculated, setHealthCalculated] = useState(false);
 
-  const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
-      if (companies.length === 0) {
-        setIsLoadingHealth(false);
-        return;
-      }
-      setIsLoadingHealth(true);
+  useEffect(() => {
+    const calculateAllClientHealth = async (companies: Company[]) => {
       try {
         const healthPromises = companies.map(async (company) => {
           try {
@@ -88,29 +83,20 @@ export default function ClientsPage() {
         const results = await Promise.all(healthPromises);
         setClientHealthData(results);
         
-        if (userProfile) {
-            const updatedCompanies = userProfile.companies.map(c => {
-                const foundHealth = results.find(h => h.id === c.id);
-                return foundHealth ? { ...c, health: { score: foundHealth.healthScore, risk: foundHealth.riskLevel, deadlines: foundHealth.upcomingDeadlines } } : c;
-            });
-            await updateUserProfile({ companies: updatedCompanies });
-        }
       } catch (error) {
         console.error("An error occurred while calculating client health:", error);
       } finally {
         setIsLoadingHealth(false);
-        setHealthCalculated(true);
       }
-    }, [updateUserProfile, userProfile]);
+    };
     
-    useEffect(() => {
-        const companies = userProfile?.companies;
-        if (companies && companies.length > 0) {
-            calculateAllClientHealth(companies);
-        } else {
-            setIsLoadingHealth(false);
-        }
-    }, [userProfile?.companies, calculateAllClientHealth]);
+    const companies = userProfile?.companies;
+    if (companies && companies.length > 0) {
+        calculateAllClientHealth(companies);
+    } else {
+        setIsLoadingHealth(false);
+    }
+  }, [userProfile?.companies]);
 
   const highRiskClientCount = useMemo(() => {
     return clientHealthData.filter(client => client.riskLevel === 'High').length;
@@ -135,7 +121,7 @@ export default function ClientsPage() {
 
   return (
     <>
-      <InviteClientModal isOpen={isInviteModalOpen} onOpenChange={setInviteModalOpen} />
+      <InviteClientModal isOpen={isInviteModalOpen} onOpenChange={setInviteClientModalOpen} />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
