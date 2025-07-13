@@ -138,6 +138,11 @@ const AdvisorActionsCard = ({ onAddRequest, onInviteClient }: { onAddRequest: ()
                 <Button variant="outline" onClick={onInviteClient}>
                     <UserPlus className="mr-2 h-4 w-4"/>Invite a Client
                 </Button>
+                 <Button variant="outline" asChild>
+                    <Link href="/dashboard/invitations">
+                        <Mail className="mr-2"/>View Invitations
+                    </Link>
+                </Button>
             </CardContent>
         </Card>
     );
