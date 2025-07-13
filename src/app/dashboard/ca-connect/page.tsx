@@ -1,30 +1,25 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Loader2,
   Plus,
-  ClipboardCheck,
   ListX,
-  Users,
   Sparkles,
   FileUp,
-  Briefcase,
   Search,
-  ArrowRight,
   UserPlus,
   Mail,
-  Building,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/auth';
 import { cn } from '@/lib/utils';
-import { format, startOfToday, formatDistanceToNow } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { AddDocRequestModal } from '@/components/dashboard/add-doc-request-modal';
 import { ProvideDocumentModal } from '@/components/dashboard/provide-document-modal';
@@ -60,9 +55,6 @@ const RequestItem = ({ request, onProvide }: { request: DocumentRequest; onProvi
         {isFounder && status !== 'Received' && (
             <Button size="sm" onClick={() => onProvide(request)}><FileUp className="mr-2"/>Provide</Button>
         )}
-        {!isFounder && (
-             <Button variant="outline" size="sm" disabled>Get Quote</Button>
-        )}
         {request.status === 'Received' && request.providedFile?.url && (
             <Button size="sm" variant="outline" asChild>
                 <a href={request.providedFile.url} target="_blank" rel="noopener noreferrer">View</a>
@@ -87,23 +79,19 @@ const EmptyState = ({ onAddRequest }: { onAddRequest: () => void }) => {
   )
 }
 
-const FounderAdvisorHub = ({ onInvite }: { onInvite: () => void }) => {
+const FounderActionsCard = ({ onInvite }: { onInvite: () => void }) => {
   const { userProfile } = useAuth();
+  const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
 
   if (!userProfile || userProfile.role !== 'Founder') return null;
 
-  if (userProfile.connectedCaUid) {
+  if (activeCompany?.connectedCaUid) {
       return (
           <Card className="interactive-lift">
               <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><CheckCircle className="text-green-500" /> My Advisor</CardTitle>
-                  <CardDescription>You are connected with your compliance professional.</CardDescription>
+                  <CardTitle className="flex items-center gap-2"><CheckCircle className="text-green-500" /> Advisor Connected</CardTitle>
+                  <CardDescription>You can now collaborate with your advisor on this workspace.</CardDescription>
               </CardHeader>
-              <CardContent>
-                 <Button disabled>
-                      <Briefcase className="mr-2"/> View Workspace (Coming Soon)
-                  </Button>
-              </CardContent>
           </Card>
       );
   }
@@ -132,6 +120,28 @@ const FounderAdvisorHub = ({ onInvite }: { onInvite: () => void }) => {
       </Card>
   )
 }
+
+const AdvisorActionsCard = ({ onAddRequest, onInviteClient }: { onAddRequest: () => void; onInviteClient: () => void; }) => {
+    const { userProfile } = useAuth();
+    if (!userProfile || userProfile.role === 'Founder') return null;
+
+    return (
+        <Card className="interactive-lift bg-muted/50">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Users /> Client Management</CardTitle>
+                <CardDescription>Manage document requests or invite a new client to your portfolio.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-4">
+                <Button onClick={onAddRequest}>
+                    <Plus className="mr-2 h-4 w-4"/>Request a Document
+                </Button>
+                <Button variant="outline" onClick={onInviteClient}>
+                    <UserPlus className="mr-2 h-4 w-4"/>Invite a Client
+                </Button>
+            </CardContent>
+        </Card>
+    );
+};
 
 
 export default function CaConnectPage() {
@@ -221,22 +231,11 @@ export default function CaConnectPage() {
             </div>
 
             {isFounder ? (
-              <FounderAdvisorHub onInvite={() => setInviteAdvisorModalOpen(true)} />
+                <FounderActionsCard onInvite={() => setInviteAdvisorModalOpen(true)} />
             ) : (
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Client Actions</CardTitle>
-                            <CardDescription>Manage interactions for {activeCompany?.name || 'your client'}.</CardDescription>
-                        </div>
-                        <div className='flex gap-2'>
-                           <Button variant="outline" onClick={() => setInviteClientModalOpen(true)}><UserPlus className="mr-2 h-4 w-4"/>Invite a Client</Button>
-                           <Button onClick={() => setAddRequestModalOpen(true)}><Plus className="mr-2 h-4 w-4"/>Request a Document</Button>
-                        </div>
-                    </CardHeader>
-                </Card>
+                <AdvisorActionsCard onAddRequest={() => setAddRequestModalOpen(true)} onInviteClient={() => setInviteClientModalOpen(true)} />
             )}
-
+           
             <Card className="interactive-lift">
                 <CardHeader>
                     <CardTitle>Document Requests</CardTitle>
