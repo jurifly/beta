@@ -149,9 +149,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let profile = userDoc.data() as UserProfile;
       const updatesToApply: Partial<UserProfile> = {};
       
+      // Ensure companies is an array. Only update if it's not.
       if (!Array.isArray(profile.companies)) {
         profile.companies = [];
-        updatesToApply.companies = [];
       }
 
       // --- Backfill missing credit fields for older user profiles ---
@@ -254,10 +254,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     
+    // Initialize health property for new companies
     if (updates.companies && userProfile) {
         const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
-            if (!oldCompanyIds.has(company.id) && !company.health) {
+            if (!oldCompanyIds.has(company.id)) {
                 company.health = { score: 0, risk: 'Low', deadlines: [] };
             }
         });
@@ -280,6 +281,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
   
+    // If CA is updating, founderUid should exist for invited clients.
+    // If CA added client manually, founderUid will be undefined.
     const targetUserId = company.founderUid || user.uid;
     
     if (!targetUserId) {
@@ -540,10 +543,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Only founders can send invites.' };
     }
     
-    // Check if an invite already exists for this CA
-    const existingInvite = (userProfile.invites || []).find(inv => inv.caEmail === caEmail && inv.status === 'pending');
+    // Check if an invite already exists for this CA for this company
+    const existingInvite = (userProfile.invites || []).find(inv => inv.caEmail === caEmail && inv.companyId === companyId && inv.status === 'pending');
     if (existingInvite) {
-        return { success: false, message: "An invitation has already been sent to this advisor." };
+        return { success: false, message: "An invitation has already been sent to this advisor for this company." };
     }
 
     const newInviteData: Omit<Invite, 'id'> = {
@@ -595,13 +598,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
       if (!companyToAccept) throw new Error("Company not found in founder's profile.");
   
+      // This is the key: we add founderUid to the company object for the CA
       const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
   
       const caDoc = await transaction.get(caRef);
       if (!caDoc.exists()) throw new Error("CA profile not found.");
       const caProfile = caDoc.data() as UserProfile;
   
-      // 1. Update CA's profile with the new company
+      // 1. Update CA's profile with the new company, including founderUid
       transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
       
       // 2. Update the founder's company with the connected CA's UID

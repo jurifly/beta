@@ -29,10 +29,12 @@ export default function ClientsPage() {
   const router = useRouter();
   const [clientHealthData, setClientHealthData] = useState<ClientHealthInfo[]>([]);
   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
       if (companies.length === 0) {
         setIsLoadingHealth(false);
+        setClientHealthData([]);
         return;
       }
       setIsLoadingHealth(true);
@@ -113,6 +115,13 @@ export default function ClientsPage() {
     return Math.round(totalScore / clientHealthData.length);
   }, [clientHealthData, isLoadingHealth]);
 
+  const filteredClients = useMemo(() => {
+      if (!searchTerm) return clientHealthData;
+      return clientHealthData.filter(client =>
+          client.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  }, [clientHealthData, searchTerm]);
+
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -169,7 +178,15 @@ export default function ClientsPage() {
                   <CardDescription>An overview of all companies in your portfolio.</CardDescription>
               </div>
               <div className="flex w-full sm:w-auto gap-2">
-                  <div className="relative flex-1 sm:flex-initial"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search clients..." className="pl-10" /></div>
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search clients..." 
+                      className="pl-10" 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
               </div>
           </CardHeader>
           <CardContent>
@@ -186,7 +203,7 @@ export default function ClientsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clientHealthData.map((company) => (
+                    {filteredClients.map((company) => (
                       <TableRow key={company.id} onClick={() => handleViewDetails(company.id)} className="cursor-pointer">
                         <TableCell className="font-medium">{company.name}</TableCell>
                         <TableCell>{company.type}</TableCell>
