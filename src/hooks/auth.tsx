@@ -286,7 +286,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!remoteUserDoc.exists()) throw new Error("Target user profile does not exist.");
 
       const remoteProfile = remoteUserDoc.data() as UserProfile;
-      const remoteCompanies = remoteProfile.companies || [];
+      const remoteCompanies = Array.isArray(remoteProfile.companies) ? remoteProfile.companies : [];
       const remoteCompanyIndex = remoteCompanies.findIndex(c => c.id === companyId);
       if (remoteCompanyIndex === -1) throw new Error("Company not found in target user's profile.");
       
