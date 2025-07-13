@@ -471,7 +471,7 @@ const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language
 };
 
 
-function DashboardApp({ children }: { children: React.ReactNode }) {
+function AppShell({ children }: { children: ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
@@ -698,19 +698,22 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, userProfile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-    if (!user) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
       router.replace("/login");
     }
   }, [user, loading, router]);
 
 
-  if (loading || !userProfile) {
+  if (!isMounted || loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -718,7 +721,7 @@ export default function DashboardLayout({
     );
   }
 
-  return <DashboardApp>{children}</DashboardApp>;
+  return <AppShell>{children}</AppShell>;
 }
 
 const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: Language }) => {

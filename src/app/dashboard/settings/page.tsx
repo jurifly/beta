@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/auth";
 import SettingsForm from './form';
 import BillingForm from "./billing-form";
@@ -117,25 +117,24 @@ export default function SettingsPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   
-  const [activeView, setActiveView] = useState<string | null>(tabParam || (isMobile ? null : 'profile'));
+  const [activeView, setActiveView] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null);
   const { userProfile, deductCredits } = useAuth();
   
-  // Update activeView if tabParam changes
-  useState(() => {
+  useEffect(() => {
+    setIsMounted(true);
+    // Set initial active view based on query param or device type
     setActiveView(tabParam || (isMobile ? null : 'profile'));
   }, [tabParam, isMobile]);
-  
-  // Set default view based on device
-  useState(() => {
-    if (tabParam) {
-      setActiveView(tabParam);
-    } else {
-      setActiveView(isMobile ? null : 'profile');
+
+  useEffect(() => {
+    if (isMounted) {
+      setActiveView(tabParam || (isMobile ? null : 'profile'));
     }
-  }, [isMobile]);
+  }, [isMounted, isMobile, tabParam]);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -165,6 +164,15 @@ export default function SettingsPage() {
   }
 
   const activeComponent = settingsItems.find(item => item.key === activeView);
+
+  // Hydration safety: Don't render UI that depends on `isMobile` on the server
+  if (!isMounted) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (isMobile) {
     if (activeComponent && activeComponent.component) {
