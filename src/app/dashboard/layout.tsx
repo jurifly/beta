@@ -137,7 +137,7 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "Impostos & Cálculo", ja: "税金と計算" },
+    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算" },
 
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
@@ -237,7 +237,7 @@ const navItemConfig: NavItemConfig = {
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
-  documents: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
+  docVault: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: FolderKanban },
@@ -563,47 +563,7 @@ function AppShell({ children }: { children: ReactNode }) {
                             <span className="sr-only">Toggle navigation menu</span>
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="flex flex-col p-0">
-                         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
-                            <Logo />
-                            <span>Claari</span>
-                            </Link>
-                        </div>
-                        <ScrollArea className="flex-1">
-                            <nav className="grid gap-2 text-lg font-medium p-4">
-                            {navItems.map((item) => {
-                                const isActive = item.href === '/dashboard' 
-                                ? usePathname() === item.href 
-                                : usePathname().startsWith(item.href);
-                                const isLocked = item.locked && !isPro && !isDevMode;
-                                const label = translations[item.label_override_key || item.translationKey][lang];
-
-                                return (
-                                    <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    onClick={(e) => {
-                                        if (isLocked) {
-                                            e.preventDefault();
-                                            setLockedFeature(label);
-                                        }
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                        isActive && "bg-muted text-primary",
-                                        isLocked && "cursor-not-allowed"
-                                    )}
-                                    >
-                                    <item.icon className="h-4 w-4" />
-                                    {label}
-                                    {isLocked && <Lock className="ml-auto h-4 w-4" />}
-                                    </Link>
-                                );
-                                })}
-                            </nav>
-                        </ScrollArea>
-                    </SheetContent>
+                    <MobileSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
                 </Sheet>
                 <div className="w-full flex-1">
                     <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary font-headline md:hidden">
@@ -697,6 +657,60 @@ function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
+const MobileSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: Language }) => {
+    const pathname = usePathname();
+    const { isDevMode } = useAuth();
+    const isPro = planHierarchy[userProfile.plan] > 0;
+    
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
+        const label = translations[item.label_override_key || item.translationKey][lang];
+        if (item.locked && !isPro && !isDevMode) {
+            e.preventDefault();
+            onLockedFeatureClick(label);
+        }
+    };
+    
+    return (
+        <SheetContent side="left" className="flex flex-col p-0">
+            <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
+                <Logo />
+                <span>Claari</span>
+                </Link>
+            </div>
+            <ScrollArea className="flex-1">
+                <nav className="grid gap-2 text-lg font-medium p-4">
+                {navItems.map((item) => {
+                    const isActive = (item.href === '/dashboard' && pathname === item.href) ||
+                                     (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                    const isLocked = item.locked && !isPro && !isDevMode;
+                    const label = translations[item.label_override_key || item.translationKey][lang];
+
+                    return (
+                        <SheetTrigger asChild key={item.href}>
+                            <Link
+                                href={item.href}
+                                onClick={(e) => handleLinkClick(e, item)}
+                                className={cn(
+                                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                    isActive && "bg-muted text-primary",
+                                    isLocked && "cursor-not-allowed"
+                                )}
+                            >
+                                <item.icon className="h-4 w-4" />
+                                {label}
+                                {isLocked && <Lock className="ml-auto h-4 w-4" />}
+                            </Link>
+                        </SheetTrigger>
+                    );
+                    })}
+                </nav>
+            </ScrollArea>
+        </SheetContent>
+    );
+};
+
+
 export default function DashboardLayout({
   children,
 }: {
@@ -718,6 +732,14 @@ export default function DashboardLayout({
 
 
   if (!isMounted) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -757,9 +779,8 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
           <ScrollArea className="flex-1">
              <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
               {navItems.map((item) => {
-                const isActive = item.href === '/dashboard' 
-                  ? pathname === item.href 
-                  : pathname.startsWith(item.href);
+                const isActive = (item.href === '/dashboard' && pathname === item.href) ||
+                                 (item.href !== '/dashboard' && pathname.startsWith(item.href));
                 const isLocked = item.locked && !isPro && !isDevMode;
                 const label = translations[item.label_override_key || item.translationKey][lang];
 
