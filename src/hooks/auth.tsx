@@ -21,7 +21,7 @@ export interface AuthContextType {
   isDevMode: boolean;
   setDevMode: (enabled: boolean) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  updateCompanyChecklistStatus: (companyId: string, newStatus: Record<string, boolean>) => Promise<void>;
+  updateCompanyChecklistStatus: (companyId: string, updates: { itemId: string; completed: boolean }[]) => Promise<void>;
   deductCredits: (amount: number) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
@@ -265,12 +265,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [user]);
   
-  const updateCompanyChecklistStatus = useCallback(async (companyId: string, newStatus: Record<string, boolean>) => {
-    if (!user || !userProfile) return;
-    
-    // Determine the correct user document to update (either the founder's or the CA's)
+  const updateCompanyChecklistStatus = useCallback(async (
+    companyId: string,
+    updates: { itemId: string; completed: boolean }[]
+  ) => {
+    if (!user || !userProfile || updates.length === 0) return;
+
     const company = userProfile.companies.find(c => c.id === companyId);
-    if (!company) return; // Should not happen
+    if (!company) return;
 
     const targetUserId = userProfile.role === 'CA' ? company.founderUid : user.uid;
     if (!targetUserId) {
@@ -280,32 +282,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const userToUpdateRef = doc(db, "users", targetUserId);
     
-    // Fetch the latest profile to avoid overwriting other changes
-    const userToUpdateDoc = await getDoc(userToUpdateRef);
-    if (!userToUpdateDoc.exists()) return;
-
-    const profileToUpdate = userToUpdateDoc.data() as UserProfile;
-    
-    const updatedCompanies = profileToUpdate.companies.map(c => {
-        if (c.id === companyId) {
-            // Sanitize keys before saving to prevent Firestore errors
-            const sanitizedStatus: Record<string, boolean> = {};
-            for (const key in newStatus) {
-                const sanitizedKey = key.replace(/[.*~/[\]]/g, '_');
-                sanitizedStatus[sanitizedKey] = newStatus[key];
+    try {
+        await runTransaction(db, async (transaction) => {
+            const userToUpdateDoc = await transaction.get(userToUpdateRef);
+            if (!userToUpdateDoc.exists()) {
+                throw new Error("User profile to update does not exist.");
             }
-            return { ...c, checklistStatus: sanitizedStatus };
+
+            const profileToUpdate = userToUpdateDoc.data() as UserProfile;
+            const companyIndex = profileToUpdate.companies.findIndex(c => c.id === companyId);
+            if (companyIndex === -1) {
+                throw new Error("Company not found in profile.");
+            }
+
+            const newChecklistStatus = { ...profileToUpdate.companies[companyIndex].checklistStatus };
+            updates.forEach(update => {
+                const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+                newChecklistStatus[sanitizedKey] = update.completed;
+            });
+            
+            const fieldPath = `companies.${companyIndex}.checklistStatus`;
+            transaction.update(userToUpdateRef, { [fieldPath]: newChecklistStatus });
+        });
+
+        // Optimistically update local state if the current user was the target
+        if (targetUserId === user.uid) {
+             setUserProfile(prev => {
+                if (!prev) return null;
+                const newCompanies = prev.companies.map(c => {
+                    if (c.id === companyId) {
+                        const newChecklistStatus = { ...c.checklistStatus };
+                         updates.forEach(update => {
+                            const sanitizedKey = update.itemId.replace(/[.*~/[\]]/g, '_');
+                            newChecklistStatus[sanitizedKey] = update.completed;
+                        });
+                        return { ...c, checklistStatus: newChecklistStatus };
+                    }
+                    return c;
+                });
+                return { ...prev, companies: newCompanies };
+            });
         }
-        return c;
-    });
 
-    await updateDoc(userToUpdateRef, { companies: updatedCompanies });
-
-    // If the current user is the one being updated, refresh their local profile state
-    if(targetUserId === user.uid) {
-        setUserProfile(prev => prev ? { ...prev, companies: updatedCompanies } : null);
+    } catch (e: any) {
+        console.error("Checklist update transaction failed:", e);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not save checklist changes. Please try again.",
+        });
     }
-  }, [user, userProfile]);
+  }, [user, userProfile, toast]);
 
   const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
