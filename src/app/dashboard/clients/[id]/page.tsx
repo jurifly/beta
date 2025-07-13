@@ -107,7 +107,8 @@ export default function ClientDetailPage() {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const clientCompany = userProfile.companies.find(c => c.id === clientId);
+  const companies = Array.isArray(userProfile.companies) ? userProfile.companies : [];
+  const clientCompany = companies.find(c => c.id === clientId);
 
   if (!clientCompany) {
     return <div className="text-center">Client not found.</div>;
