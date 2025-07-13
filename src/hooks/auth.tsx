@@ -256,6 +256,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     
+    // Ensure new companies get a default health object
     if (updates.companies && userProfile) {
         const oldCompanyIds = new Set((userProfile.companies || []).map(c => c.id));
         updates.companies.forEach(company => {
@@ -282,7 +283,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const company = userProfile.companies.find(c => c.id === companyId);
     if (!company) return;
   
-    const targetUserId = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') ? (company.founderUid || user.uid) : user.uid;
+    // Determine the owner of the record.
+    // If it's an invited client, `founderUid` exists.
+    // If it's a CA's manually added client, `founderUid` is null/undefined.
+    const targetUserId = company.founderUid || user.uid;
     
     if (!targetUserId) {
         console.error("Could not find owner of the company to update checklist.");
@@ -294,6 +298,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
     
+    // Use the determined owner's ID to build the document reference
     const userToUpdateRef = doc(db, "users", targetUserId);
     
     try {
@@ -374,7 +379,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
                 // If user doesn't exist in Firestore, it's a first-time Google sign-in
-                await createNewUserProfile(firebaseUser, 'India', 'Founder');
+                const newProfile = await createNewUserProfile(firebaseUser, 'India', 'Founder');
+                setUserProfile(newProfile);
             }
         }
     } catch(error: any) {
@@ -540,7 +546,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !userProfile || userProfile.role !== 'Founder') {
       return { success: false, message: 'Only founders can send invites.' };
     }
-    const invitesRef = collection(db, 'invites');
+    
     const newInvite: Omit<Invite, 'id'> = {
         caEmail,
         founderId: user.uid,
@@ -552,11 +558,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     try {
-        const inviteDocRef = await addDoc(invitesRef, newInvite);
+        const inviteDocRef = await addDoc(collection(db, 'invites'), newInvite);
         const userUpdates: Partial<UserProfile> = {
             invites: [...(userProfile.invites || []), { ...newInvite, id: inviteDocRef.id }],
-            // Set the invited email on the founder's profile.
-            invitedCaEmail: caEmail,
         };
         await updateUserProfile(userUpdates);
         return { success: true, message: 'Invitation sent successfully!' };
@@ -570,50 +574,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) {
       throw new Error("Only advisors can accept invites.");
     }
-
+  
     const inviteRef = doc(db, 'invites', inviteId);
     const caRef = doc(db, 'users', user.uid);
-
+  
     await runTransaction(db, async (transaction) => {
-        const inviteDoc = await transaction.get(inviteRef);
-        if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
-          throw new Error("Invite not found or already processed.");
-        }
-        
-        const inviteData = inviteDoc.data() as Invite;
-        const { founderId, companyId } = inviteData;
-    
-        const founderRef = doc(db, 'users', founderId);
-        const founderDoc = await transaction.get(founderRef);
-        if (!founderDoc.exists()) throw new Error("Founder account not found.");
-        
-        const founderData = founderDoc.data() as UserProfile;
-        const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
-        if (!companyToAccept) throw new Error("Company not found in founder's profile.");
-    
-        const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
-    
-        const caDoc = await transaction.get(caRef);
-        if (!caDoc.exists()) throw new Error("CA profile not found.");
-        const caProfile = caDoc.data() as UserProfile;
-
-        // 1. Update CA's profile with the new company
-        transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
-        // 2. Mark the invitation as accepted
-        transaction.update(inviteRef, { status: 'accepted' });
+      const inviteDoc = await transaction.get(inviteRef);
+      if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
+        throw new Error("Invite not found or already processed.");
+      }
+      
+      const inviteData = inviteDoc.data() as Invite;
+      const { founderId, companyId } = inviteData;
+  
+      const founderRef = doc(db, 'users', founderId);
+      const founderDoc = await transaction.get(founderRef);
+      if (!founderDoc.exists()) throw new Error("Founder account not found.");
+      
+      const founderData = founderDoc.data() as UserProfile;
+      const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
+      if (!companyToAccept) throw new Error("Company not found in founder's profile.");
+  
+      // Add the founder's UID to the company object for the CA
+      const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
+  
+      const caDoc = await transaction.get(caRef);
+      if (!caDoc.exists()) throw new Error("CA profile not found.");
+      const caProfile = caDoc.data() as UserProfile;
+  
+      // 1. Update CA's profile with the new company
+      transaction.update(caRef, { companies: [...(caProfile.companies || []), companyForCa] });
+      // 2. Update invitation status
+      transaction.update(inviteRef, { status: 'accepted' });
     });
-
-    // Notify the founder AFTER the transaction is successful
+  
+    // Fetch fresh data after transaction
+    await fetchUserProfile(user);
     const inviteData = (await getDoc(inviteRef)).data() as Invite;
+  
+    // Notify the founder AFTER the transaction is successful
     await addNotification({
       title: 'Invitation Accepted!',
       description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
       icon: 'CheckCircle',
       link: '/dashboard/ca-connect'
     }, inviteData.founderId);
-
-    // Refresh the CA's local profile data
-    await fetchUserProfile(user);
   };
 
   const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite };

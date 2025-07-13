@@ -35,6 +35,7 @@ export default function ClientsPage() {
         setIsLoadingHealth(false);
         return;
       }
+      setIsLoadingHealth(true);
       try {
         const healthPromises = companies.map(async (company) => {
           try {
@@ -96,9 +97,9 @@ export default function ClientsPage() {
   useEffect(() => {
     const companies = userProfile?.companies;
     if (companies) {
-        calculateAllClientHealth(companies);
+      calculateAllClientHealth(companies);
     } else {
-        setIsLoadingHealth(false);
+      setIsLoadingHealth(false);
     }
   }, [userProfile?.companies, calculateAllClientHealth]);
 
