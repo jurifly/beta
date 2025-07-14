@@ -62,6 +62,25 @@ const payrollSchema = z.object({
 });
 type PayrollFormData = z.infer<typeof payrollSchema>;
 
+const hireSchema = z.object({
+  role: z.string().min(1, "Role is required."),
+  monthlySalary: z.coerce.number().min(1, "Salary must be positive."),
+  startMonth: z.coerce.number().min(1).max(12),
+});
+
+const oneTimeExpenseSchema = z.object({
+  item: z.string().min(1, "Item description is required."),
+  amount: z.coerce.number().min(1, "Amount must be positive."),
+  month: z.coerce.number().min(1).max(12),
+});
+
+const forecastSchema = z.object({
+  revenueGrowthRate: z.coerce.number().min(0).max(100),
+  newHires: z.array(hireSchema),
+  oneTimeExpenses: z.array(oneTimeExpenseSchema),
+});
+type ForecastFormData = z.infer<typeof forecastSchema>;
+
 
 const InfoCard = ({ title, value }: { title: string, value: string }) => (
     <div className="flex justify-between items-center text-sm p-3 border rounded-md bg-muted/30">
