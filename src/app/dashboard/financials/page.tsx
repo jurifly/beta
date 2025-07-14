@@ -605,6 +605,13 @@ const FinancialsTab = () => {
     const [cashBalance, setCashBalance] = useState(activeCompany?.financials?.cashBalance || 0);
     const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
     const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
+    
+    // State for historical data
+    const [historicalData, setHistoricalData] = useState(activeCompany?.historicalFinancials || []);
+    const [newYear, setNewYear] = useState("");
+    const [newRevenue, setNewRevenue] = useState<number | ''>('');
+    const [newExpenses, setNewExpenses] = useState<number | ''>('');
+
 
     const { control, handleSubmit, formState: { errors } } = useForm<ForecastFormData>({
         resolver: zodResolver(forecastSchema),
@@ -635,11 +642,15 @@ const FinancialsTab = () => {
     const handleSaveFinancials = async () => {
         if (!activeCompany || !userProfile) return;
         setIsSaving(true);
-        const updatedCompany = { ...activeCompany, financials: { cashBalance: cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses }};
+        const updatedCompany = { 
+            ...activeCompany, 
+            financials: { cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses },
+            historicalFinancials: historicalData,
+        };
         const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
         try {
             await updateUserProfile({ companies: updatedCompanies });
-            toast({ title: "Financials Saved", description: "Your burn rate and runway have been updated."});
+            toast({ title: "Financials Saved", description: "Your financial data has been updated."});
         } catch(e) {
             toast({ variant: 'destructive', title: "Save Failed", description: "Could not save financial data."});
         } finally {
@@ -674,6 +685,25 @@ const FinancialsTab = () => {
             setIsForecasting(false);
         }
     };
+    
+    const addHistoricalData = () => {
+        if (newYear && typeof newRevenue === 'number' && typeof newExpenses === 'number') {
+            if (historicalData.some(d => d.year === newYear)) {
+                toast({ variant: 'destructive', title: 'Duplicate Year', description: 'Data for this year already exists.'});
+                return;
+            }
+            setHistoricalData([...historicalData, { year: newYear, revenue: newRevenue, expenses: newExpenses }]);
+            setNewYear('');
+            setNewRevenue('');
+            setNewExpenses('');
+        } else {
+            toast({ variant: 'destructive', title: 'Invalid Data', description: 'Please fill out all fields for the historical record.'});
+        }
+    };
+
+    const removeHistoricalData = (year: string) => {
+        setHistoricalData(historicalData.filter(d => d.year !== year));
+    };
 
     if (!activeCompany) {
       return (
@@ -707,12 +737,6 @@ const FinancialsTab = () => {
                             <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value) || 0)} placeholder="e.g. 800000" />
                         </div>
                     </CardContent>
-                    <CardFooter>
-                         <Button onClick={handleSaveFinancials} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
-                            Save & Recalculate
-                        </Button>
-                    </CardFooter>
                 </Card>
                  <Card className="interactive-lift">
                     <CardHeader>
@@ -754,6 +778,29 @@ const FinancialsTab = () => {
                     </CardContent>
                  </Card>
             </div>
+            
+            <Card className="col-span-full interactive-lift">
+                <CardHeader><CardTitle>Historical Data</CardTitle><CardDescription>Add past financial years' data for YoY analysis.</CardDescription></CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {historicalData.map(data => (
+                            <div key={data.year} className="flex items-center gap-4 p-3 border rounded-md">
+                                <p className="font-semibold flex-1">{data.year}</p>
+                                <p className="text-sm text-green-600">Revenue: {formatCurrency(data.revenue)}</p>
+                                <p className="text-sm text-red-600">Expenses: {formatCurrency(data.expenses)}</p>
+                                <Button variant="ghost" size="icon" onClick={() => removeHistoricalData(data.year)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                            </div>
+                        ))}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border-t">
+                             <div className="space-y-1.5"><Label htmlFor="new-year">Year (e.g., 2023-24)</Label><Input id="new-year" value={newYear} onChange={e => setNewYear(e.target.value)} /></div>
+                             <div className="space-y-1.5"><Label htmlFor="new-revenue">Total Revenue (₹)</Label><Input id="new-revenue" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
+                             <div className="space-y-1.5"><Label htmlFor="new-expenses">Total Expenses (₹)</Label><Input id="new-expenses" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
+                             <Button onClick={addHistoricalData}><PlusCircle className="mr-2"/>Add Year</Button>
+                        </div>
+                    </div>
+                </CardContent>
+                 <CardFooter><Button onClick={handleSaveFinancials} disabled={isSaving}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}Save Financials</Button></CardFooter>
+            </Card>
             
             <Card className="col-span-full interactive-lift">
                 <form onSubmit={handleSubmit(onForecastSubmit)}>
@@ -853,18 +900,52 @@ const FinancialsTab = () => {
 }
 
 const FinancialAnalysisTab = () => {
-    const data = [
-      { year: '2022', revenue: 4500000, expenses: 3200000 },
-      { year: '2023', revenue: 7800000, expenses: 5100000 },
-      { year: '2024', revenue: 9500000, expenses: 6800000 },
-    ];
+    const { userProfile } = useAuth();
+    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+    
+    const chartData = useMemo(() => {
+        if (!activeCompany?.historicalFinancials || activeCompany.historicalFinancials.length === 0) {
+            return [];
+        }
+        return activeCompany.historicalFinancials.sort((a,b) => a.year.localeCompare(b.year));
+    }, [activeCompany]);
+
+    const insights = useMemo(() => {
+        if (chartData.length < 2) return [];
+        const insightsArr: string[] = [];
+        for (let i = 1; i < chartData.length; i++) {
+            const current = chartData[i];
+            const prev = chartData[i-1];
+            
+            const revGrowth = ((current.revenue - prev.revenue) / prev.revenue) * 100;
+            const expGrowth = ((current.expenses - prev.expenses) / prev.expenses) * 100;
+
+            if (revGrowth > 0) {
+                insightsArr.push(`Revenue grew by ${revGrowth.toFixed(1)}% from FY ${prev.year} to FY ${current.year}.`);
+            }
+            if (expGrowth > revGrowth) {
+                insightsArr.push(`Expense growth (${expGrowth.toFixed(1)}%) outpaced revenue growth in FY ${current.year}, impacting margins.`);
+            }
+        }
+        return insightsArr;
+    }, [chartData]);
   
-    const insights = [
-      "Revenue grew by 73% from 2022 to 2023, a significant jump likely due to new market entry or product launch.",
-      "Expense growth from 2023 to 2024 (33%) was higher than revenue growth (22%), indicating a potential decrease in operational efficiency.",
-      "Profit margin improved from 28.9% in 2022 to 34.6% in 2023, but slightly decreased to 28.4% in 2024.",
-    ];
-  
+    if (chartData.length === 0) {
+        return (
+             <Card className="interactive-lift">
+                <CardHeader>
+                  <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
+                  <CardDescription>Compare financial performance across the last three years.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                        <p>No historical data found. Add data in the "Financials" tab to enable this view.</p>
+                    </div>
+                </CardContent>
+             </Card>
+        )
+    }
+
     return (
       <Card className="interactive-lift">
         <CardHeader>
@@ -873,7 +954,7 @@ const FinancialAnalysisTab = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
-            <BarChart data={data} accessibilityLayer>
+            <BarChart data={chartData} accessibilityLayer>
               <CartesianGrid vertical={false} />
               <XAxis dataKey="year" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
@@ -888,14 +969,18 @@ const FinancialAnalysisTab = () => {
                 <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> AI-Generated Insights</CardTitle>
             </CardHeader>
             <CardContent>
-                <ul className="space-y-3">
-                    {insights.map((insight, index) => (
-                        <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
-                            <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
-                            <span>{insight}</span>
-                        </li>
-                    ))}
-                </ul>
+                {insights.length > 0 ? (
+                    <ul className="space-y-3">
+                        {insights.map((insight, index) => (
+                            <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
+                                <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                                <span>{insight}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-muted-foreground">Add at least two years of data to generate insights.</p>
+                )}
             </CardContent>
           </Card>
         </CardContent>

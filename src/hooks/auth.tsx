@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -150,6 +150,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (!Array.isArray(profile.companies)) {
         profile.companies = [];
+      } else {
+        // Ensure historicalFinancials is an array for each company
+        profile.companies.forEach(company => {
+            if (!Array.isArray(company.historicalFinancials)) {
+                company.historicalFinancials = [];
+            }
+        });
       }
 
       if (profile.dailyCreditLimit === undefined) updatesToApply.dailyCreditLimit = 5;
@@ -245,6 +252,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updates.companies.forEach(company => {
             if (!oldCompanyIds.has(company.id) && !company.health) {
                 company.health = { score: 0, risk: 'Low', deadlines: [] };
+            }
+             if (!Array.isArray(company.historicalFinancials)) {
+                company.historicalFinancials = [];
             }
         });
     }

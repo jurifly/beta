@@ -86,6 +86,12 @@ export interface ActivityLog {
     timestamp: string;
 }
 
+export interface HistoricalFinancialData {
+  year: string;
+  revenue: number;
+  expenses: number;
+}
+
 export interface Company {
     id: string;
     name: string;
@@ -106,6 +112,7 @@ export interface Company {
         monthlyRevenue: number;
         monthlyExpenses: number;
     };
+    historicalFinancials?: HistoricalFinancialData[];
     founderUid?: string;
     checklistStatus?: Record<string, boolean>;
     health?: {
