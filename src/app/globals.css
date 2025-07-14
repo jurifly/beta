@@ -17,8 +17,8 @@ html {
     --popover: 0 0% 100%;
     --popover-foreground: 224 23% 15%;
     
-    --primary: 267 39% 51%; /* Vibrant Purple (#7952B3) */
-    --primary-foreground: 267 40% 98%;
+    --primary: 221 83% 53%; /* Professional Blue */
+    --primary-foreground: 210 40% 98%;
     
     --secondary: 220 14% 96%;
     --secondary-foreground: 224 23% 15%;
@@ -34,12 +34,12 @@ html {
     
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 267 39% 51%; /* Vibrant Purple */
+    --ring: 221 83% 53%; /* Professional Blue */
     
     --radius: 0.75rem;
 
     /* Charts */
-    --chart-1: 267 39% 51%; /* Vibrant Purple */
+    --chart-1: 221 83% 53%; /* Professional Blue */
     --chart-2: 45 100% 51%; /* Amber/Gold */
     --chart-3: 210 30% 50%; /* Slate Blue */
     --chart-4: 220 10% 60%; /* Gray */
@@ -56,8 +56,8 @@ html {
     --popover: 224 23% 12%;
     --popover-foreground: 210 20% 94%;
     
-    --primary: 267 39% 65%; /* Lighter Purple */
-    --primary-foreground: 267 80% 10%;
+    --primary: 217 91% 60%; /* Lighter Blue */
+    --primary-foreground: 224 71% 4%;
     
     --secondary: 224 23% 18%;
     --secondary-foreground: 210 20% 94%;
@@ -73,10 +73,10 @@ html {
     
     --border: 224 23% 20%;
     --input: 224 23% 20%;
-    --ring: 267 39% 65%; /* Lighter Purple */
+    --ring: 217 91% 60%; /* Lighter Blue */
 
     /* Charts */
-    --chart-1: 267 39% 65%; /* Lighter Purple */
+    --chart-1: 217 91% 60%; /* Lighter Blue */
     --chart-2: 45 100% 51%; /* Amber/Gold */
     --chart-3: 210 30% 60%; /* Lighter Slate Blue */
     --chart-4: 210 10% 45%; /* Lighter Gray */
