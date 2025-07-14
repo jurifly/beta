@@ -93,17 +93,6 @@ const HeroSection = () => {
                     See Features
                 </Button>
             </div>
-             <div className="mt-16 group interactive-lift">
-                <Image
-                    src="https://i.ibb.co/yY5JcR1/image.png"
-                    width={1200}
-                    height={600}
-                    alt="Dashboard Preview"
-                    className="rounded-xl border-2 border-border/10 shadow-2xl shadow-primary/10"
-                    data-ai-hint="dashboard ui dark"
-                    priority
-                />
-            </div>
             </div>
         </section>
     )
@@ -145,59 +134,23 @@ const ValueSection = () => {
 // Product Glimpse Section
 const ProductGlimpseSection = () => {
     const glimpses = [
-        { title: "Launchpad", description: "Get your company started in 5 clicks.", image: "https://i.ibb.co/gFRDMdzQ/launch-pad.png", hint: "company setup" },
-        { title: "Financials", description: "Visualize burn rate, runway, and project future growth.", image: "https://i.ibb.co/nNhZLXJw/Financial.png", hint: "financial dashboard" },
-        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness.", image: "https://i.ibb.co/8DchXXK6/Analytics.png", hint: "analytics charts" },
-        { title: "Cap Table", description: "See your dilution before it dilutes.", image: "https://i.ibb.co/99xC6g39/cap-table.png", hint: "cap table graph" },
+        { title: "Launchpad", description: "Get your company started in 5 clicks." },
+        { title: "Financials", description: "Visualize burn rate, runway, and project future growth." },
+        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness." },
+        { title: "Cap Table", description: "See your dilution before it dilutes." },
     ];
     
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    const nextGlimpse = () => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % glimpses.length);
-    };
-
-    const prevGlimpse = () => {
-        setCurrentIndex((prevIndex) => (prevIndex - 1 + glimpses.length) % glimpses.length);
-    };
-
-
     return (
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This is not software. It's sanity.</h2>
-                <div className="relative group">
-                     <Card className="p-4 bg-card/30 interactive-lift overflow-hidden">
-                        <CardContent className="p-0">
-                             <div className="relative overflow-hidden rounded-lg">
-                                <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-                                    {glimpses.map((glimpse) => (
-                                        <div key={glimpse.title} className="w-full flex-shrink-0">
-                                            <Image
-                                                alt={glimpse.title}
-                                                data-ai-hint={glimpse.hint}
-                                                loading="lazy"
-                                                width={1200}
-                                                height={800}
-                                                className="w-full object-cover border shadow-md"
-                                                src={glimpse.image}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="p-4 text-left">
-                                <h3 className="font-semibold">{glimpses[currentIndex].title}</h3>
-                                <p className="text-sm text-muted-foreground">{glimpses[currentIndex].description}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Button onClick={prevGlimpse} variant="outline" size="icon" className="absolute left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-10 w-10">
-                        <ChevronLeft />
-                    </Button>
-                    <Button onClick={nextGlimpse} variant="outline" size="icon" className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-10 w-10">
-                        <ChevronRight />
-                    </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                     {glimpses.map((glimpse) => (
+                         <Card key={glimpse.title} className="p-6 text-left interactive-lift bg-card/50">
+                            <h3 className="font-semibold">{glimpse.title}</h3>
+                            <p className="text-sm text-muted-foreground">{glimpse.description}</p>
+                         </Card>
+                     ))}
                 </div>
             </div>
         </section>
