@@ -33,19 +33,20 @@ type ReportData = {
 };
 
 const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
-    const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
+    const COLORS = ["hsl(221, 83%, 53%)", "hsl(160, 60%, 45%)", "hsl(45, 100%, 51%)", "hsl(260, 80%, 65%)"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
     return (
         <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Inter, sans-serif' }}>
+            {/* Header */}
             <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
                 <div className="flex items-center gap-3">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" style={{ color: 'hsl(220, 65%, 45%)'}}>
                         <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
                     </svg>
                     <div>
-                        <h2 className="text-2xl font-bold text-primary">Claari</h2>
-                        <p className="text-xs text-gray-500">AI-Powered Compliance</p>
+                        <h2 className="text-2xl font-bold" style={{ color: 'hsl(220, 65%, 45%)'}}>DashMate</h2>
+                        <p className="text-xs text-gray-500">AI-Powered Dashboards</p>
                     </div>
                 </div>
                 <div className="text-right">
@@ -56,8 +57,11 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
             </header>
 
             <main className="mt-8">
+                {/* Executive Summary */}
                 <section className="p-6 border border-blue-300 bg-blue-50 rounded-xl mb-8">
-                    <h3 className="text-base font-semibold text-blue-800 mb-2 flex items-center gap-2"><Sparkles/> Executive Summary</h3>
+                    <h3 className="text-base font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                        <Sparkles className="h-5 w-5"/> Executive Summary
+                    </h3>
                      {isGeneratingInsights ? (
                         <div className="space-y-2">
                            <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
@@ -71,6 +75,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     )}
                 </section>
                 
+                {/* Score Section */}
                 <section className="grid grid-cols-3 gap-6 mb-8">
                     <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
                         <p className="text-sm font-semibold text-gray-600">Legal Hygiene Score</p>
@@ -104,15 +109,19 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                         </div>
                         <div className="p-4 border border-gray-200 rounded-xl bg-white">
                             <h3 className="text-base font-semibold text-gray-700 mb-2">Ownership Structure</h3>
-                            <ResponsiveContainer width="100%" height={150}>
-                                <RechartsPieChart>
-                                    <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
-                                    <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
-                                        {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                    </Pie>
-                                    <Legend iconSize={8} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: '11px', lineHeight: '1.4' }}/>
-                                </RechartsPieChart>
-                            </ResponsiveContainer>
+                            {data.ownershipData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={150}>
+                                    <RechartsPieChart>
+                                        <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
+                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                                            {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                        </Pie>
+                                        <Legend iconSize={8} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: '11px', lineHeight: '1.4' }}/>
+                                    </RechartsPieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p className="text-sm text-center text-gray-500 py-10">No cap table data available.</p>
+                            )}
                         </div>
                     </div>
 
@@ -121,7 +130,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             <h3 className="text-base font-semibold text-red-700 mb-2">Overdue Filings ({data.overdueFilings.length})</h3>
                             {data.overdueFilings.length > 0 ? (
                                 <ul className="text-sm list-disc pl-5 space-y-1.5 text-red-900">
-                                    {data.overdueFilings.map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
+                                    {data.overdueFilings.slice(0, 5).map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
                                 </ul>
                             ) : <p className="text-sm text-gray-600">None. All caught up!</p>}
                         </div>
@@ -129,7 +138,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             <h3 className="text-base font-semibold text-gray-700 mb-2">Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})</h3>
                             {data.upcomingFilings.length > 0 ? (
                                 <ul className="text-sm list-disc pl-5 space-y-1.5 text-gray-700">
-                                    {data.upcomingFilings.map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
+                                    {data.upcomingFilings.slice(0,5).map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
                                 </ul>
                             ) : <p className="text-sm text-gray-600">No filings due in the next 30 days.</p>}
                         </div>
@@ -139,9 +148,9 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
             <footer className="text-center text-xs text-gray-400 mt-12 border-t border-gray-100 pt-4 flex flex-col items-center gap-2">
                 <div className="flex items-center gap-1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"><path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path></svg>
-                    <span>Claari &copy; {new Date().getFullYear()} - All Rights Reserved</span>
+                    <span>DashMate &copy; {new Date().getFullYear()} - All Rights Reserved</span>
                 </div>
-                <p>This report was generated by Claari AI and is intended for informational purposes only. Please verify all data before taking any action.</p>
+                <p>This report was generated by AI and is intended for informational purposes only. Please verify all data before taking any action.</p>
             </footer>
         </div>
     );
