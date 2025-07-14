@@ -7,11 +7,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock } from 'lucide-react';
+import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock, TrendingUp } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
-import type { Company, DocumentAnalysis } from '@/lib/types';
+import type { Company, DocumentAnalysis, HistoricalFinancialData } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
 import { format, startOfToday } from 'date-fns';
@@ -29,12 +29,26 @@ type ReportData = {
   overdueFilings: any[];
   completedFilings: any[];
   ownershipData: { name: string; value: number }[];
+  financials: {
+    burnRate: number;
+    runway: string;
+    historicalData: HistoricalFinancialData[];
+  };
   executiveSummary?: string;
 };
 
+const formatCurrency = (num: number, region = 'India') => {
+  const options: Intl.NumberFormatOptions = {
+      maximumFractionDigits: 0,
+      style: 'currency',
+      currency: region === 'India' ? 'INR' : 'USD'
+  };
+  return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
+}
+
 const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
     const COLORS = ["#005A9C", "#00BFFF", "#7DF9FF", "#D2B48C"]; // Professional Blue, Sky Blue, Electric Blue, Tan
-    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
+    const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
 
     return (
         <div style={{ width: '210mm' }}>
@@ -109,15 +123,17 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                                 <p className="text-sm text-center text-gray-500 py-10">No cap table data available.</p>
                             )}
                         </div>
-                         <div className="p-4 border rounded-lg bg-white">
-                            <h3 className="text-base font-semibold text-gray-700 mb-3">Key Details</h3>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between"><span className="text-gray-500">Company Type:</span><span className="font-medium text-right">{data.client.type}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-500">Incorporation Date:</span><span className="font-medium">{format(new Date(data.client.incorporationDate + 'T00:00:00'), 'do MMM, yyyy')}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-500">Legal Region:</span><span className="font-medium">{data.client.legalRegion}</span></div>
-                                <Separator />
-                                <div className="flex justify-between text-red-600 font-bold"><span className="flex items-center gap-1.5"><AlertTriangle className="w-4 h-4"/> Overdue Tasks:</span><span>{data.overdueFilings.length}</span></div>
-                                <div className="flex justify-between"><span className="flex items-center gap-1.5"><CalendarClock className="w-4 h-4"/> Upcoming Tasks:</span><span>{data.upcomingFilings.length}</span></div>
+                         <div className="p-4 border rounded-lg bg-white flex flex-col">
+                            <h3 className="text-base font-semibold text-gray-700 mb-3">Financial Snapshot</h3>
+                            <div className="flex-1 flex flex-col justify-center space-y-4">
+                                <div className="text-center p-3 bg-gray-50 rounded-md">
+                                    <p className="text-sm font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                    <p className={`text-2xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
+                                </div>
+                                <div className="text-center p-3 bg-gray-50 rounded-md">
+                                    <p className="text-sm font-medium text-gray-500">Estimated Runway</p>
+                                    <p className="text-2xl font-bold">{data.financials.runway}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -132,7 +148,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <span className="text-xl font-bold text-primary">Claari</span>
                     <div className="text-right">
-                        <h1 className="text-2xl font-bold text-gray-800">Compliance Appendix</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
                         <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
@@ -161,7 +177,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             </table>
                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
                     </section>
-                    <section>
+                    <section className="mb-8">
                         <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
                            <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
                         </h2>
@@ -183,6 +199,32 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                                 </tbody>
                             </table>
                          ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
+                    </section>
+
+                     <section>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                           <TrendingUp /> Year-over-Year Financials
+                        </h2>
+                         {data.financials.historicalData.length > 0 ? (
+                             <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-2 font-semibold">Financial Year</th>
+                                        <th className="p-2 font-semibold text-right">Total Revenue</th>
+                                        <th className="p-2 font-semibold text-right">Total Expenses</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
+                                        <tr key={item.year} className="border-b">
+                                            <td className="p-2 font-medium">{item.year}</td>
+                                            <td className="p-2 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
+                                            <td className="p-2 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
                     </section>
                 </main>
 
@@ -281,6 +323,12 @@ export default function ReportCenterPage() {
                 { name: 'ESOP Pool', value: esopPool },
             ].filter(d => d.value > 0);
 
+            // 5. Process Financial Data
+            const financials = client.financials;
+            const burn = financials ? financials.monthlyExpenses - financials.monthlyRevenue : 0;
+            const runway = financials && burn > 0 && financials.cashBalance > 0 ? `${Math.floor(financials.cashBalance / burn)} months` : "Profitable / N/A";
+            const historicalData = client.historicalFinancials || [];
+
             const initialReportData = {
                 client,
                 hygieneScore,
@@ -290,12 +338,17 @@ export default function ReportCenterPage() {
                 overdueFilings,
                 completedFilings,
                 ownershipData,
+                financials: {
+                    burnRate: burn,
+                    runway: runway,
+                    historicalData: historicalData
+                }
             };
 
             setReportData(initialReportData);
             setIsLoading(false);
 
-            // 5. Asynchronously generate AI insights
+            // 6. Asynchronously generate AI insights
             setIsGeneratingInsights(true);
             
             const docHistoryKey = 'documentIntelligenceHistory';
@@ -308,10 +361,6 @@ export default function ReportCenterPage() {
                 .map(flag => flag.risk)
                 .slice(0, 3);
             
-            const burn = client.financials ? client.financials.monthlyExpenses - client.financials.monthlyRevenue : 0;
-            const runway = client.financials && burn > 0 ? `${Math.floor(client.financials.cashBalance / burn)} months` : "Profitable / N/A";
-
-
             if(!await deductCredits(1)) {
               setIsGeneratingInsights(false);
               return;
@@ -321,7 +370,7 @@ export default function ReportCenterPage() {
                 hygieneScore: hygieneScore,
                 overdueFilings: overdueFilings.length,
                 upcomingFilings: upcomingFilings.length,
-                burnRate: burn,
+                burnRate: burn > 0 ? burn : 0,
                 runwayInMonths: runway,
                 recentRiskFlags: recentRisks,
                 legalRegion: client.legalRegion
@@ -346,8 +395,21 @@ export default function ReportCenterPage() {
           const imgData = canvas.toDataURL('image/png');
           const pdf = new jsPDF('p', 'mm', 'a4');
           const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const imgHeight = canvas.height * pdfWidth / canvas.width;
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+          heightLeft -= pageHeight;
+          
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+          
           pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
         });
     };
