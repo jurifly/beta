@@ -20,7 +20,7 @@ import html2canvas from 'html2canvas';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip, LineChart, Line } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -963,15 +963,15 @@ const FinancialAnalysisTab = () => {
             <CardContent>
                  {chartData.length > 0 ? (
                     <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
-                        <BarChart data={chartData} accessibilityLayer>
-                          <CartesianGrid vertical={false} />
-                          <XAxis dataKey="year" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
-                          <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                          <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
-                          <Legend />
-                          <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4} />
-                          <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4} />
-                        </BarChart>
+                        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="year" />
+                            <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                            <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                            <Legend />
+                            <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} name="Revenue" />
+                            <Line type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} name="Expenses" />
+                        </LineChart>
                     </ChartContainer>
                  ) : (
                     <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
