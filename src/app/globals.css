@@ -26,8 +26,8 @@ html {
     --muted: 220 14% 96%;
     --muted-foreground: 224 23% 40%;
 
-    --accent: 180 100% 50%; /* Bright Cyan (#00FFFF) */
-    --accent-foreground: 180 100% 10%;
+    --accent: 45 100% 51%; /* Warm Amber/Gold (#FFBF00) */
+    --accent-foreground: 45 100% 10%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -40,7 +40,7 @@ html {
 
     /* Charts */
     --chart-1: 267 39% 51%; /* Vibrant Purple */
-    --chart-2: 180 100% 50%; /* Bright Cyan */
+    --chart-2: 45 100% 51%; /* Amber/Gold */
     --chart-3: 210 30% 50%; /* Slate Blue */
     --chart-4: 220 10% 60%; /* Gray */
     --chart-5: 0 70% 65%; /* Muted Red */
@@ -65,8 +65,8 @@ html {
     --muted: 224 23% 18%;
     --muted-foreground: 210 20% 65%;
 
-    --accent: 180 100% 50%; /* Bright Cyan */
-    --accent-foreground: 180 9.8% 10%;
+    --accent: 45 100% 51%; /* Warm Amber/Gold */
+    --accent-foreground: 45 9.8% 10%;
     
     --destructive: 0 63% 40%;
     --destructive-foreground: 0 0% 100%;
@@ -77,7 +77,7 @@ html {
 
     /* Charts */
     --chart-1: 267 39% 65%; /* Lighter Purple */
-    --chart-2: 180 100% 50%; /* Bright Cyan */
+    --chart-2: 45 100% 51%; /* Amber/Gold */
     --chart-3: 210 30% 60%; /* Lighter Slate Blue */
     --chart-4: 210 10% 45%; /* Lighter Gray */
     --chart-5: 0 70% 60%; /* Softer Red */
