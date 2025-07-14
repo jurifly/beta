@@ -46,6 +46,12 @@ const nextConfig: NextConfig = {
         hostname: 'media.dev.to',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
