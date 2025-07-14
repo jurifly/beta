@@ -84,7 +84,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                                 <ReactMarkdown
                                   components={{
                                     ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
-                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><p className="m-0 flex-1" {...props} /></li>,
+                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
                                   }}
                                 >
                                     {data.executiveSummary || "No summary available."}
