@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow for generating year-over-year financial analysis insights.
@@ -6,12 +7,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-const YoYInputSchema = z.object({
-  historicalData: z.array(z.object({
+const HistoricalDataSchema = z.object({
     year: z.string(),
     revenue: z.number(),
     expenses: z.number(),
-  })).describe("An array of historical financial data for multiple years."),
+});
+
+const YoYInputSchema = z.object({
+  historicalData: z.array(HistoricalDataSchema).describe("An array of historical financial data for multiple years."),
   legalRegion: z.string().describe("The country/legal region for context, e.g., India."),
 });
 export type YoYInput = z.infer<typeof YoYInputSchema>;
@@ -27,13 +30,21 @@ export async function generateYoYAnalysis(input: YoYInput): Promise<YoYOutput> {
 
 const prompt = ai.definePrompt({
   name: 'yoyAnalysisPrompt',
-  input: {schema: YoYInputSchema},
+  input: {
+    schema: z.object({
+        legalRegion: z.string(),
+        // The prompt now expects data with profit/loss pre-calculated
+        processedData: z.array(HistoricalDataSchema.extend({
+            profitOrLoss: z.number(),
+        })),
+    })
+  },
   output: {schema: YoYOutputSchema},
   prompt: `You are a world-class financial analyst for a company in {{legalRegion}}. Your task is to analyze the following year-over-year financial data and generate 6-8 insightful, actionable bullet points for the founder. Be direct and clear.
 
 **Financial Data:**
-{{#each historicalData}}
-- **FY {{year}}**: Revenue: {{revenue}}, Expenses: {{expenses}}, Profit/Loss: {{math revenue '-' expenses}}
+{{#each processedData}}
+- **FY {{year}}**: Revenue: {{revenue}}, Expenses: {{expenses}}, Profit/Loss: {{profitOrLoss}}
 {{/each}}
 
 **Analysis Instructions:**
@@ -57,7 +68,7 @@ const yoyAnalysisFlow = ai.defineFlow(
     inputSchema: YoYInputSchema,
     outputSchema: YoYOutputSchema,
   },
-  async input => {
+  async (input) => {
     if (input.historicalData.length < 2) {
       return {
         insights: [
@@ -68,7 +79,18 @@ const yoyAnalysisFlow = ai.defineFlow(
         ]
       }
     }
-    const {output} = await prompt(input);
+    
+    // Pre-process the data to calculate profit/loss before sending to the prompt
+    const processedData = input.historicalData.map(d => ({
+        ...d,
+        profitOrLoss: d.revenue - d.expenses,
+    }));
+
+    const {output} = await prompt({
+        legalRegion: input.legalRegion,
+        processedData: processedData,
+    });
+    
     if (!output) {
       throw new Error("The AI failed to generate a financial analysis.");
     }
