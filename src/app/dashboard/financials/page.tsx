@@ -17,7 +17,7 @@ import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingU
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip, LineChart, Line } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -610,8 +610,8 @@ const FinancialsTab = () => {
             runway: runwayMonthsText,
             runwayLabel: burn > 0 ? "Estimated Runway" : "Financial Status",
             chartData: [ 
-                { name: 'Revenue', value: revenue, color: 'hsl(var(--chart-2))' }, 
-                { name: 'Expenses', value: expenses, color: 'hsl(var(--chart-5))' } 
+                { name: 'Revenue', value: revenue, fill: 'hsl(var(--chart-2))' }, 
+                { name: 'Expenses', value: expenses, fill: 'hsl(var(--chart-5))' } 
             ],
         };
     }, [revenue, expenses, cashBalance]);
@@ -725,18 +725,18 @@ const FinancialsTab = () => {
                                         <p className="text-2xl font-bold">{runway}</p>
                                     </div>
                                 </div>
-                                <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-48 w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={[{ name: 'Metrics', revenue, expenses }]} layout="vertical" margin={{ left: 12 }}>
-                                            <CartesianGrid horizontal={false} />
-                                            <YAxis type="category" dataKey="name" hide />
-                                            <XAxis type="number" hide />
-                                            <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
-                                            <Legend />
-                                            <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4}/>
-                                            <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4}/>
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                <ChartContainer config={{ revenue: { label: "Revenue" }, expenses: { label: "Expenses" } }} className="h-48 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                      <Tooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                      <Pie data={chartData} dataKey="value" nameKey="name" innerRadius="60%" cy="50%">
+                                         {chartData.map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                      </Pie>
+                                      <Legend />
+                                    </PieChart>
+                                  </ResponsiveContainer>
                                 </ChartContainer>
                             </>
                         ) : (
