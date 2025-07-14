@@ -95,7 +95,7 @@ const HeroSection = () => {
             </div>
              <div className="mt-16 group interactive-lift">
                 <Image
-                    src="https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724397753696.png?alt=media&token=489c0b2b-65c1-4e42-be89-72f8837e3d09"
+                    src="https://i.ibb.co/yY5JcR1/image.png"
                     width={1200}
                     height={600}
                     alt="Dashboard Preview"
@@ -145,10 +145,10 @@ const ValueSection = () => {
 // Product Glimpse Section
 const ProductGlimpseSection = () => {
     const glimpses = [
-        { title: "Launchpad", description: "Get your company started in 5 clicks.", image: "https://firebasestorage.googleapis.com/v0/b/lexiqaibeta.appspot.com/o/app_protyper_images%2F12530%2Fsrc%2Fapp%2Flanding%2Fpage.tsx_1724398188339.png?alt=media&token=487d7b30-e889-4074-b773-fcb33b8a3e77", hint: "company setup" },
-        { title: "Cap Table Preview", description: "See your dilution before it dilutes.", image: "https://placehold.co/1200x800.png", hint: "cap table graph" },
-        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness.", image: "https://placehold.co/1200x800.png", hint: "analytics charts" },
-        { title: "Financials", description: "Visualize burn rate, runway, and project future growth.", image: "https://placehold.co/1200x800.png", hint: "financial dashboard" },
+        { title: "Launchpad", description: "Get your company started in 5 clicks.", image: "https://i.ibb.co/j3qYf6m/image.png", hint: "company setup" },
+        { title: "Financials", description: "Visualize burn rate, runway, and project future growth.", image: "https://i.ibb.co/3sZ8Xw2/image.png", hint: "financial dashboard" },
+        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness.", image: "https://i.ibb.co/F8qPqTz/image.png", hint: "analytics charts" },
+        { title: "Cap Table Preview", description: "See your dilution before it dilutes.", image: "https://i.ibb.co/mBf7h4F/image.png", hint: "cap table graph" },
     ];
     
     const [currentIndex, setCurrentIndex] = useState(0);
