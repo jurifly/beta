@@ -739,38 +739,35 @@ type TemplateCategoryData = { name: string; roles: UserRole[]; templates: Templa
 
 const templateLibrary: TemplateCategoryData[] = [
     { name: 'Startup Formation & Compliance', roles: ['Founder'], templates: [
-        { name: 'Founders’ Agreement', isPremium: true }, { name: 'Co-Founder Equity Split Agreement', isPremium: true }, { name: 'Incorporation Checklist', isPremium: false }, { name: 'Consent Letter for Registered Office', isPremium: false }, { name: 'ESOP Policy (Standard + Advanced)', isPremium: true }, { name: 'Shareholders Agreement (SHA) – Template', isPremium: true }, { name: 'Board Resolution: Appointment of Directors', isPremium: false }, { name: 'Board Resolution: Allotment of Shares', isPremium: false }, { name: 'Board Resolution: Opening Bank Account', isPremium: false },
+        { name: 'Founders’ Agreement', isPremium: true }, { name: 'Co-Founder Equity Split Agreement', isPremium: true }, { name: 'Incorporation Checklist', isPremium: false }, { name: 'Consent Letter for Registered Office', isPremium: false }, { name: 'ESOP Policy (Standard + Advanced)', isPremium: true }, { name: 'Shareholders Agreement (SHA) – Template', isPremium: true }, { name: 'Board Resolution: Appointment of Directors', isPremium: false }, { name: 'Board Resolution: Allotment of Shares', isPremium: false }, { name: 'Board Resolution: Opening Bank Account', isPremium: false }, { name: 'Board Report Generator', isPremium: true },
     ]},
     { name: 'Fundraising & Equity', roles: ['Founder'], templates: [
-        { name: 'Pitch-Ready Cap Table Format (Excel + PDF)', isPremium: false }, { name: 'Convertible Note Agreement (SAFE, iSAFE)', isPremium: true }, { name: 'Term Sheet (Seed, Series A)', isPremium: true }, { name: 'Equity Subscription Agreement', isPremium: true }, { name: 'Investor Due Diligence Checklist (Editable)', isPremium: false },
+        { name: 'Pitch-Ready Cap Table Format (Excel + PDF)', isPremium: false }, { name: 'Convertible Note Agreement (SAFE, iSAFE)', isPremium: true }, { name: 'Term Sheet (Seed, Series A)', isPremium: true }, { name: 'Equity Subscription Agreement', isPremium: true }, { name: 'Investor Due Diligence Checklist (Editable)', isPremium: false }, { name: 'Fund Utilization Statement', isPremium: true }, { name: 'Virtual Due Diligence Folder Checklist', isPremium: false }, { name: 'Valuation Certificate Summary', isPremium: true },
     ]},
-    { name: 'Legal + Regulatory (Founder)', roles: ['Founder'], templates: [
+    { name: 'Legal + Regulatory', roles: ['Founder'], templates: [
         { name: 'Startup India DPIIT Declaration', isPremium: false }, { name: 'MSME/Udyam Registration Guide & Template', isPremium: false }, { name: 'NDA – Mutual & One-Way', isPremium: false }, { name: 'Non-Compete Agreement', isPremium: true }, { name: 'Employment Contract Template (ESOP-Ready)', isPremium: true },
     ]},
-    { name: 'Financial / Tax (Founder)', roles: ['Founder'], templates: [
-        { name: 'Salary Structure Template (with CTC → Take-Home)', isPremium: false }, { name: 'Reimbursement Tracker (with Sample Policy)', isPremium: false }, { name: 'Advance Tax Planner Spreadsheet', isPremium: false }, { name: 'GST Input Claim Summary Template', isPremium: false }, { name: 'TDS Deduction & Payment Calendar', isPremium: false },
+    { name: 'Financial / Tax', roles: ['Founder'], templates: [
+        { name: 'Salary Structure Template (with CTC → Take-Home)', isPremium: false }, { name: 'Reimbursement Tracker (with Sample Policy)', isPremium: false }, { name: 'Advance Tax Planner Spreadsheet', isPremium: false }, { name: 'GST Input Claim Summary Template', isPremium: false }, { name: 'TDS Deduction & Payment Calendar', isPremium: false }, { name: 'Tax Summary Report', isPremium: true },
     ]},
-    { name: 'Communication (Founder)', roles: ['Founder'], templates: [
+    { name: 'Communication', roles: ['Founder'], templates: [
         { name: 'Investor Update Email Template (Monthly/Quarterly)', isPremium: false }, { name: 'Employee ESOP Letter Template', isPremium: true }, { name: 'Offer Letter + Annexure (CTC + NDA)', isPremium: true },
     ]},
-    { name: 'Client Onboarding (CA)', roles: ['CA'], templates: [
+    { name: 'Client Onboarding', roles: ['CA'], templates: [
         { name: 'Engagement Letter Template', isPremium: false }, { name: 'Letter of Authority / Consent to Represent', isPremium: true }, { name: 'Welcome Email + Document Checklist', isPremium: false }, { name: 'KYC + UBO Declaration Format', isPremium: false },
     ]},
-    { name: 'Compliance Filing (CA)', roles: ['CA'], templates: [
-        { name: 'GSTR-3B / 1 Filing Summary Format', isPremium: false }, { name: 'Advance Tax Computation Sheet', isPremium: true }, { name: 'TDS Master Sheet (with PANs, Rates, Deadlines)', isPremium: true }, { name: 'Form 16 & 16A Generator', isPremium: true }, { name: 'ITR Filing Report (PDF summary)', isPremium: true },
+    { name: 'Compliance Filing', roles: ['CA'], templates: [
+        { name: 'GSTR-3B / 1 Filing Summary Format', isPremium: false }, { name: 'Advance Tax Computation Sheet', isPremium: true }, { name: 'TDS Master Sheet (with PANs, Rates, Deadlines)', isPremium: true }, { name: 'Form 16 & 16A Generator', isPremium: true }, { name: 'ITR Filing Report (PDF summary)', isPremium: true }, { name: 'Tax Summary Report', isPremium: true },
     ]},
-    { name: 'Due Diligence & Audit (CA)', roles: ['CA'], templates: [
-        { name: 'Pre-Funding Due Diligence Checklist', isPremium: true }, { name: 'Compliance Health Score Report', isPremium: true }, { name: 'Form MGT-7 / AOC-4 Template (with guides)', isPremium: false }, { name: 'Startup Audit Checklist', isPremium: false },
+    { name: 'Due Diligence & Audit', roles: ['CA'], templates: [
+        { name: 'Pre-Funding Due Diligence Checklist', isPremium: true }, { name: 'Compliance Health Score Report', isPremium: true }, { name: 'Form MGT-7 / AOC-4 Template (with guides)', isPremium: false }, { name: 'Startup Audit Checklist', isPremium: false }, { name: 'Fund Utilization Statement', isPremium: true }, { name: 'Virtual Due Diligence Folder Checklist', isPremium: false }, { name: 'Valuation Certificate Summary', isPremium: true },
     ]},
-    { name: 'Client Communication (CA)', roles: ['CA'], templates: [
+    { name: 'Client Communication', roles: ['CA'], templates: [
         { name: 'Monthly Compliance Summary Mailer', isPremium: false }, { name: 'Document Reminder Email Template', isPremium: false }, { name: 'Tax Planning Advisory Letter', isPremium: true }, { name: 'Startup Tax Optimization Report', isPremium: true },
     ]},
-    { name: 'Legal & Advisory (CA)', roles: ['CA', 'Legal Advisor'], templates: [
-        { name: 'Board Meeting Minutes Format', isPremium: false }, { name: 'Startup ESOP Accounting Notes', isPremium: true }, { name: 'ROC Resolution Templates', isPremium: false }, { name: 'GST Reconciliation Explanation Letter', isPremium: true }, { name: 'Notice Reply Template (for IT/GST Notices)', isPremium: true },
+    { name: 'Legal & Advisory', roles: ['CA', 'Legal Advisor'], templates: [
+        { name: 'Board Meeting Minutes Format', isPremium: false }, { name: 'Startup ESOP Accounting Notes', isPremium: true }, { name: 'ROC Resolution Templates', isPremium: false }, { name: 'GST Reconciliation Explanation Letter', isPremium: true }, { name: 'Notice Reply Template (for IT/GST Notices)', isPremium: true }, { name: 'Board Report Generator', isPremium: true },
     ]},
-    { name: 'Shared Templates', roles: ['Founder', 'CA', 'Legal Advisor', 'Enterprise'], templates: [
-        { name: 'Tax Summary Report', isPremium: true }, { name: 'Fund Utilization Statement', isPremium: true }, { name: 'Virtual Due Diligence Folder Checklist', isPremium: false }, { name: 'Valuation Certificate Summary', isPremium: true }, { name: 'Board Report Generator', isPremium: true },
-    ]}
 ];
 
 
