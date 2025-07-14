@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Download, Sparkles, AlertTriangle } from 'lucide-react';
+import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +18,7 @@ import { format, startOfToday } from 'date-fns';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 type ReportData = {
   client: Company;
@@ -33,125 +33,163 @@ type ReportData = {
 };
 
 const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
-    const COLORS = ["hsl(221, 83%, 53%)", "hsl(160, 60%, 45%)", "hsl(45, 100%, 51%)", "hsl(260, 80%, 65%)"];
+    const COLORS = ["#005A9C", "#00BFFF", "#7DF9FF", "#D2B48C"]; // Professional Blue, Sky Blue, Electric Blue, Tan
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-500';
 
     return (
-        <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Inter, sans-serif' }}>
-            {/* Header */}
-            <header className="flex justify-between items-start border-b-2 border-gray-100 pb-4">
-                <div className="flex items-center gap-3">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" style={{ color: 'hsl(220, 65%, 45%)'}}>
-                        <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
-                    </svg>
-                    <div>
-                        <h2 className="text-2xl font-bold" style={{ color: 'hsl(220, 65%, 45%)'}}>DashMate</h2>
-                        <p className="text-xs text-gray-500">AI-Powered Dashboards</p>
+        <div style={{ width: '210mm' }}>
+            {/* Page 1 */}
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm' }}>
+                <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                    <div className="flex items-center gap-3">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary">
+                            <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
+                        </svg>
+                        <span className="text-xl font-bold text-primary">Claari</span>
                     </div>
-                </div>
-                <div className="text-right">
-                    <h1 className="text-3xl font-extrabold text-gray-700">Compliance Health Report</h1>
-                    <p className="text-sm font-medium text-gray-500">{data.client.name}</p>
-                    <p className="text-xs text-gray-400">Generated: {format(new Date(), 'do MMM, yyyy')}</p>
-                </div>
-            </header>
+                    <div className="text-right">
+                        <h1 className="text-2xl font-bold text-gray-800">Compliance Health Report</h1>
+                        <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                    </div>
+                </header>
 
-            <main className="mt-8">
-                {/* Executive Summary */}
-                <section className="p-6 border border-blue-300 bg-blue-50 rounded-xl mb-8">
-                    <h3 className="text-base font-semibold text-blue-800 mb-2 flex items-center gap-2">
-                        <Sparkles className="h-5 w-5"/> Executive Summary
-                    </h3>
-                     {isGeneratingInsights ? (
-                        <div className="space-y-2">
-                           <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
-                           <div className="h-4 bg-blue-200 rounded w-5/6 animate-pulse"></div>
-                           <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
+                <main className="mt-8 flex-1">
+                    <section className="p-6 border-2 border-blue-500/20 bg-blue-50/50 rounded-lg mb-8">
+                        <h2 className="text-xl font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                            <Sparkles className="h-5 w-5"/> AI Executive Summary
+                        </h2>
+                        {isGeneratingInsights ? (
+                            <div className="space-y-2 py-2">
+                               <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
+                               <div className="h-4 bg-blue-200 rounded w-5/6 animate-pulse"></div>
+                               <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
+                            </div>
+                        ) : (
+                             <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
+                                <ReactMarkdown>{data.executiveSummary || "No summary available."}</ReactMarkdown>
+                            </div>
+                        )}
+                    </section>
+                    
+                    <div className="grid grid-cols-3 gap-6">
+                         <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
+                            <h3 className="text-base font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                            <div className={`text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <p className="text-sm font-medium text-gray-500">Out of 100</p>
                         </div>
-                    ) : (
-                         <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
-                            <ReactMarkdown>{data.executiveSummary || "No summary available."}</ReactMarkdown>
+                        <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
+                            <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${data.filingPerformance}%` }}></div></div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-teal-500 h-2.5 rounded-full" style={{ width: `${data.profileCompleteness}%` }}></div></div>
+                                </div>
+                            </div>
                         </div>
-                    )}
-                </section>
-                
-                {/* Score Section */}
-                <section className="grid grid-cols-3 gap-6 mb-8">
-                    <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <p className="text-sm font-semibold text-gray-600">Legal Hygiene Score</p>
-                        <div className={`mt-2 text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
-                        <p className="text-xs font-medium text-gray-500">Out of 100</p>
                     </div>
-                    <div className="col-span-2 bg-gray-50 p-6 rounded-xl border border-gray-200 flex flex-col justify-center">
-                        <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
-                        <div className="space-y-4">
-                             <div>
-                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
-                                <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-500 h-2 rounded-full" style={{ width: `${data.filingPerformance}%` }}></div></div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
-                                <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-teal-500 h-2 rounded-full" style={{ width: `${data.profileCompleteness}%` }}></div></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                
-                <div className="grid grid-cols-5 gap-6">
-                    <div className="col-span-2 space-y-6">
-                         <div className="p-4 border border-gray-200 rounded-xl bg-white">
-                            <h3 className="text-base font-semibold text-gray-700 mb-3">Client Details</h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between"><span className="text-gray-500">Company:</span><span className="font-medium text-right">{data.client.name}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-500">Type:</span><span className="font-medium">{data.client.type}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-500">Inc. Date:</span><span className="font-medium">{format(new Date(data.client.incorporationDate + 'T00:00:00'), 'do MMM, yyyy')}</span></div>
-                            </div>
-                        </div>
-                        <div className="p-4 border border-gray-200 rounded-xl bg-white">
-                            <h3 className="text-base font-semibold text-gray-700 mb-2">Ownership Structure</h3>
+                    
+                    <div className="grid grid-cols-2 gap-6 mt-6">
+                        <div className="p-4 border rounded-lg bg-white">
+                            <h3 className="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
                             {data.ownershipData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={150}>
+                                <ResponsiveContainer width="100%" height={200}>
                                     <RechartsPieChart>
                                         <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
-                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
                                             {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                         </Pie>
-                                        <Legend iconSize={8} layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: '11px', lineHeight: '1.4' }}/>
+                                        <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             ) : (
                                 <p className="text-sm text-center text-gray-500 py-10">No cap table data available.</p>
                             )}
                         </div>
+                         <div className="p-4 border rounded-lg bg-white">
+                            <h3 className="text-base font-semibold text-gray-700 mb-3">Key Details</h3>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex justify-between"><span className="text-gray-500">Company Type:</span><span className="font-medium text-right">{data.client.type}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Incorporation Date:</span><span className="font-medium">{format(new Date(data.client.incorporationDate + 'T00:00:00'), 'do MMM, yyyy')}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Legal Region:</span><span className="font-medium">{data.client.legalRegion}</span></div>
+                                <Separator />
+                                <div className="flex justify-between text-red-600 font-bold"><span className="flex items-center gap-1.5"><AlertTriangle className="w-4 h-4"/> Overdue Tasks:</span><span>{data.overdueFilings.length}</span></div>
+                                <div className="flex justify-between"><span className="flex items-center gap-1.5"><CalendarClock className="w-4 h-4"/> Upcoming Tasks:</span><span>{data.upcomingFilings.length}</span></div>
+                            </div>
+                        </div>
                     </div>
+                </main>
 
-                     <div className="col-span-3 space-y-6">
-                        <div className="p-4 border border-red-300 bg-red-50 rounded-xl h-full">
-                            <h3 className="text-base font-semibold text-red-700 mb-2">Overdue Filings ({data.overdueFilings.length})</h3>
-                            {data.overdueFilings.length > 0 ? (
-                                <ul className="text-sm list-disc pl-5 space-y-1.5 text-red-900">
-                                    {data.overdueFilings.slice(0, 5).map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
-                                </ul>
-                            ) : <p className="text-sm text-gray-600">None. All caught up!</p>}
-                        </div>
-                        <div className="p-4 border border-gray-200 rounded-xl bg-white h-full">
-                            <h3 className="text-base font-semibold text-gray-700 mb-2">Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})</h3>
-                            {data.upcomingFilings.length > 0 ? (
-                                <ul className="text-sm list-disc pl-5 space-y-1.5 text-gray-700">
-                                    {data.upcomingFilings.slice(0,5).map((f: any) => <li key={f.id}>{f.text} <span className="font-medium">(Due: {format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yy')})</span></li>)}
-                                </ul>
-                            ) : <p className="text-sm text-gray-600">No filings due in the next 30 days.</p>}
-                        </div>
+                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
+                    <p>Page 1 of 2 | Generated on {format(new Date(), 'PPpp')} by Claari AI</p>
+                </footer>
+            </div>
+            {/* Page 2 */}
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm', pageBreakBefore: 'always' }}>
+                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                    <span className="text-xl font-bold text-primary">Claari</span>
+                    <div className="text-right">
+                        <h1 className="text-2xl font-bold text-gray-800">Compliance Appendix</h1>
+                        <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
                     </div>
-                </div>
-            </main>
-            <footer className="text-center text-xs text-gray-400 mt-12 border-t border-gray-100 pt-4 flex flex-col items-center gap-2">
-                <div className="flex items-center gap-1">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"><path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path></svg>
-                    <span>DashMate &copy; {new Date().getFullYear()} - All Rights Reserved</span>
-                </div>
-                <p>This report was generated by AI and is intended for informational purposes only. Please verify all data before taking any action.</p>
-            </footer>
+                </header>
+
+                <main className="mt-8 flex-1">
+                    <section className="mb-8">
+                        <h2 className="text-xl font-semibold text-red-700 mb-3 flex items-center gap-2">
+                           <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
+                        </h2>
+                        {data.overdueFilings.length > 0 ? (
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-2 font-semibold">Task</th>
+                                        <th className="p-2 font-semibold text-right">Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.overdueFilings.map((f: any) => (
+                                        <tr key={f.id} className="border-b">
+                                            <td className="p-2">{f.text}</td>
+                                            <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
+                    </section>
+                    <section>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                           <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
+                        </h2>
+                         {data.upcomingFilings.length > 0 ? (
+                             <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-2 font-semibold">Task</th>
+                                        <th className="p-2 font-semibold text-right">Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.upcomingFilings.map((f: any) => (
+                                        <tr key={f.id} className="border-b">
+                                            <td className="p-2">{f.text}</td>
+                                            <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
+                    </section>
+                </main>
+
+                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
+                     <p>Page 2 of 2 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                </footer>
+            </div>
         </div>
     );
 };
