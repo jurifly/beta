@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -161,7 +161,7 @@ const ChatAssistant = () => {
   const suggestionPrompts = [
     { text: 'What are the steps to register a Private Limited Company?', icon: FileText, action: () => handleTextSubmit(undefined, 'What are the steps to register a Private Limited Company?') },
     { text: 'What are the compliance requirements for hiring the first employee?', icon: Clock, action: () => handleTextSubmit(undefined, 'What are the compliance requirements for hiring the first employee?') },
-    { text: 'What happens if I don\'t file my GST returns on time?', icon: FileText, action: () => handleTextSubmit(undefined, 'What happens if I don\'t file my GST returns on time?') },
+    { text: 'My company does food delivery. If an order is ₹100 and I add 12% commission, then a platform fee of ₹5 and delivery charge of ₹40, on what amount do I have to pay GST?', icon: HelpCircle, action: () => handleTextSubmit(undefined, "My company does food delivery. If an order is ₹100 and I add 12% commission, then a platform fee of ₹5 and delivery charge of ₹40, on what amount do I have to pay GST?") },
   ];
 
   return (
@@ -174,7 +174,7 @@ const ChatAssistant = () => {
               </div>
               <h2 className="text-2xl font-bold mb-1">Your AI Legal Assistant</h2>
               <p className="text-muted-foreground mb-6">Ask a legal question or try a suggestion.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full max-w-3xl mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full max-w-4xl mb-4">
                 {suggestionPrompts.map((prompt) => (
                   <button
                     key={prompt.text}
@@ -275,7 +275,12 @@ const dealTypesByRole = {
 };
 
 function DataroomAuditSubmitButton({ isRegenerate, isPending }: { isRegenerate: boolean, isPending: boolean }) {
-  return ( <Button type="submit" disabled={isPending} className="w-full sm:w-auto interactive-lift"> {isPending ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : isRegenerate ? (<RefreshCw className="mr-2 h-4 w-4" />) : (<Sparkles className="mr-2 h-4 w-4" />)} {isRegenerate ? "Regenerate" : "Generate Checklist (2 Credits)"} </Button> );
+  return (
+    <Button type="submit" disabled={isPending} className="w-full sm:w-auto interactive-lift">
+      {isPending ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : isRegenerate ? (<RefreshCw className="mr-2 h-4 w-4" />) : (<Sparkles className="mr-2 h-4 w-4" />)}
+      {isRegenerate ? "Regenerate" : "Generate Checklist (2 Credits)"}
+    </Button>
+  );
 }
 
 const DataroomAudit = () => {
@@ -1521,3 +1526,5 @@ export default function AiToolkitPage() {
         </div>
     );
 }
+
+    
