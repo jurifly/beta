@@ -8,15 +8,12 @@ import { z } from "zod";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
-import type { TaxAdvisorOutput } from "@/ai/flows/tax-advisor-flow";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, ChevronsDown, ChevronsUp, ChevronsLeftRight, AreaChart as AreaChartIcon } from "lucide-react";
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +21,8 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Lege
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
+import { getYoYAnalysisAction } from './actions';
+import type { YoYOutput } from '@/ai/flows/yoy-analysis-flow';
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -103,8 +102,7 @@ const PersonalTaxCalculator = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [isCalculating, setIsCalculating] = useState(false);
-  const [result, setResult] = useState<TaxAdvisorOutput | null>(null);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [result, setResult] = useState<any | null>(null);
 
   const { control, handleSubmit } = useForm<PersonalFormData>({
     resolver: zodResolver(personalTaxCalculatorSchema),
@@ -114,7 +112,7 @@ const PersonalTaxCalculator = () => {
     },
   });
   
-  const calculateIndianTax = (data: PersonalFormData): TaxAdvisorOutput => {
+  const calculateIndianTax = (data: PersonalFormData): any => {
       const grossIncome = data.income.salary + data.income.businessIncome + data.income.capitalGains + data.income.otherIncome;
 
       // --- New Regime Calculation ---
@@ -192,20 +190,6 @@ const PersonalTaxCalculator = () => {
     }, 500);
   };
 
-  const handleDownloadPdf = () => {
-    const input = resultRef.current;
-    if (!input) return;
-    toast({ title: 'Generating PDF...', description: 'Please wait.' });
-    html2canvas(input, { scale: 2, useCORS: true, backgroundColor: null }).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Personal_Tax_Report_${new Date().toISOString().split('T')[0]}.pdf`);
-    });
-  };
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
@@ -234,14 +218,13 @@ const PersonalTaxCalculator = () => {
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div><CardTitle>Tax Report</CardTitle><CardDescription>Your personalized tax breakdown.</CardDescription></div>
-                        {result && <Button variant="outline" size="sm" onClick={handleDownloadPdf}><Download className="mr-2"/>Download PDF</Button>}
                     </div>
                 </CardHeader>
                 <CardContent>
                     {isCalculating && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Calculating your taxes...</p></div>}
                     {!isCalculating && !result && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Calculator className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your tax analysis will appear here.</p></div>}
                     {!isCalculating && result && (
-                        <div ref={resultRef} className="p-4 bg-background animate-in fade-in-50">
+                        <div className="p-4 bg-background animate-in fade-in-50">
                             <Alert className="mb-6 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-300"><AlertTriangle className="h-4 w-4 !text-amber-500"/><AlertTitle>Disclaimer</AlertTitle><AlertDescription>This is an estimate for informational purposes only. Consult a professional for final tax advice.</AlertDescription></Alert>
                             <div className="p-4 text-center rounded-lg bg-primary/10 border border-primary/20 mb-6"><p className="text-sm font-semibold text-primary">Recommended Regime</p><p className="text-2xl font-bold">{result.recommendedRegime}</p><p className="text-xs text-muted-foreground">{result.recommendationReason}</p></div>
                              <p className="text-sm text-center text-muted-foreground mb-6">{result.summary}</p>
@@ -264,14 +247,14 @@ const CorporateTaxCalculator = () => {
     const { userProfile } = useAuth();
     const { toast } = useToast();
     const [isCalculating, setIsCalculating] = useState(false);
-    const [result, setResult] = useState<TaxAdvisorOutput | null>(null);
+    const [result, setResult] = useState<any | null>(null);
 
     const { control, handleSubmit } = useForm<CorporateFormData>({
         resolver: zodResolver(corporateTaxCalculatorSchema),
         defaultValues: { revenue: 0, profit: 0 },
     });
     
-    const calculateCorporateTaxes = (data: CorporateFormData, region: string): TaxAdvisorOutput => {
+    const calculateCorporateTaxes = (data: CorporateFormData, region: string): any => {
         const { revenue, profit } = data;
         let tax = 0;
         let summary = "";
@@ -487,15 +470,15 @@ const PayrollCalculator = () => {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsDown className="text-green-500"/>Earnings</h4>
+                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2 text-green-600">Earnings</h4>
                                         <dl className="space-y-2">{result.breakdown.filter((i:any) => i.amount > 0).map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsUp className="text-red-500"/>Deductions</h4>
+                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2 text-red-600">Deductions</h4>
                                         <dl className="space-y-2">{result.deductions.filter((i:any) => i.amount > 0).map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
                                     </div>
                                     <div className="md:col-span-2">
-                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><ChevronsLeftRight className="text-blue-500"/>Employer Contributions</h4>
+                                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2 text-blue-600">Employer Contributions</h4>
                                         <dl className="space-y-2">{result.employerContributions.filter((i:any) => i.amount > 0).map((item: any) => <InfoCard key={item.item} title={item.item} value={formatCurrency(item.amount)} />)}</dl>
                                     </div>
                                 </div>
@@ -701,7 +684,7 @@ const FinancialsTab = () => {
                 <Card className="interactive-lift">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><BarChartIcon className="w-6 h-6 text-primary"/> Runway Calculator</CardTitle>
-                        <CardDescription>Input your key monthly financials to calculate your runway.</CardDescription>
+                        <CardDescription>Input your key monthly financials to calculate your runway and save for analysis.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
@@ -863,72 +846,32 @@ const FinancialsTab = () => {
 }
 
 const FinancialAnalysisTab = () => {
-    const { userProfile, updateUserProfile } = useAuth();
+    const { userProfile, updateUserProfile, deductCredits } = useAuth();
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
     const [historicalData, setHistoricalData] = useState(activeCompany?.historicalFinancials || []);
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [insights, setInsights] = useState<YoYOutput | null>(null);
+
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    
     const [newYear, setNewYear] = useState("");
     const [newRevenue, setNewRevenue] = useState<number | ''>('');
     const [newExpenses, setNewExpenses] = useState<number | ''>('');
     const { toast } = useToast();
 
-    const chartData = useMemo(() => {
-        if (!historicalData || historicalData.length === 0) {
-            return [];
-        }
-        return historicalData.sort((a,b) => a.year.localeCompare(b.year));
-    }, [historicalData]);
-
-    const insights = useMemo(() => {
-        if (chartData.length < 2) return [];
-        const insightsArr = [
-          `You have provided ${chartData.length} years of financial data, allowing for a comparative analysis.`,
-        ];
-        
-        for (let i = 1; i < chartData.length; i++) {
-            const current = chartData[i];
-            const prev = chartData[i-1];
-            
-            const revGrowth = prev.revenue > 0 ? ((current.revenue - prev.revenue) / prev.revenue) * 100 : 100;
-            const expGrowth = prev.expenses > 0 ? ((current.expenses - prev.expenses) / prev.expenses) * 100 : 0;
-            const currentProfit = current.revenue - current.expenses;
-            const prevProfit = prev.revenue - prev.expenses;
-            const profitGrowth = prevProfit !== 0 ? ((currentProfit - prevProfit) / Math.abs(prevProfit)) * 100 : 100;
-
-            if (revGrowth > 0) {
-                insightsArr.push(`Revenue grew by ${revGrowth.toFixed(1)}% from FY ${prev.year} to FY ${current.year}, indicating positive top-line growth.`);
-            } else {
-                 insightsArr.push(`Revenue declined by ${Math.abs(revGrowth).toFixed(1)}% from FY ${prev.year} to FY ${current.year}.`);
-            }
-
-            if (expGrowth > revGrowth) {
-                insightsArr.push(`Expense growth (${expGrowth.toFixed(1)}%) outpaced revenue growth in FY ${current.year}, potentially impacting margins.`);
-            } else {
-                 insightsArr.push(`Expense growth was managed well at ${expGrowth.toFixed(1)}% in FY ${current.year}, below revenue growth.`);
-            }
-             if (currentProfit > prevProfit) {
-                insightsArr.push(`Profitability improved in FY ${current.year}, with profit growing by ${profitGrowth.toFixed(1)}%.`);
-            }
-        }
-        if (chartData.length > 0) {
-            const latestYear = chartData[chartData.length - 1];
-            const margin = latestYear.revenue > 0 ? ((latestYear.revenue - latestYear.expenses) / latestYear.revenue) * 100 : 0;
-            insightsArr.push(`The net profit margin for the latest year (FY ${latestYear.year}) was ${margin.toFixed(1)}%.`);
-        }
-        insightsArr.push(`Consistent data tracking is crucial for identifying long-term trends and making informed business decisions.`);
-        
-        return insightsArr.slice(0, 8); // Ensure max 8 insights
-    }, [chartData]);
+    useEffect(() => {
+        setHistoricalData(activeCompany?.historicalFinancials || []);
+    }, [activeCompany]);
     
-    const addHistoricalData = () => {
+    const addHistoricalData = async () => {
         if (newYear && typeof newRevenue === 'number' && typeof newExpenses === 'number') {
             if (historicalData.some(d => d.year === newYear)) {
                 toast({ variant: 'destructive', title: 'Duplicate Year', description: 'Data for this year already exists.'});
                 return;
             }
             const updatedData = [...historicalData, { year: newYear, revenue: newRevenue, expenses: newExpenses }];
-            setHistoricalData(updatedData);
-            saveToProfile(updatedData);
+            await saveToProfile(updatedData);
             setNewYear('');
             setNewRevenue('');
             setNewExpenses('');
@@ -937,18 +880,40 @@ const FinancialAnalysisTab = () => {
         }
     };
 
-    const removeHistoricalData = (year: string) => {
+    const removeHistoricalData = async (year: string) => {
         const updatedData = historicalData.filter(d => d.year !== year);
-        setHistoricalData(updatedData);
-        saveToProfile(updatedData);
+        await saveToProfile(updatedData);
     };
     
     const saveToProfile = async (data: any[]) => {
       if (!activeCompany || !userProfile) return;
+      setHistoricalData(data); // Optimistic update
       const updatedCompany = { ...activeCompany, historicalFinancials: data };
       const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
       await updateUserProfile({ companies: updatedCompanies });
       toast({ title: 'Historical Data Saved!' });
+    };
+
+    const handleGenerateAnalysis = async () => {
+        if (!userProfile) return;
+        if (!await deductCredits(1)) return;
+
+        setIsAnalyzing(true);
+        setChartData([]);
+        setInsights(null);
+
+        try {
+            const response = await getYoYAnalysisAction({
+                historicalData,
+                legalRegion: userProfile.legalRegion,
+            });
+            setInsights(response);
+            setChartData(historicalData.sort((a,b) => a.year.localeCompare(b.year)));
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Analysis Failed', description: error.message });
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
   
     if (!activeCompany) { return null; }
@@ -958,31 +923,8 @@ const FinancialAnalysisTab = () => {
         <Card className="interactive-lift">
             <CardHeader>
               <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
-              <CardDescription>Compare financial performance across years by adding historical data below.</CardDescription>
+              <CardDescription>Add historical data and then generate an AI-powered trend analysis.</CardDescription>
             </CardHeader>
-            <CardContent>
-                 {chartData.length > 0 ? (
-                    <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
-                        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="year" />
-                            <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                            <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
-                            <Legend />
-                            <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} name="Revenue" />
-                            <Line type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} name="Expenses" />
-                        </LineChart>
-                    </ChartContainer>
-                 ) : (
-                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                        <p>No historical data found. Add data below to enable this view.</p>
-                    </div>
-                 )}
-            </CardContent>
-        </Card>
-
-        <Card className="col-span-full interactive-lift">
-            <CardHeader><CardTitle>Add Historical Data</CardTitle></CardHeader>
             <CardContent>
                 <div className="space-y-4">
                     {historicalData.map(data => (
@@ -1001,24 +943,53 @@ const FinancialAnalysisTab = () => {
                     </div>
                 </div>
             </CardContent>
+             <CardFooter className="flex-col gap-2 items-center">
+                 <Button onClick={handleGenerateAnalysis} disabled={isAnalyzing || historicalData.length === 0} className="w-full max-w-xs">
+                     {isAnalyzing ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
+                     Generate YoY Analysis
+                 </Button>
+                  <p className="text-xs text-muted-foreground">1 Credit per analysis</p>
+            </CardFooter>
         </Card>
         
-        {insights.length > 0 && (
-          <Card className="interactive-lift">
-             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> AI-Generated Insights</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <ul className="space-y-3">
-                    {insights.map((insight, index) => (
-                        <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
-                            <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
-                            <span>{insight}</span>
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-          </Card>
+        {isAnalyzing ? (
+          <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1 col-span-full"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Analyzing your data...</p></div>
+        ) : (
+          (chartData.length > 0 || insights) && (
+            <div className="space-y-6 animate-in fade-in-50">
+              <Card className="interactive-lift">
+                  <CardHeader><CardTitle>Financial Trends</CardTitle></CardHeader>
+                  <CardContent>
+                       <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
+                          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="year" />
+                              <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                              <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                              <Legend />
+                              <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} name="Revenue" />
+                              <Line type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} name="Expenses" />
+                          </LineChart>
+                      </ChartContainer>
+                  </CardContent>
+              </Card>
+              {insights && (
+                <Card className="interactive-lift">
+                   <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> AI-Generated Insights</CardTitle></CardHeader>
+                   <CardContent>
+                      <ul className="space-y-3">
+                          {insights.insights.map((insight, index) => (
+                              <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
+                                  <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                                  <span>{insight}</span>
+                              </li>
+                          ))}
+                      </ul>
+                   </CardContent>
+                </Card>
+              )}
+            </div>
+          )
         )}
       </div>
     );
@@ -1033,8 +1004,8 @@ export default function FinancialsPage() {
     const isCA = userProfile.role === 'CA';
 
     const founderTabs = [
-        { value: 'financials', label: 'Financials', icon: BarChartIcon, component: <FinancialsTab /> },
-        { value: 'analysis', label: 'Analysis', icon: AreaChartIcon, component: <FinancialAnalysisTab /> },
+        { value: 'financials', label: 'Runway & Forecast', icon: BarChartIcon, component: <FinancialsTab /> },
+        { value: 'analysis', label: 'YoY Analysis', icon: LineChartIcon, component: <FinancialAnalysisTab /> },
         { value: 'gst', label: 'GST Calculator', icon: Calculator, component: <GstCalculatorTab /> },
         { value: 'payroll', label: 'Payroll Calculator', icon: User, component: <PayrollCalculator /> },
         { value: 'personal', label: 'Personal Tax', icon: User, component: <PersonalTaxCalculator /> },

@@ -2,6 +2,15 @@
 
 'use server';
 
-// This file is no longer used and is kept to avoid breaking imports in a real-world scenario.
-// The new logic is handled directly in the page component.
+import { generateYoYAnalysis, type YoYInput, type YoYOutput } from '@/ai/flows/yoy-analysis-flow';
 
+
+export async function getYoYAnalysisAction(input: YoYInput): Promise<YoYOutput> {
+  try {
+    const result = await generateYoYAnalysis(input);
+    return result;
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    throw new Error(e.message || 'Could not generate financial analysis.');
+  }
+}
