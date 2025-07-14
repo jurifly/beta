@@ -728,7 +728,7 @@ const FinancialsTab = () => {
                                 <ChartContainer config={{ revenue: { label: "Revenue" }, expenses: { label: "Expenses" } }} className="h-48 w-full">
                                   <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
-                                      <Tooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                      <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
                                       <Pie data={chartData} dataKey="value" nameKey="name" innerRadius="60%" cy="50%">
                                          {chartData.map((entry, index) => (
                                           <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -850,9 +850,7 @@ const FinancialAnalysisTab = () => {
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
     const [historicalData, setHistoricalData] = useState(activeCompany?.historicalFinancials || []);
-    const [chartData, setChartData] = useState<any[]>([]);
-    const [insights, setInsights] = useState<YoYOutput | null>(null);
-
+    const [analysisResult, setAnalysisResult] = useState<{chartData: any[], insights: YoYOutput} | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     
     const [newYear, setNewYear] = useState("");
@@ -861,7 +859,13 @@ const FinancialAnalysisTab = () => {
     const { toast } = useToast();
 
     useEffect(() => {
-        setHistoricalData(activeCompany?.historicalFinancials || []);
+      if (activeCompany?.id) {
+        const savedAnalysis = localStorage.getItem(`yoy-analysis-${activeCompany.id}`);
+        if (savedAnalysis) {
+            setAnalysisResult(JSON.parse(savedAnalysis));
+        }
+        setHistoricalData(activeCompany.historicalFinancials || []);
+      }
     }, [activeCompany]);
     
     const addHistoricalData = async () => {
@@ -899,16 +903,20 @@ const FinancialAnalysisTab = () => {
         if (!await deductCredits(1)) return;
 
         setIsAnalyzing(true);
-        setChartData([]);
-        setInsights(null);
+        setAnalysisResult(null);
 
         try {
             const response = await getYoYAnalysisAction({
                 historicalData,
                 legalRegion: userProfile.legalRegion,
             });
-            setInsights(response);
-            setChartData(historicalData.sort((a,b) => a.year.localeCompare(b.year)));
+            const newResult = {
+                chartData: historicalData.sort((a,b) => a.year.localeCompare(b.year)),
+                insights: response,
+            };
+            setAnalysisResult(newResult);
+            localStorage.setItem(`yoy-analysis-${activeCompany?.id}`, JSON.stringify(newResult));
+
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Analysis Failed', description: error.message });
         } finally {
@@ -944,7 +952,7 @@ const FinancialAnalysisTab = () => {
                 </div>
             </CardContent>
              <CardFooter className="flex-col gap-2 items-center">
-                 <Button onClick={handleGenerateAnalysis} disabled={isAnalyzing || historicalData.length === 0} className="w-full max-w-xs">
+                 <Button onClick={handleGenerateAnalysis} disabled={isAnalyzing || historicalData.length < 2} className="w-full max-w-xs">
                      {isAnalyzing ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
                      Generate YoY Analysis
                  </Button>
@@ -955,17 +963,17 @@ const FinancialAnalysisTab = () => {
         {isAnalyzing ? (
           <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1 col-span-full"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Analyzing your data...</p></div>
         ) : (
-          (chartData.length > 0 || insights) && (
+          analysisResult && (
             <div className="space-y-6 animate-in fade-in-50">
               <Card className="interactive-lift">
                   <CardHeader><CardTitle>Financial Trends</CardTitle></CardHeader>
                   <CardContent>
                        <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
-                          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <LineChart data={analysisResult.chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" vertical={false} />
                               <XAxis dataKey="year" />
                               <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                              <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                              <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
                               <Legend />
                               <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} name="Revenue" />
                               <Line type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} name="Expenses" />
@@ -973,12 +981,11 @@ const FinancialAnalysisTab = () => {
                       </ChartContainer>
                   </CardContent>
               </Card>
-              {insights && (
                 <Card className="interactive-lift">
                    <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> AI-Generated Insights</CardTitle></CardHeader>
                    <CardContent>
                       <ul className="space-y-3">
-                          {insights.insights.map((insight, index) => (
+                          {analysisResult.insights.insights.map((insight, index) => (
                               <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
                                   <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
                                   <span>{insight}</span>
@@ -987,7 +994,6 @@ const FinancialAnalysisTab = () => {
                       </ul>
                    </CardContent>
                 </Card>
-              )}
             </div>
           )
         )}
