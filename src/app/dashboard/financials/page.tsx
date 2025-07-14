@@ -595,7 +595,7 @@ const GstCalculatorTab = () => {
 
 
 const FinancialsTab = () => {
-    const { userProfile, updateUserProfile, deductCredits } = useAuth();
+    const { userProfile, updateUserProfile } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
     const [isForecasting, setIsForecasting] = useState(false);
     const [forecastResult, setForecastResult] = useState<FinancialForecasterOutput | null>(null);
@@ -606,12 +606,6 @@ const FinancialsTab = () => {
     const [cashBalance, setCashBalance] = useState(activeCompany?.financials?.cashBalance || 0);
     const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
     const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
-    
-    const [monthlyData, setMonthlyData] = useState(activeCompany?.monthlyFinancials || []);
-    const [newMonth, setNewMonth] = useState("");
-    const [newRevenue, setNewRevenue] = useState<number | ''>('');
-    const [newExpenses, setNewExpenses] = useState<number | ''>('');
-
 
     const { control, handleSubmit, formState: { errors } } = useForm<ForecastFormData>({
         resolver: zodResolver(forecastSchema),
@@ -639,20 +633,23 @@ const FinancialsTab = () => {
         };
     }, [revenue, expenses, cashBalance]);
 
+    useEffect(() => {
+        if (activeCompany?.financials) {
+            setCashBalance(activeCompany.financials.cashBalance);
+            setRevenue(activeCompany.financials.monthlyRevenue);
+            setExpenses(activeCompany.financials.monthlyExpenses);
+        }
+    }, [activeCompany]);
+
     const handleSaveFinancials = async () => {
         if (!activeCompany || !userProfile) return;
-        if (!await deductCredits(1)) return;
         
         setIsSaving(true);
-        const updatedCompany = { 
-            ...activeCompany, 
-            financials: { cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses },
-            monthlyFinancials: monthlyData,
-        };
+        const updatedCompany = { ...activeCompany, financials: { cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses } };
         const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
         try {
             await updateUserProfile({ companies: updatedCompanies });
-            toast({ title: "Calculation Complete!", description: "Your financial data has been updated and health metrics recalculated."});
+            toast({ title: "Financials Saved!", description: "Your runway and health metrics have been updated."});
         } catch(e) {
             toast({ variant: 'destructive', title: "Save Failed", description: "Could not save financial data."});
         } finally {
@@ -688,27 +685,6 @@ const FinancialsTab = () => {
         }
     };
     
-    const addMonthlyData = () => {
-        if (newMonth && typeof newRevenue === 'number' && typeof newExpenses === 'number') {
-            const monthDate = new Date(newMonth + '-01');
-            const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
-            if (monthlyData.some(d => d.month === monthKey)) {
-                toast({ variant: 'destructive', title: 'Duplicate Month', description: 'Data for this month already exists.'});
-                return;
-            }
-            setMonthlyData([...monthlyData, { month: monthKey, revenue: newRevenue, expenses: newExpenses }]);
-            setNewMonth('');
-            setNewRevenue('');
-            setNewExpenses('');
-        } else {
-            toast({ variant: 'destructive', title: 'Invalid Data', description: 'Please fill out all fields for the monthly record.'});
-        }
-    };
-
-    const removeMonthlyData = (month: string) => {
-        setMonthlyData(monthlyData.filter(d => d.month !== month));
-    };
-
     if (!activeCompany) {
       return (
         <Card>
@@ -724,8 +700,8 @@ const FinancialsTab = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><BarChartIcon className="w-6 h-6 text-primary"/> Financial Snapshot</CardTitle>
-                        <CardDescription>Input your key monthly financials.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><BarChartIcon className="w-6 h-6 text-primary"/> Runway Calculator</CardTitle>
+                        <CardDescription>Input your key monthly financials to calculate your runway.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
@@ -741,10 +717,10 @@ const FinancialsTab = () => {
                             <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value) || 0)} placeholder="e.g. 800000" />
                         </div>
                     </CardContent>
-                    <CardFooter>
+                     <CardFooter>
                       <Button onClick={handleSaveFinancials} disabled={isSaving}>
-                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Calculator className="mr-2"/>}
-                          Calculate (1 Credit)
+                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}
+                          Save Financials
                       </Button>
                     </CardFooter>
                 </Card>
@@ -788,28 +764,6 @@ const FinancialsTab = () => {
                     </CardContent>
                  </Card>
             </div>
-            
-            <Card className="col-span-full interactive-lift">
-                <CardHeader><CardTitle>Monthly Data</CardTitle><CardDescription>Add past financial months' data for accurate trend analysis.</CardDescription></CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {monthlyData.map(data => (
-                            <div key={data.month} className="flex items-center gap-4 p-3 border rounded-md">
-                                <p className="font-semibold flex-1">{new Date(data.month + '-02').toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
-                                <p className="text-sm text-green-600">Revenue: {formatCurrency(data.revenue)}</p>
-                                <p className="text-sm text-red-600">Expenses: {formatCurrency(data.expenses)}</p>
-                                <Button variant="ghost" size="icon" onClick={() => removeMonthlyData(data.month)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                            </div>
-                        ))}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border-t">
-                             <div className="space-y-1.5"><Label htmlFor="new-month">Month</Label><Input id="new-month" type="month" value={newMonth} onChange={e => setNewMonth(e.target.value)} /></div>
-                             <div className="space-y-1.5"><Label htmlFor="new-revenue-monthly">Total Revenue (₹)</Label><Input id="new-revenue-monthly" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
-                             <div className="space-y-1.5"><Label htmlFor="new-expenses-monthly">Total Expenses (₹)</Label><Input id="new-expenses-monthly" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
-                             <Button onClick={addMonthlyData}><PlusCircle className="mr-2"/>Add Month</Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
             
             <Card className="col-span-full interactive-lift">
                 <form onSubmit={handleSubmit(onForecastSubmit)}>
@@ -1143,4 +1097,3 @@ export default function FinancialsPage() {
         </div>
     );
 }
-

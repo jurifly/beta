@@ -95,7 +95,7 @@ const HeroSection = () => {
             </div>
              <div className="mt-16 group interactive-lift">
                 <Image
-                    src="https://i.ibb.co/R4PGDdj3/Dashboard.png"
+                    src="https://i.ibb.co/yY5JcR1/image.png"
                     width={1200}
                     height={600}
                     alt="Dashboard Preview"
@@ -145,10 +145,10 @@ const ValueSection = () => {
 // Product Glimpse Section
 const ProductGlimpseSection = () => {
     const glimpses = [
-        { title: "Launchpad", description: "Get your company started in 5 clicks.", image: "https://i.ibb.co/R4DCpNzt/launch-pad.png", hint: "company setup" },
-        { title: "Financials", description: "Visualize burn rate, runway, and project future growth.", image: "https://i.ibb.co/tTykJ0rH/Financial.png", hint: "financial dashboard" },
-        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness.", image: "https://i.ibb.co/6RBdNNng/Analytics.png", hint: "analytics charts" },
-        { title: "Cap Table", description: "See your dilution before it dilutes.", image: "https://i.ibb.co/7J36PCNJ/cap-table.png", hint: "cap table graph" },
+        { title: "Launchpad", description: "Get your company started in 5 clicks.", image: "https://i.ibb.co/gFRDMdzQ/launch-pad.png", hint: "company setup" },
+        { title: "Financials", description: "Visualize burn rate, runway, and project future growth.", image: "https://i.ibb.co/nNhZLXJw/Financial.png", hint: "financial dashboard" },
+        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness.", image: "https://i.ibb.co/8DchXXK6/Analytics.png", hint: "analytics charts" },
+        { title: "Cap Table", description: "See your dilution before it dilutes.", image: "https://i.ibb.co/99xC6g39/cap-table.png", hint: "cap table graph" },
     ];
     
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -179,7 +179,7 @@ const ProductGlimpseSection = () => {
                                                 loading="lazy"
                                                 width={1200}
                                                 height={800}
-                                                className="w-full object-cover aspect-[3/2] border shadow-md"
+                                                className="w-full object-cover border shadow-md"
                                                 src={glimpse.image}
                                             />
                                         </div>
