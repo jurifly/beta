@@ -250,7 +250,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
-  { ...navItemConfig.latestNews },
+  { ...navItemConfig.latestNews, locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
@@ -265,7 +265,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.workflows, locked: true },
   { ...navItemConfig.clauseLibrary, locked: false },
-  { ...navItemConfig.latestNews },
+  { ...navItemConfig.latestNews, locked: true },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
@@ -277,7 +277,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   { ...navItemConfig.invitations },
   { ...navItemConfig.connections, locked: true },
   navItemConfig.portfolioAnalytics,
-  { ...navItemConfig.latestNews },
+  { ...navItemConfig.latestNews, locked: true },
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
@@ -287,7 +287,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.portfolioAnalytics,
   { ...navItemConfig.learnHub },
   navItemConfig.docVault,
-  { ...navItemConfig.latestNews },
+  { ...navItemConfig.latestNews, locked: true },
 ];
 
 const getSidebarNavItems = (role: UserRole) => {

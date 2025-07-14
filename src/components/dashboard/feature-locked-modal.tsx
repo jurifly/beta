@@ -46,6 +46,11 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta: strin
         lines: ["A library of pre-approved legal clauses, just for you.", "Right now, the only clause is 'Santa Clause' and he's on vacation."],
         eta: "This is a premium feature available on our Pro plans."
     },
+    "Latest News": {
+        title: "🗞️ Latest News is... Yesterday's News",
+        lines: ["The news feature is still being written.", "Our AI reporter is currently stuck in a debate about whether pineapple belongs on pizza."],
+        eta: "ETA: As soon as we resolve this critical issue."
+    },
     "Reconciliation": {
         title: "💸 Reconciliation is... Having a Meltdown",
         lines: ["It tried to match transactions and matched trauma instead.", "Now it just stares at the ledger whispering “why?”"],
