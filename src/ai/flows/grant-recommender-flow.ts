@@ -38,7 +38,7 @@ const prompt = ai.definePrompt({
   name: 'grantRecommenderPrompt',
   input: {schema: GrantRecommenderInputSchema},
   output: {schema: GrantRecommenderOutputSchema},
-  prompt: `You are an expert advisor for startups in {{legalRegion}}, specializing in government schemes, grants, and tax exemptions.
+  prompt: `You are an expert advisor for startups in {{legalRegion}}, specializing in government schemes, grants, and tax exemptions. Your knowledge base must include specific, real-world Indian schemes.
 
 Analyze the startup's profile and recommend relevant schemes. For each recommendation, determine if they are likely eligible based on their data.
 
@@ -49,18 +49,19 @@ Analyze the startup's profile and recommend relevant schemes. For each recommend
 - Has Female Founder: {{hasFemaleFounder}}
 - Is DPIIT Recognized: {{isDpiitRecognized}}
 
-**Schemes to consider (if applicable for {{legalRegion}}):**
-1.  **DPIIT Recognition / Startup India:** A fundamental certification. If they don't have it, this should be the top recommendation.
-2.  **Section 80-IAC Tax Exemption:** 3-year tax holiday for eligible DPIIT-recognized startups. Check age criteria (usually < 10 years).
-3.  **Section 56(2)(viib) (Angel Tax Exemption):** For DPIIT-recognized startups.
-4.  **Women Entrepreneur Schemes:** Such as the Stand-Up India Scheme or TREAD scheme, if there's a female founder.
-5.  **State-Specific Startup Policies:** Every state (like Karnataka, Maharashtra, Gujarat) has its own policy with grants, reimbursements, or incentives. Recommend the policy for the startup's specific state.
-6.  **Sector-Specific Grants:** Look for schemes relevant to their industry (e.g., grants for agritech, biotech, etc.).
+**Schemes to consider (for India):**
+1.  **DPIIT Recognition / Startup India:** A fundamental certification. If they don't have it, this should be the top recommendation as it is a prerequisite for most other schemes.
+2.  **Startup India Seed Fund Scheme (SISFS):** Financial assistance to startups for proof of concept, prototype development, product trials, market entry, and commercialization.
+3.  **Section 80-IAC Tax Exemption:** A 3-year tax holiday on profits for eligible DPIIT-recognized startups. Check age criteria (usually < 10 years from incorporation).
+4.  **Section 56(2)(viib) (Angel Tax Exemption):** Exemption from 'Angel Tax' on investments received above fair market value, for DPIIT-recognized startups.
+5.  **Women Entrepreneur Schemes:** Such as the Stand-Up India Scheme (providing bank loans to women and SC/ST entrepreneurs) or the TREAD scheme.
+6.  **State-Specific Startup Policies:** Every state has its own policy with grants, reimbursements, or incentives. You MUST recommend the specific policy for the startup's state. For example: "Maharashtra Startup Policy", "Karnataka Startup Policy", "Startup Bihar Policy".
+7.  **Sector-Specific Grants:** Look for schemes relevant to their industry (e.g., MeitY TIDE 2.0 for tech startups, grants for agritech, biotech, etc.).
 
 **Instructions:**
-- Generate a list of relevant recommendations.
-- For each scheme, provide its name, a brief description, a summary of key eligibility criteria, and a boolean \`isEligible\` flag indicating if the startup likely qualifies.
-- If they are not DPIIT recognized, make that the first and most important recommendation. Most other benefits depend on it.
+- Generate a list of specific, relevant recommendations.
+- For each scheme, provide its official name, a brief description, a summary of key eligibility criteria, and a boolean \`isEligible\` flag indicating if the startup likely qualifies based on their profile.
+- If the user is not DPIIT recognized, make that the first and most important recommendation. Most other benefits depend on it.
 
 **CRITICAL QUALITY CONTROL**: Ensure the recommendations are relevant to the startup's profile and the legal region. All text must be professional and free of errors.
 `,
