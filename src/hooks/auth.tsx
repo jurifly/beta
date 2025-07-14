@@ -532,47 +532,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) {
       throw new Error("Only advisors can accept invites.");
     }
-  
     const inviteRef = doc(db, 'invites', inviteId);
-    
     try {
       const inviteDoc = await getDoc(inviteRef);
       if (!inviteDoc.exists() || inviteDoc.data().status !== 'pending') {
         throw new Error("Invite not found or has already been processed.");
       }
-      
       const inviteData = inviteDoc.data() as Invite;
-      const { founderId, companyId } = inviteData;
-  
-      const founderRef = doc(db, 'users', founderId);
-      const founderDoc = await getDoc(founderRef);
-      if (!founderDoc.exists()) throw new Error("Founder account not found.");
-      
-      const founderData = founderDoc.data() as UserProfile;
-      const companyToAccept = (founderData.companies || []).find(c => c.id === companyId);
-      if (!companyToAccept) throw new Error("Company not found in founder's profile.");
-  
-      const companyForCa: Company = { ...companyToAccept, founderUid: founderId };
-  
-      const caRef = doc(db, 'users', user.uid);
-      await updateDoc(caRef, { companies: [...(userProfile.companies || []), companyForCa] });
-      await updateDoc(inviteRef, { status: 'accepted', acceptedAt: new Date().toISOString(), caId: user.uid, caName: userProfile.name });
-
-      setUserProfile(prev => ({ ...prev!, companies: [...(prev!.companies || []), companyForCa] }));
-      
-      await addNotification({
-        title: 'Invitation Accepted',
-        description: `${userProfile.name} has accepted your invitation to manage ${inviteData.companyName}.`,
-        icon: 'CheckCircle',
-        link: '/dashboard/connections'
-      }, inviteData.founderId);
-
-    } catch(error: any) {
-        console.error("Transaction failed: ", error);
-        throw error;
+      await updateDoc(inviteRef, {
+        status: 'accepted',
+        acceptedAt: new Date().toISOString(),
+        caId: user.uid,
+        caName: userProfile.name,
+      });
+      // The founder's side will now pick this up via `checkForAcceptedInvites`.
+      // We just update the local state for the CA.
+      setReceivedInvites(prev => prev.filter(i => i.id !== inviteId));
+      toast({ title: 'Invitation Accepted!', description: 'You can now manage the new client. It will appear on your dashboard shortly.' });
+    } catch (error: any) {
+      console.error("Error accepting invite:", error);
+      throw error;
     }
   };
-
+  
   const checkForAcceptedInvites = useCallback(async () => {
     if (!user || !userProfile || userProfile.role !== 'Founder') return;
   
@@ -594,8 +576,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (companyIndex !== -1 && !updatedCompanies[companyIndex].connectedCaUid) {
         updatedCompanies[companyIndex].connectedCaUid = inviteData.caId;
         companiesUpdated = true;
-        // Mark the invite as processed by the founder to avoid re-processing.
         batch.update(docSnap.ref, { status: 'processed' });
+
+        // Also add notification for the founder
+        addNotification({
+            title: 'Advisor Connected!',
+            description: `${inviteData.caName} has accepted your invitation and can now manage ${inviteData.companyName}.`,
+            icon: 'CheckCircle',
+            link: '/dashboard/ca-connect',
+        }, user.uid);
       }
     });
   
@@ -609,7 +598,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: 'An advisor has accepted your invitation. You can now collaborate in the Connections Hub.',
       });
     }
-  }, [user, userProfile, toast]);
+  }, [user, userProfile, toast, addNotification]);
 
   const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites };
 
