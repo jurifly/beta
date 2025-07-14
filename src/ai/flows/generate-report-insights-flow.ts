@@ -20,7 +20,7 @@ const ReportInsightsInputSchema = z.object({
 export type ReportInsightsInput = z.infer<typeof ReportInsightsInputSchema>;
 
 const ReportInsightsOutputSchema = z.object({
-  executiveSummary: z.string().describe("A 3-paragraph executive summary in Markdown format. It should summarize the compliance posture, identify the most urgent issue, and provide 2-3 prioritized action items."),
+  executiveSummary: z.string().describe("A 3-5 point executive summary in Markdown format. It should summarize the compliance posture, identify the most urgent issue, and provide 2-3 prioritized action items in a bulleted list."),
 });
 export type ReportInsightsOutput = z.infer<typeof ReportInsightsOutputSchema>;
 
@@ -49,13 +49,17 @@ const prompt = ai.definePrompt({
 {{/unless}}
 
 **Instructions:**
-Generate a 3-paragraph executive summary in Markdown format.
+Generate a 3-5 point executive summary using Markdown bullet points.
 
-1.  **Paragraph 1: Overall Posture.** Start with a clear, concise summary of the company's current legal and financial health. Reference the Hygiene Score. Is it strong, average, or in need of attention? Briefly mention financial stability. Example: "Your company demonstrates excellent legal and compliance health, evidenced by a perfect Legal Hygiene Score of 100/100 and no overdue filings. This strong foundation minimizes legal risks and positions you favorably for future growth and investment."
+*   **Overall Posture:** Start with a bullet point summarizing the company's current legal and financial health. Reference the Hygiene Score. Example: "- **Overall Health:** Strong legal posture with a {{hygieneScore}}/100 score and stable financials."
 
-2.  **Paragraph 2: Most Urgent Issue.** Based on all the data, identify the single most critical issue that requires immediate attention. This could be a high number of overdue filings, a very short financial runway, or a critical risk flag from a contract. State the problem clearly and explain its potential impact. Example: "The most critical issue demanding immediate attention is the undefined Valuation Cap in your recent contracts. The current placeholder value poses a significant risk. Failure to properly assess and define this cap in INR could lead to disputes with investors regarding equity stake dilution and potentially disadvantageous terms for the company."
+*   **Most Urgent Issue:** Dedicate a bullet point to the single most critical issue that requires immediate attention. State the problem clearly. Example: "- **Urgent Priority:** The placeholder 'Valuation Cap' in recent contracts poses a significant risk of unfavorable dilution and investor disputes."
 
-3.  **Paragraph 3: Action Plan.** Provide 2-3 clear, prioritized, and actionable steps the founder should take right away to address the most urgent issue identified in Paragraph 2. Be specific. Example: "To address this, immediately prioritize the following: 1) Engage a qualified financial advisor or valuation expert to conduct a thorough valuation of the company... 2) Armed with this valuation, renegotiate the Valuation Cap clause in the relevant contracts..."
+*   **Action Plan:** Provide 2-3 clear, prioritized, and actionable steps as sub-bullets under a main "Action Plan" bullet. Example:
+    - **Action Plan:**
+        - Immediately engage a qualified financial advisor to conduct a formal valuation.
+        - Renegotiate the Valuation Cap clause in the relevant contracts to reflect the new valuation.
+        - Update all signed documents and communicate the change to investors.
 
 **CRITICAL QUALITY CONTROL**: Before returning your response, you MUST act as a meticulous editor. Your analysis must be professional, well-written, and completely free of any spelling or grammatical errors. Ensure the summary is actionable and directly addresses the provided data points.
 `,
