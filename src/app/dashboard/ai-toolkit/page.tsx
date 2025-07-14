@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +37,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInMonths } from 'date-fns';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { Input } from '@/components/ui/input';
@@ -46,7 +46,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { UpgradePrompt } from '@/components/upgrade-prompt';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { PenaltyPredictorOutput } from '@/ai/flows/penalty-predictor-flow';
+import type { GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
 
 // --- Tab: AI Legal Assistant ---
 
@@ -1337,6 +1342,120 @@ const PenaltyPredictorTab = () => {
     )
 }
 
+// --- Grant Recommender Tab ---
+
+const grantRecommenderSchema = z.object({
+  industry: z.string().min(1, "Industry is required."),
+  location: z.string().min(1, "Location is required."),
+  hasFemaleFounder: z.boolean().default(false),
+  isDpiitRecognized: z.boolean().default(false),
+});
+type GrantRecommenderFormData = z.infer<typeof grantRecommenderSchema>;
+
+const GrantRecommenderTab = () => {
+    const { userProfile, deductCredits } = useAuth();
+    const [result, setResult] = useState<GrantRecommenderOutput | null>(null);
+    const { toast } = useToast();
+    
+    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+
+    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<GrantRecommenderFormData>({
+        resolver: zodResolver(grantRecommenderSchema),
+        defaultValues: {
+            industry: activeCompany?.sector || '',
+            location: activeCompany?.location.split(',')[1]?.trim() || '',
+        }
+    });
+
+    const onSubmit = async (data: GrantRecommenderFormData) => {
+        if (!userProfile || !activeCompany) return;
+        if (!await deductCredits(1)) return;
+
+        setResult(null);
+
+        try {
+            const response = await AiActions.recommendGrantsAction({
+                ...data,
+                businessAgeInMonths: differenceInMonths(new Date(), new Date(activeCompany.incorporationDate)),
+                legalRegion: userProfile.legalRegion,
+            });
+            setResult(response);
+            toast({ title: "Recommendations Ready!", description: "We've found some schemes you might be eligible for." });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        }
+    };
+    
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+                 <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Grant & Exemption Finder</CardTitle>
+                        <CardDescription>Tell us about your startup to find relevant government schemes.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                           <Label htmlFor="industry">Industry / Sector</Label>
+                           <Controller name="industry" control={control} render={({ field }) => <Input id="industry" {...field} />} />
+                           {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="location">State of Operation</Label>
+                           <Controller name="location" control={control} render={({ field }) => <Input id="location" {...field} />} />
+                           {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <Controller name="hasFemaleFounder" control={control} render={({ field }) => <Checkbox id="hasFemaleFounder" checked={field.value} onCheckedChange={field.onChange} />} />
+                           <Label htmlFor="hasFemaleFounder">We have at least one female co-founder.</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <Controller name="isDpiitRecognized" control={control} render={({ field }) => <Checkbox id="isDpiitRecognized" checked={field.value} onCheckedChange={field.onChange} />} />
+                           <Label htmlFor="isDpiitRecognized">We are already DPIIT recognized.</Label>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                         <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Find Schemes (1 Credit)
+                        </Button>
+                    </CardFooter>
+                 </Card>
+            </form>
+             <div className="lg:col-span-3">
+                 <Card className="min-h-[400px] interactive-lift">
+                    <CardHeader>
+                        <CardTitle>AI Recommendations</CardTitle>
+                    </CardHeader>
+                     <CardContent>
+                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Searching for schemes...</p></div>}
+                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
+                        {result && (
+                            <div className="space-y-4 animate-in fade-in-50">
+                                {result.recommendations.map((rec, i) => (
+                                    <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
+                                        <CardHeader>
+                                            <div className="flex justify-between items-start">
+                                                <CardTitle className="text-base">{rec.schemeName}</CardTitle>
+                                                {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
+                                            </div>
+                                            <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground">{rec.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                     </CardContent>
+                 </Card>
+            </div>
+        </div>
+    )
+}
+
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile, isDevMode } = useAuth();
@@ -1387,6 +1506,7 @@ export default function AiToolkitPage() {
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
+        { value: 'grants', label: 'Grants', icon: Gift, content: <GrantRecommenderTab /> },
         { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: showPenaltyPredictor ? <PenaltyPredictorTab /> : <UpgradePrompt />, hidden: !showPenaltyPredictor },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);
