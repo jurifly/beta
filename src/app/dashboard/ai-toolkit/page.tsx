@@ -829,7 +829,12 @@ const DocumentGenerator = () => {
 
   useEffect(() => { if (isTyping && !hasUserEdited.current) setEditorContent(typewriterText); if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedDoc?.content || '').length) setIsTyping(false); }, [typewriterText, isTyping, generatedDoc]);
   const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { if (isTyping) { hasUserEdited.current = true; setIsTyping(false); } setEditorContent(e.target.value); };
-  const availableCategories = useMemo(() => { if (!userProfile) return []; return templateLibrary.filter(category => category.roles.includes(userProfile.role)); }, [userProfile]);
+  
+  const availableCategories = useMemo(() => {
+    if (!userProfile) return [];
+    return templateLibrary.filter(category => category.roles.includes(userProfile.role));
+  }, [userProfile]);
+  
   const editorRef = useRef<HTMLTextAreaElement>(null);
   
   useEffect(() => {
@@ -1592,5 +1597,3 @@ export default function AiToolkitPage() {
         </div>
     );
 }
-
-    
