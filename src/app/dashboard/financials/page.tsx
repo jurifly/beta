@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useForm, Controller, useFieldArray } from "react-hook-form";
@@ -594,7 +595,7 @@ const GstCalculatorTab = () => {
 
 
 const FinancialsTab = () => {
-    const { userProfile, updateUserProfile } = useAuth();
+    const { userProfile, updateUserProfile, deductCredits } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
     const [isForecasting, setIsForecasting] = useState(false);
     const [forecastResult, setForecastResult] = useState<FinancialForecasterOutput | null>(null);
@@ -606,9 +607,8 @@ const FinancialsTab = () => {
     const [revenue, setRevenue] = useState(activeCompany?.financials?.monthlyRevenue || 0);
     const [expenses, setExpenses] = useState(activeCompany?.financials?.monthlyExpenses || 0);
     
-    // State for historical data
-    const [historicalData, setHistoricalData] = useState(activeCompany?.historicalFinancials || []);
-    const [newYear, setNewYear] = useState("");
+    const [monthlyData, setMonthlyData] = useState(activeCompany?.monthlyFinancials || []);
+    const [newMonth, setNewMonth] = useState("");
     const [newRevenue, setNewRevenue] = useState<number | ''>('');
     const [newExpenses, setNewExpenses] = useState<number | ''>('');
 
@@ -641,16 +641,18 @@ const FinancialsTab = () => {
 
     const handleSaveFinancials = async () => {
         if (!activeCompany || !userProfile) return;
+        if (!await deductCredits(1)) return;
+        
         setIsSaving(true);
         const updatedCompany = { 
             ...activeCompany, 
             financials: { cashBalance, monthlyRevenue: revenue, monthlyExpenses: expenses },
-            historicalFinancials: historicalData,
+            monthlyFinancials: monthlyData,
         };
         const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
         try {
             await updateUserProfile({ companies: updatedCompanies });
-            toast({ title: "Financials Saved", description: "Your financial data has been updated."});
+            toast({ title: "Calculation Complete!", description: "Your financial data has been updated and health metrics recalculated."});
         } catch(e) {
             toast({ variant: 'destructive', title: "Save Failed", description: "Could not save financial data."});
         } finally {
@@ -686,23 +688,25 @@ const FinancialsTab = () => {
         }
     };
     
-    const addHistoricalData = () => {
-        if (newYear && typeof newRevenue === 'number' && typeof newExpenses === 'number') {
-            if (historicalData.some(d => d.year === newYear)) {
-                toast({ variant: 'destructive', title: 'Duplicate Year', description: 'Data for this year already exists.'});
+    const addMonthlyData = () => {
+        if (newMonth && typeof newRevenue === 'number' && typeof newExpenses === 'number') {
+            const monthDate = new Date(newMonth + '-01');
+            const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+            if (monthlyData.some(d => d.month === monthKey)) {
+                toast({ variant: 'destructive', title: 'Duplicate Month', description: 'Data for this month already exists.'});
                 return;
             }
-            setHistoricalData([...historicalData, { year: newYear, revenue: newRevenue, expenses: newExpenses }]);
-            setNewYear('');
+            setMonthlyData([...monthlyData, { month: monthKey, revenue: newRevenue, expenses: newExpenses }]);
+            setNewMonth('');
             setNewRevenue('');
             setNewExpenses('');
         } else {
-            toast({ variant: 'destructive', title: 'Invalid Data', description: 'Please fill out all fields for the historical record.'});
+            toast({ variant: 'destructive', title: 'Invalid Data', description: 'Please fill out all fields for the monthly record.'});
         }
     };
 
-    const removeHistoricalData = (year: string) => {
-        setHistoricalData(historicalData.filter(d => d.year !== year));
+    const removeMonthlyData = (month: string) => {
+        setMonthlyData(monthlyData.filter(d => d.month !== month));
     };
 
     if (!activeCompany) {
@@ -737,6 +741,12 @@ const FinancialsTab = () => {
                             <Input id="expenses" type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value) || 0)} placeholder="e.g. 800000" />
                         </div>
                     </CardContent>
+                    <CardFooter>
+                      <Button onClick={handleSaveFinancials} disabled={isSaving}>
+                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Calculator className="mr-2"/>}
+                          Calculate (1 Credit)
+                      </Button>
+                    </CardFooter>
                 </Card>
                  <Card className="interactive-lift">
                     <CardHeader>
@@ -780,26 +790,25 @@ const FinancialsTab = () => {
             </div>
             
             <Card className="col-span-full interactive-lift">
-                <CardHeader><CardTitle>Historical Data</CardTitle><CardDescription>Add past financial years' data for YoY analysis.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Monthly Data</CardTitle><CardDescription>Add past financial months' data for accurate trend analysis.</CardDescription></CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {historicalData.map(data => (
-                            <div key={data.year} className="flex items-center gap-4 p-3 border rounded-md">
-                                <p className="font-semibold flex-1">{data.year}</p>
+                        {monthlyData.map(data => (
+                            <div key={data.month} className="flex items-center gap-4 p-3 border rounded-md">
+                                <p className="font-semibold flex-1">{new Date(data.month + '-02').toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
                                 <p className="text-sm text-green-600">Revenue: {formatCurrency(data.revenue)}</p>
                                 <p className="text-sm text-red-600">Expenses: {formatCurrency(data.expenses)}</p>
-                                <Button variant="ghost" size="icon" onClick={() => removeHistoricalData(data.year)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                <Button variant="ghost" size="icon" onClick={() => removeMonthlyData(data.month)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                             </div>
                         ))}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border-t">
-                             <div className="space-y-1.5"><Label htmlFor="new-year">Year (e.g., 2023-24)</Label><Input id="new-year" value={newYear} onChange={e => setNewYear(e.target.value)} /></div>
-                             <div className="space-y-1.5"><Label htmlFor="new-revenue">Total Revenue (₹)</Label><Input id="new-revenue" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
-                             <div className="space-y-1.5"><Label htmlFor="new-expenses">Total Expenses (₹)</Label><Input id="new-expenses" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
-                             <Button onClick={addHistoricalData}><PlusCircle className="mr-2"/>Add Year</Button>
+                             <div className="space-y-1.5"><Label htmlFor="new-month">Month</Label><Input id="new-month" type="month" value={newMonth} onChange={e => setNewMonth(e.target.value)} /></div>
+                             <div className="space-y-1.5"><Label htmlFor="new-revenue-monthly">Total Revenue (₹)</Label><Input id="new-revenue-monthly" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
+                             <div className="space-y-1.5"><Label htmlFor="new-expenses-monthly">Total Expenses (₹)</Label><Input id="new-expenses-monthly" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
+                             <Button onClick={addMonthlyData}><PlusCircle className="mr-2"/>Add Month</Button>
                         </div>
                     </div>
                 </CardContent>
-                 <CardFooter><Button onClick={handleSaveFinancials} disabled={isSaving}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2"/>}Save Financials</Button></CardFooter>
             </Card>
             
             <Card className="col-span-full interactive-lift">
@@ -900,91 +909,164 @@ const FinancialsTab = () => {
 }
 
 const FinancialAnalysisTab = () => {
-    const { userProfile } = useAuth();
+    const { userProfile, updateUserProfile } = useAuth();
     const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
     
+    const [historicalData, setHistoricalData] = useState(activeCompany?.historicalFinancials || []);
+    const [newYear, setNewYear] = useState("");
+    const [newRevenue, setNewRevenue] = useState<number | ''>('');
+    const [newExpenses, setNewExpenses] = useState<number | ''>('');
+    const { toast } = useToast();
+
     const chartData = useMemo(() => {
-        if (!activeCompany?.historicalFinancials || activeCompany.historicalFinancials.length === 0) {
+        if (!historicalData || historicalData.length === 0) {
             return [];
         }
-        return activeCompany.historicalFinancials.sort((a,b) => a.year.localeCompare(b.year));
-    }, [activeCompany]);
+        return historicalData.sort((a,b) => a.year.localeCompare(b.year));
+    }, [historicalData]);
 
     const insights = useMemo(() => {
         if (chartData.length < 2) return [];
-        const insightsArr: string[] = [];
+        const insightsArr = [
+          `You have provided ${chartData.length} years of financial data, allowing for a comparative analysis.`,
+        ];
+        
         for (let i = 1; i < chartData.length; i++) {
             const current = chartData[i];
             const prev = chartData[i-1];
             
-            const revGrowth = ((current.revenue - prev.revenue) / prev.revenue) * 100;
-            const expGrowth = ((current.expenses - prev.expenses) / prev.expenses) * 100;
+            const revGrowth = prev.revenue > 0 ? ((current.revenue - prev.revenue) / prev.revenue) * 100 : 100;
+            const expGrowth = prev.expenses > 0 ? ((current.expenses - prev.expenses) / prev.expenses) * 100 : 0;
+            const currentProfit = current.revenue - current.expenses;
+            const prevProfit = prev.revenue - prev.expenses;
+            const profitGrowth = prevProfit !== 0 ? ((currentProfit - prevProfit) / Math.abs(prevProfit)) * 100 : 100;
 
             if (revGrowth > 0) {
-                insightsArr.push(`Revenue grew by ${revGrowth.toFixed(1)}% from FY ${prev.year} to FY ${current.year}.`);
+                insightsArr.push(`Revenue grew by ${revGrowth.toFixed(1)}% from FY ${prev.year} to FY ${current.year}, indicating positive top-line growth.`);
+            } else {
+                 insightsArr.push(`Revenue declined by ${Math.abs(revGrowth).toFixed(1)}% from FY ${prev.year} to FY ${current.year}.`);
             }
+
             if (expGrowth > revGrowth) {
-                insightsArr.push(`Expense growth (${expGrowth.toFixed(1)}%) outpaced revenue growth in FY ${current.year}, impacting margins.`);
+                insightsArr.push(`Expense growth (${expGrowth.toFixed(1)}%) outpaced revenue growth in FY ${current.year}, potentially impacting margins.`);
+            } else {
+                 insightsArr.push(`Expense growth was managed well at ${expGrowth.toFixed(1)}% in FY ${current.year}, below revenue growth.`);
+            }
+             if (currentProfit > prevProfit) {
+                insightsArr.push(`Profitability improved in FY ${current.year}, with profit growing by ${profitGrowth.toFixed(1)}%.`);
             }
         }
-        return insightsArr;
+        if (chartData.length > 0) {
+            const latestYear = chartData[chartData.length - 1];
+            const margin = latestYear.revenue > 0 ? ((latestYear.revenue - latestYear.expenses) / latestYear.revenue) * 100 : 0;
+            insightsArr.push(`The net profit margin for the latest year (FY ${latestYear.year}) was ${margin.toFixed(1)}%.`);
+        }
+        insightsArr.push(`Consistent data tracking is crucial for identifying long-term trends and making informed business decisions.`);
+        
+        return insightsArr.slice(0, 8); // Ensure max 8 insights
     }, [chartData]);
+    
+    const addHistoricalData = () => {
+        if (newYear && typeof newRevenue === 'number' && typeof newExpenses === 'number') {
+            if (historicalData.some(d => d.year === newYear)) {
+                toast({ variant: 'destructive', title: 'Duplicate Year', description: 'Data for this year already exists.'});
+                return;
+            }
+            const updatedData = [...historicalData, { year: newYear, revenue: newRevenue, expenses: newExpenses }];
+            setHistoricalData(updatedData);
+            saveToProfile(updatedData);
+            setNewYear('');
+            setNewRevenue('');
+            setNewExpenses('');
+        } else {
+            toast({ variant: 'destructive', title: 'Invalid Data', description: 'Please fill out all fields for the historical record.'});
+        }
+    };
+
+    const removeHistoricalData = (year: string) => {
+        const updatedData = historicalData.filter(d => d.year !== year);
+        setHistoricalData(updatedData);
+        saveToProfile(updatedData);
+    };
+    
+    const saveToProfile = async (data: any[]) => {
+      if (!activeCompany || !userProfile) return;
+      const updatedCompany = { ...activeCompany, historicalFinancials: data };
+      const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
+      await updateUserProfile({ companies: updatedCompanies });
+      toast({ title: 'Historical Data Saved!' });
+    };
   
-    if (chartData.length === 0) {
-        return (
-             <Card className="interactive-lift">
-                <CardHeader>
-                  <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
-                  <CardDescription>Compare financial performance across the last three years.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                        <p>No historical data found. Add data in the "Financials" tab to enable this view.</p>
-                    </div>
-                </CardContent>
-             </Card>
-        )
-    }
+    if (!activeCompany) { return null; }
 
     return (
-      <Card className="interactive-lift">
-        <CardHeader>
-          <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
-          <CardDescription>Compare financial performance across the last three years.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
-            <BarChart data={chartData} accessibilityLayer>
-              <CartesianGrid vertical={false} />
-              <XAxis dataKey="year" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
-              <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-              <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
-              <Legend />
-              <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4} />
-              <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4} />
-            </BarChart>
-          </ChartContainer>
-          <Card>
+      <div className="space-y-6">
+        <Card className="interactive-lift">
+            <CardHeader>
+              <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
+              <CardDescription>Compare financial performance across years by adding historical data below.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 {chartData.length > 0 ? (
+                    <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-80 w-full">
+                        <BarChart data={chartData} accessibilityLayer>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="year" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
+                          <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                          <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                          <Legend />
+                          <Bar dataKey="revenue" fill="var(--color-revenue)" name="Revenue" radius={4} />
+                          <Bar dataKey="expenses" fill="var(--color-expenses)" name="Expenses" radius={4} />
+                        </BarChart>
+                    </ChartContainer>
+                 ) : (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                        <p>No historical data found. Add data below to enable this view.</p>
+                    </div>
+                 )}
+            </CardContent>
+        </Card>
+
+        <Card className="col-span-full interactive-lift">
+            <CardHeader><CardTitle>Add Historical Data</CardTitle></CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {historicalData.map(data => (
+                        <div key={data.year} className="flex items-center gap-4 p-3 border rounded-md">
+                            <p className="font-semibold flex-1">{data.year}</p>
+                            <p className="text-sm text-green-600">Revenue: {formatCurrency(data.revenue)}</p>
+                            <p className="text-sm text-red-600">Expenses: {formatCurrency(data.expenses)}</p>
+                            <Button variant="ghost" size="icon" onClick={() => removeHistoricalData(data.year)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                        </div>
+                    ))}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border-t">
+                         <div className="space-y-1.5"><Label htmlFor="new-year">Year (e.g., 2023-24)</Label><Input id="new-year" value={newYear} onChange={e => setNewYear(e.target.value)} /></div>
+                         <div className="space-y-1.5"><Label htmlFor="new-revenue">Total Revenue (₹)</Label><Input id="new-revenue" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
+                         <div className="space-y-1.5"><Label htmlFor="new-expenses">Total Expenses (₹)</Label><Input id="new-expenses" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
+                         <Button onClick={addHistoricalData}><PlusCircle className="mr-2"/>Add Year</Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+        
+        {insights.length > 0 && (
+          <Card className="interactive-lift">
              <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Sparkles className="text-primary"/> AI-Generated Insights</CardTitle>
             </CardHeader>
             <CardContent>
-                {insights.length > 0 ? (
-                    <ul className="space-y-3">
-                        {insights.map((insight, index) => (
-                            <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
-                                <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
-                                <span>{insight}</span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-sm text-muted-foreground">Add at least two years of data to generate insights.</p>
-                )}
+                <ul className="space-y-3">
+                    {insights.map((insight, index) => (
+                        <li key={index} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
+                            <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                            <span>{insight}</span>
+                        </li>
+                    ))}
+                </ul>
             </CardContent>
           </Card>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     );
   };
 
@@ -1061,3 +1143,4 @@ export default function FinancialsPage() {
         </div>
     );
 }
+
