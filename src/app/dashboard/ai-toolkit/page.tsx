@@ -1337,89 +1337,7 @@ const PenaltyPredictorTab = () => {
     )
 }
 
-// --- Tab: GST Calculator ---
-const formatCurrency = (num: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2,
-    }).format(num);
-  };
-  
-const GstCalculatorTab = () => {
-    const [amount, setAmount] = useState<number | ''>('');
-    const [rate, setRate] = useState<number>(18);
-    const [amountType, setAmountType] = useState<'exclusive' | 'inclusive'>('exclusive');
-    const [calculation, setCalculation] = useState<{ base: number; gst: number; total: number } | null>(null);
-
-    const handleCalculate = () => {
-        if (typeof amount !== 'number' || amount <= 0) return;
-        let base = 0, gst = 0, total = 0;
-        if (amountType === 'exclusive') {
-            base = amount;
-            gst = amount * (rate / 100);
-            total = base + gst;
-        } else {
-            total = amount;
-            base = amount / (1 + rate / 100);
-            gst = total - base;
-        }
-        setCalculation({ base, gst, total });
-    };
-
-    return (
-        <Card className="max-w-4xl mx-auto interactive-lift">
-            <CardHeader>
-                <CardTitle>GST Calculator</CardTitle>
-                <CardDescription>Quickly calculate GST for any amount.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                    <div className="space-y-2">
-                        <Label htmlFor="amount">Amount (₹)</Label>
-                        <Input id="amount" type="number" value={amount} onChange={e => setAmount(Number(e.target.value) || '')} placeholder="e.g. 10000"/>
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Amount is</Label>
-                        <RadioGroup value={amountType} onValueChange={(v) => setAmountType(v as any)} className="grid grid-cols-2 gap-2">
-                           <Label className={cn("p-2 border rounded-md text-center cursor-pointer", amountType === 'exclusive' && 'bg-primary/10 border-primary')}>
-                            <RadioGroupItem value="exclusive" className="sr-only"/>
-                            Exclusive of GST
-                           </Label>
-                            <Label className={cn("p-2 border rounded-md text-center cursor-pointer", amountType === 'inclusive' && 'bg-primary/10 border-primary')}>
-                            <RadioGroupItem value="inclusive" className="sr-only"/>
-                            Inclusive of GST
-                           </Label>
-                        </RadioGroup>
-                    </div>
-                </div>
-                 <div className="space-y-2">
-                    <Label>GST Rate (%)</Label>
-                    <div className="flex flex-wrap gap-2">
-                        {[5, 12, 18, 28].map(r => (
-                            <Button key={r} variant={rate === r ? 'default' : 'outline'} onClick={() => setRate(r)}>{r}%</Button>
-                        ))}
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter className="flex-col gap-4">
-                 <Button className="w-full sm:w-auto" onClick={handleCalculate} disabled={!amount}>
-                    <Calculator className="mr-2"/>Calculate
-                 </Button>
-                 {calculation && (
-                    <Card className="w-full bg-muted/50 p-4 space-y-3 animate-in fade-in-50">
-                        <div className="flex justify-between items-center"><p>Base Amount:</p><p className="font-semibold">{formatCurrency(calculation.base)}</p></div>
-                        <div className="flex justify-between items-center"><p>GST ({rate}%):</p><p className="font-semibold">{formatCurrency(calculation.gst)}</p></div>
-                        <div className="flex justify-between items-center text-lg font-bold"><p>Total Amount:</p><p>{formatCurrency(calculation.total)}</p></div>
-                    </Card>
-                 )}
-            </CardFooter>
-        </Card>
-    );
-};
-
-
-// Main AI Toolkit Page ---
+// --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile, isDevMode } = useAuth();
     const searchParams = useSearchParams();
@@ -1469,7 +1387,6 @@ export default function AiToolkitPage() {
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
-        { value: 'gst-calculator', label: 'GST Calculator', icon: Calculator, content: <GstCalculatorTab /> },
         { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: showPenaltyPredictor ? <PenaltyPredictorTab /> : <UpgradePrompt />, hidden: !showPenaltyPredictor },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);

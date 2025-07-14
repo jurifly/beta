@@ -24,6 +24,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
 import Link from 'next/link';
+import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
@@ -486,21 +488,90 @@ const PayrollCalculator = () => {
     );
 };
 
+const GstCalculatorTab = () => {
+    const [amount, setAmount] = useState<number | ''>('');
+    const [rate, setRate] = useState<number>(18);
+    const [amountType, setAmountType] = useState<'exclusive' | 'inclusive'>('exclusive');
+  
+    const calculation = useMemo(() => {
+        if (typeof amount !== 'number' || amount <= 0) return null;
+        let base = 0, gst = 0, total = 0;
+        if (amountType === 'exclusive') {
+            base = amount;
+            gst = amount * (rate / 100);
+            total = base + gst;
+        } else {
+            total = amount;
+            base = amount / (1 + rate / 100);
+            gst = total - base;
+        }
+        return { base, gst, total };
+    }, [amount, rate, amountType]);
+  
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <div className="space-y-6">
+          <Card className="interactive-lift">
+              <CardHeader>
+                  <CardTitle>GST Calculator</CardTitle>
+                  <CardDescription>Quickly calculate GST for any amount.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                      <Label htmlFor="amount">Enter Amount (₹)</Label>
+                      <Input id="amount" type="number" value={amount} onChange={e => setAmount(Number(e.target.value) || '')} placeholder="e.g. 10000" className="text-lg"/>
+                  </div>
+                   <div className="space-y-2">
+                      <Label>Amount is</Label>
+                      <RadioGroup value={amountType} onValueChange={(v) => setAmountType(v as any)} className="grid grid-cols-2 gap-2">
+                         <Label className={cn("p-3 border rounded-md text-center cursor-pointer", amountType === 'exclusive' && 'bg-primary/10 border-primary ring-1 ring-primary')}>
+                          <RadioGroupItem value="exclusive" className="sr-only"/>
+                          Exclusive of GST
+                         </Label>
+                          <Label className={cn("p-3 border rounded-md text-center cursor-pointer", amountType === 'inclusive' && 'bg-primary/10 border-primary ring-1 ring-primary')}>
+                          <RadioGroupItem value="inclusive" className="sr-only"/>
+                          Inclusive of GST
+                         </Label>
+                      </RadioGroup>
+                  </div>
+                   <div className="space-y-3">
+                      <Label>Select GST Rate</Label>
+                      <div className="flex flex-wrap gap-2">
+                          {[3, 5, 12, 18, 28].map(r => (
+                              <Button key={r} variant={rate === r ? 'default' : 'outline'} onClick={() => setRate(r)}>{r}%</Button>
+                          ))}
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+        </div>
 
-const forecastSchema = z.object({
-  revenueGrowthRate: z.coerce.number().min(0).max(100).default(5),
-  newHires: z.array(z.object({
-    role: z.string().min(1, 'Role is required'),
-    monthlySalary: z.coerce.number().min(1, 'Salary is required'),
-    startMonth: z.coerce.number().min(1).max(12),
-  })).default([]),
-  oneTimeExpenses: z.array(z.object({
-    item: z.string().min(1, 'Item name is required'),
-    amount: z.coerce.number().min(1, 'Amount is required'),
-    month: z.coerce.number().min(1, 'Amount is required'),
-  })).default([]),
-});
-type ForecastFormData = z.infer<typeof forecastSchema>;
+        <Card className="interactive-lift">
+          <CardHeader>
+            <CardTitle>Calculation Result</CardTitle>
+            <CardDescription>The breakdown of your entered amount.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              {calculation ? (
+                <div className="space-y-3 animate-in fade-in-50">
+                    <InfoCard title="Base Amount" value={formatCurrency(calculation.base)} />
+                    <InfoCard title={`GST (${rate}%)`} value={formatCurrency(calculation.gst)} />
+                    <Separator/>
+                    <div className="flex justify-between items-center text-lg p-3 border-2 border-primary/20 rounded-md bg-primary/10">
+                        <dt className="font-semibold text-primary">Total Amount</dt>
+                        <dd className="font-bold font-mono">{formatCurrency(calculation.total)}</dd>
+                    </div>
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
+                    <p>Enter an amount to see the calculation.</p>
+                </div>
+              )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+};
 
 
 const FinancialsTab = () => {
@@ -824,19 +895,21 @@ export default function FinancialsPage() {
     const founderTabs = [
         { value: 'financials', label: 'Financials', icon: BarChartIcon, component: <FinancialsTab /> },
         { value: 'analysis', label: 'Analysis', icon: AreaChartIcon, component: <FinancialAnalysisTab /> },
+        { value: 'gst', label: 'GST Calculator', icon: Calculator, component: <GstCalculatorTab /> },
         { value: 'payroll', label: 'Payroll Calculator', icon: User, component: <PayrollCalculator /> },
         { value: 'personal', label: 'Personal Tax', icon: User, component: <PersonalTaxCalculator /> },
         { value: 'corporate', label: 'Corporate Tax', icon: Building, component: <CorporateTaxCalculator /> },
     ];
     
     const caTabs = [
+        { value: 'gst', label: 'GST Calculator', icon: Calculator, component: <GstCalculatorTab /> },
         { value: 'payroll', label: 'Payroll Calculator', icon: User, component: <PayrollCalculator /> },
         { value: 'personal', label: 'Personal Tax', icon: User, component: <PersonalTaxCalculator /> },
         { value: 'corporate', label: 'Corporate Tax', icon: Building, component: <CorporateTaxCalculator /> },
     ];
 
     const tabs = isCA ? caTabs : founderTabs;
-    const defaultTab = isCA ? 'payroll' : 'financials';
+    const defaultTab = isCA ? 'gst' : 'financials';
 
     const currentTab = tabs.find(t => t.value === activeTab) || tabs[0];
     const CurrentIcon = currentTab?.icon || Sparkles;
@@ -884,4 +957,3 @@ export default function FinancialsPage() {
         </div>
     );
 }
-
