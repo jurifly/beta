@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle, Gift } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle, Gift, PiggyBank, Handshake, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,8 @@ import type { WikiGeneratorOutput } from "@/ai/flows/wiki-generator-flow";
 import type { ReconciliationOutput } from '@/ai/flows/reconciliation-flow';
 import type { LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 import { allClauses } from '@/lib/clause-library-content';
+import type { ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
+import type { FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -747,7 +749,7 @@ const templateLibrary: TemplateCategoryData[] = [
     { name: 'Legal + Regulatory', roles: ['Founder'], templates: [
         { name: 'Startup India DPIIT Declaration', isPremium: false }, { name: 'MSME/Udyam Registration Guide & Template', isPremium: false }, { name: 'NDA – Mutual & One-Way', isPremium: false }, { name: 'Non-Compete Agreement', isPremium: true }, { name: 'Employment Contract Template (ESOP-Ready)', isPremium: true },
     ]},
-    { name: 'Financial / Tax', roles: ['Founder'], templates: [
+    { name: 'Financial / Tax', roles: ['Founder', 'CA'], templates: [
         { name: 'Salary Structure Template (with CTC → Take-Home)', isPremium: false }, { name: 'Reimbursement Tracker (with Sample Policy)', isPremium: false }, { name: 'Advance Tax Planner Spreadsheet', isPremium: false }, { name: 'GST Input Claim Summary Template', isPremium: false }, { name: 'TDS Deduction & Payment Calendar', isPremium: false }, { name: 'Tax Summary Report', isPremium: true },
     ]},
     { name: 'Communication', roles: ['Founder'], templates: [
@@ -1417,13 +1419,22 @@ const GrantRecommenderTab = () => {
         }
     };
     
+    const categoryIcons: Record<string, React.ElementType> = {
+        "Tax Exemption": PiggyBank,
+        "Grant / Funding": Banknote,
+        "Certification": ShieldCheck,
+        "State-Specific": Building2,
+        "Loan Scheme": Handshake,
+        "Default": Gift
+    }
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
             <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
                  <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle>Grant & Exemption Finder</CardTitle>
-                        <CardDescription>Tell us about your startup to find relevant government schemes.</CardDescription>
+                        <CardTitle>Government Scheme Finder</CardTitle>
+                        <CardDescription>Tell us about your startup to find relevant government grants, loans, and tax exemptions.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
@@ -1463,21 +1474,24 @@ const GrantRecommenderTab = () => {
                         {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
                         {result && (
                             <div className="space-y-4 animate-in fade-in-50">
-                                {result.recommendations.map((rec, i) => (
-                                    <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
-                                        <CardHeader>
-                                            <div className="flex justify-between items-start">
-                                                <CardTitle className="text-base">{rec.schemeName}</CardTitle>
-                                                {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
-                                            </div>
-                                            <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-muted-foreground">{rec.description}</p>
-                                            <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                {result.recommendations.map((rec, i) => {
+                                    const Icon = categoryIcons[rec.category] || categoryIcons.Default;
+                                    return (
+                                        <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
+                                            <CardHeader>
+                                                <div className="flex justify-between items-start">
+                                                    <CardTitle className="text-base flex items-center gap-2"><Icon className="w-4 h-4 text-primary" />{rec.schemeName}</CardTitle>
+                                                    {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
+                                                </div>
+                                                <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm text-muted-foreground">{rec.description}</p>
+                                                <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })}
                             </div>
                         )}
                      </CardContent>
@@ -1537,7 +1551,9 @@ export default function AiToolkitPage() {
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
-        { value: 'grants', label: 'Grants', icon: Gift, content: <GrantRecommenderTab /> },
+        { value: 'schemes', label: 'Schemes', icon: Gift, content: <GrantRecommenderTab /> },
+        { value: 'valuation', label: 'Valuation', icon: TrendingUp, content: <div/> },
+        { value: 'salary', label: 'Salary Planner', icon: Handshake, content: <div/> },
         { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: showPenaltyPredictor ? <PenaltyPredictorTab /> : <UpgradePrompt />, hidden: !showPenaltyPredictor },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
     ].filter(t => !t.hidden);

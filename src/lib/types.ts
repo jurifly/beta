@@ -77,6 +77,8 @@ export interface Invite {
     caId?: string; // Add this
     caName?: string; // Add this
     acceptedAt?: string; // Add this
+    type?: 'founder_to_ca' | 'ca_to_client';
+    clientEmail?: string;
 }
 
 export interface ActivityLog {

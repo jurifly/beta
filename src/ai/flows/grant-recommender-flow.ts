@@ -22,7 +22,7 @@ const RecommendationSchema = z.object({
     description: z.string().describe("A brief, clear summary of what the scheme offers."),
     eligibilitySummary: z.string().describe("A summary of the key eligibility criteria."),
     isEligible: z.boolean().describe("The AI's assessment of whether the startup is likely eligible based on the inputs."),
-    category: z.enum(["Tax Exemption", "Grant / Funding", "Certification", "State-Specific"]),
+    category: z.enum(["Tax Exemption", "Grant / Funding", "Certification", "State-Specific", "Loan Scheme"]),
 });
 
 const GrantRecommenderOutputSchema = z.object({
@@ -51,17 +51,19 @@ Analyze the startup's profile and recommend relevant schemes. For each recommend
 
 **Schemes to consider (for India):**
 1.  **DPIIT Recognition / Startup India:** A fundamental certification. If they don't have it, this should be the top recommendation as it is a prerequisite for most other schemes.
-2.  **Startup India Seed Fund Scheme (SISFS):** Financial assistance to startups for proof of concept, prototype development, product trials, market entry, and commercialization.
-3.  **Section 80-IAC Tax Exemption:** A 3-year tax holiday on profits for eligible DPIIT-recognized startups. Check age criteria (usually < 10 years from incorporation).
-4.  **Section 56(2)(viib) (Angel Tax Exemption):** Exemption from 'Angel Tax' on investments received above fair market value, for DPIIT-recognized startups.
-5.  **Women Entrepreneur Schemes:** Such as the Stand-Up India Scheme (providing bank loans to women and SC/ST entrepreneurs) or the TREAD scheme.
-6.  **State-Specific Startup Policies:** Every state has its own policy with grants, reimbursements, or incentives. You MUST recommend the specific policy for the startup's state. For example: "Maharashtra Startup Policy", "Karnataka Startup Policy", "Startup Bihar Policy".
-7.  **Sector-Specific Grants:** Look for schemes relevant to their industry (e.g., MeitY TIDE 2.0 for tech startups, grants for agritech, biotech, etc.).
+2.  **Startup India Seed Fund Scheme (SISFS):** Financial assistance to startups for proof of concept, prototype development, product trials, market entry, and commercialization. Check for DPIIT recognition.
+3.  **CGTMSE (Credit Guarantee Fund Trust for Micro and Small Enterprises):** A collateral-free loan scheme from banks for MSMEs. Check MSME status and business age.
+4.  **Section 80-IAC Tax Exemption:** A 3-year tax holiday on profits for eligible DPIIT-recognized startups. Check age criteria (usually < 10 years from incorporation).
+5.  **Section 56(2)(viib) (Angel Tax Exemption):** Exemption from 'Angel Tax' on investments received above fair market value, for DPIIT-recognized startups.
+6.  **Women Entrepreneur Schemes:** Such as the Stand-Up India Scheme (providing bank loans to women and SC/ST entrepreneurs) or the TREAD scheme if the user has a female founder.
+7.  **State-Specific Startup Policies:** Every state has its own policy with grants, reimbursements, or incentives. You MUST recommend the specific policy for the startup's state. For example: "Maharashtra Startup Policy", "Karnataka Startup Policy", "Startup Bihar Policy".
+8.  **Sector-Specific Grants:** Look for schemes relevant to their industry (e.g., MeitY TIDE 2.0 for tech startups, grants for agritech, biotech, etc.).
 
 **Instructions:**
 - Generate a list of specific, relevant recommendations.
 - For each scheme, provide its official name, a brief description, a summary of key eligibility criteria, and a boolean \`isEligible\` flag indicating if the startup likely qualifies based on their profile.
 - If the user is not DPIIT recognized, make that the first and most important recommendation. Most other benefits depend on it.
+- Classify each recommendation into the correct category: "Tax Exemption", "Grant / Funding", "Certification", "State-Specific", or "Loan Scheme".
 
 **CRITICAL QUALITY CONTROL**: Ensure the recommendations are relevant to the startup's profile and the legal region. All text must be professional and free of errors.
 `,
