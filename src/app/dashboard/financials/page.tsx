@@ -5,7 +5,7 @@
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, FormEvent } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, Handshake, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,10 @@ import type { YoYOutput } from '@/ai/flows/yoy-analysis-flow';
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getValuationOptimization, ValuationOptimizerInput, ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
+import { getValuationOptimizationAction, getFounderSalaryBreakdownAction } from '@/app/dashboard/ai-toolkit/actions';
+import { FounderSalaryInput, FounderSalaryOutput, FounderSalaryInputSchema } from '@/ai/flows/founder-salary-flow';
+import ReactMarkdown from "react-markdown";
 
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
@@ -1001,21 +1005,287 @@ const FinancialAnalysisTab = () => {
     );
   };
 
+const valuationOptimizerSchema = z.object({
+  industry: z.string().min(1, "Industry is required."),
+  stage: z.enum(['Idea', 'Pre-Seed', 'Seed']),
+  traction: z.string().min(1, "Traction summary is required."),
+  teamSummary: z.string().min(1, "Team summary is required."),
+});
+type ValuationFormData = z.infer<typeof valuationOptimizerSchema>;
+
+const ValuationOptimizerTab = () => {
+    const { userProfile, deductCredits } = useAuth();
+    const { toast } = useToast();
+    const [result, setResult] = useState<ValuationOptimizerOutput | null>(null);
+
+    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<ValuationFormData>({
+        resolver: zodResolver(valuationOptimizerSchema),
+    });
+
+    const onSubmit = async (data: ValuationFormData) => {
+        if (!userProfile) return;
+        if (!await deductCredits(2)) return;
+
+        setResult(null);
+        try {
+            const response = await getValuationOptimizationAction({
+                ...data,
+                legalRegion: userProfile.legalRegion,
+            });
+            setResult(response);
+            toast({ title: "Valuation Analysis Complete!" });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+                <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Angel Tax & Valuation Optimizer</CardTitle>
+                        <CardDescription>Plan your pre-seed/seed valuation safely.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="industry">Industry</Label>
+                            <Controller name="industry" control={control} render={({ field }) => <Input id="industry" placeholder="e.g. B2B SaaS, Fintech" {...field} />} />
+                            {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Stage</Label>
+                             <Controller
+                                name="stage"
+                                control={control}
+                                render={({ field }) => (
+                                    <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">
+                                        {['Idea', 'Pre-Seed', 'Seed'].map(stage => (
+                                            <Label key={stage} className={cn("p-2 border rounded-md text-center cursor-pointer", field.value === stage && 'bg-primary/10 border-primary ring-1 ring-primary')}>
+                                                <RadioGroupItem value={stage} className="sr-only"/>
+                                                {stage}
+                                            </Label>
+                                        ))}
+                                    </RadioGroup>
+                                )}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="traction">Traction</Label>
+                            <Controller name="traction" control={control} render={({ field }) => <Input id="traction" placeholder="e.g. 1000 users, ₹5L MRR" {...field} />} />
+                            {errors.traction && <p className="text-sm text-destructive">{errors.traction.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="teamSummary">Team Summary</Label>
+                            <Controller name="teamSummary" control={control} render={({ field }) => <Input id="teamSummary" placeholder="e.g. 2 founders, ex-Flipkart" {...field} />} />
+                            {errors.teamSummary && <p className="text-sm text-destructive">{errors.teamSummary.message}</p>}
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Suggest Valuation (2 Credits)
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </form>
+            <div className="lg:col-span-3">
+                 <Card className="min-h-[400px] interactive-lift">
+                    <CardHeader><CardTitle>AI Valuation Analysis</CardTitle></CardHeader>
+                    <CardContent>
+                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Analyzing market data...</p></div>}
+                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><TrendingUp className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your valuation insights will appear here.</p></div>}
+                        {result && (
+                            <div className="space-y-6 animate-in fade-in-50">
+                                <div className="p-4 text-center rounded-lg bg-primary/10 border border-primary/20">
+                                    <p className="text-sm font-semibold text-primary">Suggested Valuation Range</p>
+                                    <p className="text-3xl font-bold">{result.suggestedValuationRange}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2">Reasoning</h4>
+                                    <div className="prose dark:prose-invert max-w-none text-sm text-muted-foreground p-3 bg-muted/50 border rounded-md">
+                                        <ReactMarkdown>{result.reasoning}</ReactMarkdown>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2">Justification Steps</h4>
+                                    <ul className="space-y-2">
+                                        {result.justificationSteps.map((step, i) => (
+                                            <li key={i} className="flex items-start gap-3 p-3 text-sm rounded-md bg-muted/50 border">
+                                                <CheckCircle className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                                                <span>{step}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <Alert variant="destructive">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle>Angel Tax Warning</AlertTitle>
+                                    <AlertDescription>{result.angelTaxWarning}</AlertDescription>
+                                </Alert>
+                            </div>
+                        )}
+                    </CardContent>
+                 </Card>
+            </div>
+        </div>
+    );
+};
+
+const FounderSalaryPlannerTab = () => {
+  const { userProfile, deductCredits } = useAuth();
+  const { toast } = useToast();
+  const [result, setResult] = useState<FounderSalaryOutput | null>(null);
+
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FounderSalaryInput>({
+      resolver: zodResolver(FounderSalaryInputSchema),
+  });
+
+  const onSubmit = async (data: FounderSalaryInput) => {
+    if (!userProfile) return;
+    if (!await deductCredits(1)) return;
+
+    setResult(null);
+    try {
+        const response = await getFounderSalaryBreakdownAction({
+            ...data,
+            legalRegion: userProfile.legalRegion,
+        });
+        setResult(response);
+        toast({ title: "Payout Plan Ready!" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const totalPayout = result ? Object.values(result.breakdown).reduce((sum, val) => sum + val, 0) : 0;
+  
+  const chartData = result ? [
+    { name: 'Salary', value: result.breakdown.inHandSalary },
+    { name: 'Reimbursements', value: result.breakdown.reimbursements },
+    { name: 'Director\'s Fee', value: result.breakdown.directorsFee },
+    { name: 'ESOP Value', value: result.breakdown.esopAllocationValue },
+  ].filter(item => item.value > 0) : [];
+
+  const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+        <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+            <Card className="interactive-lift">
+                <CardHeader>
+                    <CardTitle>Founder Salary Planner</CardTitle>
+                    <CardDescription>Plan your compensation smartly.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="desiredAnnualPayout">Desired Annual Payout (₹)</Label>
+                        <Controller name="desiredAnnualPayout" control={control} render={({ field }) => <Input id="desiredAnnualPayout" type="number" placeholder="e.g. 2400000" {...field} />} />
+                        {errors.desiredAnnualPayout && <p className="text-sm text-destructive">{errors.desiredAnnualPayout.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Company Stage</Label>
+                        <Controller
+                            name="companyStage"
+                            control={control}
+                            render={({ field }) => (
+                                <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">
+                                    {['Pre-Revenue', 'Early Revenue', 'Growth Stage'].map(stage => (
+                                        <Label key={stage} className={cn("p-2 border rounded-md text-center text-xs cursor-pointer", field.value === stage && 'bg-primary/10 border-primary ring-1 ring-primary')}>
+                                            <RadioGroupItem value={stage} className="sr-only"/>
+                                            {stage}
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            )}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="lastFundingAmount">Last Funding Amount (₹)</Label>
+                        <Controller name="lastFundingAmount" control={control} render={({ field }) => <Input id="lastFundingAmount" type="number" placeholder="0 if bootstrapped" {...field} />} />
+                        {errors.lastFundingAmount && <p className="text-sm text-destructive">{errors.lastFundingAmount.message}</p>}
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                        Recommend Structure (1 Credit)
+                    </Button>
+                </CardFooter>
+            </Card>
+        </form>
+         <div className="lg:col-span-3">
+            <Card className="min-h-[400px] interactive-lift">
+                <CardHeader><CardTitle>AI Recommended Payout Structure</CardTitle></CardHeader>
+                <CardContent>
+                    {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Optimizing for tax and investors...</p></div>}
+                    {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Handshake className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your optimized payout plan will appear here.</p></div>}
+                    {result && (
+                        <div className="space-y-6 animate-in fade-in-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="font-semibold mb-2">Breakdown</h4>
+                                    <div className="space-y-2">
+                                        <InfoCard title="In-Hand Salary" value={formatCurrency(result.breakdown.inHandSalary)} />
+                                        <InfoCard title="Reimbursements" value={formatCurrency(result.breakdown.reimbursements)} />
+                                        <InfoCard title="Director's Fee" value={formatCurrency(result.breakdown.directorsFee)} />
+                                        <InfoCard title="ESOP Allocation (Value)" value={formatCurrency(result.breakdown.esopAllocationValue)} />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <h4 className="font-semibold mb-2">Allocation</h4>
+                                     <ChartContainer config={{}} className="mx-auto aspect-square h-52">
+                                        <PieChart>
+                                            <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                            <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={40}>
+                                                {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                            </Pie>
+                                            <Legend iconType="circle" />
+                                        </PieChart>
+                                    </ChartContainer>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold mb-2">Reasoning</h4>
+                                <p className="text-sm text-muted-foreground p-3 bg-muted/50 border rounded-md">{result.reasoning}</p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold mb-2">Warnings & Considerations</h4>
+                                <ul className="space-y-2">
+                                    {result.warnings.map((warning, i) => (
+                                        <li key={i} className="flex items-start gap-3 p-3 text-sm rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-800">
+                                            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0"/>
+                                            <span>{warning}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+  )
+};
+
+
 export default function FinancialsPage() {
     const { userProfile } = useAuth();
-    const [activeTab, setActiveTab] = useState('financials');
+    const [activeTab, setActiveTab] = useState('runway');
 
     if (!userProfile) return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
     const isCA = userProfile.role === 'CA';
 
     const founderTabs = [
-        { value: 'financials', label: 'Runway & Forecast', icon: BarChartIcon, component: <FinancialsTab /> },
+        { value: 'runway', label: 'Runway & Forecast', icon: BarChartIcon, component: <FinancialsTab /> },
         { value: 'analysis', label: 'YoY Analysis', icon: LineChartIcon, component: <FinancialAnalysisTab /> },
+        { value: 'valuation', label: 'Valuation', icon: TrendingUp, component: <ValuationOptimizerTab/> },
+        { value: 'salary', label: 'Salary Planner', icon: Handshake, component: <FounderSalaryPlannerTab/> },
         { value: 'gst', label: 'GST Calculator', icon: Calculator, component: <GstCalculatorTab /> },
         { value: 'payroll', label: 'Payroll Calculator', icon: User, component: <PayrollCalculator /> },
-        { value: 'personal', label: 'Personal Tax', icon: User, component: <PersonalTaxCalculator /> },
-        { value: 'corporate', label: 'Corporate Tax', icon: Building, component: <CorporateTaxCalculator /> },
     ];
     
     const caTabs = [
@@ -1026,7 +1296,7 @@ export default function FinancialsPage() {
     ];
 
     const tabs = isCA ? caTabs : founderTabs;
-    const defaultTab = isCA ? 'gst' : 'financials';
+    const defaultTab = isCA ? 'gst' : 'runway';
 
     const currentTab = tabs.find(t => t.value === activeTab) || tabs[0];
     const CurrentIcon = currentTab?.icon || Sparkles;
