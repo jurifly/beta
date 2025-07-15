@@ -32,6 +32,12 @@ import {
   Scale,
   FileText,
   LineChart,
+  Loader2,
+  MoreHorizontal,
+  Globe,
+  ChevronDown,
+  CheckCircle,
+  Flame,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -64,7 +70,6 @@ import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal"
 import { formatDistanceToNow } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
-import { MoreHorizontal, Globe, ChevronDown, CheckCircle, Flame } from "lucide-react";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -140,7 +145,7 @@ export const translations: Translations = {
     equityIssued: { en: "Equity Issued", hi: "इक्विटी जारी", es: "Capital Emitido", zh: "已发行股权", fr: "Capitaux Propres Émis", de: "Ausgegebenes Eigenkapital", pt: "Capital Emitido", ja: "発行済み株式" },
     alerts: { en: "Alerts", hi: "अलर्ट", es: "Alertas", zh: "警报", fr: "Alertes", de: "Warnungen", pt: "Alertas", ja: "アラート" },
     overdueTasks: { en: "Overdue tasks", hi: "अतिदेय कार्य", es: "Tareas atrasadas", zh: "逾期任务", fr: "Tâches en retard", de: "Überfällige Aufgaben", pt: "Tarefas atrasadas", ja: "期限切れのタスク" },
-    noOverdueTasks: { en: "No overdue tasks", hi: "कोई अतिदेय कार्य नहीं", es: "No hay tareas atrasadas", zh: "无逾期任务", fr: "Aucune tâche en retard", de: "Keine überfälligen Aufgaben", pt: "Nenhuma tarefa atrasada", ja: "期限切れのタaskはありません" },
+    noOverdueTasks: { en: "No overdue tasks", hi: "कोई अतिदेय कार्य नहीं", es: "No hay tareas atrasadas", zh: "无逾期任务", fr: "Aucune tâche en retard", de: "Keine überfälligen Aufgaben", pt: "Nenhuma tarefa atrasada", ja: "期限切れのaskはありません" },
     proactiveAISuggestions: { en: "Proactive AI Suggestions", hi: "सक्रिय AI सुझाव", es: "Sugerencias Proactivas de IA", zh: "主动式AI建议", fr: "Suggestions Proactives de l'IA", de: "Proaktive KI-Vorschläge", pt: "Sugestões Proativas de IA", ja: "プロアクティブAI提案" },
     timelyAdvice: { en: "Timely advice from our AI to help you stay ahead.", hi: "हमारे AI से समय पर सलाह ताकि आप आगे रहें।", es: "Consejos oportunos de nuestra IA para ayudarte a mantenerte a la vanguardia.", zh: "我们AI的及时建议，助您保持领先。", fr: "Conseils opportuns de notre IA pour vous aider à garder une longueur d'avance.", de: "Rechtzeitige Ratschläge von unserer KI, um Ihnen zu helfen, immer einen Schritt voraus zu sein。", pt: "Conselhos oportunos da nossa IA para ajudá-lo a se manter à frente。", ja: "AIからのタイムリーなアドバイスで、一歩先を行きましょう。" },
     noSpecialInsights: { en: "No special insights at the moment. You're all set!", hi: "फिलहाल कोई विशेष अंतर्दृष्टि नहीं है। आप पूरी तरह से तैयार हैं!", es: "No hay ideas especiales en este momento. ¡Estás listo!", zh: "目前没有特别的见解。一切就绪！", fr: "Pas d'aperçus spéciaux pour le moment. Vous êtes prêt !", de: "Im Moment keine besonderen Einblicke. Alles bestens!", pt: "Nenhuma visão especial no momento. Está tudo pronto!", ja: "現在、特別なインサイトはありません。準備は万端です！" },
