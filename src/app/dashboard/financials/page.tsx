@@ -27,8 +27,8 @@ import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getValuationOptimizationAction, getFounderSalaryBreakdownAction } from '@/app/dashboard/ai-toolkit/actions';
-import type { ValuationOptimizerInput, ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
-import type { FounderSalaryInput, FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
+import type { ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
+import type { FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 import ReactMarkdown from "react-markdown";
 
 const personalIncomeSchema = z.object({
@@ -1262,7 +1262,9 @@ const FounderSalaryPlannerTab = () => {
 
                             <div>
                                 <h4 className="font-semibold mb-2">Reasoning</h4>
-                                <p className="text-sm text-muted-foreground p-3 bg-muted/50 border rounded-md">{result.reasoning}</p>
+                                <div className="prose dark:prose-invert max-w-none text-sm text-muted-foreground p-3 bg-muted/50 border rounded-md">
+                                    <ReactMarkdown>{result.reasoning}</ReactMarkdown>
+                                </div>
                             </div>
                             <div>
                                 <h4 className="font-semibold mb-2">Warnings & Considerations</h4>
