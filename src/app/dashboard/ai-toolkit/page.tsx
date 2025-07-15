@@ -289,7 +289,10 @@ function DataroomAuditSubmitButton({ isRegenerate, isPending }: { isRegenerate: 
 
 const DataroomAudit = () => {
   const { userProfile, deductCredits, updateUserProfile } = useAuth();
+  
   const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+  const isAdvisorRole = userProfile?.role !== 'Founder';
+
   const [checklistState, setChecklistState] = useState<GenerateDDChecklistOutput | null>(activeCompany?.diligenceChecklist || null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [isPending, startTransition] = useTransition();
@@ -297,11 +300,16 @@ const DataroomAudit = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
   
-  if (!userProfile || !activeCompany) return <Loader2 className="animate-spin" />;
+  useEffect(() => {
+    // This effect ensures that when the active company changes, the checklist state updates.
+    setChecklistState(activeCompany?.diligenceChecklist || null);
+  }, [activeCompany]);
+
+  if (!userProfile) return <Loader2 className="animate-spin" />;
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (!formRef.current) return;
+      if (!formRef.current || !activeCompany) return;
       if (!await deductCredits(2)) return;
 
       const formData = new FormData(formRef.current);
@@ -368,6 +376,10 @@ const DataroomAudit = () => {
   
   const handleShare = () => { navigator.clipboard.writeText(window.location.href); toast({ title: "Link Copied!", description: "A shareable link to this checklist has been copied." }); }
 
+  const handleCompanyChange = (companyId: string) => {
+    updateUserProfile({ activeCompanyId: companyId });
+  };
+
   const { completedCount, totalCount, progress } = useMemo(() => { if (!checklistState) return { completedCount: 0, totalCount: 0, progress: 0 }; const allItems = checklistState.checklist.flatMap(c => c.items); const completedItems = allItems.filter(i => i.status === 'Completed').length; const totalItems = allItems.length; if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0 }; return { completedCount: completedItems.length, totalCount: totalItems, progress: Math.round((completedItems.length / totalItems) * 100) }; }, [checklistState]);
 
   const filteredChecklist = useMemo(() => { if (!checklistState) return []; if (activeFilter === 'all') return checklistState.checklist; return checklistState.checklist.map(category => ({ ...category, items: category.items.filter(item => { if (activeFilter === 'completed') return item.status === 'Completed'; if (activeFilter === 'pending') return ['Pending', 'In Progress', 'Not Applicable'].includes(item.status); return true; }), })).filter(category => category.items.length > 0); }, [checklistState, activeFilter]);
@@ -378,7 +390,26 @@ const DataroomAudit = () => {
   return (
     <div className="space-y-6">
       <Card>
-          <CardHeader><CardTitle>{checklistState?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process.</CardDescription></CardHeader>
+          <CardHeader>
+            <div className="flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <CardTitle>{checklistState?.reportTitle || "Dataroom Audit Tool"}</CardTitle>
+                    <CardDescription>Generate a checklist to start your audit process.</CardDescription>
+                </div>
+                {isAdvisorRole && userProfile.companies.length > 1 && (
+                    <Select onValueChange={handleCompanyChange} value={userProfile.activeCompanyId}>
+                        <SelectTrigger className="w-full sm:w-[250px]"><SelectValue placeholder="Select a client..." /></SelectTrigger>
+                        <SelectContent>
+                            {userProfile.companies.map(c => (
+                                <SelectItem key={c.id} value={c.id}>
+                                    <div className="flex items-center gap-2"><Building2 className="w-4 h-4"/>{c.name}</div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )}
+            </div>
+          </CardHeader>
           <CardContent>
               <form ref={formRef} onSubmit={handleFormSubmit} className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b">
                 <input type="hidden" name="legalRegion" value={userProfile.legalRegion} />
@@ -391,7 +422,7 @@ const DataroomAudit = () => {
       {isPending && !checklistState && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Generating your checklist...</p></div> )}
       {checklistState && !isPending ? (
         <div className="space-y-6 animate-in fade-in-50 duration-500">
-            {checklistState.timestamp && <p className="text-xs text-muted-foreground text-center">📌 Last generated: {formatDistanceToNow(new Date(checklistState.timestamp), { addSuffix: true })}</p>}
+            {checklistState.timestamp && <p className="text-xs text-muted-foreground text-center">📌 Last generated: {formatDistanceToNow(new Date(checklistState.timestamp), { addSuffix: true })} for {activeCompany?.name}</p>}
             <div className="space-y-3"><div className="flex justify-between items-center text-sm font-medium"><Label>Dataroom Readiness ({completedCount}/{totalCount} Completed)</Label><span className="font-bold text-primary">{progress}%</span></div><Progress value={progress} /></div>
             <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)} className="w-full"><TabsList className="grid grid-cols-3 w-full max-w-sm"><TabsTrigger value="all">All</TabsTrigger><TabsTrigger value="pending">Pending</TabsTrigger><TabsTrigger value="completed">Completed</TabsTrigger></TabsList></Tabs>
             <Accordion type="multiple" defaultValue={filteredChecklist.map(c => c.category)} className="w-full">
@@ -427,7 +458,7 @@ const DataroomAudit = () => {
       )}
     </div>
   );
-}
+};
 
 
 // --- Tab: Document Analyzer ---
@@ -1658,7 +1689,7 @@ export default function AiToolkitPage() {
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
-        { value: 'reconciliation', label: 'Reconciliation', icon: Scale, content: showReconciliation ? <ReconciliationTab /> : <UpgradePrompt />, hidden: !showReconciliation },
+        { value: 'reconciliation', label: 'Reconciliation', icon: Scale, content: showReconciliation ? <ReconciliationTab /> : <UpgradePrompt /> },
         { value: 'schemes', label: 'Schemes', icon: Gift, content: <GrantRecommenderTab /> },
         { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: <PenaltyPredictorTab /> },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },

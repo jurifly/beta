@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/auth";
-import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight, FileText, Lock } from "lucide-react";
+import { Loader2, PlusCircle, PieChart as PieChartIcon, Users, Scale, Edit, Trash2, TrendingUp, ChevronsRight, FileText, Lock, Building } from "lucide-react";
 import type { CapTableEntry, Company } from '@/lib/types';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling
 import { FeatureLockedModal } from '@/components/dashboard/feature-locked-modal';
 import { planHierarchy } from '@/lib/types';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -119,6 +120,10 @@ export default function CapTablePage() {
             setLockedFeature("Round Modeling");
         }
     };
+    
+    const handleCompanyChange = (companyId: string) => {
+        updateUserProfile({ activeCompanyId: companyId });
+    };
 
     const { totalShares, esopPool, founderShares, investorShares } = useMemo(() => {
         return capTable.reduce(
@@ -148,6 +153,8 @@ export default function CapTablePage() {
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
+
+    const isAdvisorRole = userProfile.role !== 'Founder';
 
     if (!activeCompany) {
         return (
@@ -196,9 +203,25 @@ export default function CapTablePage() {
                 onOpenChange={() => setLockedFeature(null)}
             />
             <div className="space-y-6">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Capitalization Table</h2>
-                    <p className="text-muted-foreground">An overview of {activeCompany.name}'s equity ownership.</p>
+                 <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
+                    <div className="flex justify-between items-center flex-wrap gap-4">
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-tight text-primary">Capitalization Table</h2>
+                            <p className="text-muted-foreground">An overview of {activeCompany.name}'s equity ownership.</p>
+                        </div>
+                        {isAdvisorRole && userProfile.companies.length > 1 && (
+                            <Select onValueChange={handleCompanyChange} value={userProfile.activeCompanyId}>
+                                <SelectTrigger className="w-full sm:w-[250px]"><SelectValue placeholder="Select a client..." /></SelectTrigger>
+                                <SelectContent>
+                                    {userProfile.companies.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>
+                                            <div className="flex items-center gap-2"><Building className="w-4 h-4"/>{c.name}</div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    </div>
                 </div>
                 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
