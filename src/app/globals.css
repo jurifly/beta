@@ -8,7 +8,7 @@ html {
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 220 20% 97%; /* Soft White #F9FAFB */
     --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
@@ -17,16 +17,16 @@ html {
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
 
-    --primary: 240 35% 25%; /* #272757 */
+    --primary: 221 68% 40%; /* Deep Blue #1E40AF */
     --primary-foreground: 210 20% 98%;
 
     --secondary: 220 14.3% 95.9%;
     --secondary-foreground: 220 9.1% 42.2%;
 
-    --muted: 220 14.3% 95.9%;
+    --muted: 220 13% 91%; /* Light Gray #D1D5DB */
     --muted-foreground: 220 8.9% 46.1%;
 
-    --accent: 240 35% 30%; /* Darker shade of primary */
+    --accent: 215 84% 51%; /* Electric Blue #3B82F6 */
     --accent-foreground: 210 20% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -34,16 +34,16 @@ html {
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 240 35% 35%; /* Lighter shade of primary */
+    --ring: 215 84% 51%; /* Electric Blue for focus rings */
     
     --radius: 0.75rem;
 
     /* Charts */
-    --chart-1: 240 35% 25%; /* Midnight Blue */
-    --chart-2: 45 100% 51%; /* Amber/Gold */
+    --chart-1: 221 68% 40%; /* Primary Deep Blue */
+    --chart-2: 215 84% 51%; /* Accent Electric Blue */
     --chart-3: 160 60% 45%; /* Teal */
     --chart-4: 260 80% 65%; /* Purple */
-    --chart-5: 0 70% 65%; /* Muted Red */
+    --chart-5: 0 70% 65%;   /* Muted Red */
   }
  
   .dark {
@@ -53,8 +53,8 @@ html {
     --card-foreground: 210 40% 98%;
     --popover: 222 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 240 35% 75%; /* Lighter version for dark mode */
-    --primary-foreground: 240 35% 15%;
+    --primary: 215 84% 61%; /* Lighter Electric Blue for dark mode */
+    --primary-foreground: 222 84% 4.9%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
@@ -65,14 +65,14 @@ html {
     --destructive-foreground: 210 40% 98%;
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 240 35% 80%;
+    --ring: 215 84% 61%;
 
     /* Charts */
-    --chart-1: 240 35% 70%; /* Lighter Blue */
-    --chart-2: 45 100% 51%; /* Amber/Gold */
-    --chart-3: 160 70% 50%; /* Lighter Teal */
-    --chart-4: 260 80% 70%; /* Lighter Purple */
-    --chart-5: 0 70% 60%; /* Softer Red */
+    --chart-1: 215 84% 61%;
+    --chart-2: 45 100% 51%;
+    --chart-3: 160 70% 50%;
+    --chart-4: 260 80% 70%;
+    --chart-5: 0 70% 60%;
   }
 }
 
