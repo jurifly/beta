@@ -69,6 +69,7 @@ export interface TeamMember {
 export interface Invite {
     id: string;
     caEmail: string;
+    role: 'Admin' | 'Member' | 'Viewer' | 'Billing';
     founderId: string;
     founderName: string;
     companyId: string;

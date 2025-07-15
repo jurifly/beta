@@ -111,11 +111,11 @@ export default function TeamPage() {
                                    <TableBody>
                                        {pendingInvites.length > 0 ? pendingInvites.map(invite => (
                                            <TableRow key={invite.id}>
-                                               <TableCell className="font-medium">{invite.email}</TableCell>
+                                               <TableCell className="font-medium">{invite.caEmail}</TableCell>
                                                <TableCell><Badge variant="secondary">{invite.role}</Badge></TableCell>
-                                               <TableCell>{formatDistanceToNow(new Date(invite.invitedAt), { addSuffix: true })}</TableCell>
+                                               <TableCell>{formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}</TableCell>
                                                <TableCell className="text-right space-x-2">
-                                                   <Button variant="ghost" size="sm" onClick={() => toast({ title: "Invite Resent", description: `An invitation has been resent to ${invite.email}`})}><Send className="mr-2"/> Resend</Button>
+                                                   <Button variant="ghost" size="sm" onClick={() => toast({ title: "Invite Resent", description: `An invitation has been resent to ${invite.caEmail}`})}><Send className="mr-2"/> Resend</Button>
                                                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRevokeInvite(invite.id)}><Trash2 className="mr-2"/>Revoke</Button>
                                                </TableCell>
                                            </TableRow>
