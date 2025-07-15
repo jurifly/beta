@@ -20,6 +20,10 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
+  PieChart,
+  Network,
+  Receipt,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import {
@@ -134,24 +138,42 @@ const ValueSection = () => {
 // Product Glimpse Section
 const ProductGlimpseSection = () => {
     const glimpses = [
-        { title: "Launchpad", description: "Get your company started in 5 clicks." },
-        { title: "Financials", description: "Visualize burn rate, runway, and project future growth." },
-        { title: "Analytics", description: "Track your Legal Hygiene Score and fundraising readiness." },
-        { title: "Cap Table", description: "See your dilution before it dilutes." },
+        { title: "Dashboard", icon: LayoutDashboard, imageUrl: "https://ik.imagekit.io/claariai/Dashboard.png?updatedAt=1752544425831" },
+        { title: "Analytics", icon: TrendingUp, imageUrl: "https://ik.imagekit.io/claariai/Analytics.png?updatedAt=1752544425818" },
+        { title: "Cap Table", icon: PieChart, imageUrl: "https://ik.imagekit.io/claariai/cap%20table.png?updatedAt=1752544425744" },
+        { title: "Launch Pad", icon: Network, imageUrl: "https://ik.imagekit.io/claariai/launch%20pad.png?updatedAt=1752544425723" },
+        { title: "Financials", icon: Receipt, imageUrl: "https://ik.imagekit.io/claariai/Financial.png?updatedAt=1752544425721" },
     ];
+    const [activeGlimpse, setActiveGlimpse] = useState(glimpses[0]);
     
     return (
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This is not software. It's sanity.</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                     {glimpses.map((glimpse) => (
-                         <Card key={glimpse.title} className="p-6 text-left interactive-lift bg-card/50">
-                            <h3 className="font-semibold">{glimpse.title}</h3>
-                            <p className="text-sm text-muted-foreground">{glimpse.description}</p>
-                         </Card>
-                     ))}
+                <div className="flex flex-wrap justify-center gap-2 md:gap-4 border-b pb-4">
+                    {glimpses.map((glimpse) => (
+                        <Button
+                            key={glimpse.title}
+                            variant={activeGlimpse.title === glimpse.title ? "default" : "outline"}
+                            className="transition-all duration-200"
+                            onClick={() => setActiveGlimpse(glimpse)}
+                        >
+                           <glimpse.icon className="mr-2 h-4 w-4"/>
+                            {glimpse.title}
+                        </Button>
+                    ))}
                 </div>
+                 <div className="mt-8 aspect-[16/10] w-full max-w-5xl mx-auto overflow-hidden rounded-xl border-8 border-card shadow-2xl bg-muted">
+                    <Image
+                      key={activeGlimpse.imageUrl}
+                      src={activeGlimpse.imageUrl}
+                      alt={`${activeGlimpse.title} screenshot`}
+                      width={1200}
+                      height={750}
+                      className="w-full h-full object-cover object-top animate-in fade-in-50 duration-500"
+                      data-ai-hint="application screenshot"
+                    />
+                 </div>
             </div>
         </section>
     );
