@@ -610,62 +610,6 @@ function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-const MobileSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: Language }) => {
-    const pathname = usePathname();
-    const { isDevMode } = useAuth();
-    const isPro = planHierarchy[userProfile.plan] > 0;
-    
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
-        const labelKey = item.label_override_key || item.translationKey;
-        const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
-        if (item.locked && !isPro && !isDevMode) {
-            e.preventDefault();
-            onLockedFeatureClick(label);
-        }
-    };
-    
-    return (
-        <SheetContent side="left" className="flex flex-col p-0">
-            <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
-                <Logo />
-                <span>Jurifly</span>
-                </Link>
-            </div>
-            <ScrollArea className="flex-1">
-                <nav className="grid gap-2 text-lg font-medium p-4">
-                {navItems.map((item) => {
-                    const isActive = (item.href === '/dashboard' && pathname === item.href) ||
-                                     (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                    const isLocked = item.locked && !isPro && !isDevMode;
-                    const labelKey = item.label_override_key || item.translationKey;
-                    const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
-
-
-                    return (
-                        <SheetTrigger asChild key={item.href}>
-                            <Link
-                                href={item.href}
-                                onClick={(e) => handleLinkClick(e, item)}
-                                className={cn(
-                                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                    isActive && "bg-muted text-primary",
-                                    isLocked && "cursor-not-allowed"
-                                )}
-                            >
-                                <item.icon className="h-4 w-4" />
-                                {label}
-                                {isLocked && <Lock className="ml-auto h-4 w-4" />}
-                            </Link>
-                        </SheetTrigger>
-                    );
-                    })}
-                </nav>
-            </ScrollArea>
-        </SheetContent>
-    );
-};
-
 
 export default function DashboardLayout({
   children,
@@ -674,26 +618,12 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/landing");
     }
   }, [user, loading, router]);
-
-
-  if (!isMounted) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
   
   if (loading) {
     return (
