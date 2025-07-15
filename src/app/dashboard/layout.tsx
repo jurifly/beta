@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from "next/link";
@@ -261,6 +262,9 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clients },
   { ...navItemConfig.team, locked: true },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
+  { ...navItemConfig.capTable },
+  { ...navItemConfig.launchPad },
+  { ...navItemConfig.docVault },
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.learnHub },
@@ -268,6 +272,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.workflows, locked: true },
   { ...navItemConfig.clauseLibrary, locked: false },
+  { ...navItemConfig.community, locked: true },
   { ...navItemConfig.latestNews, locked: true },
 ];
 

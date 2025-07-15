@@ -15,10 +15,11 @@ import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CheckSquare, ShieldCheck, ArrowRight, BarChart, PieChart, ListTodo, TrendingUp, CalendarClock, FileWarning, Users, Briefcase, LineChart, GanttChartSquare, Loader2, FileText } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
-import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, Bar as RechartsBar } from "recharts";
+import { Area, AreaChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, Bar as RechartsBar, LineChart as RechartsLineChart, Line } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRouter } from "next/navigation"
 
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
@@ -32,53 +33,33 @@ const formatCurrency = (num: number, region = 'India') => {
   return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
 }
 
-const FinancialTrendChart = ({ financials }: { financials: Company['financials'] }) => {
+const FinancialTrendChart = ({ historicalData }: { historicalData: Company['historicalFinancials'] }) => {
     const data = useMemo(() => {
-        if (!financials || (financials.monthlyRevenue === 0 && financials.monthlyExpenses === 0)) {
+        if (!historicalData || historicalData.length === 0) {
             return [];
         }
-        const months = Array.from({ length: 6 }, (_, i) => {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            return format(d, 'MMM');
-        }).reverse();
+        return historicalData.sort((a,b) => a.year.localeCompare(b.year));
+    }, [historicalData]);
 
-        return months.map(month => ({
-            month,
-            revenue: Math.floor(financials.monthlyRevenue * (1 + (Math.random() - 0.4) * 0.3)),
-            expenses: Math.floor(financials.monthlyExpenses * (1 + (Math.random() - 0.5) * 0.2)),
-        }));
-    }, [financials]);
-
-    if (!financials || (financials.monthlyRevenue === 0 && financials.monthlyExpenses === 0)) {
+    if (!historicalData || historicalData.length === 0) {
         return (
             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-md h-full flex flex-col items-center justify-center gap-4 bg-muted/40 flex-1">
-                <p>No financial data. <Link href="/dashboard/financials" className="text-primary underline">Add financials</Link> to see trends.</p>
+                <p>No historical financial data. <Link href="/dashboard/financials" className="text-primary underline">Add data</Link> to see trends.</p>
             </div>
         )
     }
 
     return (
         <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-2))" }, expenses: { label: "Expenses", color: "hsl(var(--chart-5))" } }} className="h-56 w-full">
-            <AreaChart data={data} accessibilityLayer margin={{ left: 12, right: 12 }}>
-                <defs>
-                    <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0.1} />
-                    </linearGradient>
-                    <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-expenses)" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="var(--color-expenses)" stopOpacity={0.1} />
-                    </linearGradient>
-                </defs>
+            <RechartsLineChart data={data} accessibilityLayer margin={{ left: 12, right: 12 }}>
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
-                <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                <Area dataKey="revenue" type="natural" fill="url(#fillRevenue)" stroke="var(--color-revenue)" stackId="a" />
-                <Area dataKey="expenses" type="natural" fill="url(#fillExpenses)" stroke="var(--color-expenses)" stackId="a" />
+                <XAxis dataKey="year" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} />
+                <YAxis tickLine={false} axisLine={false} fontSize={12} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                <ChartTooltip content={<ChartTooltipContent indicator="dot" formatter={(value) => formatCurrency(Number(value))} />} />
+                <Line dataKey="revenue" type="monotone" stroke="var(--color-revenue)" strokeWidth={2} name="Revenue"/>
+                <Line dataKey="expenses" type="monotone" stroke="var(--color-expenses)" strokeWidth={2} name="Expenses"/>
                 <ChartLegend />
-            </AreaChart>
+            </RechartsLineChart>
         </ChartContainer>
     )
 }
@@ -86,29 +67,15 @@ const FinancialTrendChart = ({ financials }: { financials: Company['financials']
 // --- Founder Analytics ---
 export function FounderAnalytics() {
   const { userProfile } = useAuth();
-  const [checklistState, setChecklistState] = useState<{ data: GenerateDDChecklistOutput, timestamp: string } | null>(null);
-  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
   const { toast } = useToast();
+  
+  const diligenceChecklist = activeCompany?.diligenceChecklist;
+
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
 
   useEffect(() => {
-    if (!activeCompany) {
-        setIsLoading(false);
-        return;
-    };
-    
-    const checklistKey = `ddChecklistData-${activeCompany.id}`;
-    try {
-        const savedChecklist = localStorage.getItem(checklistKey);
-        if (savedChecklist) {
-            setChecklistState(JSON.parse(savedChecklist));
-        }
-    } catch (error) {
-        console.error("Failed to parse checklist data from localStorage", error);
-        localStorage.removeItem(checklistKey);
-    }
-    
     const fetchFilings = async () => {
         if (!activeCompany) {
           setIsLoading(false);
@@ -150,13 +117,13 @@ export function FounderAnalytics() {
   }, [activeCompany, toast]);
 
     const { categoryProgress, overallProgress } = useMemo(() => {
-        if (!checklistState?.data) return { categoryProgress: [], overallProgress: 0 };
+        if (!diligenceChecklist) return { categoryProgress: [], overallProgress: 0 };
         
-        const allItems = checklistState.data.checklist.flatMap(c => c.items);
+        const allItems = diligenceChecklist.checklist.flatMap(c => c.items);
         const completedItems = allItems.filter(i => i.status === 'Completed').length;
         const totalItems = allItems.length;
 
-        const categories = checklistState.data.checklist.map(cat => {
+        const categories = diligenceChecklist.checklist.map(cat => {
             const total = cat.items.length;
             const completed = cat.items.filter(i => i.status === 'Completed').length;
             return {
@@ -166,14 +133,21 @@ export function FounderAnalytics() {
         });
         
         return {
-          categoryProgress: categories.filter(c => checklistState.data.checklist.find(cat => cat.category === c.name)?.items.length ?? 0 > 0),
+          categoryProgress: categories.filter(c => diligenceChecklist.checklist.find(cat => cat.category === c.name)?.items.length ?? 0 > 0),
           overallProgress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
         };
-    }, [checklistState]);
+    }, [diligenceChecklist]);
 
   const { hygieneScore, filingPerformance, profileCompleteness, upcomingFilings } = useMemo(() => {
     const totalFilings = deadlines.length;
-    const overdueFilings = deadlines.filter(d => d.overdue).length;
+    
+    const savedStatuses = activeCompany?.checklistStatus || {};
+    const overdueFilings = deadlines.filter(d => {
+        const uniqueId = `${d.title}-${d.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
+        const isCompleted = savedStatuses[uniqueId] ?? false;
+        return d.overdue && !isCompleted;
+    }).length;
+
     const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings) / totalFilings) * 100 : 100;
 
     const today = new Date();
@@ -294,11 +268,11 @@ export function FounderAnalytics() {
                 <CardDescription>A dynamic checklist to prepare your company for due diligence.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1">
-                  {checklistState?.data && categoryProgress.length > 0 ? (
+                  {diligenceChecklist && categoryProgress.length > 0 ? (
                       <div className="space-y-4">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center text-sm font-medium">
-                                <Label>{checklistState.data.reportTitle} (Overall)</Label>
+                                <Label>{diligenceChecklist.reportTitle} (Overall)</Label>
                                 <span className="font-bold text-primary">{overallProgress}%</span>
                             </div>
                             <Progress value={overallProgress} />
@@ -436,16 +410,16 @@ export function FounderAnalytics() {
        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
         <Card className="interactive-lift flex flex-col">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Trends</CardTitle>
-                <CardDescription>6-month overview of your revenue vs. expenses.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Year-Over-Year Trends</CardTitle>
+                <CardDescription>An overview of your revenue vs. expenses from historical data.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
-                <FinancialTrendChart financials={activeCompany?.financials} />
+                <FinancialTrendChart historicalData={activeCompany?.historicalFinancials} />
             </CardContent>
             <CardFooter>
                 <Button asChild variant="link" className="p-0 h-auto">
-                    <Link href="/dashboard/financials">
-                        Manage Financials <ArrowRight className="ml-2 h-4 w-4"/>
+                    <Link href="/dashboard/financials?tab=analysis">
+                        Manage Historical Data <ArrowRight className="ml-2 h-4 w-4"/>
                     </Link>
                 </Button>
             </CardFooter>
@@ -468,6 +442,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
    const clientCount = userProfile.companies.length;
    const [clientHealthData, setClientHealthData] = useState<any[]>([]);
    const [isLoadingHealth, setIsLoadingHealth] = useState(true);
+   const router = useRouter();
 
    const calculateAllClientHealth = useCallback(async (companies: Company[]) => {
     if (companies.length === 0) {
@@ -587,6 +562,10 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
             allUpcomingDeadlines: deadlines
         };
     }, [clientHealthData, clientCount]);
+
+    const handleViewClient = (clientId: string) => {
+        router.push(`/dashboard/clients/${clientId}`);
+    };
     
    return (
     <div className="space-y-6">
@@ -680,7 +659,7 @@ export function CAAnalytics({ userProfile }: { userProfile: UserProfile }) {
                             <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Health Score</TableHead><TableHead className="text-right">Risk Level</TableHead></TableRow></TableHeader>
                             <TableBody>
                                 {clientHealthData.sort((a,b) => (a.health?.score || 0) - (b.health?.score || 0)).map(client => (
-                                    <TableRow key={client.id}>
+                                    <TableRow key={client.id} onClick={() => handleViewClient(client.id)} className="cursor-pointer">
                                         <TableCell className="font-medium">{client.name}</TableCell>
                                         <TableCell>
                                             <Progress value={client.health?.score || 0} className="w-24 h-2" />

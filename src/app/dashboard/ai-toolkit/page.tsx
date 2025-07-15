@@ -1631,7 +1631,7 @@ export default function AiToolkitPage() {
     
     const showAnalyzer = (userProfile?.role === 'Founder' && (isPro || isDevMode)) || (userProfile?.role === 'CA' && (isPro || isDevMode)) || userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
     const showResearch = userProfile?.role === 'Legal Advisor' || userProfile?.role === 'Enterprise';
-    const showPenaltyPredictor = true; // Make predictor available for all roles
+    const showReconciliation = userProfile?.role === 'CA' || userProfile?.role === 'Enterprise' || isDevMode;
 
     const pageTitle = useMemo(() => {
         if (!userProfile) return "AI Toolkit";
@@ -1658,9 +1658,11 @@ export default function AiToolkitPage() {
         { value: 'studio', label: 'Doc Studio', icon: FilePenLine, content: <DocumentStudioTab /> },
         { value: 'audit', label: 'Audit', icon: GanttChartSquare, content: <DataroomAudit /> },
         { value: 'analyzer', label: 'Analyzer', icon: FileScan, content: showAnalyzer ? <DocumentAnalyzerTab /> : <UpgradePrompt /> },
+        { value: 'reconciliation', label: 'Reconciliation', icon: Scale, content: showReconciliation ? <ReconciliationTab /> : <UpgradePrompt />, hidden: !showReconciliation },
         { value: 'schemes', label: 'Schemes', icon: Gift, content: <GrantRecommenderTab /> },
-        { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: showPenaltyPredictor ? <PenaltyPredictorTab /> : <UpgradePrompt />, hidden: !showPenaltyPredictor },
+        { value: 'predictor', label: 'Penalty Predictor', icon: Gavel, content: <PenaltyPredictorTab /> },
         { value: 'research', label: 'Research', icon: Gavel, content: showResearch ? <LegalResearchTab /> : null, hidden: !showResearch },
+        { value: 'workflows', label: 'Workflows', icon: Workflow, content: <WorkflowTab />, hidden: !isDevMode },
     ].filter(t => !t.hidden);
     
     const currentTabInfo = tabs.find(t => t.value === activeTab) || tabs[0];
