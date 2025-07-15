@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition, useMemo } from 'react';
@@ -9,7 +10,7 @@ import { useAuth } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, FolderCheck, RefreshCw, Share2, GanttChartSquare, Gift, CheckCircle, Building2, Banknote, ShieldCheck, Handshake, PiggyBank } from 'lucide-react';
+import { Loader2, Sparkles, FolderCheck, RefreshCw, Share2, GanttChartSquare, Gift, CheckCircle, Building2, Banknote, ShieldCheck, Handshake, PiggyBank, ArrowRight, ExternalLink } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
@@ -58,7 +59,6 @@ const DataroomAuditTab = () => {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const isMobile = useIsMobile();
   
   useEffect(() => {
     // This effect ensures that when the active company changes, the checklist state updates.
@@ -323,6 +323,13 @@ const GrantRecommenderTab = () => {
                                                 <p className="text-sm text-muted-foreground">{rec.description}</p>
                                                 <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
                                             </CardContent>
+                                            <CardFooter>
+                                                <Button asChild variant="link" className="p-0 h-auto">
+                                                    <a href={rec.link} target="_blank" rel="noopener noreferrer">
+                                                        Learn More & Apply <ExternalLink className="ml-2 w-3.5 h-3.5"/>
+                                                    </a>
+                                                </Button>
+                                            </CardFooter>
                                         </Card>
                                     )
                                 })}
@@ -364,4 +371,5 @@ export default function PlaybookPage() {
         </div>
     );
 }
+
 

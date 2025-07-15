@@ -23,6 +23,7 @@ const RecommendationSchema = z.object({
     eligibilitySummary: z.string().describe("A summary of the key eligibility criteria."),
     isEligible: z.boolean().describe("The AI's assessment of whether the startup is likely eligible based on the inputs."),
     category: z.enum(["Tax Exemption", "Grant / Funding", "Certification", "State-Specific", "Loan Scheme"]),
+    link: z.string().url().describe("The official URL for the scheme's landing or application page."),
 });
 
 const GrantRecommenderOutputSchema = z.object({
@@ -62,6 +63,7 @@ Analyze the startup's profile and recommend relevant schemes. For each recommend
 **Instructions:**
 - Generate a list of specific, relevant recommendations.
 - For each scheme, provide its official name, a brief description, a summary of key eligibility criteria, and a boolean \`isEligible\` flag indicating if the startup likely qualifies based on their profile.
+- You **MUST** provide a valid, direct URL to the official government page for each scheme in the \`link\` field. Do not use generic or third-party links.
 - If the user is not DPIIT recognized, make that the first and most important recommendation. Most other benefits depend on it.
 - Classify each recommendation into the correct category: "Tax Exemption", "Grant / Funding", "Certification", "State-Specific", or "Loan Scheme".
 
