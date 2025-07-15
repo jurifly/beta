@@ -1027,7 +1027,7 @@ const ValuationOptimizerTab = () => {
 
     const onSubmit = async (data: ValuationFormData) => {
         if (!userProfile) return;
-        if (!await deductCredits(2)) return;
+        if (!await deductCredits(1)) return;
 
         setResult(null);
         try {
@@ -1087,7 +1087,7 @@ const ValuationOptimizerTab = () => {
                     <CardFooter>
                         <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Suggest Valuation (2 Credits)
+                            Suggest Valuation (1 Credit)
                         </Button>
                     </CardFooter>
                 </Card>
