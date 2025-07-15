@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { CapTableModal } from '@/components/dashboard/cap-table-modal';
 import { useToast } from '@/hooks/use-toast';
 import { CapTableModelingModal } from '@/components/dashboard/cap-table-modeling-modal';
+import { FeatureLockedModal } from '@/components/dashboard/feature-locked-modal';
 import { planHierarchy } from '@/lib/types';
 import Link from 'next/link';
 
@@ -37,6 +38,7 @@ export default function CapTablePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModelingModalOpen, setIsModelingModalOpen] = useState(false);
     const [entryToEdit, setEntryToEdit] = useState<CapTableEntry | null>(null);
+    const [lockedFeature, setLockedFeature] = useState<string | null>(null);
 
     const handleAddOrEdit = async (entry: Omit<CapTableEntry, 'id'> & { id?: string }) => {
         if (!userProfile || !activeCompany) return;
@@ -107,6 +109,17 @@ export default function CapTablePage() {
         setIsModalOpen(true);
     };
 
+    const handleModelRoundClick = () => {
+        const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
+        const canModel = isPro || isDevMode;
+
+        if (canModel) {
+            setIsModelingModalOpen(true);
+        } else {
+            setLockedFeature("Round Modeling");
+        }
+    };
+
     const { totalShares, esopPool, founderShares, investorShares } = useMemo(() => {
         return capTable.reduce(
             (acc, entry) => {
@@ -146,9 +159,6 @@ export default function CapTablePage() {
         );
     }
     
-    const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
-    const canModel = isPro || isDevMode;
-
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
           const data = payload[0].payload;
@@ -181,6 +191,10 @@ export default function CapTablePage() {
                 onOpenChange={setIsModelingModalOpen}
                 currentCapTable={capTable}
             />
+             <FeatureLockedModal
+                featureName={lockedFeature}
+                onOpenChange={() => setLockedFeature(null)}
+            />
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">Capitalization Table</h2>
@@ -202,18 +216,10 @@ export default function CapTablePage() {
                                 <CardDescription>A detailed breakdown of all equity holders.</CardDescription>
                             </div>
                              <div className="flex w-full sm:w-auto gap-2">
-                                {canModel ? (
-                                    <Button variant="outline" onClick={() => setIsModelingModalOpen(true)} className="flex-1 sm:flex-initial">
-                                        <TrendingUp className="mr-2"/>
-                                        Model Round
-                                    </Button>
-                                ) : (
-                                    <Button variant="outline" className="flex-1 sm:flex-initial" asChild>
-                                        <Link href="/dashboard/settings?tab=subscription">
-                                            <Lock className="mr-2 h-4 w-4"/> Model Round
-                                        </Link>
-                                    </Button>
-                                )}
+                                <Button variant="outline" onClick={handleModelRoundClick} className="flex-1 sm:flex-initial">
+                                    <TrendingUp className="mr-2"/>
+                                    Model Round
+                                </Button>
                                 <Button onClick={() => handleOpenModal()} className="flex-1 sm:flex-initial"><PlusCircle className="mr-2"/>Add Issuance</Button>
                             </div>
                         </CardHeader>

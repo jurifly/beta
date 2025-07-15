@@ -99,7 +99,7 @@ export default function LearnHubPage() {
                                         <Button 
                                             key={term.slug}
                                             variant="secondary"
-                                            className="h-auto py-1 px-3"
+                                            className="h-auto py-1 px-3 interactive-lift"
                                             onClick={() => setSelectedTerm(term)}
                                         >
                                             {term.title}

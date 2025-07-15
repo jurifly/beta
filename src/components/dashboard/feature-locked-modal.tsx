@@ -9,74 +9,64 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, Zap } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/auth";
 
 interface FeatureLockedModalProps {
   featureName: string | null;
   onOpenChange: (isOpen: boolean) => void;
 }
 
-const wittyMessages: Record<string, { title: string; lines: string[]; eta: string }> = {
+const wittyMessages: Record<string, { title: string; lines: string[]; eta?: string }> = {
     "Team Management": {
-        title: "🧑‍💼 Team Management is... Spiritually Out of Office",
-        lines: ["The team tool was supposed to bring order.", "Instead, it brought a group chat full of emojis and confusion."],
-        eta: "ETA: After one townhall and a shared mental breakdown. 🫠"
+        title: "🧑‍💼 Team Management is a Pro Feature",
+        lines: ["Invite colleagues, assign roles, and manage permissions by upgrading to a Pro plan."],
     },
     "Connections": {
-        title: "🔌 Connection is… on Airplane Mode",
-        lines: ["We built it to connect people.", "Turns out no one wants to talk unless there’s equity involved."],
-        eta: "ETA: After coffee, convincing, and emotional bribery. ☕💸"
+        title: "🔌 Connect with Your Team",
+        lines: ["Collaborate seamlessly with your advisors or clients. This feature is available on our paid plans."],
     },
     "Community": {
-        title: "Community Feature Missing",
-        lines: [
-            "Our intern said: ‘I'll build the community feature.’",
-            "That was 49 days ago. No updates since.",
-        ],
-        eta: "We’re filing a missing person report. 🕵️‍♂️"
+        title: "💬 Join the Community",
+        lines: ["Access our private community of founders and experts by upgrading your account."],
     },
     "Report Center": {
-        title: "📊 Report Centre is... in Witness Protection",
-        lines: ["It was last seen near a dashboard wireframe.", "No one’s heard from it since the analytics guy rage-quit."],
-        eta: "When the numbers agree to be seen. 📉"
+        title: "📊 Automated Reporting",
+        lines: ["Generate professional, shareable PDF reports for your clients or stakeholders. Upgrade to unlock this feature."],
     },
     "Clause Library": {
-        title: "Clause Library is Checked Out",
-        lines: ["A library of pre-approved legal clauses, just for you.", "Right now, the only clause is 'Santa Clause' and he's on vacation."],
-        eta: "This is a premium feature available on our Pro plans."
+        title: "📚 Unlock the Full Clause Library",
+        lines: ["Access our complete library of pre-built legal clauses to speed up your document drafting."],
+    },
+    "Round Modeling": {
+        title: "💸 Round Modeling is a Pro Feature",
+        lines: ["Model funding rounds, understand dilution, and plan your equity strategy like a pro."],
     },
     "Latest News": {
-        title: "🗞️ Latest News is... Yesterday's News",
-        lines: ["The news feature is still being written.", "Our AI reporter is currently stuck in a debate about whether pineapple belongs on pizza."],
-        eta: "ETA: As soon as we resolve this critical issue."
+        title: "🗞️ Stay Ahead with Curated News",
+        lines: ["Get the latest legal and financial news relevant to your business by upgrading to a Pro plan."],
     },
     "Reconciliation": {
-        title: "💸 Reconciliation is... Having a Meltdown",
-        lines: ["It tried to match transactions and matched trauma instead.", "Now it just stares at the ledger whispering “why?”"],
-        eta: "Pending therapy and a bug fix. 🧾🧘‍♂️"
+        title: "💸 Automated Reconciliation",
+        lines: ["Automatically compare financial documents to find discrepancies. Upgrade to unlock this powerful tool."],
     },
     "Workflows": {
-        title: "Workflow Engine is... Napping",
-        lines: [
-            "The workflow is currently... not working.",
-            "We tried building it on a weekend. Big mistake.",
-        ],
-        eta: "ETA: After 7 cups of chai and one long nap. 💤"
+        title: "⚡ Workflow Automation",
+        lines: ["Streamline your processes by creating automated workflows for compliance and approvals."],
     },
     "default": {
-        title: "Feature Not Found",
-        lines: [
-            "Error 404: This feature has gone on an unscheduled vacation.",
-            "We've sent a postcard asking it to return.",
-        ],
-        eta: "Check back soon for updates."
+        title: "Upgrade to Unlock",
+        lines: ["This is a premium feature. Upgrade your plan to gain access."],
     }
-}
+};
 
 export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedModalProps) {
   const isOpen = !!featureName;
   const content = (featureName && wittyMessages[featureName]) || wittyMessages.default;
+  const { isDevMode } = useAuth();
+
+  if (isDevMode) return null;
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -91,7 +81,13 @@ export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedM
                 <div className="space-y-1 text-foreground text-center">
                     {content.lines.map((line, index) => <p key={index}>{line}</p>)}
                 </div>
-                <p className="text-muted-foreground/80 font-medium">{content.eta}</p>
+                {content.eta && <p className="text-muted-foreground/80 font-medium">{content.eta}</p>}
+                <Button asChild size="lg" className="w-full interactive-lift" onClick={() => onOpenChange(false)}>
+                    <Link href="/dashboard/settings?tab=subscription">
+                        <Zap className="mr-2 h-4 w-4"/>
+                        Upgrade to Pro
+                    </Link>
+                </Button>
             </div>
           </DialogDescription>
         </DialogHeader>
