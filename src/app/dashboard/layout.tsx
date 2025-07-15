@@ -172,7 +172,7 @@ export const translations: Translations = {
     noUpcomingDeadlines: { en: "No upcoming deadlines.", hi: "कोई आगामी समय-सीमा नहीं।", es: "No hay plazos próximos.", zh: "没有即将到来的截止日期。", fr: "Aucune échéance à venir.", de: "Keine anstehenden Fristen.", pt: "Nenhum prazo próximo.", ja: "今後の締め切りはありません。" },
     recentActivity: { en: "Recent Activity", hi: "हाल की गतिविधि", es: "Actividad Reciente", zh: "最近活动", fr: "Activité Récente", de: "Letzte Aktivitäten", pt: "Atividade Recente", ja: "最近のアクティビティ" },
     latestActions: { en: "The latest actions from your portfolio.", hi: "आपके पोर्टफोलियो से नवीनतम कार्रवाइयां।", es: "Las últimas acciones de su cartera.", zh: "您投资组合的最新动态。", fr: "Les dernières actions de votre portefeuille.", de: "Die neuesten Aktionen aus Ihrem Portfolio.", pt: "As últimas ações do seu portfólio.", ja: "ポートフォリオの最新アクション。" },
-    noRecentActivity: { en: "No recent activity.", hi: "कोई हाल की गतिविधि नहीं।", es: "No hay actividad reciente.", zh: "没有最近的活动。", fr: "Aucune activité récente.", de: "Keine kürzlichen Aktivitäten.", pt: "Nenhuma atividade recente.", ja: "最近のアクティビティはありません。" },
+    noRecentActivity: { en: "No recent activity.", hi: "कोई हाल की गतिविधि नहीं।", es: "No hay actividad reciente.", zh: "没有最近的活动。", fr: "Aucune activité récente.", de: "Keine kürzlichen Aktivitäten", pt: "Nenhuma atividade recente.", ja: "最近のアクティビティはありません。" },
     aiDocAnalyzer: { en: "AI Document Analyzer", hi: "AI दस्तावेज़ विश्लेषक", es: "Analizador de Documentos IA", zh: "AI文档分析器", fr: "Analyseur de Documents IA", de: "KI-Dokumentenanalysator", pt: "Analisador de Documentos IA", ja: "AIドキュメントアナライザー" },
     aiDocAnalyzerDesc: { en: "Instantly upload a contract to identify risks, find missing clauses, and get redline suggestions.", hi: "जोखिमों की पहचान करने, गुम क्लॉज़ खोजने, और रेडलाइन सुझाव प्राप्त करने के लिए तुरंत एक अनुबंध अपलोड करें।", es: "Cargue un contrato al instante para identificar riesgos, encontrar cláusulas faltantes y obtener sugerencias de revisión.", zh: "立即上传合同以识别风险、查找缺失条款并获取红线建议。", fr: "Téléchargez instantanément un contrat pour identifier les risques, trouver les clauses manquantes et obtenir des suggestions de révision.", de: "Laden Sie sofort einen Vertrag hoch, um Risiken zu identifizieren, fehlende Klauseln zu finden und Redline-Vorschläge zu erhalten。", pt: "Carregue um contrato instantaneamente para identificar riscos, encontrar cláusulas ausentes e obter sugestões de revisão。", ja: "契約書を即座にアップロードして、リスクの特定、不足している条項の発見、修正提案の取得を行います。" },
     activeMatters: { en: "Active Matters", hi: "सक्रिय मामले", es: "Asuntos Activos", zh: "活跃事项", fr: "Dossiers Actifs", de: "Aktive Angelegenheiten", pt: "Assuntos Ativos", ja: "進行中の案件" },
@@ -232,6 +232,7 @@ const navItemConfig: NavItemConfig = {
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
   learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
   latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss },
+  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: BookHeart },
 } as const;
 
 
@@ -246,7 +247,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
-  { ...navItemConfig.learnHub },
+  { ...navItemConfig.playbook },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.connections, locked: true },
@@ -267,7 +268,7 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.docVault },
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
-  { ...navItemConfig.learnHub },
+  { ...navItemConfig.playbook },
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.workflows, locked: true },
@@ -281,7 +282,7 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
-  { ...navItemConfig.learnHub },
+  { ...navItemConfig.playbook },
   { ...navItemConfig.invitations },
   { ...navItemConfig.connections, locked: true },
   navItemConfig.portfolioAnalytics,
@@ -293,7 +294,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   { ...navItemConfig.team, locked: false }, // Unlocked for Enterprise
   navItemConfig.clients,
   navItemConfig.portfolioAnalytics,
-  { ...navItemConfig.learnHub },
+  { ...navItemConfig.playbook },
   navItemConfig.docVault,
   { ...navItemConfig.latestNews, locked: true },
 ];
@@ -335,7 +336,7 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
     "/dashboard",
     "/dashboard/clients",
     "/dashboard/ai-toolkit",
-    "/dashboard/learn",
+    "/dashboard/playbook",
     "/dashboard/cap-table",
     "/dashboard/financials",
     "/dashboard/ca-connect",
