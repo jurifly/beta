@@ -99,7 +99,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Logo />
           <CardTitle className="text-2xl font-headline">Welcome back</CardTitle>
-          <CardDescription>Sign in to continue to Claari</CardDescription>
+          <CardDescription>Sign in to continue to Jurifly</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

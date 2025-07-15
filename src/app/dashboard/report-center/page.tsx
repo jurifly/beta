@@ -60,7 +60,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary">
                             <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
                         </svg>
-                        <span className="text-xl font-bold text-primary">Claari</span>
+                        <span className="text-xl font-bold text-primary">Jurifly</span>
                     </div>
                     <div className="text-right">
                         <h1 className="text-2xl font-bold text-gray-800">Compliance Health Report</h1>
@@ -148,13 +148,13 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </main>
 
                 <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
-                    <p>Page 1 of 2 | Generated on {format(new Date(), 'PPpp')} by Claari AI</p>
+                    <p>Page 1 of 2 | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
             {/* Page 2 */}
             <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm', pageBreakBefore: 'always' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                    <span className="text-xl font-bold text-primary">Claari</span>
+                    <span className="text-xl font-bold text-primary">Jurifly</span>
                     <div className="text-right">
                         <h1 className="text-2xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
                         <p className="text-sm font-medium text-gray-600">{data.client.name}</p>

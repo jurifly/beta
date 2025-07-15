@@ -115,7 +115,7 @@ export default function RegisterPage() {
         <CardHeader className="text-center">
           <Logo />
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Get started with Claari today.</CardDescription>
+          <CardDescription>Get started with Jurifly today.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

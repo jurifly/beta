@@ -557,7 +557,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       // The founder's side will now pick this up via `checkForAcceptedInvites`.
       // We just update the local state for the CA.
-      setReceivedInvites(prev => prev.filter(i => i.id !== inviteId));
+      // The `getPendingInvites` function will be called again on the invitations page to refresh the list.
       toast({ title: 'Invitation Accepted!', description: 'You can now manage the new client. It will appear on your dashboard shortly.' });
     } catch (error: any) {
       console.error("Error accepting invite:", error);

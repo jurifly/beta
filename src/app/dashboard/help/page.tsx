@@ -19,8 +19,8 @@ import { LifeBuoy, Mail } from "lucide-react"
 
 const faqs = [
   {
-    question: "What is Claari?",
-    answer: "Claari is an AI-powered platform designed to help startups, CAs, and legal professionals manage their legal and compliance needs efficiently. From document generation to compliance tracking, Claari is your AI legal co-pilot.",
+    question: "What is Jurifly?",
+    answer: "Jurifly is an AI-powered platform designed to help startups, CAs, and legal professionals manage their legal and compliance needs efficiently. From document generation to compliance tracking, Jurifly is your AI legal co-pilot.",
   },
   {
     question: "How do AI credits work?",
@@ -39,7 +39,7 @@ const faqs = [
     answer: "Our AI can analyze various legal and financial documents, including contracts, agreements, government notices, and policy documents. It can identify risks, extract key details, and even suggest replies.",
   },
   {
-    question: "Can I use Claari for multiple companies or clients?",
+    question: "Can I use Jurifly for multiple companies or clients?",
     answer: "Yes. You can add and manage multiple companies from the settings page. This is ideal for founders with multiple ventures or professionals (CAs, Lawyers) managing a portfolio of clients.",
   },
   {
@@ -48,7 +48,7 @@ const faqs = [
   },
   {
     question: "Who can I contact for support?",
-    answer: "You can reach our support team by emailing us at support@claari.com. We'd be happy to help with any questions or issues you may have.",
+    answer: "You can reach our support team by emailing us at support@jurifly.com. We'd be happy to help with any questions or issues you may have.",
   },
 ];
 
@@ -93,7 +93,7 @@ export default function HelpPage() {
                 </CardHeader>
                 <CardContent>
                     <Button asChild className="w-full">
-                        <a href="mailto:support@claari.com">
+                        <a href="mailto:support@jurifly.com">
                             Email Support
                         </a>
                     </Button>

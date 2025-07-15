@@ -62,7 +62,7 @@ const LandingHeader = () => {
       <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <button onClick={() => router.push('/landing')} className="flex items-center gap-2 font-bold text-primary font-headline text-xl">
           <Logo />
-          <span>Claari</span>
+          <span>Jurifly</span>
         </button>
         <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="link" onClick={() => router.push('/login')} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">

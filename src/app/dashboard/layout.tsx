@@ -467,7 +467,7 @@ function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const savedLang = localStorage.getItem('claari-lang') as Language;
+      const savedLang = localStorage.getItem('jurifly-lang') as Language;
       if (savedLang && languages.some(l => l.code === savedLang)) {
         setLang(savedLang);
       }
@@ -480,7 +480,7 @@ function AppShell({ children }: { children: ReactNode }) {
     const newLang = langCode as Language;
     setLang(newLang);
     try {
-      localStorage.setItem('claari-lang', newLang);
+      localStorage.setItem('jurifly-lang', newLang);
     } catch (error) {
       console.error('Could not access localStorage for language settings.', error);
     }
@@ -641,7 +641,7 @@ const MobileSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { 
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
                 <Logo />
-                <span>Claari</span>
+                <span>Jurifly</span>
                 </Link>
             </div>
             <ScrollArea className="flex-1">
@@ -740,7 +740,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
               {isPro && <Flame className="h-6 w-6 text-accent" />}
               <Logo />
               <span className="flex items-center">
-                Claari
+                Jurifly
                  <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">{translations.beta[lang]}</Badge>
               </span>
             </Link>
