@@ -65,7 +65,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { Language, Translations } from "./layout";
+import { type Language, type Translations, translations as allTranslations } from "./layout";
 
 const ComplianceActivityChart = dynamic(
   () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -972,13 +972,18 @@ function EnterpriseDashboard({ userProfile, translations, lang }: { userProfile:
     );
 }
 
-export default function Dashboard({ translations, lang }: { translations: Translations, lang: Language }) {
+export default function Dashboard() {
   const { userProfile, deductCredits } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [lang, setLang] = useState<Language>('en');
 
   useEffect(() => {
     setIsMounted(true);
+    const savedLang = localStorage.getItem('jurifly-lang') as Language;
+    if (savedLang && allTranslations.dashboard[savedLang]) {
+      setLang(savedLang);
+    }
   }, []);
 
   const renderDashboardByRole = () => {
@@ -1000,15 +1005,15 @@ export default function Dashboard({ translations, lang }: { translations: Transl
     }
     switch (userProfile.role) {
       case 'Founder':
-        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={translations} lang={lang}/>;
+        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={allTranslations} lang={lang}/>;
       case 'CA':
-        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} translations={translations} lang={lang}/>;
+        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} translations={allTranslations} lang={lang}/>;
       case 'Legal Advisor':
-        return <LegalAdvisorDashboard userProfile={userProfile} translations={translations} lang={lang}/>;
+        return <LegalAdvisorDashboard userProfile={userProfile} translations={allTranslations} lang={lang}/>;
       case 'Enterprise':
-        return <EnterpriseDashboard userProfile={userProfile} translations={translations} lang={lang}/>;
+        return <EnterpriseDashboard userProfile={userProfile} translations={allTranslations} lang={lang}/>;
       default:
-        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={translations} lang={lang}/>;
+        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={allTranslations} lang={lang}/>;
     }
   };
   
@@ -1035,9 +1040,9 @@ export default function Dashboard({ translations, lang }: { translations: Transl
 
   const getAddButtonText = () => {
       if (userProfile?.role === 'CA' || userProfile?.role === 'Legal Advisor') {
-          return translations.addClient[lang];
+          return allTranslations.addClient[lang];
       }
-      return translations.addCompany[lang];
+      return allTranslations.addCompany[lang];
   }
 
   return (
@@ -1048,10 +1053,10 @@ export default function Dashboard({ translations, lang }: { translations: Transl
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">
-                {translations.welcome[lang]}, {userProfile?.name.split(" ")[0]}!
+                {allTranslations.welcome[lang]}, {userProfile?.name.split(" ")[0]}!
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                {translations.workspaceOverview[lang]} {userProfile?.role === 'Founder' && activeCompany ? `${translations.for[lang]} ${activeCompany.name}` : ''}.
+                {allTranslations.workspaceOverview[lang]} {userProfile?.role === 'Founder' && activeCompany ? `${allTranslations.for[lang]} ${activeCompany.name}` : ''}.
               </p>
             </div>
               <div className="flex items-center gap-4">
