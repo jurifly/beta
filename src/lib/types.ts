@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { LucideIcon } from "lucide-react";
@@ -159,6 +160,8 @@ export interface UserProfile {
   dailyCreditLimit?: number;
   dailyCreditsUsed?: number;
   lastCreditReset?: string; // ISO string
+  accessPassesUsed?: { code: string; usedOn: string; rewardType: string; }[];
+
 
   // Founder-CA Connection
   invitedCaEmail?: string;

@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useAuth } from "@/hooks/auth";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +27,7 @@ const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   legalRegion: z.string({ required_error: "Please select a region." }).min(1, "Please select a region."),
   role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"], { required_error: "Please select a role." }),
+  accessPass: z.string().optional(),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -45,17 +47,8 @@ const betaRoles: { id: UserRole, label: string }[] = [
 ];
 
 const Logo = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 mx-auto text-primary mb-2"
-  >
-     <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-     <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-     <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto text-primary mb-2">
+    <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
   </svg>
 );
 
@@ -87,7 +80,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const refId = localStorage.getItem('referralId');
-      await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, data.role, refId || undefined);
+      await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, data.role, refId || undefined, data.accessPass);
       localStorage.removeItem('referralId'); // Clear after use
     } catch (error: any) {
         toast({
@@ -168,6 +161,13 @@ export default function RegisterPage() {
                     )}
                 />
               {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="accessPass" className="flex items-center gap-2">
+                    Access Pass <span className="text-xs text-muted-foreground">(Optional)</span>
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                </Label>
+                <Input id="accessPass" placeholder="Enter code for special access" {...register("accessPass")} />
             </div>
              <div className="items-top flex space-x-2">
                 <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />

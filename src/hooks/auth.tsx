@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -7,7 +8,7 @@ import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transac
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, where, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, where, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { add, type Duration } from 'date-fns';
 import { ToastAction } from '@/components/ui/toast';
 import Link from 'next/link';
@@ -23,9 +24,10 @@ export interface AuthContextType {
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   updateCompanyChecklistStatus: (companyId: string, updates: { itemId: string; completed: boolean }[]) => Promise<void>;
   deductCredits: (amount: number) => Promise<boolean>;
+  applyAccessPass: (passCode: string) => Promise<{ success: boolean; message: string }>;
   signInWithGoogle: () => Promise<void>;
   signInWithEmailAndPassword: (email: string, pass: string) => Promise<void>;
-  signUpWithEmailAndPassword: (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string) => Promise<void>;
+  signUpWithEmailAndPassword: (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string, accessPass?: string) => Promise<void>;
   signOut: () => Promise<void>;
   sendPasswordResetLink: (email: string) => Promise<void>;
   saveChatHistory: (chat: ChatMessage[]) => Promise<void>;
@@ -110,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       teamMembers: [{ id: firebaseUser.uid, name: firebaseUser.displayName || 'Me', email: firebaseUser.email || '', role: 'Admin' }],
       invites: [],
       activityLog: [{ id: Date.now().toString(), userName: 'System', action: 'Created workspace', timestamp: new Date().toISOString() }],
+      accessPassesUsed: [],
     };
     
     await setDoc(userDocRef, newProfile);
@@ -162,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (profile.dailyCreditLimit === undefined) updatesToApply.dailyCreditLimit = 5;
       if (profile.dailyCreditsUsed === undefined) updatesToApply.dailyCreditsUsed = 0;
       if (!profile.lastCreditReset) updatesToApply.lastCreditReset = new Date(0).toISOString();
+      if (!profile.accessPassesUsed) updatesToApply.accessPassesUsed = [];
 
       const today = new Date();
       const lastResetDate = new Date(updatesToApply.lastCreditReset || profile.lastCreditReset!);
@@ -350,17 +354,109 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, userProfile, toast]);
 
-  const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string) => {
+    const applyAccessPass = useCallback(async (passCode: string): Promise<{ success: boolean; message: string }> => {
+        if (!user || !userProfile) return { success: false, message: 'You must be logged in to use an access pass.' };
+
+        // 1. Check if user has already used this pass
+        if ((userProfile.accessPassesUsed || []).some(p => p.code === passCode)) {
+            return { success: false, message: 'You have already used this access pass.' };
+        }
+
+        const passRef = doc(db, 'accessPasses', passCode);
+        const userRef = doc(db, 'users', user.uid);
+
+        try {
+            const result = await runTransaction(db, async (transaction) => {
+                const passDoc = await transaction.get(passRef);
+                if (!passDoc.exists()) {
+                    throw new Error("Invalid Access Pass. Please check the code and try again.");
+                }
+
+                const passData = passDoc.data();
+
+                // 2. Validate the pass
+                if (passData.expiresAt && new Date(passData.expiresAt) < new Date()) {
+                    throw new Error("This Access Pass has expired.");
+                }
+                if (passData.useLimit && (passData.usedBy?.length || 0) >= passData.useLimit) {
+                    throw new Error("This Access Pass has reached its usage limit.");
+                }
+                if (passData.usedBy?.includes(user.uid)) {
+                     throw new Error("You have already redeemed this pass.");
+                }
+
+                const userDoc = await transaction.get(userRef);
+                const currentProfile = userDoc.data() as UserProfile;
+                const updates: Partial<UserProfile> = {};
+                let message = "";
+
+                // 3. Apply the reward
+                switch (passData.reward.type) {
+                    case 'trial':
+                        updates.plan = userProfile.role === 'CA' ? 'Professional' : 'Founder';
+                        const currentExpiry = new Date(currentProfile.planExpiryDate);
+                        const trialEndDate = add(new Date(), { days: passData.reward.durationDays });
+                        updates.planExpiryDate = (trialEndDate > currentExpiry ? trialEndDate : currentExpiry).toISOString();
+                        message = `Success! Your Pro trial for ${passData.reward.durationDays} days has been activated.`;
+                        break;
+                    case 'credits':
+                        updates.creditBalance = (currentProfile.creditBalance || 0) + passData.reward.amount;
+                        message = `Success! ${passData.reward.amount} bonus credits have been added to your account.`;
+                        break;
+                    default:
+                        throw new Error("Unknown reward type associated with this pass.");
+                }
+
+                // 4. Mark pass as used by this user
+                updates.accessPassesUsed = arrayUnion({
+                    code: passCode,
+                    usedOn: new Date().toISOString(),
+                    rewardType: passData.reward.type,
+                });
+                
+                transaction.update(userRef, updates);
+                transaction.update(passRef, {
+                    usedBy: arrayUnion(user.uid)
+                });
+
+                return message;
+            });
+
+            // Re-fetch profile to update UI state
+            await fetchUserProfile(user);
+            return { success: true, message: result };
+            
+        } catch (error: any) {
+            console.error("Access Pass Transaction Error:", error);
+            return { success: false, message: error.message || "An unexpected error occurred." };
+        }
+    }, [user, userProfile, fetchUserProfile]);
+
+
+  const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string, accessPass?: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      if (userCredential.user) {
-        await updateFirebaseProfile(userCredential.user, { displayName: name });
+      const firebaseUser = userCredential.user;
+      if (firebaseUser) {
+        await updateFirebaseProfile(firebaseUser, { displayName: name });
         const userData: User = {
-            uid: userCredential.user.uid,
-            email: userCredential.user.email,
+            uid: firebaseUser.user.uid,
+            email: firebaseUser.user.email,
             displayName: name,
         };
         const newProfile = await createNewUserProfile(userData, legalRegion, role, refId);
         setUserProfile(newProfile);
+
+        if (accessPass) {
+            const passResult = await applyAccessPass(accessPass);
+            // Non-blocking: we don't want to fail signup if the pass fails.
+            // The user can re-enter it in settings.
+            setTimeout(() => {
+                toast({
+                    title: passResult.success ? `Access Pass Applied!` : `Access Pass Notice`,
+                    description: passResult.message
+                });
+            }, 1000);
+        }
       }
   };
 
@@ -610,7 +706,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, userProfile, toast, addNotification]);
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, applyAccessPass, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

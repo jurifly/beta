@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState } from "react"
@@ -6,11 +7,16 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Check, Loader2, Sparkles, Star } from "lucide-react"
+import { Check, Loader2, Sparkles, Star, KeyRound } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { UserPlan } from "@/lib/types"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod";
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/hooks/use-toast"
 
 const founderPlans = [
     {
@@ -51,6 +57,49 @@ const creditPacks = [
   { name: 'Boss Mode', price: 599, credits: 600, popular: false },
 ];
 
+const accessPassSchema = z.object({
+    pass: z.string().min(4, "Please enter a valid pass.").max(20),
+});
+type AccessPassFormData = z.infer<typeof accessPassSchema>;
+
+const AccessPassForm = () => {
+    const { applyAccessPass } = useAuth();
+    const { toast } = useToast();
+    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<AccessPassFormData>();
+    
+    const onSubmit = async (data: AccessPassFormData) => {
+        const result = await applyAccessPass(data.pass);
+        if (result.success) {
+            toast({ title: 'Success!', description: result.message });
+            reset();
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.message });
+        }
+    };
+    
+    return (
+        <Card className="interactive-lift">
+            <CardHeader>
+                <CardTitle>Have an Access Pass?</CardTitle>
+                <CardDescription>Enter a pass code here to unlock special offers, trials, or bonus credits.</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <CardContent>
+                    <div className="flex items-end gap-2">
+                        <div className="flex-1 space-y-1">
+                            <Label htmlFor="access-pass">Access Pass Code</Label>
+                            <Input id="access-pass" {...register("pass")} placeholder="e.g. BETAEXTRA"/>
+                        </div>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="animate-spin" /> : 'Apply'}
+                        </Button>
+                    </div>
+                    {errors.pass && <p className="text-sm text-destructive mt-2">{errors.pass.message}</p>}
+                </CardContent>
+            </form>
+        </Card>
+    )
+}
 
 export default function BillingForm() {
   const { userProfile } = useAuth()
@@ -84,6 +133,8 @@ export default function BillingForm() {
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
+        <AccessPassForm />
+        
         <Card className="interactive-lift">
             <CardHeader>
                 <CardTitle>Plans & Pricing</CardTitle>

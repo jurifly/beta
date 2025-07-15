@@ -142,7 +142,7 @@ export const translations: Translations = {
     equityIssued: { en: "Equity Issued", hi: "इक्विटी जारी", es: "Capital Emitido", zh: "已发行股权", fr: "Capitaux Propres Émis", de: "Ausgegebenes Eigenkapital", pt: "Capital Emitido", ja: "発行済み株式" },
     alerts: { en: "Alerts", hi: "अलर्ट", es: "Alertas", zh: "警报", fr: "Alertes", de: "Warnungen", pt: "Alertas", ja: "アラート" },
     overdueTasks: { en: "Overdue tasks", hi: "अतिदेय कार्य", es: "Tareas atrasadas", zh: "逾期任务", fr: "Tâches en retard", de: "Überfällige Aufgaben", pt: "Tarefas atrasadas", ja: "期限切れのタスク" },
-    noOverdueTasks: { en: "No overdue tasks", hi: "कोई अतिदेय कार्य नहीं", es: "No hay tareas atrasadas", zh: "无逾期任务", fr: "Aucune tâche en retard", de: "Keine überfälligen Aufgaben", pt: "Nenhuma tarefa atrasada", ja: "期限切れのタスクはありません" },
+    noOverdueTasks: { en: "No overdue tasks", hi: "कोई अतिदेय कार्य नहीं", es: "No hay tareas atrasadas", zh: "无逾期任务", fr: "Aucune tâche en retard", de: "Keine überfälligen Aufgaben", pt: "Nenhuma tarefa atrasada", ja: "期限切れのタaskはありません" },
     proactiveAISuggestions: { en: "Proactive AI Suggestions", hi: "सक्रिय AI सुझाव", es: "Sugerencias Proactivas de IA", zh: "主动式AI建议", fr: "Suggestions Proactives de l'IA", de: "Proaktive KI-Vorschläge", pt: "Sugestões Proativas de IA", ja: "プロアクティブAI提案" },
     timelyAdvice: { en: "Timely advice from our AI to help you stay ahead.", hi: "हमारे AI से समय पर सलाह ताकि आप आगे रहें।", es: "Consejos oportunos de nuestra IA para ayudarte a mantenerte a la vanguardia.", zh: "我们AI的及时建议，助您保持领先。", fr: "Conseils opportuns de notre IA pour vous aider à garder une longueur d'avance.", de: "Rechtzeitige Ratschläge von unserer KI, um Ihnen zu helfen, immer einen Schritt voraus zu sein。", pt: "Conselhos oportunos da nossa IA para ajudá-lo a se manter à frente。", ja: "AIからのタイムリーなアドバイスで、一歩先を行きましょう。" },
     noSpecialInsights: { en: "No special insights at the moment. You're all set!", hi: "फिलहाल कोई विशेष अंतर्दृष्टि नहीं है। आप पूरी तरह से तैयार हैं!", es: "No hay ideas especiales en este momento. ¡Estás listo!", zh: "目前没有特别的见解。一切就绪！", fr: "Pas d'aperçus spéciaux pour le moment. Vous êtes prêt !", de: "Im Moment keine besonderen Einblicke. Alles bestens!", pt: "Nenhuma visão especial no momento. Está tudo pronto!", ja: "現在、特別なインサイトはありません。準備は万端です！" },
@@ -300,18 +300,9 @@ const getSidebarNavItems = (role: UserRole) => {
 }
 
 const Logo = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-  >
-     <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-     <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-     <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6">
+        <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
+    </svg>
 );
 
 
