@@ -53,7 +53,6 @@ import { cn } from "@/lib/utils";
 import type { UserProfile, Company, ActivityLogItem } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { getProactiveInsights, type ProactiveInsightsOutput } from "@/ai/flows/proactive-insights-flow";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
@@ -76,10 +75,18 @@ const ComplianceActivityChart = dynamic(
   }
 );
 
+type Insight = {
+    title: string;
+    description: string;
+    cta: string;
+    href: string;
+    icon: "Lightbulb" | "BarChart" | "FileText" | "AlertTriangle" | "Users" | "ShieldCheck" | "Settings";
+}
+
 
 // --- Helper Components ---
 
-const InsightCard = ({ insight, onCtaClick }: { insight: ProactiveInsightsOutput['insights'][0], onCtaClick: (href: string) => void }) => {
+const InsightCard = ({ insight, onCtaClick }: { insight: Insight, onCtaClick: (href: string) => void }) => {
   const icons: Record<string, React.ReactNode> = {
     Lightbulb: <Lightbulb className="w-5 h-5 text-yellow-500" />,
     BarChart: <BarChart className="w-5 h-5 text-blue-500" />,
@@ -166,7 +173,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
-    const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
+    const [insights, setInsights] = useState<Insight[]>([]);
     const [insightsLoading, setInsightsLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     const [popoverOpen, setPopoverOpen] = useState(false);
@@ -265,37 +272,72 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
     }, [activeCompany, toast]);
 
     useEffect(() => {
-        const fetchInsights = async () => {
-            if (isLoading || !activeCompany || !userProfile) return;
-            setInsightsLoading(true);
+        if (isLoading || !activeCompany) return;
+        setInsightsLoading(true);
 
-            const burnRate = (activeCompany.financials?.monthlyExpenses || 0) - (activeCompany.financials?.monthlyRevenue || 0);
+        const newInsights: Insight[] = [];
+        const burnRate = (activeCompany.financials?.monthlyExpenses || 0) - (activeCompany.financials?.monthlyRevenue || 0);
+        const companyAgeInDays = differenceInDays(new Date(), new Date(activeCompany.incorporationDate));
 
-            try {
-                const response = await getProactiveInsights({
-                    userRole: 'Founder',
-                    legalRegion: userProfile.legalRegion,
-                    founderContext: {
-                        companyAgeInDays: differenceInDays(new Date(), new Date(activeCompany.incorporationDate)),
-                        companyType: activeCompany.type,
-                        hygieneScore: hygieneScore,
-                        profileCompleteness: profileCompleteness,
-                        overdueCount: overdueFilingsCount,
-                        upcomingIn30DaysCount: upcomingFilingsCount,
-                        burnRate: burnRate > 0 ? burnRate : 0,
-                    }
-                });
-                setInsights(response.insights);
-            } catch (error: any) {
-                console.error("Could not fetch insights", error);
-                toast({ title: 'AI Suggestion Failed', description: error.message, variant: 'destructive' });
-            } finally {
-                setInsightsLoading(false);
-            }
-        };
+        if (profileCompleteness < 90) {
+            newInsights.push({
+                title: "Complete Your Profile",
+                description: "Fill in all company details to improve AI accuracy and unlock more features.",
+                cta: "Go to Settings",
+                href: "/dashboard/settings",
+                icon: "Settings",
+            });
+        }
+        if (hygieneScore < 70) {
+             newInsights.push({
+                title: "Improve Your Score",
+                description: "Your Legal Hygiene Score is a bit low. Let's see how we can improve it.",
+                cta: "Review Analytics",
+                href: "/dashboard/analytics",
+                icon: "ShieldCheck",
+            });
+        }
+         if (overdueFilingsCount > 0) {
+            newInsights.push({
+                title: "Clear Overdue Tasks",
+                description: `You have ${overdueFilingsCount} overdue compliance tasks that need urgent attention.`,
+                cta: "Go to Advisor Hub",
+                href: "/dashboard/ca-connect",
+                icon: "AlertTriangle",
+            });
+        }
+        if (burnRate > 0) {
+            newInsights.push({
+                title: "Analyze Your Burn Rate",
+                description: "You're burning cash. Visit the financials page to analyze your runway and forecast.",
+                cta: "Go to Financials",
+                href: "/dashboard/financials",
+                icon: "BarChart",
+            });
+        }
+        if (companyAgeInDays > 540 && activeCompany.type.includes('Private Limited')) {
+             newInsights.push({
+                title: "Time for an ESOP?",
+                description: "Your company is over 1.5 years old. It might be a good time to create an ESOP to retain talent.",
+                cta: "Generate ESOP Policy",
+                href: "/dashboard/ai-toolkit?tab=studio",
+                icon: "FileText",
+            });
+        }
+        if (upcomingFilingsCount > 0 && overdueFilingsCount === 0) {
+             newInsights.push({
+                title: "Upcoming Deadlines",
+                description: `You have ${upcomingFilingsCount} tasks due soon. Stay on top of your compliance.`,
+                cta: "Review Filings",
+                href: "/dashboard/ca-connect",
+                icon: "Lightbulb",
+            });
+        }
+        
+        setInsights(newInsights.slice(0, 3));
+        setInsightsLoading(false);
 
-        fetchInsights();
-    }, [isLoading, activeCompany, hygieneScore, overdueFilingsCount, upcomingFilingsCount, userProfile, toast, profileCompleteness]);
+    }, [isLoading, activeCompany, hygieneScore, profileCompleteness, overdueFilingsCount, upcomingFilingsCount, toast]);
     
     const handleToggleComplete = (itemId: string, newStatus: boolean) => {
         if (!activeCompany) return;
@@ -663,7 +705,7 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
 function CADashboard({ userProfile, onAddClientClick, translations, lang }: { userProfile: UserProfile, onAddClientClick: () => void, translations: Translations, lang: Language }) {
     const { toast } = useToast();
     const router = useRouter();
-    const [insights, setInsights] = useState<ProactiveInsightsOutput['insights']>([]);
+    const [insights, setInsights] = useState<Insight[]>([]);
     const [insightsLoading, setInsightsLoading] = useState(true);
     const [clientHealthData, setClientHealthData] = useState<any[]>([]);
     const [isLoadingHealth, setIsLoadingHealth] = useState(true);
@@ -755,29 +797,41 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
     }, [userProfile.companies]);
 
     useEffect(() => {
-        const fetchInsights = async () => {
-            if (isLoadingHealth) return;
-            setInsightsLoading(true);
-            try {
-                const response = await getProactiveInsights({
-                    userRole: 'CA',
-                    legalRegion: userProfile.legalRegion,
-                    caContext: {
-                        clientCount: clientCount,
-                        highRiskClientCount: highRiskClientCount,
-                    }
-                });
-                setInsights(response.insights);
-            } catch (error: any) {
-                console.error("Could not fetch insights", error);
-                toast({ title: 'AI Suggestion Failed', description: error.message, variant: 'destructive' });
-            } finally {
-                setInsightsLoading(false);
-            }
-        };
+        if (isLoadingHealth) return;
+        setInsightsLoading(true);
+        const newInsights: Insight[] = [];
 
-        fetchInsights();
-    }, [clientCount, highRiskClientCount, userProfile.legalRegion, toast, isLoadingHealth]);
+        if (highRiskClientCount > 0) {
+            newInsights.push({
+                title: "Address High-Risk Clients",
+                description: `You have ${highRiskClientCount} clients with low compliance scores requiring your attention.`,
+                cta: "View Portfolio Analytics",
+                href: "/dashboard/analytics",
+                icon: "ShieldCheck",
+            });
+        }
+        if (clientCount === 0) {
+             newInsights.push({
+                title: "Add Your First Client",
+                description: "Onboard your first client to start managing their compliance and financials.",
+                cta: "Go to Client Management",
+                href: "/dashboard/clients",
+                icon: "Users",
+            });
+        }
+        if (clientCount > 0) {
+            newInsights.push({
+                title: "Generate a Client Health Report",
+                description: "Add value for a key client by generating a detailed compliance health report.",
+                cta: "Go to Report Center",
+                href: "/dashboard/report-center",
+                icon: "FileText",
+            });
+        }
+        
+        setInsights(newInsights.slice(0,2));
+        setInsightsLoading(false);
+    }, [clientCount, highRiskClientCount, isLoadingHealth]);
 
    if (clientCount === 0) {
      return (
@@ -1013,3 +1067,4 @@ export default function Dashboard({ translations, lang }: { translations: Transl
     </>
   );
 }
+
