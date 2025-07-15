@@ -26,9 +26,9 @@ import type { YoYOutput } from '@/ai/flows/yoy-analysis-flow';
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getValuationOptimization, ValuationOptimizerInput, ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
 import { getValuationOptimizationAction, getFounderSalaryBreakdownAction } from '@/app/dashboard/ai-toolkit/actions';
-import { FounderSalaryInput, FounderSalaryOutput, FounderSalaryInputSchema } from '@/ai/flows/founder-salary-flow';
+import type { ValuationOptimizerInput, ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
+import type { FounderSalaryInput, FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 import ReactMarkdown from "react-markdown";
 
 const personalIncomeSchema = z.object({
@@ -1020,6 +1020,9 @@ const ValuationOptimizerTab = () => {
 
     const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<ValuationFormData>({
         resolver: zodResolver(valuationOptimizerSchema),
+        defaultValues: {
+            stage: 'Pre-Seed',
+        }
     });
 
     const onSubmit = async (data: ValuationFormData) => {
@@ -1132,16 +1135,27 @@ const ValuationOptimizerTab = () => {
     );
 };
 
+const founderSalarySchema = z.object({
+  desiredAnnualPayout: z.coerce.number().min(1, "Payout must be a positive number."),
+  companyStage: z.enum(['Pre-Revenue', 'Early Revenue', 'Growth Stage']),
+  lastFundingAmount: z.coerce.number().min(0, "Funding amount cannot be negative."),
+});
+type FounderSalaryFormData = z.infer<typeof founderSalarySchema>;
+
 const FounderSalaryPlannerTab = () => {
   const { userProfile, deductCredits } = useAuth();
   const { toast } = useToast();
   const [result, setResult] = useState<FounderSalaryOutput | null>(null);
 
-  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FounderSalaryInput>({
-      resolver: zodResolver(FounderSalaryInputSchema),
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FounderSalaryFormData>({
+      resolver: zodResolver(founderSalarySchema),
+      defaultValues: {
+          companyStage: 'Pre-Revenue',
+          lastFundingAmount: 0
+      }
   });
 
-  const onSubmit = async (data: FounderSalaryInput) => {
+  const onSubmit = async (data: FounderSalaryFormData) => {
     if (!userProfile) return;
     if (!await deductCredits(1)) return;
 

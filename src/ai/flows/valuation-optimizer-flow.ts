@@ -6,7 +6,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-export const ValuationOptimizerInputSchema = z.object({
+const ValuationOptimizerInputSchema = z.object({
   industry: z.string().describe("The industry or sector of the startup (e.g., 'Fintech', 'SaaS')."),
   stage: z.enum(['Idea', 'Pre-Seed', 'Seed']).describe("The current funding stage of the startup."),
   traction: z.string().describe("A brief summary of the startup's traction (e.g., '1000 active users', '₹5L monthly revenue', '2 pilot customers')."),
@@ -15,7 +15,7 @@ export const ValuationOptimizerInputSchema = z.object({
 });
 export type ValuationOptimizerInput = z.infer<typeof ValuationOptimizerInputSchema>;
 
-export const ValuationOptimizerOutputSchema = z.object({
+const ValuationOptimizerOutputSchema = z.object({
   suggestedValuationRange: z.string().describe("A plausible, defensible valuation range, e.g., '₹2 Cr - ₹4 Cr'."),
   reasoning: z.string().describe("A markdown-formatted explanation for the suggested valuation, referencing the startup's stage, industry, and traction."),
   justificationSteps: z.array(z.string()).describe("A list of 3-4 actionable steps the founder can take to legally justify this valuation to investors and tax authorities (e.g., 'Prepare a DCF model', 'Benchmark against comparable startups')."),

@@ -6,7 +6,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-export const FounderSalaryInputSchema = z.object({
+const FounderSalaryInputSchema = z.object({
   desiredAnnualPayout: z.number().min(1).describe("The founder's desired total annual compensation."),
   companyStage: z.enum(['Pre-Revenue', 'Early Revenue', 'Growth Stage']).describe("The current stage of the company."),
   lastFundingAmount: z.number().min(0).describe("The amount of the last funding round raised. Use 0 if bootstrapped."),
@@ -14,7 +14,7 @@ export const FounderSalaryInputSchema = z.object({
 });
 export type FounderSalaryInput = z.infer<typeof FounderSalaryInputSchema>;
 
-export const FounderSalaryOutputSchema = z.object({
+const FounderSalaryOutputSchema = z.object({
   breakdown: z.object({
     inHandSalary: z.number().describe("The recommended annual in-hand salary component."),
     reimbursements: z.number().describe("The recommended annual amount for tax-free reimbursements."),
