@@ -598,7 +598,7 @@ function AppShell({ children }: { children: ReactNode }) {
                 </div>
             </header>
             <main 
-                className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto"
+                className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto animate-in fade-in-50"
             >
                 <BetaBanner />
                 {childrenWithLang}
@@ -749,7 +749,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       href={item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-card-foreground/70 transition-all relative interactive-lift hover:bg-muted",
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative interactive-lift hover:bg-muted",
                           isActive && "text-primary font-semibold bg-muted",
                           isLocked && "cursor-not-allowed"
                       )}
