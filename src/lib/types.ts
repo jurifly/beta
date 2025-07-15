@@ -63,7 +63,7 @@ export interface TeamMember {
     id: string;
     name: string;
     email: string;
-    role: 'Admin' | 'Member' | 'Viewer' | 'Billing';
+    role: 'Admin' | 'Member' | 'Viewer';
 }
 
 export interface Invite {
@@ -117,6 +117,7 @@ export interface Company {
         monthlyExpenses: number;
     };
     historicalFinancials?: HistoricalFinancialData[];
+    diligenceChecklist?: GenerateDDChecklistOutput;
     founderUid?: string;
     checklistStatus?: Record<string, boolean>;
     health?: {
@@ -187,6 +188,7 @@ export interface ChecklistCategory {
 export interface GenerateDDChecklistOutput {
   reportTitle: string;
   checklist: ChecklistCategory[];
+  timestamp?: string;
 }
 
 export interface Clause {

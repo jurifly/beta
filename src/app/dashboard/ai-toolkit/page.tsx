@@ -14,7 +14,7 @@ import { useSearchParams } from 'next/navigation';
 
 import * as AiActions from './actions';
 import type { AssistantOutput } from '@/ai/flows/assistant-flow';
-import type { GenerateDDChecklistOutput, ChecklistCategory, ChecklistItem, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails, Clause } from "@/lib/types"
+import type { GenerateDDChecklistOutput, ChecklistCategory, UserRole, UserProfile, Workflow as WorkflowType, ActivityLogItem, ChatMessage, DocumentAnalysis, RiskFlag, ContractDetails, Clause } from "@/lib/types"
 import { planHierarchy } from "@/lib/types";
 import type { GenerateChecklistOutput as RawChecklistOutput } from '@/ai/flows/generate-checklist-flow'
 import type { ComplianceValidatorOutput } from "@/ai/flows/compliance-validator-flow"
@@ -269,8 +269,7 @@ const ChatAssistant = () => {
 // --- Tab: Dataroom Audit ---
 
 const initialDiligenceState: { data: RawChecklistOutput | null; error: string | null } = { data: null, error: null };
-const initialComplianceState: { data: ComplianceValidatorOutput | null; error: string | null } = { data: null, error: null };
-type ChecklistState = { data: GenerateDDChecklistOutput | null; timestamp: string | null; };
+type ChecklistState = { data: GenerateDDChecklistOutput | null };
 
 const dealTypesByRole = {
   Founder: [ { value: "Pre-seed / Seed Funding", label: "Pre-seed / Seed Funding" }, { value: "Series A Funding", label: "Series A Funding" }, { value: "Series B/C+ Funding", label: "Series B/C+ Funding" }, { value: "Venture Debt Financing", label: "Venture Debt Financing" }, { value: "Merger & Acquisition (Sell-Side)", label: "Merger & Acquisition (Sell-Side)" }, { value: "General Dataroom Prep", label: "General Dataroom Prep" }, ],
@@ -289,43 +288,16 @@ function DataroomAuditSubmitButton({ isRegenerate, isPending }: { isRegenerate: 
 }
 
 const DataroomAudit = () => {
-  const { userProfile, deductCredits } = useAuth();
-  const [serverState, setServerState] = useState(initialDiligenceState);
-  const [checklistState, setChecklistState] = useState<ChecklistState>({ data: null, timestamp: null });
+  const { userProfile, deductCredits, updateUserProfile } = useAuth();
+  const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+  const [checklistState, setChecklistState] = useState<GenerateDDChecklistOutput | null>(activeCompany?.diligenceChecklist || null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
   
-  if (!userProfile) return <Loader2 className="animate-spin" />;
-
-  const checklistKey = `ddChecklistData-${userProfile.activeCompanyId}`;
-
-  useEffect(() => { 
-    try { 
-      const savedState = localStorage.getItem(checklistKey); 
-      if (savedState) setChecklistState(JSON.parse(savedState)); 
-    } catch (error) { 
-      console.error("Failed to parse checklist data from localStorage", error); 
-      localStorage.removeItem(checklistKey); 
-    } 
-  }, [checklistKey]);
-  
-  useEffect(() => {
-    if (serverState.error) {
-        toast({ variant: "destructive", title: "Checklist Generation Failed", description: serverState.error });
-    }
-    
-    if (serverState.data) {
-      const rawData = serverState.data;
-      const groupedData = rawData.checklist.reduce<ChecklistCategory[]>((acc, item) => { let category = acc.find(c => c.category === item.category); if (!category) { category = { category: item.category, items: [] }; acc.push(category); } category.items.push({ id: `${item.category.replace(/\s+/g, '-')}-${category.items.length}`, task: item.task, description: '', status: 'Pending' }); return acc; }, []);
-      const newChecklistState: ChecklistState = { data: { reportTitle: rawData.title, checklist: groupedData }, timestamp: new Date().toISOString() };
-      setChecklistState(newChecklistState);
-    }
-  }, [serverState, toast]);
-
-  useEffect(() => { if (checklistKey && checklistState.data) localStorage.setItem(checklistKey, JSON.stringify(checklistState)); }, [checklistState, checklistKey]);
+  if (!userProfile || !activeCompany) return <Loader2 className="animate-spin" />;
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -334,18 +306,71 @@ const DataroomAudit = () => {
 
       const formData = new FormData(formRef.current);
       startTransition(async () => {
-          const result = await AiActions.generateDiligenceChecklistAction(serverState, formData);
-          setServerState(result);
+          try {
+            const rawData = await AiActions.generateDiligenceChecklistAction(initialDiligenceState, formData);
+            if (rawData.error) throw new Error(rawData.error);
+            if (rawData.data) {
+                const groupedData = rawData.data.checklist.reduce<ChecklistCategory[]>((acc, item) => {
+                    let category = acc.find(c => c.category === item.category); 
+                    if (!category) { 
+                        category = { category: item.category, items: [] }; 
+                        acc.push(category); 
+                    } 
+                    category.items.push({ id: `${item.category.replace(/\s+/g, '-')}-${category.items.length}`, task: item.task, description: '', status: 'Pending' }); 
+                    return acc; 
+                }, []);
+                
+                const newChecklistState: GenerateDDChecklistOutput = { 
+                    reportTitle: rawData.data.title, 
+                    checklist: groupedData,
+                    timestamp: new Date().toISOString()
+                };
+                
+                setChecklistState(newChecklistState);
+
+                // Save to Firebase
+                const updatedCompany = { ...activeCompany, diligenceChecklist: newChecklistState };
+                const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
+                await updateUserProfile({ companies: updatedCompanies });
+
+            }
+          } catch (error: any) {
+              toast({ variant: "destructive", title: "Checklist Generation Failed", description: error.message });
+          }
       });
   };
 
-  const handleCheckChange = (categoryId: string, itemId: string, completed: boolean) => { setChecklistState(prevState => { if (!prevState.data) return prevState; const newData: GenerateDDChecklistOutput = { ...prevState.data, checklist: prevState.data.checklist.map(category => { if (category.category === categoryId) return { ...category, items: category.items.map(item => item.id === itemId ? { ...item, status: completed ? 'Completed' : 'Pending' } : item) }; return category; }) }; return { ...prevState, data: newData }; }); };
+  const updateChecklistInFirebase = (updatedChecklist: GenerateDDChecklistOutput) => {
+    if (!userProfile || !activeCompany) return;
+    const updatedCompany = { ...activeCompany, diligenceChecklist: updatedChecklist };
+    const updatedCompanies = userProfile.companies.map(c => c.id === activeCompany.id ? updatedCompany : c);
+    updateUserProfile({ companies: updatedCompanies });
+  };
+  
+  const handleCheckChange = (categoryId: string, itemId: string, completed: boolean) => { 
+      setChecklistState(prevState => { 
+        if (!prevState) return prevState; 
+        const newChecklist: GenerateDDChecklistOutput = { 
+          ...prevState, 
+          checklist: prevState.checklist.map(category => { 
+            if (category.category === categoryId) 
+              return { 
+                ...category, 
+                items: category.items.map(item => item.id === itemId ? { ...item, status: completed ? 'Completed' : 'Pending' } : item) 
+              }; 
+            return category; 
+          }) 
+        };
+        updateChecklistInFirebase(newChecklist);
+        return newChecklist;
+      }); 
+  };
   
   const handleShare = () => { navigator.clipboard.writeText(window.location.href); toast({ title: "Link Copied!", description: "A shareable link to this checklist has been copied." }); }
 
-  const { completedCount, totalCount, progress } = useMemo(() => { if (!checklistState.data) return { completedCount: 0, totalCount: 0, progress: 0 }; const allItems = checklistState.data.checklist.flatMap(c => c.items); const completedItems = allItems.filter(i => i.status === 'Completed').length; const totalItems = allItems.length; if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0 }; return { completedCount: completedItems.length, totalCount: totalItems, progress: Math.round((completedItems.length / totalItems) * 100) }; }, [checklistState.data]);
+  const { completedCount, totalCount, progress } = useMemo(() => { if (!checklistState) return { completedCount: 0, totalCount: 0, progress: 0 }; const allItems = checklistState.checklist.flatMap(c => c.items); const completedItems = allItems.filter(i => i.status === 'Completed').length; const totalItems = allItems.length; if (totalItems === 0) return { completedCount: 0, totalCount: 0, progress: 0 }; return { completedCount: completedItems.length, totalCount: totalItems, progress: Math.round((completedItems.length / totalItems) * 100) }; }, [checklistState]);
 
-  const filteredChecklist = useMemo(() => { if (!checklistState.data) return []; if (activeFilter === 'all') return checklistState.data.checklist; return checklistState.data.checklist.map(category => ({ ...category, items: category.items.filter(item => { if (activeFilter === 'completed') return item.status === 'Completed'; if (activeFilter === 'pending') return ['Pending', 'In Progress', 'Not Applicable'].includes(item.status); return true; }), })).filter(category => category.items.length > 0); }, [checklistState.data, activeFilter]);
+  const filteredChecklist = useMemo(() => { if (!checklistState) return []; if (activeFilter === 'all') return checklistState.checklist; return checklistState.checklist.map(category => ({ ...category, items: category.items.filter(item => { if (activeFilter === 'completed') return item.status === 'Completed'; if (activeFilter === 'pending') return ['Pending', 'In Progress', 'Not Applicable'].includes(item.status); return true; }), })).filter(category => category.items.length > 0); }, [checklistState, activeFilter]);
 
 
   const availableDealTypes = dealTypesByRole[userProfile.role] || dealTypesByRole.Founder;
@@ -353,18 +378,18 @@ const DataroomAudit = () => {
   return (
     <div className="space-y-6">
       <Card>
-          <CardHeader><CardTitle>{checklistState.data?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{checklistState?.reportTitle || "Dataroom Audit Tool"}</CardTitle><CardDescription>Generate a checklist to start your audit process.</CardDescription></CardHeader>
           <CardContent>
               <form ref={formRef} onSubmit={handleFormSubmit} className="flex flex-col sm:flex-row items-center gap-4 pb-6 border-b">
                 <input type="hidden" name="legalRegion" value={userProfile.legalRegion} />
                 <div className="space-y-1.5 w-full sm:w-auto sm:flex-1"><Label htmlFor="dealType">Deal / Audit Type</Label><Select name="dealType" defaultValue={availableDealTypes[0].value}><SelectTrigger id="dealType" className="min-w-[200px]"><SelectValue placeholder="Select type" /></SelectTrigger><SelectContent>{availableDealTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select></div>
-                <div className="w-full sm:w-auto self-end"><DataroomAuditSubmitButton isPending={isPending} isRegenerate={!!checklistState.data} /></div>
-                <div className="flex items-center gap-2 self-end"><Button variant="outline" size="icon" disabled={!checklistState.data} className="interactive-lift" onClick={handleShare}><Share2 className="h-4 w-4"/></Button></div>
+                <div className="w-full sm:w-auto self-end"><DataroomAuditSubmitButton isPending={isPending} isRegenerate={!!checklistState} /></div>
+                <div className="flex items-center gap-2 self-end"><Button variant="outline" size="icon" disabled={!checklistState} className="interactive-lift" onClick={handleShare}><Share2 className="h-4 w-4"/></Button></div>
               </form>
           </CardContent>
       </Card>
-      {isPending && !checklistState.data && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Generating your checklist...</p></div> )}
-      {checklistState.data && !isPending ? (
+      {isPending && !checklistState && ( <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-4 flex-1"><Loader2 className="h-12 w-12 text-primary animate-spin" /><p className="font-semibold text-lg text-foreground">Generating your checklist...</p></div> )}
+      {checklistState && !isPending ? (
         <div className="space-y-6 animate-in fade-in-50 duration-500">
             {checklistState.timestamp && <p className="text-xs text-muted-foreground text-center">📌 Last generated: {formatDistanceToNow(new Date(checklistState.timestamp), { addSuffix: true })}</p>}
             <div className="space-y-3"><div className="flex justify-between items-center text-sm font-medium"><Label>Dataroom Readiness ({completedCount}/{totalCount} Completed)</Label><span className="font-bold text-primary">{progress}%</span></div><Progress value={progress} /></div>
