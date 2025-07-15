@@ -12,7 +12,6 @@ import {
   Bolt,
   LayoutDashboard,
   Library,
-  LineChart,
   Loader2,
   Lock,
   MessageSquare,
@@ -34,6 +33,7 @@ import {
   ChevronRight,
   Scale,
   FileText,
+  LineChart,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
