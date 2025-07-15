@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Link from "next/link";
@@ -12,7 +11,6 @@ import {
   Bolt,
   LayoutDashboard,
   Library,
-  Loader2,
   Lock,
   MessageSquare,
   Network,
