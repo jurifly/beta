@@ -62,16 +62,7 @@ export function InviteMemberModal({ isOpen, onOpenChange }: InviteMemberModalPro
     reset();
   };
 
-  const availableRoles = () => {
-    if (userProfile?.role === 'CA') {
-        return ['Viewer', 'Editor'];
-    }
-    if (userProfile?.plan === 'Enterprise') {
-        return ['Admin', 'Member', 'Billing'];
-    }
-    // Default roles for Pro plan
-    return ['Manager', 'Associate'];
-  }
+  const availableRoles = ['Admin', 'Member', 'Viewer'];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -103,7 +94,7 @@ export function InviteMemberModal({ isOpen, onOpenChange }: InviteMemberModalPro
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableRoles().map(role => (
+                    {availableRoles.map(role => (
                        <SelectItem key={role} value={role}>{role}</SelectItem>
                     ))}
                   </SelectContent>

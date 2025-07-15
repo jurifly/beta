@@ -18,7 +18,7 @@ import type { TeamMember, Invite } from '@/lib/types';
 
 const mockRoles = [
     { name: 'Admin', description: 'Full access to all features, including billing and team management.', permissions: 12, icon: Shield },
-    { name: 'Member', description: 'Can view and edit documents, but cannot manage billing or team members.', permissions: 7, icon: Edit },
+    { name: 'Member', description: 'Can view and edit documents, and use AI tools. Cannot manage team or billing.', permissions: 7, icon: Edit },
     { name: 'Viewer', description: 'Can only view documents and data. Cannot make any changes.', permissions: 3, icon: Eye },
 ];
 
@@ -28,7 +28,7 @@ export default function TeamPage() {
     const { toast } = useToast();
 
     const teamMembers = useMemo(() => userProfile?.teamMembers || [], [userProfile]);
-    const pendingInvites = useMemo(() => userProfile?.invites || [], [userProfile]);
+    const pendingInvites = useMemo(() => userProfile?.invites?.filter(inv => inv.type !== 'founder_to_ca') || [], [userProfile]);
     const activityLog = useMemo(() => userProfile?.activityLog || [], [userProfile]);
 
     const handleRevokeInvite = async (inviteId: string) => {
