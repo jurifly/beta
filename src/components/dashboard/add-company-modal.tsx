@@ -36,6 +36,7 @@ const companyTypes = [
     { id: "llc", name: "Limited Liability Company (LLC)" },
     { id: "c_corp", name: "C Corporation" },
     { id: "s_corp", name: "S Corporation" },
+    { id: "listed_co", name: "Listed Company (Manual)" },
 ];
 
 const companySchema = z.object({
@@ -43,12 +44,13 @@ const companySchema = z.object({
   type: z.string().min(1, "Please select a company type."),
   legalRegion: z.string().min(1, "Legal region is required."),
   cin: z.string().optional(),
-  pan: z.string().length(10, "PAN/Tax ID must be 10 characters.").or(z.string().min(1, "PAN/Tax ID is required.")),
+  pan: z.string().length(10, "PAN/Tax ID must be 10 characters.").or(z.string().min(1, "PAN/Tax ID is required.")).optional().or(z.literal('')),
   gstin: z.string().length(15, "GSTIN/VAT ID must be 15 characters.").optional().or(z.literal('')),
-  incorporationDate: z.string().min(1, "Incorporation date is required."),
-  sector: z.string().min(1, "Industry / Sector is required."),
-  location: z.string().min(1, "Location is required."),
+  incorporationDate: z.string().min(1, "Incorporation date is required.").optional().or(z.literal('')),
+  sector: z.string().min(1, "Industry / Sector is required.").optional().or(z.literal('')),
+  location: z.string().min(1, "Location is required.").optional().or(z.literal('')),
 }).refine((data) => {
+    if (data.type === 'Listed Company (Manual)') return true;
     const cinRequiredTypes = ["Private Limited Company", "One Person Company", "Limited Liability Partnership"];
     if (data.legalRegion === 'India' && cinRequiredTypes.includes(data.type)) {
         return data.cin && data.cin.length === 21;
@@ -135,13 +137,22 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
 
   const onSubmit = async (data: FormData) => {
     if (!userProfile) return;
+    
+    // For listed companies, some fields are optional, so we provide defaults.
+    const finalData = {
+        ...data,
+        pan: data.pan || 'N/A',
+        incorporationDate: data.incorporationDate || new Date().toISOString().split('T')[0],
+        sector: data.sector || 'N/A',
+        location: data.location || 'N/A',
+    };
 
     let updatedCompanies: Company[];
     let activeCompanyId = userProfile.activeCompanyId;
     
     const companyData: Company = {
         id: companyToEdit?.id || Date.now().toString(),
-        ...data,
+        ...finalData,
     };
 
     if (isEditMode && companyToEdit) {
@@ -177,6 +188,9 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   
   const panLabel = selectedRegion === 'India' ? 'Company PAN' : 'Tax ID / EIN';
   const gstinLabel = selectedRegion === 'India' ? 'GSTIN (Optional)' : 'VAT ID (Optional)';
+  
+  const isListedManual = selectedCompanyType === 'Listed Company (Manual)';
+  const lastStep = isListedManual ? 1 : 3;
 
 
   const renderAddForm = () => (
@@ -194,7 +208,9 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
             <div className="space-y-3">
               <Label>What is the type of the company?</Label>
               <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {companyTypes.map((type) => (
+                  {companyTypes
+                    .filter(type => isCA ? true : type.name !== 'Listed Company (Manual)')
+                    .map((type) => (
                       <Label key={type.id} htmlFor={type.id} className="flex items-start space-x-3 border rounded-md p-3 hover:bg-muted has-[input:checked]:border-primary has-[input:checked]:bg-primary/10 transition-colors cursor-pointer text-sm font-medium">
                           <RadioGroupItem value={type.name} id={type.id} className="mt-0.5 shrink-0" />
                           <span className="flex-1">{type.name}</span>
@@ -221,7 +237,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
         </div>
       )}
       
-      {step === 2 && (
+      {step === 2 && !isListedManual && (
         <div className="space-y-4">
            {selectedRegion === 'India' && <Controller name="cin" control={control} render={({ field }) => (
               <div className="space-y-2">
@@ -271,7 +287,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
         </div>
       )}
 
-      {step === 3 && (
+      {step === 3 && !isListedManual && (
           <div className="space-y-4">
                <Controller name="incorporationDate" control={control} render={({ field }) => (
                   <div className="space-y-2">
@@ -384,7 +400,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
             </DialogDescription>
           </DialogHeader>
           
-          {!isEditMode && <Progress value={progressValue} className="w-full h-2" />}
+          {!isEditMode && !isListedManual && <Progress value={progressValue} className="w-full h-2" />}
           
           <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto pr-2 -mr-4 pl-1">
             <div className="space-y-6 py-4 pr-4">
@@ -408,7 +424,7 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
               <>
                 {step > 1 && <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>}
                 <div className="flex-1"></div>
-                {step < STEPS.length ? (
+                {step < lastStep ? (
                     <Button type="button" onClick={nextStep} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
                 ) : (
                     <Button type="button" onClick={handleSubmit(onSubmit)} className="w-full sm:w-auto" disabled={isSubmitting}>

@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/auth';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, LayoutDashboard, Briefcase, Plus } from 'lucide-react';
+import { Loader2, ArrowLeft, LayoutDashboard, Briefcase, Plus, LineChart } from 'lucide-react';
 import ClientDashboardView from './ClientDashboardView';
 import { Button } from '@/components/ui/button';
 import type { UserProfile, Company, ClientMatter } from '@/lib/types';
@@ -15,6 +15,7 @@ import { AddMatterModal } from '@/components/dashboard/add-matter-modal';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { FounderAnalytics } from '../../analytics/AnalyticsViews';
 
 const MattersView = ({ clientCompany }: { clientCompany: Company }) => {
     const { updateUserProfile, userProfile } = useAuth();
@@ -137,10 +138,14 @@ export default function ClientDetailPage() {
       <Tabs defaultValue="dashboard">
           <TabsList>
               <TabsTrigger value="dashboard"><LayoutDashboard className="mr-2"/>Dashboard</TabsTrigger>
+              <TabsTrigger value="analytics"><LineChart className="mr-2"/>Analytics</TabsTrigger>
               <TabsTrigger value="matters"><Briefcase className="mr-2"/>Matters</TabsTrigger>
           </TabsList>
           <TabsContent value="dashboard" className="mt-6">
               <ClientDashboardView userProfile={clientViewProfile} />
+          </TabsContent>
+          <TabsContent value="analytics" className="mt-6">
+              <FounderAnalytics />
           </TabsContent>
            <TabsContent value="matters" className="mt-6">
               <MattersView clientCompany={clientCompany} />
