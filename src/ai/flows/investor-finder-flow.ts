@@ -19,11 +19,11 @@ const InvestorSchema = z.object({
     firmName: z.string().describe("The name of the VC firm or Angel Network."),
     sectorFocus: z.string().describe("A comma-separated list of their primary investment sectors."),
     chequeSize: z.string().describe("Their typical investment size range, e.g., '$100k - $500k', '₹1 Cr - ₹5 Cr'."),
-    website: z.string().url().describe("The official website URL of the firm."),
-    linkedin: z.string().url().describe("The official LinkedIn page URL for the firm."),
+    website: z.string().describe("The official website URL of the firm."),
+    linkedin: z.string().describe("The official LinkedIn page URL for the firm."),
     keyPartners: z.array(z.object({
         name: z.string().describe("Full name of the key partner or decision-maker."),
-        linkedin: z.string().url().describe("The LinkedIn profile URL of the partner."),
+        linkedin: z.string().describe("The LinkedIn profile URL of the partner."),
     })).describe("A list of 1-2 key partners at the firm."),
     portfolio: z.array(z.string()).optional().describe("A few notable portfolio companies."),
 });
