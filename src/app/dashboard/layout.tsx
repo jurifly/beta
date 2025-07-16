@@ -39,6 +39,7 @@ import {
   ChevronDown,
   CheckCircle,
   Flame,
+  GanttChartSquare,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -232,7 +233,7 @@ const navItemConfig: NavItemConfig = {
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
   learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
   latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss },
-  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: BookHeart },
+  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare },
 } as const;
 
 
@@ -248,6 +249,8 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.playbook },
+  { ...navItemConfig.learnHub },
+  { ...navItemConfig.latestNews },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.connections, locked: true },
@@ -255,7 +258,6 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
-  { ...navItemConfig.latestNews, locked: true },
 ];
 
 const caNavItems: ThemedNavItem[] = [
@@ -269,12 +271,13 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.playbook },
+  { ...navItemConfig.learnHub },
+  { ...navItemConfig.latestNews },
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.workflows, locked: true },
   { ...navItemConfig.clauseLibrary, locked: false },
   { ...navItemConfig.community, locked: true },
-  { ...navItemConfig.latestNews, locked: true },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
