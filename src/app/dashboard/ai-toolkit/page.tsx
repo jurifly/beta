@@ -1270,6 +1270,27 @@ const PenaltyPredictorTab = () => {
     )
 }
 
+const WorkflowTab = () => {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Workflow Automation</CardTitle>
+                <CardDescription>This feature is under development and will be available soon.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col items-center justify-center text-center p-8 min-h-[300px] border-2 border-dashed rounded-md bg-muted/40 h-full">
+                    <Workflow className="w-16 h-16 text-primary/20 mb-4"/>
+                    <p className="font-semibold text-lg">Coming Soon</p>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                        Create powerful automations to streamline compliance processes and approvals.
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+
 // --- Main AI Toolkit Page ---
 export default function AiToolkitPage() {
     const { userProfile, isDevMode } = useAuth();
