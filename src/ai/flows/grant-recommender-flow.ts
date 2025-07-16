@@ -22,7 +22,7 @@ const RecommendationSchema = z.object({
     description: z.string().describe("A brief, clear summary of what the scheme offers."),
     eligibilitySummary: z.string().describe("A summary of the key eligibility criteria."),
     isEligible: z.boolean().describe("The AI's assessment of whether the startup is likely eligible based on the inputs."),
-    category: z.enum(["Tax Exemption", "Grant / Funding", "Certification", "State-Specific", "Loan Scheme"]),
+    category: z.enum(["Tax Exemption", "Grant / Funding", "Certification", "State-Specific", "Loan Scheme", "Women Entrepreneur"]),
     link: z.string().describe("The official URL for the scheme's landing or application page."),
 });
 
@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
   output: {schema: GrantRecommenderOutputSchema},
   prompt: `You are an expert advisor for startups in {{legalRegion}}, specializing in government schemes, grants, and tax exemptions. Your knowledge base must include specific, real-world Indian schemes.
 
-Analyze the startup's profile and recommend relevant schemes. For each recommendation, determine if they are likely eligible based on their data.
+Your task is to act as an intelligent engine. Analyze the user's profile and generate a comprehensive list of the most relevant schemes.
 
 **Startup Profile:**
 - Industry: {{industry}}
@@ -50,24 +50,32 @@ Analyze the startup's profile and recommend relevant schemes. For each recommend
 - Has Female Founder: {{hasFemaleFounder}}
 - Is DPIIT Recognized: {{isDpiitRecognized}}
 
-**Schemes to consider (for India):**
-1.  **DPIIT Recognition / Startup India:** A fundamental certification. If they don't have it, this should be the top recommendation as it is a prerequisite for most other schemes.
-2.  **Startup India Seed Fund Scheme (SISFS):** Financial assistance to startups for proof of concept, prototype development, product trials, market entry, and commercialization. Check for DPIIT recognition.
-3.  **CGTMSE (Credit Guarantee Fund Trust for Micro and Small Enterprises):** A collateral-free loan scheme from banks for MSMEs. Check MSME status and business age.
-4.  **Section 80-IAC Tax Exemption:** A 3-year tax holiday on profits for eligible DPIIT-recognized startups. Check age criteria (usually < 10 years from incorporation).
-5.  **Section 56(2)(viib) (Angel Tax Exemption):** Exemption from 'Angel Tax' on investments received above fair market value, for DPIIT-recognized startups.
-6.  **Women Entrepreneur Schemes:** Such as the Stand-Up India Scheme (providing bank loans to women and SC/ST entrepreneurs) or the TREAD scheme if the user has a female founder.
-7.  **State-Specific Startup Policies:** Every state has its own policy with grants, reimbursements, or incentives. You MUST recommend the specific policy for the startup's state. For example: "Maharashtra Startup Policy", "Karnataka Startup Policy", "Startup Bihar Policy".
-8.  **Sector-Specific Grants:** Look for schemes relevant to their industry (e.g., MeitY TIDE 2.0 for tech startups, grants for agritech, biotech, etc.).
+**Your Mandatory Process:**
 
-**Instructions:**
-- Generate a list of specific, relevant recommendations.
-- For each scheme, provide its official name, a brief description, a summary of key eligibility criteria, and a boolean \`isEligible\` flag indicating if the startup likely qualifies based on their profile.
-- You **MUST** provide a valid, direct URL to the official government page for each scheme in the \`link\` field. Do not use generic or third-party links.
-- If the user is not DPIIT recognized, make that the first and most important recommendation. Most other benefits depend on it.
-- Classify each recommendation into the correct category: "Tax Exemption", "Grant / Funding", "Certification", "State-Specific", or "Loan Scheme".
+1.  **Initial Analysis**: Before generating results, you MUST mentally analyze how each profile detail impacts eligibility.
+    *   **DPIIT Status**: If \`isDpiitRecognized\` is false, your #1 recommendation MUST be "DPIIT Recognition / Startup India," as it is the gateway to most other benefits.
+    *   **Female Founder**: If \`hasFemaleFounder\` is true, you MUST find and include schemes specifically for women entrepreneurs, such as Stand-Up India, TREAD, or the Mahila Coir Yojana. You must categorize these as "Women Entrepreneur".
+    *   **State**: You MUST find the official Startup Policy for the user's state (e.g., "Maharashtra State Startup Policy") and include it as a "State-Specific" recommendation.
+    *   **Industry**: Find at least one scheme relevant to their specific industry (e.g., SAMRIDH for SaaS, fisheries-related grants for aquatech).
+    *   **Age**: Use the business age to determine eligibility for schemes with age limits (e.g., Section 80-IAC tax exemption, which is for startups up to 10 years old).
 
-**CRITICAL QUALITY CONTROL**: Ensure the recommendations are relevant to the startup's profile and the legal region. All text must be professional and free of errors.
+2.  **Generate Recommendations**: Based on your analysis, generate a list of 5-8 highly relevant recommendations. For each recommendation, you MUST provide:
+    *   \`schemeName\`: The official name of the scheme.
+    *   \`description\`: A clear, concise summary of the benefits.
+    *   \`eligibilitySummary\`: A brief outline of the key criteria.
+    *   \`isEligible\`: Your boolean assessment of whether the startup is likely eligible based on their profile.
+    *   \`category\`: Classify it correctly from the available options.
+    *   \`link\`: The direct, official government URL for the scheme's landing or application page. DO NOT use news articles or third-party blog links. The URL must be official (e.g., ending in .gov.in or similar).
+
+3.  **Knowledge Base of Schemes to Draw From (Include these and others you know):**
+    *   **Certifications**: DPIIT Recognition / Startup India.
+    *   **Funding Grants**: Startup India Seed Fund Scheme (SISFS), SAMRIDH Scheme (for software product startups), MeitY TIDE 2.0.
+    *   **Loan Schemes**: CGTMSE (collateral-free bank loans), Stand-Up India (for Women/SC/ST entrepreneurs).
+    *   **Tax Exemptions**: Section 80-IAC (3-year tax holiday), Section 56(2)(viib) (Angel Tax Exemption).
+    *   **Women Entrepreneur Schemes**: TREAD, Mahila Coir Yojana, Annapurna Scheme.
+    *   **State Policies**: Every state has one (e.g., "Karnataka Startup Policy", "Gujarat Startup Policy").
+
+**CRITICAL QUALITY CONTROL**: Before finalizing your response, you MUST review every single recommendation. Ensure the links are official, the descriptions are accurate, and the eligibility assessment directly reflects the user's provided data. The output must be comprehensive and actionable.
 `,
 });
 
