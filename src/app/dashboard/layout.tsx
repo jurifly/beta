@@ -205,7 +205,7 @@ type NavItemConfig = {
         href: string;
         translationKey: keyof typeof translations;
         icon: React.ElementType;
-        locked?: boolean;
+        locked?: boolean | 'pro' | 'beta';
         label?: string; // For overrides
         badge?: string; // For "Beta", "New", etc.
     }
@@ -213,27 +213,33 @@ type NavItemConfig = {
 
 const navItemConfig: NavItemConfig = {
   dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
-  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, locked: true },
+  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, locked: 'beta' },
   aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
   launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
   capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   docVault: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
-  community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: true },
+  community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: 'beta' },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: Briefcase },
-  team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: true },
-  clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library },
-  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: true },
-  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: true },
+  team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: 'pro' },
+  clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library, locked: 'pro' },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: 'beta' },
+  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: 'beta' },
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
+  analytics: { href: "/dashboard/analytics", translationKey: "analytics", icon: LineChart, locked: 'pro' },
+  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare },
+  teamManagement: { href: "/dashboard/team", translationKey: "teamManagement", icon: Users, locked: 'pro' },
+  clientManagement: { href: "/dashboard/client-management", translationKey: "clientManagement", icon: Users, locked: true },
+  aiPracticeSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiPracticeSuite", icon: Sparkles },
+  aiCounselTools: { href: "/dashboard/ai-toolkit", translationKey: "aiCounselTools", icon: Sparkles },
+  aiComplianceSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiComplianceSuite", icon: Sparkles },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
   learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
   latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss },
-  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare },
 } as const;
 
 
@@ -249,21 +255,21 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.playbook },
-  { ...navItemConfig.learnHub },
-  { ...navItemConfig.reportCenter, locked: true },
-  { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
-  { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.docVault },
-  { ...navItemConfig.clauseLibrary, locked: true },
-  { ...navItemConfig.community, locked: true },
-  { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
+  { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
+  { ...navItemConfig.team, label_override_key: "teamManagement" },
+  { ...navItemConfig.clauseLibrary },
+  { ...navItemConfig.reportCenter },
+  { ...navItemConfig.connections },
+  { ...navItemConfig.community },
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.latestNews },
 ];
 
 const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.dashboard },
   { ...navItemConfig.clients },
-  { ...navItemConfig.team, locked: true },
+  { ...navItemConfig.team, locked: 'pro' },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
   { ...navItemConfig.capTable },
   { ...navItemConfig.launchPad },
@@ -271,12 +277,12 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.playbook },
-  { ...navItemConfig.learnHub },
   { ...navItemConfig.reportCenter },
-  { ...navItemConfig.connections, locked: true },
-  { ...navItemConfig.workflows, locked: true },
-  { ...navItemConfig.clauseLibrary, locked: false },
-  { ...navItemConfig.community, locked: true },
+  { ...navItemConfig.connections, locked: 'beta' },
+  { ...navItemConfig.workflows, locked: 'beta' },
+  { ...navItemConfig.clauseLibrary },
+  { ...navItemConfig.community, locked: 'beta' },
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.latestNews },
 ];
 
@@ -287,9 +293,9 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clauseLibrary,
   { ...navItemConfig.playbook },
   { ...navItemConfig.invitations },
-  { ...navItemConfig.connections, locked: true },
+  { ...navItemConfig.connections, locked: 'beta' },
   navItemConfig.portfolioAnalytics,
-  { ...navItemConfig.latestNews, locked: true },
+  { ...navItemConfig.latestNews },
 ];
 
 const enterpriseNavItems: ThemedNavItem[] = [
@@ -299,7 +305,7 @@ const enterpriseNavItems: ThemedNavItem[] = [
   navItemConfig.portfolioAnalytics,
   { ...navItemConfig.playbook },
   navItemConfig.docVault,
-  { ...navItemConfig.latestNews, locked: true },
+  { ...navItemConfig.latestNews },
 ];
 
 const getSidebarNavItems = (role: UserRole) => {
@@ -356,9 +362,10 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
 };
 
 const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
-    const { userProfile } = useAuth();
+    const { userProfile, isDevMode } = useAuth();
     if (!userProfile) return null;
 
+    const isPro = planHierarchy[userProfile.plan] > 0;
     const bottomItemsHrefs = getBottomNavItems(userProfile.role).map(item => item.href);
 
     // Items for the 'More' menu are those that are in the role's nav list but not in the bottom bar
@@ -383,16 +390,17 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
                         {menuItems.map(item => {
                             const labelKey = item.label_override_key || item.translationKey;
                             const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
+                             const isLocked = (item.locked === 'pro' && !isPro && !isDevMode) || item.locked === 'beta';
                             return (
                              <SheetTrigger asChild key={item.href}>
                                 <Link
-                                    href={item.href}
-                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted"
+                                    href={isLocked ? '#' : item.href}
+                                    className={cn("flex items-center justify-between p-3 rounded-lg hover:bg-muted", isLocked && "opacity-50 cursor-not-allowed")}
                                 >
                                     <div className="flex items-center gap-4">
                                         <item.icon className="h-5 w-5 text-muted-foreground" />
                                         <span className="font-medium">{label}</span>
-                                        {item.locked && (
+                                        {isLocked && (
                                             <Lock className="ml-2 h-3.5 w-3.5 text-muted-foreground/70" />
                                         )}
                                     </div>
@@ -428,9 +436,10 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
 
 const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
     const pathname = usePathname();
-    const { userProfile } = useAuth();
+    const { userProfile, isDevMode } = useAuth();
     if (!userProfile) return null;
 
+    const isPro = planHierarchy[userProfile.plan] > 0;
     const bottomNavItems = getBottomNavItems(userProfile.role);
 
     return (
@@ -442,14 +451,16 @@ const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language
                     
                     const labelKey = item.label_override_key || item.translationKey;
                     const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
+                    const isLocked = (item.locked === 'pro' && !isPro && !isDevMode) || item.locked === 'beta';
 
                     return (
                         <Link
                             key={item.href}
-                            href={item.href}
+                            href={isLocked ? '#' : item.href}
                             className={cn(
                                 "inline-flex flex-col items-center justify-center px-1 text-center group",
-                                isActive ? "text-primary" : "text-muted-foreground"
+                                isActive ? "text-primary" : "text-muted-foreground",
+                                isLocked && "opacity-50 cursor-not-allowed"
                             )}
                         >
                             <item.icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
@@ -653,7 +664,7 @@ export default function DashboardLayout({
   return <AppShell>{children}</AppShell>;
 }
 
-const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (feature: string) => void, lang: Language }) => {
+const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (featureName: string, type: 'pro' | 'beta') => void, lang: Language }) => {
     const pathname = usePathname();
     const { isDevMode } = useAuth();
     const isPro = planHierarchy[userProfile.plan] > 0;
@@ -661,9 +672,15 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
         const labelKey = item.label_override_key || item.translationKey;
         const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
-        if (item.locked && !isPro && !isDevMode) {
+        const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
+        const isLockedBeta = item.locked === 'beta';
+
+        if (isLockedPro) {
             e.preventDefault();
-            onLockedFeatureClick(label);
+            onLockedFeatureClick(label, 'pro');
+        } else if (isLockedBeta) {
+            e.preventDefault();
+            onLockedFeatureClick(label, 'beta');
         }
     };
 
@@ -685,10 +702,13 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
               {navItems.map((item) => {
                 const isActive = (item.href === '/dashboard' && pathname === item.href) ||
                                  (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                const isLocked = item.locked && !isPro && !isDevMode;
+                
+                const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
+                const isLockedBeta = item.locked === 'beta';
+                const isLocked = isLockedPro || isLockedBeta;
+
                 const labelKey = item.label_override_key || item.translationKey;
                 const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
-
 
                 return (
                     <Link

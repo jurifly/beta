@@ -10,19 +10,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Lock, Zap } from "lucide-react";
+import { Lock, Zap, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/auth";
 
 interface FeatureLockedModalProps {
   featureName: string | null;
   onOpenChange: (isOpen: boolean) => void;
+  type?: 'pro' | 'beta';
 }
 
-const wittyMessages: Record<string, { title: string; lines: string[]; eta?: string }> = {
+const wittyMessages: Record<string, { title: string; lines: string[]; }> = {
     "Team Management": {
         title: "Patience, Young Padawan",
-        lines: ["Managing a team is a big deal.", "This feature is still in the Jedi Council chambers. Coming soon!"],
+        lines: ["Managing a team is a big deal.", "This feature is part of our Pro plan."],
     },
     "Connections": {
         title: "It's Not You, It's Us",
@@ -38,19 +39,11 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta?: stri
     },
     "Clause Library": {
         title: "Shhh, the Clauses are Sleeping",
-        lines: ["Our extensive library of pre-built legal clauses is being polished.", "It will be available to all after the official launch."],
+        lines: ["Our extensive library of pre-built legal clauses is being polished.", "It will be available to Pro users soon."],
     },
-    "Round Modeling": {
-        title: "Future-Gazing in Progress",
-        lines: ["Our dilution calculator is powerful, but it's still brewing.", "This Pro feature will be available soon."],
-    },
-    "Latest News": {
-        title: "Hold the Front Page!",
-        lines: ["Our AI news-bots are being trained to find the juiciest updates.", "This feature will roll out to everyone post-beta."],
-    },
-    "Reconciliation": {
-        title: "The Robots are Reconciling",
-        lines: ["Automated document reconciliation is a powerful tool we're perfecting.", "It'll be available for everyone after the beta launch."],
+    "Analytics": {
+        title: "The Future is Data-Driven",
+        lines: ["Unlock deep insights into your compliance and financial health.", "This powerful feature is available on our Pro plan."],
     },
     "Workflows": {
         title: "Don't Just Work, Workflow!",
@@ -62,11 +55,22 @@ const wittyMessages: Record<string, { title: string; lines: string[]; eta?: stri
     }
 };
 
-export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedModalProps) {
+const proUpgradeContent = {
+    title: "Upgrade to Pro",
+    lines: ["This powerful feature is exclusively available on our Pro plan.", "Upgrade now to unlock this and much more."]
+}
+
+export function FeatureLockedModal({ featureName, onOpenChange, type = 'beta' }: FeatureLockedModalProps) {
   const isOpen = !!featureName;
-  const content = (featureName && wittyMessages[featureName]) || wittyMessages.default;
   const { isDevMode } = useAuth();
 
+  let content;
+  if (type === 'pro') {
+      content = proUpgradeContent;
+  } else {
+      content = (featureName && wittyMessages[featureName]) || wittyMessages.default;
+  }
+  
   if (isDevMode) return null;
   
   return (
@@ -82,13 +86,17 @@ export function FeatureLockedModal({ featureName, onOpenChange }: FeatureLockedM
                 <div className="space-y-1 text-foreground text-center">
                     {content.lines.map((line, index) => <p key={index}>{line}</p>)}
                 </div>
-                {content.eta && <p className="text-muted-foreground/80 font-medium">{content.eta}</p>}
-                <Button asChild size="lg" className="w-full interactive-lift" onClick={() => onOpenChange(false)}>
-                    <div className="flex items-center gap-2">
-                        <Zap className="mr-2 h-4 w-4"/>
+                 {type === 'pro' ? (
+                    <Button asChild size="lg" className="w-full interactive-lift" onClick={() => onOpenChange(false)}>
+                        <Link href="/dashboard/settings?tab=subscription">
+                            <Zap className="mr-2 h-4 w-4"/> Upgrade Now
+                        </Link>
+                    </Button>
+                 ) : (
+                    <Button size="lg" className="w-full interactive-lift" onClick={() => onOpenChange(false)}>
                         Got It!
-                    </div>
-                </Button>
+                    </Button>
+                 )}
             </div>
           </DialogDescription>
         </DialogHeader>
