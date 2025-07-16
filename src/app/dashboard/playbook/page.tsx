@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, FolderCheck, RefreshCw, Share2, GanttChartSquare, Gift, CheckCircle, Building2, Banknote, ShieldCheck, Handshake, PiggyBank, ArrowRight, ExternalLink } from 'lucide-react';
+import { Loader2, Sparkles, FolderCheck, RefreshCw, Share2, GanttChartSquare, Gift, CheckCircle, Building2, Banknote, ShieldCheck, Handshake, PiggyBank, ArrowRight, ExternalLink, Linkedin, Search as SearchIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
@@ -22,15 +22,16 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format, formatDistanceToNow, differenceInMonths } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import * as AiActions from '@/app/dashboard/ai-toolkit/actions';
+import * as AiActions from './actions';
 import type { GenerateDDChecklistOutput, ChecklistCategory, UserProfile } from "@/lib/types";
 import type { GenerateChecklistOutput as RawChecklistOutput } from '@/ai/flows/generate-checklist-flow';
 import type { GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
+import type { InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 // --- Dataroom Audit Tab ---
 
 const initialDiligenceState: { data: RawChecklistOutput | null; error: string | null } = { data: null, error: null };
-type ChecklistState = { data: GenerateDDChecklistOutput | null };
 
 const dealTypesByRole = {
   Founder: [ { value: "Pre-seed / Seed Funding", label: "Pre-seed / Seed Funding" }, { value: "Series A Funding", label: "Series A Funding" }, { value: "Series B/C+ Funding", label: "Series B/C+ Funding" }, { value: "Venture Debt Financing", label: "Venture Debt Financing" }, { value: "Merger & Acquisition (Sell-Side)", label: "Merger & Acquisition (Sell-Side)" }, { value: "General Dataroom Prep", label: "General Dataroom Prep" }, ],
@@ -230,7 +231,7 @@ const GrantRecommenderTab = () => {
         resolver: zodResolver(grantRecommenderSchema),
         defaultValues: {
             industry: activeCompany?.sector || '',
-            location: activeCompany?.location.split(',')[1]?.trim() || '',
+            location: activeCompany?.location.split(',')[0]?.trim() || '',
         }
     });
 
@@ -259,8 +260,9 @@ const GrantRecommenderTab = () => {
         "Certification": ShieldCheck,
         "State-Specific": Building2,
         "Loan Scheme": Handshake,
+        "Women Entrepreneur": "♀", // Using an emoji for simplicity
         "Default": Gift
-    }
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
@@ -278,7 +280,7 @@ const GrantRecommenderTab = () => {
                         </div>
                         <div className="space-y-2">
                            <Label htmlFor="location">State of Operation</Label>
-                           <Controller name="location" control={control} render={({ field }) => <Input id="location" {...field} />} />
+                           <Controller name="location" control={control} render={({ field }) => <Input id="location" placeholder="e.g. Maharashtra" {...field} />} />
                            {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
                         </div>
                         <div className="flex items-center space-x-2">
@@ -342,12 +344,147 @@ const GrantRecommenderTab = () => {
     )
 }
 
+// --- Investor Discovery Tab ---
+const investorFinderSchema = z.object({
+  industry: z.string().min(1, "Industry is required."),
+  stage: z.enum(['Pre-seed', 'Seed', 'Series A']),
+  location: z.string().min(1, "Location is required."),
+});
+type InvestorFinderFormData = z.infer<typeof investorFinderSchema>;
+
+const InvestorDiscoveryTab = () => {
+    const { userProfile, deductCredits } = useAuth();
+    const [result, setResult] = useState<InvestorFinderOutput | null>(null);
+    const { toast } = useToast();
+    
+    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
+
+    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<InvestorFinderFormData>({
+        resolver: zodResolver(investorFinderSchema),
+        defaultValues: {
+            industry: activeCompany?.sector || '',
+            stage: 'Seed',
+            location: activeCompany?.location.split(',')[0]?.trim() || '',
+        }
+    });
+
+    const onSubmit = async (data: InvestorFinderFormData) => {
+        if (!userProfile) return;
+        if (!await deductCredits(2)) return;
+
+        setResult(null);
+
+        try {
+            const response = await AiActions.findInvestorsAction({
+                ...data,
+                legalRegion: userProfile.legalRegion,
+            });
+            setResult(response);
+            toast({ title: "Investor List Generated!", description: "We've found some potential investors for your startup." });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        }
+    };
+    
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+                 <Card className="interactive-lift">
+                    <CardHeader>
+                        <CardTitle>Investor Discovery</CardTitle>
+                        <CardDescription>Find VCs and Angel Networks that match your startup's profile.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                           <Label htmlFor="industry">Industry / Sector</Label>
+                           <Controller name="industry" control={control} render={({ field }) => <Input id="industry" placeholder="e.g. B2B SaaS, Fintech" {...field} />} />
+                           {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                           <Label>Funding Stage</Label>
+                           <Controller name="stage" control={control} render={({ field }) => (
+                                <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">
+                                  {['Pre-seed', 'Seed', 'Series A'].map(stage => (
+                                    <Label key={stage} className={cn("p-2 border rounded-md text-center cursor-pointer", field.value === stage && 'bg-primary/10 border-primary ring-1 ring-primary')}>
+                                      <RadioGroupItem value={stage} className="sr-only"/>
+                                      {stage}
+                                    </Label>
+                                  ))}
+                                </RadioGroup>
+                           )} />
+                        </div>
+                         <div className="space-y-2">
+                           <Label htmlFor="location">Primary Location</Label>
+                           <Controller name="location" control={control} render={({ field }) => <Input id="location" placeholder="e.g. Bengaluru, Delhi NCR" {...field} />} />
+                           {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                         <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <SearchIcon className="mr-2 h-4 w-4" />}
+                            Find Investors (2 Credits)
+                        </Button>
+                    </CardFooter>
+                 </Card>
+            </form>
+             <div className="lg:col-span-3">
+                 <Card className="min-h-[400px] interactive-lift">
+                    <CardHeader><CardTitle>AI-Curated Investor List</CardTitle></CardHeader>
+                     <CardContent>
+                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Scanning our investor network...</p></div>}
+                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><SearchIcon className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your investor matches will appear here.</p></div>}
+                        {result && (
+                            <Accordion type="multiple" className="w-full space-y-4 animate-in fade-in-50">
+                                {result.investors.map((investor, i) => (
+                                    <AccordionItem key={i} value={`item-${i}`} className="border-0">
+                                        <Card>
+                                            <AccordionTrigger className="p-4 hover:no-underline text-left">
+                                                <div className="flex-1 space-y-1">
+                                                    <p className="font-semibold">{investor.firmName}</p>
+                                                    <p className="text-sm text-muted-foreground">{investor.chequeSize}</p>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="p-4 pt-0">
+                                                <div className="space-y-3">
+                                                    <div className="flex flex-wrap gap-2">{investor.sectorFocus.split(',').map(s => <Badge key={s} variant="secondary">{s.trim()}</Badge>)}</div>
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold mb-1">KEY PARTNERS</h4>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            {investor.keyPartners.map(p => <a key={p.name} href={p.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm flex items-center gap-1.5 hover:underline text-blue-600"><Linkedin className="w-3.5 h-3.5"/>{p.name}</a>)}
+                                                        </div>
+                                                    </div>
+                                                    {investor.portfolio && investor.portfolio.length > 0 && (
+                                                       <div>
+                                                        <h4 className="text-xs font-semibold mb-1">NOTABLE PORTFOLIO</h4>
+                                                        <p className="text-sm text-muted-foreground">{investor.portfolio.join(', ')}</p>
+                                                       </div>
+                                                    )}
+                                                     <div className="flex gap-2 pt-2 border-t">
+                                                        <Button asChild size="sm" variant="outline"><a href={investor.website} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 w-3.5 h-3.5"/>Website</a></Button>
+                                                        <Button asChild size="sm" variant="outline"><a href={investor.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="mr-2 w-3.5 h-3.5"/>LinkedIn</a></Button>
+                                                     </div>
+                                                </div>
+                                            </AccordionContent>
+                                        </Card>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        )}
+                     </CardContent>
+                 </Card>
+            </div>
+        </div>
+    )
+};
+
 // --- Main Page Component ---
 export default function PlaybookPage() {
     const { userProfile } = useAuth();
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;
     }
+
+    const showInvestorFinder = userProfile.role === 'Founder';
 
     return (
         <div className="space-y-6">
@@ -357,9 +494,10 @@ export default function PlaybookPage() {
             </div>
             
             <Tabs defaultValue="audit" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className={cn("grid w-full", showInvestorFinder ? "grid-cols-3" : "grid-cols-2")}>
                     <TabsTrigger value="audit"><GanttChartSquare className="mr-2"/>Dataroom Audit</TabsTrigger>
                     <TabsTrigger value="schemes"><Gift className="mr-2"/>Grant Recommender</TabsTrigger>
+                    {showInvestorFinder && <TabsTrigger value="investors"><SearchIcon className="mr-2"/>Investor Discovery</TabsTrigger>}
                 </TabsList>
                 <TabsContent value="audit" className="mt-6">
                     <DataroomAuditTab />
@@ -367,9 +505,13 @@ export default function PlaybookPage() {
                 <TabsContent value="schemes" className="mt-6">
                     <GrantRecommenderTab />
                 </TabsContent>
+                {showInvestorFinder && (
+                    <TabsContent value="investors" className="mt-6">
+                        <InvestorDiscoveryTab />
+                    </TabsContent>
+                )}
             </Tabs>
         </div>
     );
 }
-
 
