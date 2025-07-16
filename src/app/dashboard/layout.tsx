@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import Link from "next/link";
 import React from "react";
@@ -250,7 +250,6 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.launchPad },
   { ...navItemConfig.playbook },
   { ...navItemConfig.learnHub },
-  { ...navItemConfig.latestNews },
   { ...navItemConfig.reportCenter, locked: true },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.connections, locked: true },
@@ -258,6 +257,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clauseLibrary, locked: true },
   { ...navItemConfig.community, locked: true },
   { ...navItemConfig.team, label_override_key: "teamManagement", locked: true },
+  { ...navItemConfig.latestNews },
 ];
 
 const caNavItems: ThemedNavItem[] = [
@@ -272,12 +272,12 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.playbook },
   { ...navItemConfig.learnHub },
-  { ...navItemConfig.latestNews },
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.connections, locked: true },
   { ...navItemConfig.workflows, locked: true },
   { ...navItemConfig.clauseLibrary, locked: false },
   { ...navItemConfig.community, locked: true },
+  { ...navItemConfig.latestNews },
 ];
 
 const legalAdvisorNavItems: ThemedNavItem[] = [
