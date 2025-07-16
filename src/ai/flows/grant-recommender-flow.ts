@@ -23,7 +23,7 @@ const RecommendationSchema = z.object({
     eligibilitySummary: z.string().describe("A summary of the key eligibility criteria."),
     isEligible: z.boolean().describe("The AI's assessment of whether the startup is likely eligible based on the inputs."),
     category: z.enum(["Tax Exemption", "Grant / Funding", "Certification", "State-Specific", "Loan Scheme"]),
-    link: z.string().url().describe("The official URL for the scheme's landing or application page."),
+    link: z.string().describe("The official URL for the scheme's landing or application page."),
 });
 
 const GrantRecommenderOutputSchema = z.object({
