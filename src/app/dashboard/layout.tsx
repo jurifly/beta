@@ -717,13 +717,13 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     };
 
     return (
-      <div className="hidden w-[280px] shrink-0 border-r bg-card md:block">
+      <div className="hidden w-[280px] shrink-0 border-r bg-card md:block group/sidebar">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
               {isPro && <Flame className="h-6 w-6 text-accent" />}
               <Logo />
-              <span className="flex items-center">
+              <span className="flex items-center group-[[data-state=collapsed]]/sidebar:hidden">
                 Jurifly
                  <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">{translations.beta[lang]}</Badge>
               </span>
@@ -754,17 +754,17 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       )}
                     >
                       <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                      {label}
-                      {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50">{item.badge}</Badge>}
+                      <span className="group-[[data-state=collapsed]]/sidebar:hidden">{label}</span>
+                      {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50 group-[[data-state=collapsed]]/sidebar:hidden">{item.badge}</Badge>}
                       {isLocked && (
-                        <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
+                        <Lock className="ml-auto h-3 w-3 text-muted-foreground group-[[data-state=collapsed]]/sidebar:hidden" />
                       )}
                     </Link>
                 )
               })}
             </nav>
           </ScrollArea>
-           <div className="mt-auto p-4 border-t">
+           <div className="mt-auto p-4 border-t group-[[data-state=collapsed]]/sidebar:hidden">
               <Link href="/dashboard/settings">
                 <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
                     <Settings className="h-5 w-5" />
