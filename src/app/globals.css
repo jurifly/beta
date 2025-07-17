@@ -9,7 +9,7 @@ html {
 
 @layer base {
   :root {
-    --background: 220 20% 97%; /* Soft White #F9FAFB */
+    --background: 0 0% 100%;
     --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
@@ -60,7 +60,7 @@ html {
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --accent: 0 0% 24.9%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
