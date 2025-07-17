@@ -25,7 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
-import type { UserRole } from "@/lib/types";
+import type { TeamMember } from "@/lib/types";
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -43,7 +43,7 @@ export function InviteMemberModal({ isOpen, onOpenChange }: InviteMemberModalPro
   const { toast } = useToast();
   const { sendTeamInvite } = useAuth();
   
-  const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
+  const { control, register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
     resolver: zodResolver(inviteSchema),
   });
 
