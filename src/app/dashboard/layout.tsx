@@ -374,7 +374,7 @@ const MoreMenuSheet = ({ lang, setLang, onLockedFeatureClick }: { lang: Language
     
     const handleLinkClick = (e: React.MouseEvent, item: ThemedNavItem) => {
         const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
-        const isLockedBeta = item.locked === 'beta';
+        const isLockedBeta = item.locked === 'beta' && !isDevMode;
 
         if (isLockedPro || isLockedBeta) {
             e.preventDefault();
@@ -401,7 +401,7 @@ const MoreMenuSheet = ({ lang, setLang, onLockedFeatureClick }: { lang: Language
                         {menuItems.map(item => {
                             const labelKey = item.label_override_key || item.translationKey;
                             const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
-                             const isLocked = (item.locked === 'pro' && !isPro && !isDevMode) || item.locked === 'beta';
+                             const isLocked = (item.locked === 'pro' && !isPro && !isDevMode) || (item.locked === 'beta' && !isDevMode);
                             return (
                              <SheetTrigger asChild key={item.href}>
                                 <Link
@@ -456,7 +456,7 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
 
     const handleLinkClick = (e: React.MouseEvent, item: ThemedNavItem) => {
         const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
-        const isLockedBeta = item.locked === 'beta';
+        const isLockedBeta = item.locked === 'beta' && !isDevMode;
 
         if (isLockedPro || isLockedBeta) {
             e.preventDefault();
@@ -475,7 +475,7 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
                     
                     const labelKey = item.label_override_key || item.translationKey;
                     const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
-                    const isLocked = (item.locked === 'pro' && !isPro && !isDevMode) || item.locked === 'beta';
+                    const isLocked = (item.locked === 'pro' && !isPro && !isDevMode) || (item.locked === 'beta' && !isDevMode);
 
                     return (
                         <Link
@@ -705,7 +705,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
         const labelKey = item.label_override_key || item.translationKey;
         const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
         const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
-        const isLockedBeta = item.locked === 'beta';
+        const isLockedBeta = item.locked === 'beta' && !isDevMode;
 
         if (isLockedPro) {
             e.preventDefault();
@@ -717,7 +717,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     };
 
     return (
-      <div className="hidden w-[280px] shrink-0 border-r bg-card md:block group/sidebar">
+      <div className="hidden w-[280px] shrink-0 border-r bg-card md:block group/sidebar" data-state="expanded">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
@@ -736,7 +736,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                                  (item.href !== '/dashboard' && pathname.startsWith(item.href));
                 
                 const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
-                const isLockedBeta = item.locked === 'beta';
+                const isLockedBeta = item.locked === 'beta' && !isDevMode;
                 const isLocked = isLockedPro || isLockedBeta;
 
                 const labelKey = item.label_override_key || item.translationKey;
@@ -745,7 +745,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                 return (
                     <Link
                       key={item.href}
-                      href={item.href}
+                      href={isLocked ? '#' : item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
                           "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative interactive-lift hover:bg-muted",
@@ -754,10 +754,10 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       )}
                     >
                       <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-                      <span className="group-[[data-state=collapsed]]/sidebar:hidden">{label}</span>
-                      {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50 group-[[data-state=collapsed]]/sidebar:hidden">{item.badge}</Badge>}
+                      <span className="group-data-[state=collapsed]/sidebar:hidden">{label}</span>
+                      {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50 group-data-[state=collapsed]/sidebar:hidden">{item.badge}</Badge>}
                       {isLocked && (
-                        <Lock className="ml-auto h-3 w-3 text-muted-foreground group-[[data-state=collapsed]]/sidebar:hidden" />
+                        <Lock className="ml-auto h-3 w-3 text-muted-foreground group-data-[state=collapsed]/sidebar:hidden" />
                       )}
                     </Link>
                 )
