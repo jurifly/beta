@@ -164,7 +164,7 @@ const ProductGlimpseSection = () => {
                       alt={`${activeGlimpse.title} screenshot`}
                       width={1200}
                       height={750}
-                      className="w-full h-full object-cover object-top animate-in fade-in-50 duration-500"
+                      className="w-full h-full object-contain object-center animate-in fade-in-50 duration-500"
                       data-ai-hint="application screenshot"
                     />
                  </div>
