@@ -157,19 +157,18 @@ const ProductGlimpseSection = () => {
                         </Button>
                     ))}
                 </div>
-                 <div className="relative mt-8 aspect-[16/10] w-full max-w-5xl mx-auto rounded-xl bg-slate-900/40 p-1.5 shadow-2xl dark:bg-slate-900/70 dark:shadow-black/40">
-                    <div className="relative rounded-lg w-full h-full overflow-hidden
-                                before:absolute before:inset-0 before:-z-10 before:bg-[radial-gradient(circle_at_50%_10%,_rgba(255,255,255,0.2),_transparent_40%)] before:opacity-0
-                                dark:before:opacity-100 dark:before:animate-in dark:before:fade-in-25 dark:before:duration-1000">
+                 <div className="group relative mt-8 aspect-[16/10] w-full max-w-5xl mx-auto [perspective:1000px]">
+                    <div className="relative rounded-lg w-full h-full shadow-2xl dark:shadow-black/60 transition-transform duration-500 ease-in-out group-hover:[transform:rotateX(10deg)] [transform-style:preserve-3d]">
                         <Image
                           key={activeGlimpse.imageUrl}
                           src={activeGlimpse.imageUrl}
                           alt={`${activeGlimpse.title} screenshot`}
                           width={1200}
                           height={750}
-                          className="w-full h-full object-contain object-center animate-in fade-in-50 duration-500 rounded-md"
+                          className="w-full h-full object-contain object-center rounded-md"
                           data-ai-hint="application screenshot"
                         />
+                         <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 dark:ring-white/10" />
                     </div>
                  </div>
             </div>
