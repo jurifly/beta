@@ -39,3 +39,14 @@ export async function getIncCodeAction(input: IncCodeFinderInput): Promise<IncCo
     throw new Error(`AI code finder is currently unavailable: ${errorMessage}`);
   }
 }
+
+export async function compareStatesAction(input: StateComparisonInput): Promise<StateComparisonOutput> {
+  try {
+    const result = await compareStates(input);
+    return result;
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    const errorMessage = e.message || 'An unexpected error occurred.';
+    throw new Error(`AI state comparison is currently unavailable: ${errorMessage}`);
+  }
+}

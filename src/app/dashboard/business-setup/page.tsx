@@ -23,6 +23,7 @@ import {
   Lightbulb,
   Lock,
   Globe,
+  GanttChartSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,10 +32,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getBusinessRecommendationAction, getIncCodeAction, getFinalChecklistAction } from "./actions";
+import { getBusinessRecommendationAction, getIncCodeAction, getFinalChecklistAction, compareStatesAction } from "./actions";
 import type { BusinessRecommenderOutput } from "@/ai/flows/business-recommender-flow";
 import type { IncCodeFinderOutput } from "@/ai/flows/inc-code-finder-flow";
 import type { AssistantOutput } from "@/ai/flows/assistant-flow";
+import type { StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { generateDocument } from "@/ai/flows/document-generator-flow";
@@ -49,14 +51,16 @@ import { planHierarchy } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const STEPS = [
   { id: 1, name: "Business Type", icon: Building2 },
   { id: 2, name: "INC Code Finder", icon: Fingerprint },
-  { id: 3, name: "Registration Guide", icon: BookUser },
-  { id: 4, name: "Generate Documents", icon: FileSignature },
-  { id: 5, name: "Final Checklist", icon: ListChecks },
+  { id: 3, name: "Infrastructure & Schemes", icon: Globe },
+  { id: 4, name: "Registration Guide", icon: BookUser },
+  { id: 5, name: "Generate Documents", icon: FileSignature },
+  { id: 6, name: "Final Checklist", icon: ListChecks },
 ];
 
 const businessTypeFormSchema = z.object({
@@ -74,6 +78,14 @@ const incCodeFormSchema = z.object({
 });
 type IncCodeFormData = z.infer<typeof incCodeFormSchema>;
 
+const stateAssistantSchema = z.object({
+  businessType: z.enum(['Tech/IT/SaaS', 'Manufacturing', 'Services (Non-IT)', 'Agri-business', 'E-commerce/Retail']),
+  fundingStage: z.enum(['Bootstrapped', 'Pre-Seed/Angel', 'VC Funded']),
+  hiringPlan: z.enum(['1-10 Employees', '11-50 Employees', '50+ Employees']),
+  statesToCompare: z.array(z.string()).min(1, "Select at least one state.").max(3, "You can compare up to 3 states."),
+});
+type StateAssistantFormData = z.infer<typeof stateAssistantSchema>;
+
 type NavigatorState = {
   businessTypeForm?: BusinessTypeFormData;
   businessTypeResult?: BusinessRecommenderOutput;
@@ -81,6 +93,7 @@ type NavigatorState = {
   incCodeResult?: IncCodeFinderOutput;
   finalChecklist?: AssistantOutput;
   completedSteps: number[];
+  stateAssistantResult?: StateComparisonOutput;
 };
 
 // Main Page Component
@@ -119,11 +132,13 @@ export default function BusinessSetupPage() {
       case 2:
         return <Step2IncCodeFinder onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 3:
-        return <Step3RegistrationGuide onComplete={goToNextStep} />;
+        return <Step3Infrastructure onComplete={goToNextStep} updateState={updateNavigatorState} initialState={navigatorState} />;
       case 4:
-        return <Step4DocumentGenerator onComplete={goToNextStep} userProfile={userProfile} />;
+        return <Step4RegistrationGuide onComplete={goToNextStep} />;
       case 5:
-        return <Step5FinalChecklist navigatorState={navigatorState} />;
+        return <Step5DocumentGenerator onComplete={goToNextStep} userProfile={userProfile} />;
+      case 6:
+        return <Step6FinalChecklist navigatorState={navigatorState} />;
       default:
         return null;
     }
@@ -485,15 +500,77 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
   );
 }
 
-// --- Step 3: Registration Guide ---
+// --- Step 3: Infrastructure & Schemes ---
+
+const allIndianStates = [ 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Puducherry' ];
+
+function Step3Infrastructure({ onComplete, updateState, initialState }: StepProps) {
+    const { toast } = useToast();
+    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<StateAssistantFormData>({
+      resolver: zodResolver(stateAssistantSchema),
+      defaultValues: { statesToCompare: [], hiringPlan: '1-10 Employees' }
+    });
+
+    const [result, setResult] = useState<StateComparisonOutput | undefined>(initialState.stateAssistantResult);
+    
+    const onSubmit = async (data: StateAssistantFormData) => {
+      setResult(undefined);
+      try {
+        const response = await compareStatesAction(data);
+        setResult(response);
+        updateState({ stateAssistantResult: response });
+      } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Analysis Failed', description: e.message });
+      }
+    };
+  
+    return (
+        <div className="space-y-4">
+            <h2 className="text-xl font-bold">State-Based Incorporation Assistant</h2>
+            <p className="text-muted-foreground mt-1">Compare Indian states to find the best place to register your business based on your specific needs.</p>
+            <Card>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
+                         <Controller name="businessType" control={control} render={({ field }) => (<div className="space-y-2"><Label>Business Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger><SelectContent><SelectItem value="Tech/IT/SaaS">Tech/IT/SaaS</SelectItem><SelectItem value="Manufacturing">Manufacturing</SelectItem><SelectItem value="Services (Non-IT)">Services (Non-IT)</SelectItem><SelectItem value="Agri-business">Agri-business</SelectItem><SelectItem value="E-commerce/Retail">E-commerce/Retail</SelectItem></SelectContent></Select>{errors.businessType && <p className="text-sm text-destructive">{errors.businessType.message}</p>}</div>)} />
+                         <Controller name="fundingStage" control={control} render={({ field }) => (<div className="space-y-2"><Label>Funding Stage</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent><SelectItem value="Bootstrapped">Bootstrapped</SelectItem><SelectItem value="Pre-Seed/Angel">Pre-Seed/Angel</SelectItem><SelectItem value="VC Funded">VC Funded</SelectItem></SelectContent></Select>{errors.fundingStage && <p className="text-sm text-destructive">{errors.fundingStage.message}</p>}</div>)} />
+                         <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-xs", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
+                         <Controller name="statesToCompare" control={control} render={({ field }) => (<div className="space-y-2"><Label>Compare States (Max 3)</Label><Select onValueChange={(value) => {const current = field.value || []; const newValues = current.includes(value) ? current.filter(v => v !== value) : [...current, value].slice(-3); field.onChange(newValues);}} value="placeholder"><SelectTrigger><SelectValue placeholder="Select states..."/></SelectTrigger><SelectContent><div className="grid grid-cols-2 gap-1 p-2">{allIndianStates.map(state => (<div key={state} className="flex items-center space-x-2 p-2 border rounded-md"><Checkbox id={state} checked={field.value?.includes(state)} onCheckedChange={(checked) => {const current = field.value || []; return checked ? field.onChange([...current, state]) : field.onChange(current.filter(value => value !== state))}}/><Label htmlFor={state} className="text-sm font-normal">{state}</Label></div>))}</div></SelectContent></Select><div className="flex flex-wrap gap-1 mt-2">{field.value?.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}</div>{errors.statesToCompare && <p className="text-sm text-destructive">{errors.statesToCompare.message}</p>}</div>)} />
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>} Compare States
+                        </Button>
+                    </CardFooter>
+                </form>
+            </Card>
+            {isSubmitting && (<div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Comparing state policies...</p></div>)}
+            {result && (
+                <div className="space-y-6 animate-in fade-in-50">
+                    <Card><CardHeader><CardTitle>AI Recommendation</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{result.recommendation}</p></CardContent></Card>
+                    <div className={cn("grid gap-4", result.analysis.length === 1 && "grid-cols-1", result.analysis.length === 2 && "grid-cols-1 md:grid-cols-2", result.analysis.length === 3 && "grid-cols-1 md:grid-cols-3")}>
+                        {result.analysis.sort((a,b) => b.score - a.score).map(state => (
+                            <Card key={state.state} className="flex flex-col"><CardHeader className="text-center bg-muted/50"><CardTitle>{state.state}</CardTitle><Badge className="w-fit mx-auto" variant={state.score > 7 ? 'default' : state.score > 4 ? 'secondary' : 'destructive'}>Score: {state.score}/10</Badge></CardHeader><CardContent className="p-4 space-y-3 text-sm flex-1"><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Incorporation</p><p className="text-muted-foreground text-xs">{state.incorporation.easeOfRegistration} {state.incorporation.complianceNotes}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Startup Schemes</p><p className="text-muted-foreground text-xs">{state.startupSchemes.incentives}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Tax &amp; Labour</p><p className="text-muted-foreground text-xs">Prof. Tax: {state.taxAndLabour.professionalTax}. Labour: {state.taxAndLabour.labourLawCompliance}</p></div><div className="p-2 border rounded-md bg-destructive/10"><p className="font-semibold text-xs text-destructive">Risks</p><p className="text-destructive/80 text-xs">{state.risksAndFlags.commonIssues.join(', ')}</p></div></CardContent></Card>
+                        ))}
+                    </div>
+                     <div className="text-center pt-4">
+                        <Button onClick={onComplete}>Next Step <ArrowRight className="ml-2"/></Button>
+                    </div>
+                </div>
+            )}
+        </div>
+      );
+}
+
+
+// --- Step 4: Registration Guide ---
 const registrationData = [
   { id: "gst", title: "GST Registration", time: "3-7 days", link: "https://www.gst.gov.in/", docs: ["PAN Card", "Proof of Business Registration", "Address Proof of Business", "Bank Account Statement", "Promoter's ID and Address Proof"] },
   { id: "msme", title: "MSME / Udyam Registration", time: "1-2 days", link: "https://udyamregistration.gov.in/", docs: ["Aadhaar Card of Applicant", "PAN Card of Organization", "Bank Account Details"] },
   { id: "startup_india", title: "Startup India (DPIIT)", time: "1-2 weeks", link: "https://www.startupindia.gov.in/", docs: ["Incorporation/Registration Certificate", "Director/Partner Details", "Proof of Funding (if any)", "Pitch Deck or Business Brief"] },
-  { id: "shops", title: "Shops & Establishment Act", time: "7-15 days", link: "#", docs: ["Business Name and Address", "Category of Establishment", "Employer and Employee Details"] },
+  { id: "shops", title: "Shops &amp; Establishment Act", time: "7-15 days", link: "#", docs: ["Business Name and Address", "Category of Establishment", "Employer and Employee Details"] },
 ];
 
-function Step3RegistrationGuide({ onComplete }: { onComplete: () => void }) {
+function Step4RegistrationGuide({ onComplete }: { onComplete: () => void }) {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="text-center">
@@ -528,12 +605,12 @@ function Step3RegistrationGuide({ onComplete }: { onComplete: () => void }) {
     );
 }
 
-interface Step4DocumentGeneratorProps {
+interface Step5DocumentGeneratorProps {
     onComplete: () => void;
     userProfile: UserProfile;
 }
 
-// --- Step 4: Document Generation ---
+// --- Step 5: Document Generation ---
 const docTemplates = [
   { name: "NOC from Landlord", desc: "A no-objection certificate required if your registered office is a rented property.", premium: false },
   { name: "Board Resolution for Incorporation", desc: "The official board resolution to authorize the incorporation process.", premium: true },
@@ -541,7 +618,7 @@ const docTemplates = [
   { name: "Registered Address Declaration", desc: "A declaration for the company's registered office address.", premium: true },
 ];
 
-function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGeneratorProps) {
+function Step5DocumentGenerator({ onComplete, userProfile }: Step5DocumentGeneratorProps) {
     const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
     const [generatedContent, setGeneratedContent] = useState<{title: string, content: string} | null>(null);
     const { toast } = useToast();
@@ -665,8 +742,8 @@ function Step4DocumentGenerator({ onComplete, userProfile }: Step4DocumentGenera
     )
 }
 
-// --- Step 5: Final Checklist ---
-function Step5FinalChecklist({ navigatorState }: { navigatorState: NavigatorState }) {
+// --- Step 6: Final Checklist ---
+function Step6FinalChecklist({ navigatorState }: { navigatorState: NavigatorState }) {
     const [isLoading, setIsLoading] = useState(false);
     const [checklist, setChecklist] = useState<AssistantOutput['checklist'] | undefined>(navigatorState.finalChecklist?.checklist);
     const [checklistTitle, setChecklistTitle] = useState<string>(navigatorState.finalChecklist?.checklist?.title || "Final Checklist");
