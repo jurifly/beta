@@ -326,7 +326,7 @@ export default function ReportCenterPage() {
         setReportData(null);
         
         try {
-            // 1. Fetch compliance checklist data
+            // 1. Gather all data synchronously first.
             const currentDate = format(new Date(), 'yyyy-MM-dd');
             const filingResponse = await generateFilings({
                 companyType: client.type,
@@ -336,7 +336,6 @@ export default function ReportCenterPage() {
                 gstin: client.gstin,
             });
 
-            // 2. Process data for the report
             const today = startOfToday();
             const thirtyDaysFromNow = new Date();
             thirtyDaysFromNow.setDate(today.getDate() + 30);
@@ -344,25 +343,12 @@ export default function ReportCenterPage() {
             const savedStatuses = client.checklistStatus || {};
             const checklistItems = filingResponse.filings.map((filing) => {
                 const uniqueId = `${filing.title}-${filing.date}`.replace(/[^a-zA-Z0-9-]/g, '_');
-                return {
-                    id: uniqueId,
-                    text: filing.title,
-                    dueDate: filing.date,
-                    completed: savedStatuses[uniqueId] ?? false,
-                };
+                return { id: uniqueId, text: filing.title, dueDate: filing.date, completed: savedStatuses[uniqueId] ?? false };
             });
             
-            const upcomingFilings = checklistItems.filter(item => {
-                const dueDate = new Date(item.dueDate + 'T00:00:00');
-                return dueDate >= today && dueDate <= thirtyDaysFromNow && !item.completed;
-            });
-            const overdueFilings = checklistItems.filter(item => {
-                const dueDate = new Date(item.dueDate + 'T00:00:00');
-                return dueDate < today && !item.completed;
-            });
-            const completedFilings = checklistItems.filter(item => item.completed);
-
-            // 3. Calculate Hygiene Score
+            const upcomingFilings = checklistItems.filter(item => new Date(item.dueDate + 'T00:00:00') >= today && new Date(item.dueDate + 'T00:00:00') <= thirtyDaysFromNow && !item.completed);
+            const overdueFilings = checklistItems.filter(item => new Date(item.dueDate + 'T00:00:00') < today && !item.completed);
+            
             const totalFilings = checklistItems.length;
             const filingPerf = totalFilings > 0 ? ((totalFilings - overdueFilings.length) / totalFilings) * 100 : 100;
             const requiredFields: (keyof Company)[] = ['name', 'type', 'pan', 'incorporationDate', 'sector', 'location'];
@@ -371,99 +357,66 @@ export default function ReportCenterPage() {
             const profileCompleteness = (filledFields / requiredFields.length) * 100;
             const hygieneScore = Math.round((filingPerf * 0.7) + (profileCompleteness * 0.3));
 
-            // 4. Process Cap Table data
             const capTable = client.capTable || [];
-            const { founderShares, investorShares, esopPool } = capTable.reduce(
-                (acc, entry) => {
-                    if (entry.type === 'Founder') acc.founderShares += entry.shares;
-                    else if (entry.type === 'Investor') acc.investorShares += entry.shares;
-                    else if (entry.type === 'ESOP') acc.esopPool += entry.shares;
-                    return acc;
-                }, { founderShares: 0, investorShares: 0, esopPool: 0 }
-            );
-            const ownershipData = [
-                { name: 'Founders', value: founderShares },
-                { name: 'Investors', value: investorShares },
-                { name: 'ESOP Pool', value: esopPool },
-            ].filter(d => d.value > 0);
+            const { founderShares, investorShares, esopPool } = capTable.reduce((acc, entry) => {
+                if (entry.type === 'Founder') acc.founderShares += entry.shares;
+                else if (entry.type === 'Investor') acc.investorShares += entry.shares;
+                else if (entry.type === 'ESOP') acc.esopPool += entry.shares;
+                return acc;
+            }, { founderShares: 0, investorShares: 0, esopPool: 0 });
+            const ownershipData = [{ name: 'Founders', value: founderShares }, { name: 'Investors', value: investorShares }, { name: 'ESOP Pool', value: esopPool }].filter(d => d.value > 0);
 
-            // 5. Process Financial Data
             const financials = client.financials;
             const burn = financials ? financials.monthlyExpenses - financials.monthlyRevenue : 0;
             const runway = financials && burn > 0 && financials.cashBalance > 0 ? `${Math.floor(financials.cashBalance / burn)} months` : "Profitable / N/A";
             const historicalData = client.historicalFinancials || [];
+            
+            const docHistoryKey = 'documentIntelligenceHistory';
+            const savedHistory = localStorage.getItem(docHistoryKey);
+            const allAnalyzedDocs: DocumentAnalysis[] = savedHistory ? JSON.parse(savedHistory) : [];
+            const recentRisks = allAnalyzedDocs.slice(0, 3).flatMap(doc => doc.riskFlags).filter(flag => flag.severity === 'High').map(flag => flag.risk).slice(0, 3);
+            
+            // 2. Now, generate AI insights with all data gathered.
+            setIsGeneratingInsights(true);
+            
+            let executiveSummary = "Could not generate AI summary at this time.";
+            if (await deductCredits(1)) {
+                try {
+                    const insightsResponse = await generateReportInsights({
+                        hygieneScore,
+                        overdueFilings: overdueFilings.length,
+                        upcomingFilings: upcomingFilings.length,
+                        burnRate: burn > 0 ? burn : 0,
+                        runwayInMonths: runway,
+                        recentRiskFlags: recentRisks,
+                        legalRegion: client.legalRegion
+                    });
+                    executiveSummary = insightsResponse.executiveSummary;
+                } catch (aiError: any) {
+                    console.error("AI Insight generation failed:", aiError);
+                    toast({ variant: 'destructive', title: "AI Summary Failed", description: "The model may be overloaded, but the rest of the report is ready." });
+                }
+            }
 
-            const initialReportData: ReportData = {
+            // 3. Set the final, complete report data in a single state update.
+            setReportData({
                 client,
                 hygieneScore,
                 filingPerformance: filingPerf,
                 profileCompleteness,
                 upcomingFilings,
                 overdueFilings,
-                completedFilings,
+                completedFilings: checklistItems.filter(item => item.completed),
                 ownershipData,
-                financials: {
-                    burnRate: burn,
-                    runway: runway,
-                    historicalData: historicalData
-                },
+                financials: { burnRate: burn, runway, historicalData },
                 diligenceChecklist: client.diligenceChecklist,
-            };
-
-            setReportData(initialReportData);
-            setIsLoading(false);
-
-            // 6. Asynchronously generate AI insights
-            setIsGeneratingInsights(true);
-            
-            const docHistoryKey = 'documentIntelligenceHistory';
-            const savedHistory = localStorage.getItem(docHistoryKey);
-            const allAnalyzedDocs: DocumentAnalysis[] = savedHistory ? JSON.parse(savedHistory) : [];
-            const recentRisks = allAnalyzedDocs
-                .slice(0, 3)
-                .flatMap(doc => doc.riskFlags)
-                .filter(flag => flag.severity === 'High')
-                .map(flag => flag.risk)
-                .slice(0, 3);
-            
-            if(!await deductCredits(1)) {
-              setIsGeneratingInsights(false);
-              return;
-            };
-            
-            try {
-                const insightsResponse = await generateReportInsights({
-                    hygieneScore: hygieneScore,
-                    overdueFilings: overdueFilings.length,
-                    upcomingFilings: upcomingFilings.length,
-                    burnRate: burn > 0 ? burn : 0,
-                    runwayInMonths: runway,
-                    recentRiskFlags: recentRisks,
-                    legalRegion: client.legalRegion
-                });
-                
-                // Re-apply the full data with the new summary
-                setReportData(currentData => {
-                    if (!currentData) return null;
-                    return {
-                        ...currentData, 
-                        executiveSummary: insightsResponse.executiveSummary 
-                    };
-                });
-            } catch (aiError: any) {
-                console.error("AI Insight generation failed:", aiError);
-                toast({
-                    variant: 'destructive',
-                    title: "AI Summary Failed",
-                    description: "Could not generate AI summary, but the rest of the report is ready. The model may be overloaded."
-                });
-            }
-
+                executiveSummary
+            });
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate report data. ' + error.message });
-            setIsLoading(false);
         } finally {
+            setIsLoading(false);
             setIsGeneratingInsights(false);
         }
     };
