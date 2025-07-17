@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useRef, useEffect, useTransition, useMemo } from 'react';
@@ -496,7 +494,7 @@ export default function PlaybookPage() {
             <Tabs defaultValue="audit" className="w-full">
                 <TabsList className={cn("grid w-full", showInvestorFinder ? "grid-cols-3" : "grid-cols-2")}>
                     <TabsTrigger value="audit"><GanttChartSquare className="mr-2"/>Dataroom Audit</TabsTrigger>
-                    <TabsTrigger value="schemes"><Gift className="mr-2"/>Grant Recommender</TabsTrigger>
+                    <TabsTrigger value="schemes"><Gift className="mr-2"/>Govt. Scheme Finder</TabsTrigger>
                     {showInvestorFinder && <TabsTrigger value="investors"><SearchIcon className="mr-2"/>Investor Discovery</TabsTrigger>}
                 </TabsList>
                 <TabsContent value="audit" className="mt-6">
@@ -514,4 +512,3 @@ export default function PlaybookPage() {
         </div>
     );
 }
-
