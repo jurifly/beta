@@ -225,7 +225,7 @@ const navItemConfig: NavItemConfig = {
   team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: 'pro' },
   clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library, locked: 'pro' },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: 'beta' },
-  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, locked: 'beta' },
+  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText },
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
@@ -720,7 +720,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       <div className="hidden w-[280px] shrink-0 border-r bg-card md:block group/sidebar" data-state="expanded">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-primary">
+            <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-xl text-primary">
               {isPro && <Flame className="h-6 w-6 text-accent" />}
               <Logo />
               <span className="flex items-center group-[[data-state=collapsed]]/sidebar:hidden">
