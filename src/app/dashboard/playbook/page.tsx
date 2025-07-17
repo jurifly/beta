@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition, useMemo } from 'react';
@@ -233,6 +234,8 @@ const GrantRecommenderTab = () => {
         defaultValues: {
             industry: activeCompany?.sector || '',
             location: activeCompany?.location.split(',')[0]?.trim() || '',
+            hasFemaleFounder: false,
+            isDpiitRecognized: false,
         }
     });
 
@@ -266,48 +269,88 @@ const GrantRecommenderTab = () => {
     };
 
     return (
-        <div className="lg:col-span-3">
-             <Card className="min-h-[400px] interactive-lift">
-                <CardHeader>
-                    <CardTitle>AI Recommendations</CardTitle>
-                </CardHeader>
-                 <CardContent>
-                    {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Searching for schemes...</p></div>}
-                    {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
-                    {result && (
-                        <div className="space-y-4 animate-in fade-in-50">
-                            {result.recommendations.map((rec, i) => {
-                                const Icon = categoryIcons[rec.category] || categoryIcons.Default;
-                                return (
-                                    <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
-                                        <CardHeader>
-                                            <div className="flex justify-between items-start">
-                                                <CardTitle className="text-base flex items-center gap-2"><Icon className="w-4 h-4 text-primary" />{rec.schemeName}</CardTitle>
-                                                {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
-                                            </div>
-                                            <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-muted-foreground">{rec.description}</p>
-                                            <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
-                                        </CardContent>
-                                        <CardFooter>
-                                            <Button asChild variant="link" className="p-0 h-auto">
-                                                <a href={rec.link} target="_blank" rel="noopener noreferrer">
-                                                    Learn More & Apply <ExternalLink className="ml-2 w-3.5 h-3.5"/>
-                                                </a>
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
-                                )
-                            })}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+             <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
+                 <Card className="interactive-lift">
+                     <CardHeader>
+                         <CardTitle>Government Scheme Finder</CardTitle>
+                         <CardDescription>Discover grants and tax exemptions relevant to your startup.</CardDescription>
+                     </CardHeader>
+                     <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="industry">Industry / Sector</Label>
+                            <Controller name="industry" control={control} render={({ field }) => <Input id="industry" placeholder="e.g. Healthtech, SaaS" {...field} />} />
+                             {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
                         </div>
-                    )}
-                 </CardContent>
-             </Card>
+                        <div className="space-y-2">
+                           <Label htmlFor="location">Primary State of Operation</Label>
+                           <Controller name="location" control={control} render={({ field }) => <Input id="location" placeholder="e.g. Karnataka, Maharashtra" {...field} />} />
+                           {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
+                        </div>
+                        <Controller name="hasFemaleFounder" control={control} render={({ field }) => (
+                           <div className="flex items-center space-x-2">
+                              <Checkbox id="femaleFounder" checked={field.value} onCheckedChange={field.onChange} />
+                              <Label htmlFor="femaleFounder" className="text-sm font-normal">My startup has a female co-founder</Label>
+                           </div>
+                        )} />
+                         <Controller name="isDpiitRecognized" control={control} render={({ field }) => (
+                           <div className="flex items-center space-x-2">
+                              <Checkbox id="dpiit" checked={field.value} onCheckedChange={field.onChange} />
+                              <Label htmlFor="dpiit" className="text-sm font-normal">I have DPIIT / Startup India recognition</Label>
+                           </div>
+                        )} />
+                     </CardContent>
+                     <CardFooter>
+                         <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Find Schemes (1 Credit)
+                        </Button>
+                     </CardFooter>
+                 </Card>
+            </form>
+            <div className="lg:col-span-3">
+                 <Card className="min-h-[400px] interactive-lift">
+                    <CardHeader>
+                        <CardTitle>AI Recommendations</CardTitle>
+                    </CardHeader>
+                     <CardContent>
+                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Searching for schemes...</p></div>}
+                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
+                        {result && (
+                            <div className="space-y-4 animate-in fade-in-50">
+                                {result.recommendations.map((rec, i) => {
+                                    const Icon = categoryIcons[rec.category] || categoryIcons.Default;
+                                    return (
+                                        <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
+                                            <CardHeader>
+                                                <div className="flex justify-between items-start">
+                                                    <CardTitle className="text-base flex items-center gap-2"><Icon className="w-4 h-4 text-primary" />{rec.schemeName}</CardTitle>
+                                                    {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
+                                                </div>
+                                                <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm text-muted-foreground">{rec.description}</p>
+                                                <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
+                                            </CardContent>
+                                            <CardFooter>
+                                                <Button asChild variant="link" className="p-0 h-auto">
+                                                    <a href={rec.link} target="_blank" rel="noopener noreferrer">
+                                                        Learn More & Apply <ExternalLink className="ml-2 w-3.5 h-3.5"/>
+                                                    </a>
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    )
+                                })}
+                            </div>
+                        )}
+                     </CardContent>
+                 </Card>
+            </div>
         </div>
     )
-}
+};
 
 // --- Investor Discovery Tab ---
 const investorFinderSchema = z.object({
@@ -453,6 +496,7 @@ type StateAssistantFormData = z.infer<typeof stateAssistantSchema>;
 
 function StateAssistantTab() {
   const { toast } = useToast();
+  const { deductCredits } = useAuth();
   const [result, setResult] = useState<StateComparisonOutput | null>(null);
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<StateAssistantFormData>({
     resolver: zodResolver(stateAssistantSchema),
@@ -460,6 +504,7 @@ function StateAssistantTab() {
   });
   
   const onSubmit = async (data: StateAssistantFormData) => {
+    if (!await deductCredits(1)) return;
     setResult(null);
     try {
       const response = await compareStatesAction(data);
@@ -485,7 +530,7 @@ function StateAssistantTab() {
                 </CardContent>
                 <CardFooter>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>} Compare States
+                        {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>} Compare States (1 Credit)
                     </Button>
                 </CardFooter>
             </form>
@@ -496,7 +541,7 @@ function StateAssistantTab() {
                 <Card><CardHeader><CardTitle>AI Recommendation</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{result.recommendation}</p></CardContent></Card>
                 <div className={cn("grid gap-4", result.analysis.length === 1 && "grid-cols-1", result.analysis.length === 2 && "grid-cols-1 md:grid-cols-2", result.analysis.length === 3 && "grid-cols-1 md:grid-cols-3")}>
                     {result.analysis.sort((a,b) => b.score - a.score).map(state => (
-                        <Card key={state.state} className="flex flex-col"><CardHeader className="text-center bg-muted/50"><CardTitle>{state.state}</CardTitle><Badge className="w-fit mx-auto" variant={state.score > 7 ? 'default' : state.score > 4 ? 'secondary' : 'destructive'}>Score: {state.score}/10</Badge></CardHeader><CardContent className="p-4 space-y-3 text-sm flex-1"><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Incorporation</p><p className="text-muted-foreground text-xs">{state.incorporation.easeOfRegistration} {state.incorporation.complianceNotes}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Startup Schemes</p><p className="text-muted-foreground text-xs">{state.startupSchemes.incentives}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Tax & Labour</p><p className="text-muted-foreground text-xs">Prof. Tax: {state.taxAndLabour.professionalTax}. Labour: {state.taxAndLabour.labourLawCompliance}</p></div><div className="p-2 border rounded-md bg-destructive/10"><p className="font-semibold text-xs text-destructive">Risks</p><p className="text-destructive/80 text-xs">{state.risksAndFlags.commonIssues.join(', ')}</p></div></CardContent></Card>
+                        <Card key={state.state} className="flex flex-col"><CardHeader className="text-center bg-muted/50"><CardTitle>{state.state}</CardTitle><Badge className="w-fit mx-auto" variant={state.score > 7 ? 'default' : state.score > 4 ? 'secondary' : 'destructive'}>Score: {state.score}/10</Badge></CardHeader><CardContent className="p-4 space-y-3 text-sm flex-1"><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Incorporation</p><p className="text-muted-foreground text-xs">{state.incorporation.easeOfRegistration} {state.incorporation.complianceNotes}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Startup Schemes</p><p className="text-muted-foreground text-xs">{state.startupSchemes.incentives}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Tax &amp; Labour</p><p className="text-muted-foreground text-xs">Prof. Tax: {state.taxAndLabour.professionalTax}. Labour: {state.taxAndLabour.labourLawCompliance}</p></div><div className="p-2 border rounded-md bg-destructive/10"><p className="font-semibold text-xs text-destructive">Risks</p><p className="text-destructive/80 text-xs">{state.risksAndFlags.commonIssues.join(', ')}</p></div></CardContent></Card>
                     ))}
                 </div>
             </div>
