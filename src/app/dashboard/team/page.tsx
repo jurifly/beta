@@ -23,26 +23,36 @@ const mockRoles = [
 ];
 
 export default function TeamPage() {
-    const { userProfile, updateUserProfile } = useAuth();
+    const { userProfile, revokeTeamInvite, removeTeamMember } = useAuth();
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
     const { toast } = useToast();
 
     const teamMembers = useMemo(() => userProfile?.teamMembers || [], [userProfile]);
-    const pendingInvites = useMemo(() => userProfile?.invites?.filter(inv => inv.type !== 'founder_to_ca') || [], [userProfile]);
+    const pendingInvites = useMemo(() => (userProfile?.invites || []).filter(inv => inv.type === 'team_invite'), [userProfile]);
     const activityLog = useMemo(() => userProfile?.activityLog || [], [userProfile]);
 
     const handleRevokeInvite = async (inviteId: string) => {
-        if (!userProfile) return;
-        const updatedInvites = pendingInvites.filter(inv => inv.id !== inviteId);
-        await updateUserProfile({ invites: updatedInvites });
-        toast({ title: "Invite Revoked", description: "The invitation has been successfully revoked." });
+        const result = await revokeTeamInvite(inviteId);
+        if (result.success) {
+            toast({ title: "Invite Revoked", description: "The invitation has been successfully revoked." });
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: result.message });
+        }
     };
 
     const handleRemoveMember = async (memberId: string) => {
-         if (!userProfile) return;
-        const updatedMembers = teamMembers.filter(mem => mem.id !== memberId);
-        await updateUserProfile({ teamMembers: updatedMembers });
-        toast({ title: "Member Removed", description: "The team member has been removed from the workspace." });
+        if (memberId === userProfile?.uid) {
+            toast({ variant: 'destructive', title: "Action not allowed", description: "You cannot remove yourself from the workspace." });
+            return;
+        }
+        if (window.confirm("Are you sure you want to remove this team member?")) {
+            const result = await removeTeamMember(memberId);
+            if (result.success) {
+                toast({ title: "Member Removed", description: "The team member has been removed from the workspace." });
+            } else {
+                toast({ variant: 'destructive', title: "Error", description: result.message });
+            }
+        }
     };
 
     if (!userProfile) {
@@ -89,7 +99,7 @@ export default function TeamPage() {
                                             </TableCell>
                                             <TableCell><Badge variant="outline">{member.role}</Badge></TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(member.id)}>
+                                                <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(member.id)} disabled={member.id === userProfile.uid}>
                                                     <Trash2 className="w-4 h-4 text-destructive"/>
                                                 </Button>
                                             </TableCell>

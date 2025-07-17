@@ -25,10 +25,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
+import type { UserRole } from "@/lib/types";
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
-  role: z.string().min(1, "Please select a role for the team member."),
+  role: z.enum(['Admin', 'Member', 'Viewer'], { required_error: "Please select a role." }),
 });
 
 type FormData = z.infer<typeof inviteSchema>;
@@ -40,26 +41,28 @@ interface InviteMemberModalProps {
 
 export function InviteMemberModal({ isOpen, onOpenChange }: InviteMemberModalProps) {
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { sendTeamInvite } = useAuth();
   
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, control } = useForm<FormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
     resolver: zodResolver(inviteSchema),
-    defaultValues: {
-      email: "",
-      role: "",
-    }
   });
 
   const onSubmit = async (data: FormData) => {
-    // In a real app, you would have an API call here to send the invite
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Invite Sent!",
-      description: `${data.email} has been invited to join as a ${data.role}.`,
-    });
-    onOpenChange(false);
-    reset();
+    const result = await sendTeamInvite(data.email, data.role as 'Admin' | 'Member' | 'Viewer');
+    if (result.success) {
+      toast({
+        title: "Invite Sent!",
+        description: `${data.email} has been invited to join as a ${data.role}.`,
+      });
+      onOpenChange(false);
+      reset();
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error Sending Invite',
+        description: result.message
+      });
+    }
   };
 
   const availableRoles = ['Admin', 'Member', 'Viewer'];

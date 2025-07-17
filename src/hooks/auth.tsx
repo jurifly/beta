@@ -4,7 +4,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData, TeamMember } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -41,6 +41,9 @@ export interface AuthContextType {
   getPendingInvites: () => Promise<any[]>;
   acceptInvite: (inviteId: string) => Promise<void>;
   checkForAcceptedInvites: () => Promise<void>;
+  sendTeamInvite: (email: string, role: TeamMember['role']) => Promise<{ success: boolean; message: string }>;
+  revokeTeamInvite: (inviteId: string) => Promise<{ success: boolean; message: string }>;
+  removeTeamMember: (memberId: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -706,7 +709,69 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, userProfile, toast, addNotification]);
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, applyAccessPass, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites };
+  const sendTeamInvite = async (email: string, role: TeamMember['role']): Promise<{ success: boolean; message: string }> => {
+    if (!user || !userProfile) return { success: false, message: 'You must be logged in.' };
+    
+    // Check if user is already a member
+    if (userProfile.teamMembers?.some(m => m.email === email)) {
+        return { success: false, message: 'This user is already a member of your team.' };
+    }
+    // Check for pending invites
+    if (userProfile.invites?.some(inv => inv.caEmail === email && inv.status === 'pending' && inv.type === 'team_invite')) {
+        return { success: false, message: 'An invitation has already been sent to this email address.' };
+    }
+
+    const newInvite: Omit<Invite, 'id'> = {
+        type: 'team_invite',
+        founderId: user.uid,
+        founderName: userProfile.name,
+        companyId: userProfile.uid, // Using founder's UID as the workspace/company ID
+        companyName: `${userProfile.name}'s Workspace`,
+        caEmail: email, // Reusing field for invited user's email
+        role,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+    };
+
+    try {
+        const inviteDocRef = await addDoc(collection(db, "invites"), newInvite);
+        await updateUserProfile({ invites: [...(userProfile.invites || []), { ...newInvite, id: inviteDocRef.id }] });
+        return { success: true, message: "Invitation sent." };
+    } catch (error: any) {
+        console.error("Error sending team invite:", error);
+        return { success: false, message: 'Could not send invitation. Please try again.' };
+    }
+  };
+
+  const revokeTeamInvite = async (inviteId: string): Promise<{ success: boolean; message: string }> => {
+    if (!user || !userProfile) return { success: false, message: "Not authenticated." };
+    try {
+      const inviteRef = doc(db, 'invites', inviteId);
+      await deleteDoc(inviteRef);
+      const updatedInvites = userProfile.invites?.filter(inv => inv.id !== inviteId);
+      await updateUserProfile({ invites: updatedInvites });
+      return { success: true, message: 'Invite revoked.' };
+    } catch (error) {
+      console.error("Error revoking invite:", error);
+      return { success: false, message: "Could not revoke invite." };
+    }
+  };
+
+  const removeTeamMember = async (memberId: string): Promise<{ success: boolean; message: string }> => {
+    if (!user || !userProfile) return { success: false, message: "Not authenticated." };
+    if (memberId === user.uid) return { success: false, message: "You cannot remove yourself." };
+
+    try {
+        const updatedMembers = userProfile.teamMembers?.filter(m => m.id !== memberId);
+        await updateUserProfile({ teamMembers: updatedMembers });
+        return { success: true, message: 'Member removed.' };
+    } catch (error) {
+        console.error("Error removing member:", error);
+        return { success: false, message: 'Could not remove team member.' };
+    }
+  };
+
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, applyAccessPass, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites, sendTeamInvite, revokeTeamInvite, removeTeamMember };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
