@@ -37,7 +37,7 @@ const GrantSchema = z.object({
 
 const InvestorFinderOutputSchema = z.object({
   investors: z.array(InvestorSchema).describe('A curated list of 10-15 relevant investors.'),
-  grants: z.array(GrantSchema).optional().describe("A list of 2-3 highly relevant government grants or schemes for the startup."),
+  grants: z.array(GrantSchema).optional().describe("A list of 3-5 highly relevant government grants or schemes for the startup."),
 });
 export type InvestorFinderOutput = z.infer<typeof InvestorFinderOutputSchema>;
 
@@ -72,10 +72,10 @@ Generate a list of 10-15 active and relevant investors. For each investor, provi
 -   **Portfolio Startups**: 2-3 relevant or well-known portfolio companies.
 
 **Part 2: Grants & Schemes**
-Based on the startup's profile, identify 2-3 of the MOST relevant government grants or schemes available in {{legalRegion}}. For each grant, provide:
--   **Name**: The official name of the scheme (e.g., "Startup India Seed Fund Scheme").
+Based on the startup's profile, identify 3-5 of the MOST relevant government grants or schemes available in {{legalRegion}}. You MUST prioritize **state-level schemes** specific to the user's location ({{location}}) first, before listing any national-level schemes. For each grant, provide:
+-   **Name**: The official name of the scheme (e.g., "Startup Bihar Policy", "Startup India Seed Fund Scheme").
 -   **Description**: A one-sentence summary.
--   **Eligibility Summary**: A brief, clear summary of who can apply (e.g., "DPIIT recognized startups, less than 2 years old").
+-   **Eligibility Summary**: A brief, clear summary of who can apply (e.g., "DPIIT recognized startups in Bihar, less than 10 years old").
 -   **Link**: The official government website URL for the scheme.
 
 **CRITICAL QUALITY CONTROL**: You MUST verify the data to the best of your ability. Ensure all links are correct and direct. The provided lists must be highly relevant to the startup's profile. Prioritize investors known to be active in the last 12-18 months.
