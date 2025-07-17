@@ -6,6 +6,7 @@ import { useActionState } from 'react';
 import { generateChecklist as generateDiligenceChecklistFlow, type GenerateChecklistInput, type GenerateChecklistOutput } from '@/ai/flows/generate-checklist-flow';
 import { recommendGrants, type GrantRecommenderInput, type GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import { findInvestors, type InvestorFinderInput, type InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
+import { compareStates, type StateComparisonInput, type StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 
 const initialDiligenceState: { data: GenerateChecklistOutput | null; error: string | null; } = { data: null, error: null };
 export async function generateDiligenceChecklistAction(previousState: typeof initialDiligenceState, formData: FormData): Promise<typeof initialDiligenceState> {
@@ -37,4 +38,15 @@ export async function findInvestorsAction(input: InvestorFinderInput): Promise<I
         console.error('AI Flow Error:', e);
         throw new Error(e.message || 'Could not find investor recommendations.');
     }
+}
+
+export async function compareStatesAction(input: StateComparisonInput): Promise<StateComparisonOutput> {
+  try {
+    const result = await compareStates(input);
+    return result;
+  } catch (e: any) {
+    console.error('AI Flow Error:', e);
+    const errorMessage = e.message || 'An unexpected error occurred.';
+    throw new Error(`AI state comparison is currently unavailable: ${errorMessage}`);
+  }
 }

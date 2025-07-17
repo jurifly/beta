@@ -28,7 +28,7 @@ import type { GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import type { InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
 import type { StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { compareStatesAction } from '../business-setup/actions';
+import { compareStatesAction } from './actions';
 
 // --- Dataroom Audit Tab ---
 
