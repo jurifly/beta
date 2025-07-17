@@ -1,3 +1,4 @@
+
 'use server';
 
 import { recommendBusinessStructure, type BusinessRecommenderInput, type BusinessRecommenderOutput } from '@/ai/flows/business-recommender-flow';
@@ -36,15 +37,5 @@ export async function getIncCodeAction(input: IncCodeFinderInput): Promise<IncCo
     console.error('AI Flow Error:', e);
     const errorMessage = e.message || 'An unexpected error occurred.';
     throw new Error(`AI code finder is currently unavailable: ${errorMessage}`);
-  }
-}
-
-export async function compareStatesAction(input: StateComparisonInput): Promise<StateComparisonOutput> {
-  try {
-    return await compareStates(input);
-  } catch (e: any) {
-    console.error('AI Flow Error:', e);
-    const errorMessage = e.message || 'An unexpected error occurred.';
-    throw new Error(`AI state comparison is currently unavailable: ${errorMessage}`);
   }
 }

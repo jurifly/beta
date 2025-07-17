@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition, useMemo } from 'react';
@@ -8,7 +9,7 @@ import { useAuth } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, FolderCheck, RefreshCw, Share2, GanttChartSquare, Gift, CheckCircle, Building2, Banknote, ShieldCheck, Handshake, PiggyBank, ArrowRight, ExternalLink, Linkedin, Search as SearchIcon } from 'lucide-react';
+import { Loader2, Sparkles, FolderCheck, RefreshCw, Share2, GanttChartSquare, Gift, CheckCircle, Building2, Banknote, ShieldCheck, Handshake, PiggyBank, ArrowRight, ExternalLink, Linkedin, Search as SearchIcon, Globe } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
@@ -25,7 +26,9 @@ import type { GenerateDDChecklistOutput, ChecklistCategory, UserProfile } from "
 import type { GenerateChecklistOutput as RawChecklistOutput } from '@/ai/flows/generate-checklist-flow';
 import type { GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import type { InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
+import type { StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { compareStatesAction } from '../business-setup/actions';
 
 // --- Dataroom Audit Tab ---
 
@@ -263,81 +266,45 @@ const GrantRecommenderTab = () => {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-            <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
-                 <Card className="interactive-lift">
-                    <CardHeader>
-                        <CardTitle>Government Scheme Finder</CardTitle>
-                        <CardDescription>Tell us about your startup to find relevant government grants, loans, and tax exemptions.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                           <Label htmlFor="industry">Industry / Sector</Label>
-                           <Controller name="industry" control={control} render={({ field }) => <Input id="industry" placeholder="e.g. B2B SaaS, Fintech" {...field} />} />
-                           {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
+        <div className="lg:col-span-3">
+             <Card className="min-h-[400px] interactive-lift">
+                <CardHeader>
+                    <CardTitle>AI Recommendations</CardTitle>
+                </CardHeader>
+                 <CardContent>
+                    {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Searching for schemes...</p></div>}
+                    {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
+                    {result && (
+                        <div className="space-y-4 animate-in fade-in-50">
+                            {result.recommendations.map((rec, i) => {
+                                const Icon = categoryIcons[rec.category] || categoryIcons.Default;
+                                return (
+                                    <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
+                                        <CardHeader>
+                                            <div className="flex justify-between items-start">
+                                                <CardTitle className="text-base flex items-center gap-2"><Icon className="w-4 h-4 text-primary" />{rec.schemeName}</CardTitle>
+                                                {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
+                                            </div>
+                                            <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground">{rec.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Button asChild variant="link" className="p-0 h-auto">
+                                                <a href={rec.link} target="_blank" rel="noopener noreferrer">
+                                                    Learn More & Apply <ExternalLink className="ml-2 w-3.5 h-3.5"/>
+                                                </a>
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                )
+                            })}
                         </div>
-                        <div className="space-y-2">
-                           <Label htmlFor="location">State of Operation</Label>
-                           <Controller name="location" control={control} render={({ field }) => <Input id="location" placeholder="e.g. Maharashtra" {...field} />} />
-                           {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                           <Controller name="hasFemaleFounder" control={control} render={({ field }) => <Checkbox id="hasFemaleFounder" checked={field.value} onCheckedChange={field.onChange} />} />
-                           <Label htmlFor="hasFemaleFounder">We have at least one female co-founder.</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                           <Controller name="isDpiitRecognized" control={control} render={({ field }) => <Checkbox id="isDpiitRecognized" checked={field.value} onCheckedChange={field.onChange} />} />
-                           <Label htmlFor="isDpiitRecognized">We are already DPIIT recognized.</Label>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                         <Button type="submit" className="w-full" disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Find Schemes (1 Credit)
-                        </Button>
-                    </CardFooter>
-                 </Card>
-            </form>
-             <div className="lg:col-span-3">
-                 <Card className="min-h-[400px] interactive-lift">
-                    <CardHeader>
-                        <CardTitle>AI Recommendations</CardTitle>
-                    </CardHeader>
-                     <CardContent>
-                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Searching for schemes...</p></div>}
-                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
-                        {result && (
-                            <div className="space-y-4 animate-in fade-in-50">
-                                {result.recommendations.map((rec, i) => {
-                                    const Icon = categoryIcons[rec.category] || categoryIcons.Default;
-                                    return (
-                                        <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
-                                            <CardHeader>
-                                                <div className="flex justify-between items-start">
-                                                    <CardTitle className="text-base flex items-center gap-2"><Icon className="w-4 h-4 text-primary" />{rec.schemeName}</CardTitle>
-                                                    {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
-                                                </div>
-                                                <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm text-muted-foreground">{rec.description}</p>
-                                                <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
-                                            </CardContent>
-                                            <CardFooter>
-                                                <Button asChild variant="link" className="p-0 h-auto">
-                                                    <a href={rec.link} target="_blank" rel="noopener noreferrer">
-                                                        Learn More & Apply <ExternalLink className="ml-2 w-3.5 h-3.5"/>
-                                                    </a>
-                                                </Button>
-                                            </CardFooter>
-                                        </Card>
-                                    )
-                                })}
-                            </div>
-                        )}
-                     </CardContent>
-                 </Card>
-            </div>
+                    )}
+                 </CardContent>
+             </Card>
         </div>
     )
 }
@@ -475,6 +442,69 @@ const InvestorDiscoveryTab = () => {
     )
 };
 
+const allIndianStates = [ 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Puducherry' ];
+const stateAssistantSchema = z.object({
+  businessType: z.enum(['Tech/IT/SaaS', 'Manufacturing', 'Services (Non-IT)', 'Agri-business', 'E-commerce/Retail']),
+  fundingStage: z.enum(['Bootstrapped', 'Pre-Seed/Angel', 'VC Funded']),
+  hiringPlan: z.enum(['1-10 Employees', '11-50 Employees', '50+ Employees']),
+  statesToCompare: z.array(z.string()).min(1, "Select at least one state.").max(3, "You can compare up to 3 states."),
+});
+type StateAssistantFormData = z.infer<typeof stateAssistantSchema>;
+
+function StateAssistantTab() {
+  const { toast } = useToast();
+  const [result, setResult] = useState<StateComparisonOutput | null>(null);
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<StateAssistantFormData>({
+    resolver: zodResolver(stateAssistantSchema),
+    defaultValues: { statesToCompare: [], hiringPlan: '1-10 Employees' }
+  });
+  
+  const onSubmit = async (data: StateAssistantFormData) => {
+    setResult(null);
+    try {
+      const response = await compareStatesAction(data);
+      setResult(response);
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Analysis Failed', description: e.message });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+        <Card>
+            <CardHeader>
+                <CardTitle>State-Based Assistant</CardTitle>
+                <CardDescription>Compare Indian states to find the best place to register your business.</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                     <Controller name="businessType" control={control} render={({ field }) => (<div className="space-y-2"><Label>Business Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger><SelectContent><SelectItem value="Tech/IT/SaaS">Tech/IT/SaaS</SelectItem><SelectItem value="Manufacturing">Manufacturing</SelectItem><SelectItem value="Services (Non-IT)">Services (Non-IT)</SelectItem><SelectItem value="Agri-business">Agri-business</SelectItem><SelectItem value="E-commerce/Retail">E-commerce/Retail</SelectItem></SelectContent></Select>{errors.businessType && <p className="text-sm text-destructive">{errors.businessType.message}</p>}</div>)} />
+                     <Controller name="fundingStage" control={control} render={({ field }) => (<div className="space-y-2"><Label>Funding Stage</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent><SelectItem value="Bootstrapped">Bootstrapped</SelectItem><SelectItem value="Pre-Seed/Angel">Pre-Seed/Angel</SelectItem><SelectItem value="VC Funded">VC Funded</SelectItem></SelectContent></Select>{errors.fundingStage && <p className="text-sm text-destructive">{errors.fundingStage.message}</p>}</div>)} />
+                     <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-xs", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
+                     <Controller name="statesToCompare" control={control} render={({ field }) => (<div className="space-y-2"><Label>Compare States (Max 3)</Label><Select onValueChange={(value) => {const current = field.value || []; const newValues = current.includes(value) ? current.filter(v => v !== value) : [...current, value].slice(-3); field.onChange(newValues);}} value="placeholder"><SelectTrigger><SelectValue placeholder="Select states..."/></SelectTrigger><SelectContent><div className="grid grid-cols-2 gap-1 p-2">{allIndianStates.map(state => (<div key={state} className="flex items-center space-x-2 p-2 border rounded-md"><Checkbox id={state} checked={field.value?.includes(state)} onCheckedChange={(checked) => {const current = field.value || []; return checked ? field.onChange([...current, state]) : field.onChange(current.filter(value => value !== state))}}/><Label htmlFor={state} className="text-sm font-normal">{state}</Label></div>))}</div></SelectContent></Select><div className="flex flex-wrap gap-1 mt-2">{field.value?.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}</div>{errors.statesToCompare && <p className="text-sm text-destructive">{errors.statesToCompare.message}</p>}</div>)} />
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>} Compare States
+                    </Button>
+                </CardFooter>
+            </form>
+        </Card>
+        {isSubmitting && (<div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Comparing state policies...</p></div>)}
+        {!isSubmitting && result && (
+            <div className="space-y-6 animate-in fade-in-50">
+                <Card><CardHeader><CardTitle>AI Recommendation</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{result.recommendation}</p></CardContent></Card>
+                <div className={cn("grid gap-4", result.analysis.length === 1 && "grid-cols-1", result.analysis.length === 2 && "grid-cols-1 md:grid-cols-2", result.analysis.length === 3 && "grid-cols-1 md:grid-cols-3")}>
+                    {result.analysis.sort((a,b) => b.score - a.score).map(state => (
+                        <Card key={state.state} className="flex flex-col"><CardHeader className="text-center bg-muted/50"><CardTitle>{state.state}</CardTitle><Badge className="w-fit mx-auto" variant={state.score > 7 ? 'default' : state.score > 4 ? 'secondary' : 'destructive'}>Score: {state.score}/10</Badge></CardHeader><CardContent className="p-4 space-y-3 text-sm flex-1"><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Incorporation</p><p className="text-muted-foreground text-xs">{state.incorporation.easeOfRegistration} {state.incorporation.complianceNotes}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Startup Schemes</p><p className="text-muted-foreground text-xs">{state.startupSchemes.incentives}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Tax & Labour</p><p className="text-muted-foreground text-xs">Prof. Tax: {state.taxAndLabour.professionalTax}. Labour: {state.taxAndLabour.labourLawCompliance}</p></div><div className="p-2 border rounded-md bg-destructive/10"><p className="font-semibold text-xs text-destructive">Risks</p><p className="text-destructive/80 text-xs">{state.risksAndFlags.commonIssues.join(', ')}</p></div></CardContent></Card>
+                    ))}
+                </div>
+            </div>
+        )}
+    </div>
+  );
+}
+
 // --- Main Page Component ---
 export default function PlaybookPage() {
     const { userProfile } = useAuth();
@@ -494,14 +524,17 @@ export default function PlaybookPage() {
             <Tabs defaultValue="audit" className="w-full">
                 <TabsList className={cn("grid w-full", showInvestorFinder ? "grid-cols-3" : "grid-cols-2")}>
                     <TabsTrigger value="audit"><GanttChartSquare className="mr-2"/>Dataroom Audit</TabsTrigger>
-                    <TabsTrigger value="schemes"><Gift className="mr-2"/>Govt. Scheme Finder</TabsTrigger>
+                    <TabsTrigger value="infrastructure"><Globe className="mr-2"/>Infrastructure</TabsTrigger>
                     {showInvestorFinder && <TabsTrigger value="investors"><SearchIcon className="mr-2"/>Investor Discovery</TabsTrigger>}
                 </TabsList>
                 <TabsContent value="audit" className="mt-6">
                     <DataroomAuditTab />
                 </TabsContent>
-                <TabsContent value="schemes" className="mt-6">
-                    <GrantRecommenderTab />
+                <TabsContent value="infrastructure" className="mt-6">
+                    <div className="space-y-8">
+                        <StateAssistantTab />
+                        <GrantRecommenderTab />
+                    </div>
                 </TabsContent>
                 {showInvestorFinder && (
                     <TabsContent value="investors" className="mt-6">
