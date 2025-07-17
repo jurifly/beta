@@ -45,25 +45,26 @@ export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartP
 
   const years = React.useMemo(() => Object.keys(dataByYear).sort((a,b) => Number(b) - Number(a)), [dataByYear]);
   
-  const getDefaultYear = () => {
+  const getDefaultYear = React.useCallback(() => {
     const currentYear = new Date().getFullYear().toString();
     if (years.includes(currentYear)) {
       return currentYear;
     }
     return years[0] || currentYear;
-  };
+  }, [years]);
 
   const [selectedYear, setSelectedYear] = React.useState(getDefaultYear());
   
   React.useEffect(() => {
-    if (years.length > 0 && !years.includes(selectedYear)) {
+    if (years.length > 0) {
       setSelectedYear(getDefaultYear());
     }
-  }, [years, selectedYear]);
+  }, [years, getDefaultYear]);
 
   const chartData = dataByYear[selectedYear] || [];
-  
-  if (!isMounted) {
+  const isLoading = !isMounted || Object.keys(dataByYear).length === 0;
+
+  if (isLoading) {
     return (
         <Card className="interactive-lift h-full">
             <CardHeader>
