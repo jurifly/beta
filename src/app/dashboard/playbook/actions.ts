@@ -4,7 +4,6 @@
 
 import { useActionState } from 'react';
 import { generateChecklist as generateDiligenceChecklistFlow, type GenerateChecklistInput, type GenerateChecklistOutput } from '@/ai/flows/generate-checklist-flow';
-import { recommendGrants, type GrantRecommenderInput, type GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import { findInvestors, type InvestorFinderInput, type InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
 import { compareStates, type StateComparisonInput, type StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 
@@ -20,15 +19,6 @@ export async function generateDiligenceChecklistAction(previousState: typeof ini
     console.error('AI Flow Error:', e);
     return { data: null, error: e.message || 'An unexpected error occurred.' };
   }
-}
-
-export async function recommendGrantsAction(input: GrantRecommenderInput): Promise<GrantRecommenderOutput> {
-    try {
-        return await recommendGrants(input);
-    } catch (e: any) {
-        console.error('AI Flow Error:', e);
-        throw new Error(e.message || 'Could not find grant recommendations.');
-    }
 }
 
 export async function findInvestorsAction(input: InvestorFinderInput): Promise<InvestorFinderOutput> {

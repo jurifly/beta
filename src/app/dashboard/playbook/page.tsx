@@ -25,7 +25,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import * as AiActions from './actions';
 import type { GenerateDDChecklistOutput, ChecklistCategory, UserProfile } from "@/lib/types";
 import type { GenerateChecklistOutput as RawChecklistOutput } from '@/ai/flows/generate-checklist-flow';
-import type { GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import type { InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
 import type { StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -212,146 +211,6 @@ const DataroomAuditTab = () => {
   );
 };
 
-// --- Grant Recommender Tab ---
-
-const grantRecommenderSchema = z.object({
-  industry: z.string().min(1, "Industry is required."),
-  location: z.string().min(1, "Location is required."),
-  hasFemaleFounder: z.boolean().default(false),
-  isDpiitRecognized: z.boolean().default(false),
-});
-type GrantRecommenderFormData = z.infer<typeof grantRecommenderSchema>;
-
-const GrantRecommenderTab = () => {
-    const { userProfile, deductCredits } = useAuth();
-    const [result, setResult] = useState<GrantRecommenderOutput | null>(null);
-    const { toast } = useToast();
-    
-    const activeCompany = userProfile?.companies.find(c => c.id === userProfile.activeCompanyId);
-
-    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<GrantRecommenderFormData>({
-        resolver: zodResolver(grantRecommenderSchema),
-        defaultValues: {
-            industry: activeCompany?.sector || '',
-            location: activeCompany?.location.split(',')[0]?.trim() || '',
-            hasFemaleFounder: false,
-            isDpiitRecognized: false,
-        }
-    });
-
-    const onSubmit = async (data: GrantRecommenderFormData) => {
-        if (!userProfile || !activeCompany) return;
-        if (!await deductCredits(1)) return;
-
-        setResult(null);
-
-        try {
-            const response = await AiActions.recommendGrantsAction({
-                ...data,
-                businessAgeInMonths: differenceInMonths(new Date(), new Date(activeCompany.incorporationDate)),
-                legalRegion: userProfile.legalRegion,
-            });
-            setResult(response);
-            toast({ title: "Recommendations Ready!", description: "We've found some schemes you might be eligible for." });
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
-        }
-    };
-    
-    const categoryIcons: Record<string, React.ElementType> = {
-        "Tax Exemption": PiggyBank,
-        "Grant / Funding": Banknote,
-        "Certification": ShieldCheck,
-        "State-Specific": Building2,
-        "Loan Scheme": Handshake,
-        "Women Entrepreneur": "♀", // Using an emoji for simplicity
-        "Default": Gift
-    };
-
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-             <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 space-y-6">
-                 <Card className="interactive-lift">
-                     <CardHeader>
-                         <CardTitle>Government Scheme Finder</CardTitle>
-                         <CardDescription>Discover grants and tax exemptions relevant to your startup.</CardDescription>
-                     </CardHeader>
-                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="industry">Industry / Sector</Label>
-                            <Controller name="industry" control={control} render={({ field }) => <Input id="industry" placeholder="e.g. Healthtech, SaaS" {...field} />} />
-                             {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                           <Label htmlFor="location">Primary State of Operation</Label>
-                           <Controller name="location" control={control} render={({ field }) => <Input id="location" placeholder="e.g. Karnataka, Maharashtra" {...field} />} />
-                           {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
-                        </div>
-                        <Controller name="hasFemaleFounder" control={control} render={({ field }) => (
-                           <div className="flex items-center space-x-2">
-                              <Checkbox id="femaleFounder" checked={field.value} onCheckedChange={field.onChange} />
-                              <Label htmlFor="femaleFounder" className="text-sm font-normal">My startup has a female co-founder</Label>
-                           </div>
-                        )} />
-                         <Controller name="isDpiitRecognized" control={control} render={({ field }) => (
-                           <div className="flex items-center space-x-2">
-                              <Checkbox id="dpiit" checked={field.value} onCheckedChange={field.onChange} />
-                              <Label htmlFor="dpiit" className="text-sm font-normal">I have DPIIT / Startup India recognition</Label>
-                           </div>
-                        )} />
-                     </CardContent>
-                     <CardFooter>
-                         <Button type="submit" className="w-full" disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Find Schemes (1 Credit)
-                        </Button>
-                     </CardFooter>
-                 </Card>
-            </form>
-            <div className="lg:col-span-3">
-                 <Card className="min-h-[400px] interactive-lift">
-                    <CardHeader>
-                        <CardTitle>AI Recommendations</CardTitle>
-                    </CardHeader>
-                     <CardContent>
-                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Searching for schemes...</p></div>}
-                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><Gift className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your grant recommendations will appear here.</p></div>}
-                        {result && (
-                            <div className="space-y-4 animate-in fade-in-50">
-                                {result.recommendations.map((rec, i) => {
-                                    const Icon = categoryIcons[rec.category] || categoryIcons.Default;
-                                    return (
-                                        <Card key={i} className={cn(rec.isEligible ? 'border-primary/30 bg-primary/5' : 'bg-muted/50')}>
-                                            <CardHeader>
-                                                <div className="flex justify-between items-start">
-                                                    <CardTitle className="text-base flex items-center gap-2"><Icon className="w-4 h-4 text-primary" />{rec.schemeName}</CardTitle>
-                                                    {rec.isEligible && <Badge><CheckCircle className="mr-1.5"/> Likely Eligible</Badge>}
-                                                </div>
-                                                <CardDescription><Badge variant="outline">{rec.category}</Badge></CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm text-muted-foreground">{rec.description}</p>
-                                                <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {rec.eligibilitySummary}</p>
-                                            </CardContent>
-                                            <CardFooter>
-                                                <Button asChild variant="link" className="p-0 h-auto">
-                                                    <a href={rec.link} target="_blank" rel="noopener noreferrer">
-                                                        Learn More & Apply <ExternalLink className="ml-2 w-3.5 h-3.5"/>
-                                                    </a>
-                                                </Button>
-                                            </CardFooter>
-                                        </Card>
-                                    )
-                                })}
-                            </div>
-                        )}
-                     </CardContent>
-                 </Card>
-            </div>
-        </div>
-    )
-};
-
 // --- Investor Discovery Tab ---
 const investorFinderSchema = z.object({
   industry: z.string().min(1, "Industry is required."),
@@ -519,7 +378,7 @@ function StateAssistantTab() {
         <Card>
             <CardHeader>
                 <CardTitle>State-Based Assistant</CardTitle>
-                <CardDescription>Compare Indian states to find the best place to register your business.</CardDescription>
+                <CardDescription>Compare Indian states to find the best place to register your business, including local schemes.</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -576,10 +435,7 @@ export default function PlaybookPage() {
                     <DataroomAuditTab />
                 </TabsContent>
                 <TabsContent value="infrastructure" className="mt-6">
-                    <div className="space-y-8">
-                        <StateAssistantTab />
-                        <GrantRecommenderTab />
-                    </div>
+                    <StateAssistantTab />
                 </TabsContent>
                 {showInvestorFinder && (
                     <TabsContent value="investors" className="mt-6">
