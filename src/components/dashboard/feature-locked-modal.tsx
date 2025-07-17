@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Lock, Zap, ArrowRight, GanttChartSquare, LineChart, Library, Users } from "lucide-react";
+import { Lock, Zap, ArrowRight, GanttChartSquare, LineChart, Library, Users, MessageSquare, Network, FileText, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/auth";
 import type { ReactNode } from "react";
@@ -20,12 +20,28 @@ interface FeatureLockedModalProps {
   type?: 'pro' | 'beta';
 }
 
-const wittyMessages: Record<string, { title: string; lines: string[]; }> = {
-    "Connections": { title: "It's Not You, It's Us", lines: ["This feature is currently playing hard to get.", "We're launching it for everyone after the beta. Promise."], },
-    "Community": { title: "The Cool Kids' Table", lines: ["Our community forum is getting its final touches.", "It'll be the place to be, launching for everyone post-beta."], },
-    "Report Center": { title: "The Reports of My Existence...", lines: ["...have been greatly exaggerated. For now.", "Automated PDF reports are coming for all users after the beta period."], },
-    "Workflows": { title: "Don't Just Work, Workflow!", lines: ["Automation is the final frontier.", "This powerful feature is coming for all users after the beta."], },
-    "default": { title: "Still in the Oven!", lines: ["This feature is baking and isn't quite ready yet.", "It will be available for everyone after the beta launch."], }
+const wittyMessages: Record<string, { title: string; lines: string[]; icon: React.ElementType }> = {
+    "Community": { 
+        title: "Community is... Still Missing", 
+        lines: ["Our intern said, “I’ll build the community feature.”", "That was 49 days ago. No update.", "We’re filing a missing person report. 🕵️‍♂️"],
+        icon: MessageSquare,
+    },
+    "Connections": { 
+        title: "Connection is... on Airplane Mode", 
+        lines: ["We built it to spark networking magic.", "So far, it’s sparked 0 replies and 1 accidental Zoom with someone’s dad."], 
+        icon: Network,
+    },
+    "Report Center": { 
+        title: "Report Centre is... Redacted", 
+        lines: ["We promised real-time insights.", "All we have is one sad pie chart and a Google Sheet named “USE_THIS_final_v10”."],
+        icon: FileText,
+    },
+    "Workflows": { 
+        title: "Workflow Engine is... Napping", 
+        lines: ["The workflow is currently... not working.", "We tried building it on a weekend. Big mistake.", "ETA: After 7 cups of chai and one long nap. 💤"],
+        icon: Workflow,
+    },
+    "default": { title: "Still in the Oven!", lines: ["This feature is baking and isn't quite ready yet.", "It will be available for everyone after the beta launch."], icon: Lock }
 };
 
 const proFeatureMessages: Record<string, { title: string; lines: string[], icon: React.ElementType }> = {
@@ -74,7 +90,7 @@ export function FeatureLockedModal({ featureName, onOpenChange, type = 'beta' }:
       Icon = content.icon;
   } else {
       content = (featureName && wittyMessages[featureName]) || wittyMessages.default;
-      Icon = Lock;
+      Icon = content.icon;
   }
   
   if (isDevMode) return null;
@@ -100,7 +116,7 @@ export function FeatureLockedModal({ featureName, onOpenChange, type = 'beta' }:
                     </Button>
                  ) : (
                     <Button size="lg" className="w-full interactive-lift" onClick={() => onOpenChange(false)}>
-                        Got It!
+                        Got It! (Coming Soon)
                     </Button>
                  )}
             </div>
