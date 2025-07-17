@@ -431,21 +431,33 @@ export default function ReportCenterPage() {
               return;
             };
             
-            const insightsResponse = await generateReportInsights({
-                hygieneScore: hygieneScore,
-                overdueFilings: overdueFilings.length,
-                upcomingFilings: upcomingFilings.length,
-                burnRate: burn > 0 ? burn : 0,
-                runwayInMonths: runway,
-                recentRiskFlags: recentRisks,
-                legalRegion: client.legalRegion
-            });
-            
-            // Re-apply the full data with the new summary
-            setReportData({
-                ...initialReportData, 
-                executiveSummary: insightsResponse.executiveSummary 
-            });
+            try {
+                const insightsResponse = await generateReportInsights({
+                    hygieneScore: hygieneScore,
+                    overdueFilings: overdueFilings.length,
+                    upcomingFilings: upcomingFilings.length,
+                    burnRate: burn > 0 ? burn : 0,
+                    runwayInMonths: runway,
+                    recentRiskFlags: recentRisks,
+                    legalRegion: client.legalRegion
+                });
+                
+                // Re-apply the full data with the new summary
+                setReportData(currentData => {
+                    if (!currentData) return null;
+                    return {
+                        ...currentData, 
+                        executiveSummary: insightsResponse.executiveSummary 
+                    };
+                });
+            } catch (aiError: any) {
+                console.error("AI Insight generation failed:", aiError);
+                toast({
+                    variant: 'destructive',
+                    title: "AI Summary Failed",
+                    description: "Could not generate AI summary, but the rest of the report is ready. The model may be overloaded."
+                });
+            }
 
 
         } catch (error: any) {
