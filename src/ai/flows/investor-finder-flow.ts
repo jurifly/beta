@@ -32,7 +32,7 @@ const GrantSchema = z.object({
     name: z.string().describe("The official name of the government grant or scheme."),
     description: z.string().describe("A brief summary of what the grant is for."),
     eligibilitySummary: z.string().describe("A concise summary of the key eligibility criteria for a startup."),
-    link: z.string().url().describe("The official government URL for the grant or scheme."),
+    link: z.string().describe("The official government URL for the grant or scheme."),
 });
 
 const InvestorFinderOutputSchema = z.object({
