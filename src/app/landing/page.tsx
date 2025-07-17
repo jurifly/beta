@@ -78,10 +78,10 @@ const HeroSection = () => {
             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary)/0.05),transparent)]"></div>
             <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
-                Clarity for Founders. Finally.
+                Founders Clarity. Finally.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-                No more cluttered dashboards. Just the clarity you need — for your company’s documents, taxes, and compliances — in one clean space.
+                There would be no longer clumsy dashboards. Comparative clarity, all you need on behalf of your company documents, taxes and compliances, in one clean room.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" onClick={() => router.push('/register')}>
@@ -99,10 +99,10 @@ const HeroSection = () => {
 // Value Props Section
 const ValueSection = () => {
     const valueProps = [
-        { text: "Auto-generate docs", description: "Founder letters to legal forms, done in seconds.", icon: FileText },
-        { text: "Visualize your finances", description: "Burn-rate, runway, tax overviews — always up-to-date.", icon: BarChart },
-        { text: "Sync, store, share", description: "All your docs + filings stored on your drive, always ready.", icon: DatabaseZap },
-        { text: "Founder <> Advisor Mode", description: "Share workspace with your CA or investor in one click.", icon: HeartHandshake },
+        { text: "Auto-generate docs", description: "Legal forms made in seconds.", icon: FileText },
+        { text: "Sometimes you have to imagine your finances", description: "Burn-rate, runway, tax summaries, topical and up-to-date.", icon: BarChart },
+        { text: "Sync, store, share", description: "All your documents + filings on your drive and always available.", icon: DatabaseZap },
+        { text: "Advisor Comments Mode", description: "Collaborate on your workspace with your CA or investor with a single-click.", icon: HeartHandshake },
     ];
 
     return (
@@ -110,7 +110,7 @@ const ValueSection = () => {
           <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                    Everything you expected a CA to do — without the wait.
+                    All that you wanted to do by using a CA- it just took time.
                 </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -143,7 +143,7 @@ const ProductGlimpseSection = () => {
     return (
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This is not software. It's sanity.</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This is no software. It's sanity.</h2>
                 <div className="flex flex-wrap justify-center gap-2 md:gap-4 border-b pb-4">
                     {glimpses.map((glimpse) => (
                         <Button
@@ -177,17 +177,17 @@ const ProductGlimpseSection = () => {
 // How It Works Section
 const HowItWorksSection = () => {
     const steps = [
-        { title: "Sign-up & select role", description: "Founder or advisor — we personalize everything." },
-        { title: "Add your company", description: "Basic info → we fetch docs, structure your workspace." },
-        { title: "Let the AI assist", description: "Generate docs, review tax view, share workspace with CA." }
+        { title: "Register & choose position", description: "Advisor or founder, we make everything personal." },
+        { title: "Include your own company", description: "Simple data → we download documents, organize you your place of work." },
+        { title: "Allow the AI to help me out", description: "PDF-docs, Tax View, share workspace with CA." }
     ];
     return (
         <section className="w-full py-20 md:py-32 bg-card/50">
             <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4">
-                    How you start using this in &lt; 3 mins
+                    The time that you will begin using this in &lt; 3 mins
                 </h2>
-                <p className="text-lg text-muted-foreground">"From chaos to clarity in 180 seconds."</p>
+                <p className="text-lg text-muted-foreground">The 180 seconds concept is - chaos to clarity.</p>
                 <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                     {steps.map((step, index) => (
                         <div key={index} className="relative flex flex-col items-center gap-4 text-center">
@@ -219,11 +219,11 @@ const SocialValidationSection = () => {
         <section className="w-full py-20 md:py-32">
             <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
                 <Card className="p-6 md:p-10 max-w-2xl mx-auto bg-card/50 text-center interactive-lift">
-                    <p className="text-2xl font-medium leading-snug">"Before this, I had legal docs in Gmail, tax reminders in WhatsApp, and burn rate in Notion. Now, it's just here — in one clean view."</p>
-                    <p className="font-semibold mt-4">— Beta Founder #47</p>
+                    <p className="text-2xl font-medium leading-snug">"Prior to this, I used Gmail to store my legal docs, WhatsApp to send tax reminders, and Notion to manage burn rate. It is now, simply, here - just here in one clear picture."</p>
+                    <p className="font-semibold mt-4">— Here is a Founder of beta #47.</p>
                 </Card>
                 
-                <h3 className="text-lg text-muted-foreground mt-16 mb-4">Built with 100+ founders, CAs, and early-stage advisors from communities like:</h3>
+                <h3 className="text-lg text-muted-foreground mt-16 mb-4">Constructed on 100+ founders, CAs, and early-stage advisors of the community such as:</h3>
                 <div className="my-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
                    {brandLogos.map(logo => <div key={logo.name}>{logo.component}</div>)}
                 </div>
@@ -244,7 +244,7 @@ const LandingFooter = () => {
         <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:h-24 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
             <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
-              This is a beta product. Your feedback shapes it.
+              It is a beta product. It is influenced by your feedback.
             </p>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
