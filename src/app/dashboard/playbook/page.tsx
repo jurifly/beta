@@ -29,6 +29,8 @@ import type { InvestorFinderOutput } from '@/ai/flows/investor-finder-flow';
 import type { StateComparisonOutput } from '@/ai/flows/state-comparison-flow';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { compareStatesAction } from './actions';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 // --- Dataroom Audit Tab ---
 
@@ -372,20 +374,69 @@ function StateAssistantTab() {
       toast({ variant: 'destructive', title: 'Analysis Failed', description: e.message });
     }
   };
-
-  return (
+  
+    return (
     <div className="space-y-4">
         <Card>
-            <CardHeader>
-                <CardTitle>State-Based Assistant</CardTitle>
-                <CardDescription>Compare Indian states to find the best place to register your business, including local schemes.</CardDescription>
-            </CardHeader>
             <form onSubmit={handleSubmit(onSubmit)}>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                     <Controller name="businessType" control={control} render={({ field }) => (<div className="space-y-2"><Label>Business Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger><SelectContent><SelectItem value="Tech/IT/SaaS">Tech/IT/SaaS</SelectItem><SelectItem value="Manufacturing">Manufacturing</SelectItem><SelectItem value="Services (Non-IT)">Services (Non-IT)</SelectItem><SelectItem value="Agri-business">Agri-business</SelectItem><SelectItem value="E-commerce/Retail">E-commerce/Retail</SelectItem></SelectContent></Select>{errors.businessType && <p className="text-sm text-destructive">{errors.businessType.message}</p>}</div>)} />
-                     <Controller name="fundingStage" control={control} render={({ field }) => (<div className="space-y-2"><Label>Funding Stage</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent><SelectItem value="Bootstrapped">Bootstrapped</SelectItem><SelectItem value="Pre-Seed/Angel">Pre-Seed/Angel</SelectItem><SelectItem value="VC Funded">VC Funded</SelectItem></SelectContent></Select>{errors.fundingStage && <p className="text-sm text-destructive">{errors.fundingStage.message}</p>}</div>)} />
-                     <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-xs", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
-                     <Controller name="statesToCompare" control={control} render={({ field }) => (<div className="space-y-2"><Label>Compare States (Max 3)</Label><Select onValueChange={(value) => {const current = field.value || []; const newValues = current.includes(value) ? current.filter(v => v !== value) : [...current, value].slice(-3); field.onChange(newValues);}} value="placeholder"><SelectTrigger><SelectValue placeholder="Select states..."/></SelectTrigger><SelectContent><div className="grid grid-cols-2 gap-1 p-2">{allIndianStates.map(state => (<div key={state} className="flex items-center space-x-2 p-2 border rounded-md"><Checkbox id={state} checked={field.value?.includes(state)} onCheckedChange={(checked) => {const current = field.value || []; return checked ? field.onChange([...current, state]) : field.onChange(current.filter(value => value !== state))}}/><Label htmlFor={state} className="text-sm font-normal">{state}</Label></div>))}</div></SelectContent></Select><div className="flex flex-wrap gap-1 mt-2">{field.value?.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}</div>{errors.statesToCompare && <p className="text-sm text-destructive">{errors.statesToCompare.message}</p>}</div>)} />
+                <CardHeader>
+                    <CardTitle>State-Based Assistant</CardTitle>
+                    <CardDescription>Compare Indian states to find the best place to register your business, including local schemes.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                        {/* Left Column for Inputs */}
+                        <div className="md:col-span-3 space-y-6">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Controller name="businessType" control={control} render={({ field }) => (<div className="space-y-2"><Label>Business Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger><SelectContent><SelectItem value="Tech/IT/SaaS">Tech/IT/SaaS</SelectItem><SelectItem value="Manufacturing">Manufacturing</SelectItem><SelectItem value="Services (Non-IT)">Services (Non-IT)</SelectItem><SelectItem value="Agri-business">Agri-business</SelectItem><SelectItem value="E-commerce/Retail">E-commerce/Retail</SelectItem></SelectContent></Select>{errors.businessType && <p className="text-sm text-destructive">{errors.businessType.message}</p>}</div>)} />
+                                <Controller name="fundingStage" control={control} render={({ field }) => (<div className="space-y-2"><Label>Funding Stage</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent><SelectItem value="Bootstrapped">Bootstrapped</SelectItem><SelectItem value="Pre-Seed/Angel">Pre-Seed/Angel</SelectItem><SelectItem value="VC Funded">VC Funded</SelectItem></SelectContent></Select>{errors.fundingStage && <p className="text-sm text-destructive">{errors.fundingStage.message}</p>}</div>)} />
+                             </div>
+                             <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-sm", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
+                        </div>
+                        {/* Right Column for State Selection */}
+                        <div className="md:col-span-2 space-y-2">
+                             <Label>States to Compare (Max 3)</Label>
+                            <Controller
+                                name="statesToCompare"
+                                control={control}
+                                render={({ field }) => (
+                                    <>
+                                    <ScrollArea className="h-48 w-full rounded-md border p-2 bg-muted/50">
+                                        <div className="space-y-2">
+                                            {allIndianStates.map((state) => (
+                                                <div key={state} className="flex items-center space-x-2 rounded-md hover:bg-background p-2">
+                                                    <Checkbox
+                                                        id={state}
+                                                        checked={field.value?.includes(state)}
+                                                        onCheckedChange={(checked) => {
+                                                            const current = field.value || [];
+                                                            let newValues;
+                                                            if (checked) {
+                                                                newValues = [...current, state];
+                                                            } else {
+                                                                newValues = current.filter((value) => value !== state);
+                                                            }
+                                                            if (newValues.length > 3) {
+                                                                toast({ variant: "destructive", title: "Limit Reached", description: "You can only compare up to 3 states."})
+                                                            } else {
+                                                                field.onChange(newValues);
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={state} className="text-sm font-normal flex-1 cursor-pointer">{state}</Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                    <div className="flex flex-wrap gap-1 pt-2 min-h-[2rem]">
+                                        {field.value?.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}
+                                    </div>
+                                    </>
+                                )}
+                            />
+                            {errors.statesToCompare && <p className="text-sm text-destructive">{errors.statesToCompare.message}</p>}
+                        </div>
+                    </div>
                 </CardContent>
                 <CardFooter>
                     <Button type="submit" disabled={isSubmitting}>
