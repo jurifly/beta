@@ -361,17 +361,28 @@ const getBottomNavItems = (role: UserRole): ThemedNavItem[] => {
     .slice(0, 4);
 };
 
-const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
+const MoreMenuSheet = ({ lang, setLang, onLockedFeatureClick }: { lang: Language, setLang: (l: Language) => void, onLockedFeatureClick: (name: string, type: 'pro' | 'beta') => void }) => {
     const { userProfile, isDevMode } = useAuth();
     if (!userProfile) return null;
 
     const isPro = planHierarchy[userProfile.plan] > 0;
     const bottomItemsHrefs = getBottomNavItems(userProfile.role).map(item => item.href);
 
-    // Items for the 'More' menu are those that are in the role's nav list but not in the bottom bar
     const menuItems = getSidebarNavItems(userProfile.role).filter(item => 
         !bottomItemsHrefs.includes(item.href)
     );
+    
+    const handleLinkClick = (e: React.MouseEvent, item: ThemedNavItem) => {
+        const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
+        const isLockedBeta = item.locked === 'beta';
+
+        if (isLockedPro || isLockedBeta) {
+            e.preventDefault();
+            const labelKey = item.label_override_key || item.translationKey;
+            const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
+            onLockedFeatureClick(label, isLockedPro ? 'pro' : 'beta');
+        }
+    };
     
     return (
         <Sheet>
@@ -395,6 +406,7 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
                              <SheetTrigger asChild key={item.href}>
                                 <Link
                                     href={isLocked ? '#' : item.href}
+                                    onClick={(e) => handleLinkClick(e, item)}
                                     className={cn("flex items-center justify-between p-3 rounded-lg hover:bg-muted", isLocked && "opacity-50 cursor-not-allowed")}
                                 >
                                     <div className="flex items-center gap-4">
@@ -434,13 +446,25 @@ const MoreMenuSheet = ({ lang, setLang }: { lang: Language, setLang: (l: Languag
 };
 
 
-const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
+const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language, setLang: (l: Language) => void, onLockedFeatureClick: (name: string, type: 'pro' | 'beta') => void }) => {
     const pathname = usePathname();
     const { userProfile, isDevMode } = useAuth();
     if (!userProfile) return null;
 
     const isPro = planHierarchy[userProfile.plan] > 0;
     const bottomNavItems = getBottomNavItems(userProfile.role);
+
+    const handleLinkClick = (e: React.MouseEvent, item: ThemedNavItem) => {
+        const isLockedPro = item.locked === 'pro' && !isPro && !isDevMode;
+        const isLockedBeta = item.locked === 'beta';
+
+        if (isLockedPro || isLockedBeta) {
+            e.preventDefault();
+            const labelKey = item.label_override_key || item.translationKey;
+            const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
+            onLockedFeatureClick(label, isLockedPro ? 'pro' : 'beta');
+        }
+    };
 
     return (
         <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-card border-t md:hidden">
@@ -457,6 +481,7 @@ const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language
                         <Link
                             key={item.href}
                             href={isLocked ? '#' : item.href}
+                            onClick={(e) => handleLinkClick(e, item)}
                             className={cn(
                                 "inline-flex flex-col items-center justify-center px-1 text-center group",
                                 isActive ? "text-primary" : "text-muted-foreground",
@@ -468,7 +493,7 @@ const BottomNavBar = ({ lang, setLang }: { lang: Language, setLang: (l: Language
                         </Link>
                     )
                 })}
-                <MoreMenuSheet lang={lang} setLang={setLang} />
+                <MoreMenuSheet lang={lang} setLang={setLang} onLockedFeatureClick={onLockedFeatureClick} />
             </div>
         </div>
     );
@@ -479,6 +504,7 @@ function AppShell({ children }: { children: ReactNode }) {
   const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
+  const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
   const [lang, setLang] = useState<Language>('en');
 
   useEffect(() => {
@@ -500,6 +526,11 @@ function AppShell({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Could not access localStorage for language settings.', error);
     }
+  };
+  
+  const handleLockedFeatureClick = (featureName: string, type: 'pro' | 'beta') => {
+      setLockedFeature(featureName);
+      setLockedFeatureType(type);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -542,6 +573,7 @@ function AppShell({ children }: { children: ReactNode }) {
         <FeatureLockedModal
             featureName={lockedFeature}
             onOpenChange={() => setLockedFeature(null)}
+            type={lockedFeatureType}
         />
         <NotificationModal 
             isOpen={!!selectedNotification} 
@@ -549,7 +581,7 @@ function AppShell({ children }: { children: ReactNode }) {
             notification={selectedNotification}
         />
         <div className="flex h-screen w-full">
-            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={setLockedFeature} lang={lang} />
+            <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={handleLockedFeatureClick} lang={lang} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
                 <div className="w-full flex-1 flex items-center gap-2 md:gap-4 justify-end">
@@ -631,7 +663,7 @@ function AppShell({ children }: { children: ReactNode }) {
                 <BetaBanner />
                 {childrenWithLang}
             </main>
-            <BottomNavBar lang={lang} setLang={handleLanguageChange}/>
+            <BottomNavBar lang={lang} setLang={handleLanguageChange} onLockedFeatureClick={handleLockedFeatureClick}/>
             </div>
         </div>
     </>
