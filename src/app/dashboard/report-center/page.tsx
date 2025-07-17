@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -7,11 +8,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock, TrendingUp } from 'lucide-react';
+import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock, TrendingUp, GanttChartSquare } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
-import type { Company, DocumentAnalysis, HistoricalFinancialData } from '@/lib/types';
+import type { Company, DocumentAnalysis, HistoricalFinancialData, GenerateDDChecklistOutput } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
 import { format, startOfToday } from 'date-fns';
@@ -19,6 +20,7 @@ import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, T
 import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 
 type ReportData = {
   client: Company;
@@ -35,6 +37,7 @@ type ReportData = {
     historicalData: HistoricalFinancialData[];
   };
   executiveSummary?: string;
+  diligenceChecklist?: GenerateDDChecklistOutput;
 };
 
 const formatCurrency = (num: number, region = 'India') => {
@@ -49,6 +52,14 @@ const formatCurrency = (num: number, region = 'India') => {
 const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
     const COLORS = ["#005A9C", "#00BFFF", "#7DF9FF", "#D2B48C"]; // Professional Blue, Sky Blue, Electric Blue, Tan
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
+    
+    const diligenceProgress = useMemo(() => {
+        if (!data.diligenceChecklist) return 0;
+        const allItems = data.diligenceChecklist.checklist.flatMap(c => c.items);
+        const completedItems = allItems.filter(i => i.status === 'Completed').length;
+        const totalItems = allItems.length;
+        return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+    }, [data.diligenceChecklist]);
 
     return (
         <div style={{ width: '210mm' }}>
@@ -147,9 +158,10 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </main>
 
                 <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
-                    <p>Page 1 of 2 | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
+                    <p>Page 1 of 3 | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
+            
             {/* Page 2 */}
             <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm', pageBreakBefore: 'always' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
@@ -236,9 +248,54 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </main>
 
                 <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
-                     <p>Page 2 of 2 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                     <p>Page 2 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
+
+            {/* Page 3 - Due Diligence */}
+            {data.diligenceChecklist && (
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm', pageBreakBefore: 'always' }}>
+                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                        <span className="text-xl font-bold text-primary">Jurifly</span>
+                        <div className="text-right">
+                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix</h1>
+                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                        </div>
+                    </header>
+
+                    <main className="mt-8 flex-1">
+                        <section className="mb-6">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                               <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
+                            </h2>
+                            <div className="p-4 bg-gray-50 rounded-lg border">
+                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${diligenceProgress}%` }}></div></div>
+                            </div>
+                        </section>
+                        
+                        <section>
+                            {data.diligenceChecklist.checklist.map((category, index) => (
+                                <div key={index} className="mb-6 break-inside-avoid">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
+                                    <ul className="space-y-1">
+                                        {category.items.map(item => (
+                                            <li key={item.id} className="flex items-center gap-2 text-sm">
+                                                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                                <span>{item.task}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </section>
+                    </main>
+
+                     <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
+                        <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                    </footer>
+                </div>
+            )}
         </div>
     );
 };
@@ -336,7 +393,7 @@ export default function ReportCenterPage() {
             const runway = financials && burn > 0 && financials.cashBalance > 0 ? `${Math.floor(financials.cashBalance / burn)} months` : "Profitable / N/A";
             const historicalData = client.historicalFinancials || [];
 
-            const initialReportData = {
+            const initialReportData: ReportData = {
                 client,
                 hygieneScore,
                 filingPerformance: filingPerf,
@@ -349,7 +406,8 @@ export default function ReportCenterPage() {
                     burnRate: burn,
                     runway: runway,
                     historicalData: historicalData
-                }
+                },
+                diligenceChecklist: client.diligenceChecklist,
             };
 
             setReportData(initialReportData);
@@ -398,27 +456,32 @@ export default function ReportCenterPage() {
         if (!input) return;
         
         toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
-        html2canvas(input, { scale: 2, useCORS: true }).then(canvas => {
-          const imgData = canvas.toDataURL('image/png');
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const imgHeight = canvas.height * pdfWidth / canvas.width;
-          let heightLeft = imgHeight;
-          let position = 0;
-
-          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-          heightLeft -= pageHeight;
-          
-          while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pageHeight;
-          }
-          
-          pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
-        });
+        
+        const pages = input.children;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        const generatePage = async (pageIndex: number) => {
+            if (pageIndex >= pages.length) {
+                pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
+                return;
+            }
+            
+            const page = pages[pageIndex] as HTMLElement;
+            const canvas = await html2canvas(page, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            const imgHeight = canvas.height * pdfWidth / canvas.width;
+            
+            if (pageIndex > 0) {
+                pdf.addPage();
+            }
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, Math.min(imgHeight, pdfHeight));
+            
+            await generatePage(pageIndex + 1);
+        };
+        
+        generatePage(0);
     };
 
     if (!userProfile) {
