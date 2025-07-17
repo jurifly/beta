@@ -440,8 +440,13 @@ export default function ReportCenterPage() {
                 recentRiskFlags: recentRisks,
                 legalRegion: client.legalRegion
             });
+            
+            // Re-apply the full data with the new summary
+            setReportData({
+                ...initialReportData, 
+                executiveSummary: insightsResponse.executiveSummary 
+            });
 
-            setReportData(prevData => prevData ? { ...prevData, executiveSummary: insightsResponse.executiveSummary } : null);
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate report data. ' + error.message });
