@@ -457,26 +457,21 @@ export default function ReportCenterPage() {
         for (let i = 0; i < pageElements.length; i++) {
             const page = pageElements[i];
             
-            // Give the browser a moment to render the page, especially if it was previously hidden.
             await new Promise(resolve => setTimeout(resolve, 50));
     
             try {
                 const canvas = await html2canvas(page, {
-                    scale: 1.5, // Reduced scale for smaller file size, but still good quality
+                    scale: 1.5,
                     useCORS: true,
                     logging: false,
                     width: page.offsetWidth,
-                    height: page.scrollHeight, // Use scrollHeight to capture full content, even if it overflows
+                    height: page.scrollHeight,
                     windowWidth: page.scrollWidth,
                     windowHeight: page.scrollHeight,
                 });
     
-                const imgData = canvas.toDataURL('image/jpeg', 0.95); // Use JPEG for better compression
-                
-                // Calculate aspect ratio to fit the A4 page width
-                const canvasHeight = canvas.height;
-                const canvasWidth = canvas.width;
-                const ratio = canvasHeight / canvasWidth;
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const ratio = canvas.height / canvas.width;
                 const pageHeight = pdfWidth * ratio;
     
                 if (i > 0) {
@@ -486,7 +481,7 @@ export default function ReportCenterPage() {
             } catch (error) {
                 console.error(`Error capturing page ${i + 1} for PDF:`, error);
                 toast({ variant: "destructive", title: "PDF Generation Error", description: `Failed to process page ${i + 1}.` });
-                return; // Stop if one page fails
+                return;
             }
         }
     
@@ -564,7 +559,7 @@ export default function ReportCenterPage() {
                             <Download className="mr-2" /> Download PDF
                         </Button>
                     </CardHeader>
-                    <CardContent className="flex justify-center bg-gray-200 p-8 overflow-auto">
+                    <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
                         <div ref={reportRef}>
                             <ReportTemplate data={reportData} isGeneratingInsights={isGeneratingInsights} />
                         </div>
@@ -574,3 +569,4 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+
