@@ -16,7 +16,7 @@ import type { Company, DocumentAnalysis, HistoricalFinancialData, GenerateDDChec
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
 import { format, startOfToday } from 'date-fns';
-import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip } from 'recharts';
+import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip, LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
@@ -225,24 +225,39 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                            <TrendingUp /> Year-over-Year Financials
                         </h2>
                          {data.financials.historicalData.length > 0 ? (
-                             <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="p-2 font-semibold">Financial Year</th>
-                                        <th className="p-2 font-semibold text-right">Total Revenue</th>
-                                        <th className="p-2 font-semibold text-right">Total Expenses</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
-                                        <tr key={item.year} className="border-b">
-                                            <td className="p-2 font-medium">{item.year}</td>
-                                            <td className="p-2 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
-                                            <td className="p-2 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
+                            <div className="space-y-4">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="p-2 font-semibold">Financial Year</th>
+                                            <th className="p-2 font-semibold text-right">Total Revenue</th>
+                                            <th className="p-2 font-semibold text-right">Total Expenses</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
+                                            <tr key={item.year} className="border-b">
+                                                <td className="p-2 font-medium">{item.year}</td>
+                                                <td className="p-2 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
+                                                <td className="p-2 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <div className="h-64 w-full pt-4">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
+                                            <YAxis fontSize={12} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
+                                            <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} />
+                                            <Legend wrapperStyle={{fontSize: '12px'}}/>
+                                            <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2} name="Revenue" />
+                                            <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={2} name="Expenses" />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
                          ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
                     </section>
                 </main>
