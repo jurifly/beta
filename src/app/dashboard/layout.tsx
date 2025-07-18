@@ -121,6 +121,7 @@ export const translations: Translations = {
 
     // Global UI
     beta: { en: "Beta", hi: "बीटा", es: "Beta", zh: "测试版", fr: "Bêta", de: "Beta", pt: "Beta", ja: "ベータ" },
+    pro: { en: "Pro", hi: "प्रो", es: "Pro", zh: "专业版", fr: "Pro", de: "Pro", pt: "Pro", ja: "プロ" },
     more: { en: "More", hi: "अन्य", es: "Más", zh: "更多", fr: "Plus", de: "Mehr", pt: "Mais", ja: "その他" },
     moreOptions: { en: "More Options", hi: "अन्य विकल्प", es: "Más Opciones", zh: "更多选项", fr: "Plus d'Options", de: "Weitere Optionen", pt: "Mais Opções", ja: "その他のオプション" },
     notifications: { en: "Notifications", hi: "सूचनाएं", es: "Notificaciones", zh: "通知", fr: "Notifications", de: "Benachrichtigungen", pt: "Notificações", ja: "通知" },
@@ -721,11 +722,17 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold font-headline text-xl text-primary">
-              {isPro && <Flame className="h-6 w-6 text-accent" />}
               <Logo />
               <span className="flex items-center group-[[data-state=collapsed]]/sidebar:hidden">
                 Jurifly
-                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">{translations.beta[lang]}</Badge>
+                 {isPro ? (
+                    <Badge variant="secondary" className="ml-2 bg-gradient-to-r from-orange-400 to-rose-400 text-white border-none text-xs">
+                        <Flame className="w-3 h-3 mr-1" />
+                        {translations.pro[lang]}
+                    </Badge>
+                ) : (
+                    <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">{translations.beta[lang]}</Badge>
+                )}
               </span>
             </Link>
           </div>
