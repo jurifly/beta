@@ -431,12 +431,19 @@ export default function ReportCenterPage() {
         const pages = Array.from(input.children) as HTMLElement[];
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         
         for (let i = 0; i < pages.length; i++) {
             const page = pages[i];
-            const canvas = await html2canvas(page, { scale: 2, useCORS: true });
+            const canvas = await html2canvas(page, { 
+                scale: 2, 
+                useCORS: true,
+                windowWidth: page.scrollWidth,
+                windowHeight: page.scrollHeight
+            });
             const imgData = canvas.toDataURL('image/png');
-            const imgHeight = canvas.height * pdfWidth / canvas.width;
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
             
             if (i > 0) {
                 pdf.addPage();
