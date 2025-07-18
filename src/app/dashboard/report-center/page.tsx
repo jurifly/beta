@@ -62,13 +62,18 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     }, [data.diligenceChecklist]);
 
     return (
-        <div style={{ width: '210mm' }}>
+        <div className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ width: '210mm', minHeight: '297mm' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary">
-                            <path d="M16.5 6.5C14.0858 4.08579 10.9142 4.08579 8.5 6.5C6.08579 8.91421 6.08579 12.0858 8.5 14.5C9.42358 15.4236 10.4914 16.0357 11.6667 16.3333M16.5 17.5C14.0858 19.9142 10.9142 19.9142 8.5 17.5C6.08579 15.0858 6.08579 11.9142 8.5 9.5C9.42358 8.57642 10.4914 7.96429 11.6667 7.66667" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
+                            <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                            <path d="M20 5.5L12 9.5L4 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 22V9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M15.5 16.5L12 18L8.5 16.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M22 7L17 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M2 7L7 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                         <span className="text-xl font-bold text-primary">Jurifly</span>
                     </div>
@@ -163,7 +168,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm', pageBreakBefore: 'always' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ width: '210mm', minHeight: '297mm' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <span className="text-xl font-bold text-primary">Jurifly</span>
                     <div className="text-right">
@@ -269,7 +274,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
 
             {/* Page 3 - Due Diligence */}
             {data.diligenceChecklist && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ minHeight: '297mm', pageBreakBefore: 'always' }}>
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col" style={{ width: '210mm', minHeight: '297mm' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <span className="text-xl font-bold text-primary">Jurifly</span>
                         <div className="text-right">
@@ -291,7 +296,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                         
                         <section>
                             {data.diligenceChecklist.checklist.map((category, index) => (
-                                <div key={index} className="mb-6 break-inside-avoid">
+                                <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
                                     <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
                                     <ul className="space-y-1">
                                         {category.items.map(item => (
@@ -439,31 +444,40 @@ export default function ReportCenterPage() {
     
     const handleDownloadPdf = async () => {
         const input = reportRef.current;
-        if (!input) return;
-        
+        if (!input) {
+            toast({ variant: "destructive", title: "Error", description: "Report preview not found." });
+            return;
+        }
+
         toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
         
-        const pages = Array.from(input.children) as HTMLElement[];
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        
+        const pages = input.children;
+
         for (let i = 0; i < pages.length; i++) {
-            const page = pages[i];
-            const canvas = await html2canvas(page, { 
-                scale: 2, 
-                useCORS: true,
-                windowWidth: page.scrollWidth,
-                windowHeight: page.scrollHeight
-            });
-            const imgData = canvas.toDataURL('image/png');
-            const imgProps = pdf.getImageProperties(imgData);
-            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            
-            if (i > 0) {
-                pdf.addPage();
+            const page = pages[i] as HTMLElement;
+            try {
+                const canvas = await html2canvas(page, {
+                    scale: 1.5, // A lower scale reduces file size
+                    useCORS: true,
+                    logging: false, // Turn off extensive logging
+                });
+                const imgData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG and compression
+                const imgProps = pdf.getImageProperties(imgData);
+                const ratio = imgProps.height / imgProps.width;
+                const pageHeight = pdfWidth * ratio;
+
+                if (i > 0) {
+                    pdf.addPage();
+                }
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, Math.min(pageHeight, pdfHeight));
+            } catch (error) {
+                console.error("Error capturing page for PDF:", error);
+                toast({ variant: "destructive", title: "PDF Generation Error", description: `Failed to process page ${i + 1}.` });
+                return; // Stop the process if a page fails
             }
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
         }
         
         pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
