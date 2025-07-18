@@ -464,10 +464,6 @@ export default function ReportCenterPage() {
                     scale: 1.5,
                     useCORS: true,
                     logging: false,
-                    width: page.offsetWidth,
-                    height: page.scrollHeight,
-                    windowWidth: page.scrollWidth,
-                    windowHeight: page.scrollHeight,
                 });
     
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -569,4 +565,3 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
