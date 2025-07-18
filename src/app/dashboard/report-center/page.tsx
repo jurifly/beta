@@ -14,12 +14,14 @@ import { useToast } from '@/hooks/use-toast';
 import type { Company, DocumentAnalysis, HistoricalFinancialData, GenerateDDChecklistOutput } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, parseISO } from 'date-fns';
 import { Pie, PieChart as RechartsPieChart, ResponsiveContainer, Cell, Legend, Tooltip as RechartsTooltip, LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import ReactDOM from 'react-dom/client';
+
 
 type ReportData = {
   client: Company;
@@ -61,7 +63,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     }, [data.diligenceChecklist]);
 
     return (
-        <div className="space-y-4">
+        <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
             <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
@@ -440,9 +442,9 @@ export default function ReportCenterPage() {
     };
     
     const handleDownloadPdf = async () => {
-        const reportElement = reportRef.current;
-        if (!reportElement) {
-            toast({ variant: "destructive", title: "Error", description: "Report preview not found." });
+        const reportContainer = document.getElementById('report-content-for-pdf');
+        if (!reportContainer) {
+            toast({ variant: "destructive", title: "Error", description: "Report preview container not found." });
             return;
         }
 
@@ -451,31 +453,27 @@ export default function ReportCenterPage() {
 
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const pageElements = reportElement.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
 
+        const pageElements = reportContainer.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
+        
         for (let i = 0; i < pageElements.length; i++) {
             const page = pageElements[i];
             
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
             const canvas = await html2canvas(page, {
-                scale: 1.5,
+                scale: 2, // Higher scale for better quality
                 useCORS: true,
                 logging: false,
                 width: page.offsetWidth,
                 height: page.offsetHeight,
             });
 
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            const canvasAspectRatio = canvas.height / canvas.width;
-            const pageHeight = pdfWidth * canvasAspectRatio;
+            const imgData = canvas.toDataURL('image/jpeg', 0.95); // Use JPEG for smaller file size
+            const pageHeight = (canvas.height * pdfWidth) / canvas.width;
             
             if (i > 0) {
                 pdf.addPage();
             }
+            
             pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
         }
 
@@ -558,7 +556,7 @@ export default function ReportCenterPage() {
                         </Button>
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
-                        <div ref={reportRef}>
+                        <div id="report-preview-container">
                             <ReportTemplate data={reportData} isGeneratingInsights={isGeneratingInsights} />
                         </div>
                     </CardContent>
