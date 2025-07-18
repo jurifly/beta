@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { CreatureAnimation } from "./CreatureAnimation";
 
 
 const Logo = () => (
@@ -75,8 +76,8 @@ const HeroSection = () => {
     const router = useRouter();
     return (
         <section className="relative w-full py-24 md:py-40">
-            <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(circle_500px_at_50%_200px,hsl(var(--primary)/0.05),transparent)]"></div>
-            <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
+            <CreatureAnimation />
+            <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
                 Founders Clarity. Finally.
             </h1>
