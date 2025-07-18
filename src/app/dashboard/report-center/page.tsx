@@ -19,7 +19,6 @@ import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import ReactDOM from 'react-dom/client';
 
 
 type ReportData = {
@@ -130,7 +129,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </div>
                     
                     <div className="grid grid-cols-2 gap-6 mt-6">
-                        <div className="p-4 border rounded-lg bg-white">
+                        <div className="p-4 border rounded-lg bg-white" data-jspdf-ignore="true">
                             <h3 className="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
                             {data.ownershipData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={200}>
@@ -249,7 +248,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                                         ))}
                                     </tbody>
                                 </table>
-                                <div className="h-64 w-full pt-4">
+                                <div className="h-64 w-full pt-4" data-jspdf-ignore="true">
                                      <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -330,10 +329,15 @@ export default function ReportCenterPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        if (userProfile?.companies && userProfile.companies.length === 1) {
-            setSelectedClientId(userProfile.companies[0].id);
+        if (userProfile?.companies && userProfile.companies.length > 0) {
+            const activeCompanyId = userProfile.activeCompanyId;
+            if (activeCompanyId && userProfile.companies.some(c => c.id === activeCompanyId)) {
+                setSelectedClientId(activeCompanyId);
+            } else {
+                setSelectedClientId(userProfile.companies[0].id);
+            }
         }
-    }, [userProfile?.companies]);
+    }, [userProfile?.companies, userProfile?.activeCompanyId]);
     
     const handleGenerateReport = async () => {
         if (!selectedClientId || !userProfile) return;
@@ -440,34 +444,29 @@ export default function ReportCenterPage() {
     };
     
     const handleDownloadPdf = async () => {
-        const reportContainer = document.getElementById('report-content-for-pdf');
-        if (!reportContainer) {
-            toast({ variant: "destructive", title: "Error", description: "Report container not found." });
-            return;
-        }
-
-        toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
-        setIsLoading(true);
-
+      const reportContainer = document.getElementById('report-content-for-pdf');
+      if (!reportContainer) {
+          toast({ variant: "destructive", title: "Error", description: "Report container not found." });
+          return;
+      }
+  
+      toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
+      setIsLoading(true);
+  
+      try {
         const pdf = new jsPDF('p', 'mm', 'a4');
-
-        try {
-            await pdf.html(reportContainer, {
-                callback: function (doc) {
-                    doc.save(`${reportData?.client.name}_Compliance_Report.pdf`);
-                },
-                x: 0,
-                y: 0,
-                width: 210, // A4 width in mm
-                windowWidth: reportContainer.scrollWidth,
-                autoPaging: 'text',
-            });
-        } catch (error) {
-            console.error("PDF generation error:", error);
-            toast({ variant: "destructive", title: "PDF Error", description: "Failed to generate PDF." });
-        } finally {
-            setIsLoading(false);
-        }
+        await pdf.html(reportContainer, {
+          autoPaging: 'text',
+          callback: function (doc) {
+            doc.save(`${reportData?.client.name}_Compliance_Report.pdf`);
+          },
+        });
+      } catch (error) {
+        console.error("PDF generation error:", error);
+        toast({ variant: "destructive", title: "PDF Error", description: "Failed to generate PDF." });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     if (!userProfile) {
