@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -50,7 +49,7 @@ const formatCurrency = (num: number, region = 'India') => {
 }
 
 const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
-    const COLORS = ["#005A9C", "#00BFFF", "#7DF9FF", "#D2B48C"]; // Professional Blue, Sky Blue, Electric Blue, Tan
+    const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
     const diligenceProgress = useMemo(() => {
@@ -64,7 +63,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     return (
         <div className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', breakInside: 'avoid' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary">
@@ -84,22 +83,22 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </header>
 
                 <main className="mt-8 flex-1">
-                    <section className="p-6 border-2 border-blue-500/20 bg-blue-50/50 rounded-lg mb-8">
-                        <h2 className="text-xl font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                    <section className="p-6 border-2 border-primary/20 bg-primary/5 rounded-lg mb-8">
+                        <h2 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
                             <Sparkles className="h-5 w-5"/> AI Executive Summary
                         </h2>
                         {isGeneratingInsights ? (
                             <div className="space-y-2 py-2">
-                               <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
-                               <div className="h-4 bg-blue-200 rounded w-5/6 animate-pulse"></div>
-                               <div className="h-4 bg-blue-200 rounded w-full animate-pulse"></div>
+                               <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
+                               <div className="h-4 bg-primary/20 rounded w-5/6 animate-pulse"></div>
+                               <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
                             </div>
                         ) : (
                              <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
                                 <ReactMarkdown
                                   components={{
                                     ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
-                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
+                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-primary mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
                                   }}
                                 >
                                     {data.executiveSummary || "No summary available."}
@@ -119,11 +118,11 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             <div className="space-y-4">
                                 <div>
                                     <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${data.filingPerformance}%` }}></div></div>
+                                    <Progress value={data.filingPerformance} />
                                 </div>
                                 <div>
                                     <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-teal-500 h-2.5 rounded-full" style={{ width: `${data.profileCompleteness}%` }}></div></div>
+                                     <Progress value={data.profileCompleteness} />
                                 </div>
                             </div>
                         </div>
@@ -168,7 +167,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', breakInside: 'avoid' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <span className="text-xl font-bold text-primary">Jurifly</span>
                     <div className="text-right">
@@ -274,7 +273,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
 
             {/* Page 3 - Due Diligence */}
             {data.diligenceChecklist && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', breakInside: 'avoid' }}>
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <span className="text-xl font-bold text-primary">Jurifly</span>
                         <div className="text-right">
@@ -290,7 +289,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             </h2>
                             <div className="p-4 bg-gray-50 rounded-lg border">
                                 <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
-                                <Progress value={diligenceProgress} className="h-2.5" />
+                                <Progress value={diligenceProgress} />
                             </div>
                         </section>
                         
@@ -452,28 +451,28 @@ export default function ReportCenterPage() {
 
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         
         const pageElements = reportElement.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
 
         for (let i = 0; i < pageElements.length; i++) {
             const page = pageElements[i];
             
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 50));
             
             const canvas = await html2canvas(page, {
-                scale: 2, // Use a higher scale for better quality
+                scale: 1.5,
                 useCORS: true,
                 logging: false,
                 width: page.offsetWidth,
                 height: page.offsetHeight,
-                windowWidth: page.offsetWidth,
-                windowHeight: page.offsetHeight,
             });
 
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            const ratio = canvas.height / canvas.width;
-            const pageHeight = pdfWidth * ratio;
-
+            
+            const canvasAspectRatio = canvas.height / canvas.width;
+            const pageHeight = pdfWidth * canvasAspectRatio;
+            
             if (i > 0) {
                 pdf.addPage();
             }
@@ -568,5 +567,3 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
-```
