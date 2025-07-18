@@ -4,7 +4,7 @@
 import { db } from '@/lib/firebase/config';
 import { addDoc, collection } from "firebase/firestore";
 import { add } from 'date-fns';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, UserPlan } from '@/lib/types';
 
 // This interface defines what the client will send.
 // It contains all possible fields.
@@ -15,7 +15,7 @@ interface TransactionInput {
   type: 'plan' | 'credit_pack';
   name: string;
   amount: number;
-  plan?: string;
+  plan?: UserPlan;
   cycle?: 'monthly' | 'yearly';
   credits?: number;
 }
