@@ -110,7 +110,7 @@ const ValueSection = () => {
           <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                    All that you wanted to do by using a CA- it just took time.
+                    All you expected a CA to do, but not with the wait.
                 </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
