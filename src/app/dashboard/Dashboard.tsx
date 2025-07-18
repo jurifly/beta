@@ -525,9 +525,9 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
                 <Link href="/dashboard/analytics" className="block"><StatCard title={translations.hygieneScore[lang]} value={`${hygieneScore}`} subtext={hygieneScore > 80 ? 'Excellent' : 'Good'} icon={<ShieldCheck />} colorClass={scoreColor} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/connections" className="block"><StatCard title={translations.upcomingFilings[lang]} value={`${upcomingFilingsCount}`} subtext={translations.inNext30Days[lang]} icon={<Calendar />} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/ca-connect" className="block"><StatCard title={translations.upcomingFilings[lang]} value={`${upcomingFilingsCount}`} subtext={translations.inNext30Days[lang]} icon={<Calendar />} isLoading={isLoading} /></Link>
                 <Link href="/dashboard/cap-table" className="block"><StatCard title={translations.equityIssued[lang]} value={equityIssued} subtext={equityIssuedSubtext} icon={<PieChart />} isLoading={isLoading} /></Link>
-                <Link href="/dashboard/connections" className="block"><StatCard title={translations.alerts[lang]} value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? translations.overdueTasks[lang] : translations.noOverdueTasks[lang]} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
+                <Link href="/dashboard/ca-connect" className="block"><StatCard title={translations.alerts[lang]} value={`${overdueFilingsCount}`} subtext={overdueFilingsCount > 0 ? translations.overdueTasks[lang] : translations.noOverdueTasks[lang]} icon={<AlertTriangle className="h-4 w-4" />} colorClass={overdueFilingsCount > 0 ? "text-red-600" : ""} isLoading={isLoading} /></Link>
             </div>
             
             <Card className="interactive-lift">
