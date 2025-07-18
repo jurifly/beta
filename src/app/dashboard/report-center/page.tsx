@@ -453,18 +453,17 @@ export default function ReportCenterPage() {
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
         const pageElements = reportElement.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
 
         for (let i = 0; i < pageElements.length; i++) {
             const page = pageElements[i];
             try {
                 const canvas = await html2canvas(page, {
-                    scale: 1.5,
+                    scale: 1.5, // A reasonable scale for good quality without huge file size
                     useCORS: true,
                     logging: false,
                     width: page.offsetWidth,
-                    height: page.offsetHeight,
+                    height: page.scrollHeight, // Use scrollHeight to capture full content
                 });
                 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -485,6 +484,7 @@ export default function ReportCenterPage() {
         
         pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
     };
+
 
     if (!userProfile) {
         return <Loader2 className="animate-spin" />;
