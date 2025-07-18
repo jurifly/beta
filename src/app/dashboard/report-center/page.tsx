@@ -158,7 +158,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </main>
 
                 <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
-                    <p>Page 1 of 3 | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
+                    <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
             
@@ -248,7 +248,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </main>
 
                 <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
-                     <p>Page 2 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                     <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
 
@@ -376,9 +376,23 @@ export default function ReportCenterPage() {
             const allAnalyzedDocs: DocumentAnalysis[] = savedHistory ? JSON.parse(savedHistory) : [];
             const recentRisks = allAnalyzedDocs.slice(0, 3).flatMap(doc => doc.riskFlags).filter(flag => flag.severity === 'High').map(flag => flag.risk).slice(0, 3);
             
-            // 2. Now, generate AI insights with all data gathered.
-            setIsGeneratingInsights(true);
+            const initialReportData = {
+                client,
+                hygieneScore,
+                filingPerformance: filingPerf,
+                profileCompleteness,
+                upcomingFilings,
+                overdueFilings,
+                completedFilings: checklistItems.filter(item => item.completed),
+                ownershipData,
+                financials: { burnRate: burn, runway, historicalData },
+                diligenceChecklist: client.diligenceChecklist,
+                executiveSummary: "Generating AI insights..."
+            };
             
+            setReportData(initialReportData);
+            setIsGeneratingInsights(true);
+
             let executiveSummary = "Could not generate AI summary at this time.";
             if (await deductCredits(1)) {
                 try {
@@ -398,20 +412,7 @@ export default function ReportCenterPage() {
                 }
             }
 
-            // 3. Set the final, complete report data in a single state update.
-            setReportData({
-                client,
-                hygieneScore,
-                filingPerformance: filingPerf,
-                profileCompleteness,
-                upcomingFilings,
-                overdueFilings,
-                completedFilings: checklistItems.filter(item => item.completed),
-                ownershipData,
-                financials: { burnRate: burn, runway, historicalData },
-                diligenceChecklist: client.diligenceChecklist,
-                executiveSummary
-            });
+            setReportData({ ...initialReportData, executiveSummary });
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate report data. ' + error.message });
@@ -421,37 +422,29 @@ export default function ReportCenterPage() {
         }
     };
     
-    const handleDownloadPdf = () => {
+    const handleDownloadPdf = async () => {
         const input = reportRef.current;
         if (!input) return;
         
         toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
         
-        const pages = input.children;
+        const pages = Array.from(input.children) as HTMLElement[];
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
         
-        const generatePage = async (pageIndex: number) => {
-            if (pageIndex >= pages.length) {
-                pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
-                return;
-            }
-            
-            const page = pages[pageIndex] as HTMLElement;
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
             const canvas = await html2canvas(page, { scale: 2, useCORS: true });
             const imgData = canvas.toDataURL('image/png');
             const imgHeight = canvas.height * pdfWidth / canvas.width;
             
-            if (pageIndex > 0) {
+            if (i > 0) {
                 pdf.addPage();
             }
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, Math.min(imgHeight, pdfHeight));
-            
-            await generatePage(pageIndex + 1);
-        };
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+        }
         
-        generatePage(0);
+        pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
     };
 
     if (!userProfile) {
