@@ -66,6 +66,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Language, type Translations, translations as allTranslations } from "./layout";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ComplianceActivityChart = dynamic(
   () => import('./ComplianceActivityChart').then(mod => mod.ComplianceActivityChart),
@@ -569,33 +570,35 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
                                         <ChevronDown className="ml-2 h-4 w-4"/>
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2">
-                                    <div className="space-y-1">
-                                    {checklistYears.map(year => (
-                                        <div key={year} className="flex items-center justify-between gap-4 p-2 rounded-md hover:bg-muted">
-                                            <button 
-                                                onClick={() => { setSelectedYear(year); setPopoverOpen(false); }}
-                                                className={cn("flex-1 text-left flex items-center gap-2", selectedYear === year && "font-bold text-primary")}
-                                            >
-                                                {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive"/>}
-                                                {year}
-                                            </button>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Checkbox 
-                                                            checked={yearCompletionStatus[year]}
-                                                            onCheckedChange={() => handleCompleteYear(year)}
-                                                        />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{translations.completeAllTasksFor[lang]} {year}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                <PopoverContent className="w-auto p-0">
+                                    <ScrollArea className="h-[200px]">
+                                        <div className="p-2 space-y-1">
+                                        {checklistYears.map(year => (
+                                            <div key={year} className="flex items-center justify-between gap-4 p-2 rounded-md hover:bg-muted">
+                                                <button 
+                                                    onClick={() => { setSelectedYear(year); setPopoverOpen(false); }}
+                                                    className={cn("flex-1 text-left flex items-center gap-2", selectedYear === year && "font-bold text-primary")}
+                                                >
+                                                    {overdueYears.has(year) && <AlertTriangle className="h-4 w-4 text-destructive"/>}
+                                                    {year}
+                                                </button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Checkbox 
+                                                                checked={yearCompletionStatus[year]}
+                                                                onCheckedChange={() => handleCompleteYear(year)}
+                                                            />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{translations.completeAllTasksFor[lang]} {year}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                        ))}
                                         </div>
-                                    ))}
-                                    </div>
+                                    </ScrollArea>
                                 </PopoverContent>
                             </Popover>
                         )}
@@ -1072,4 +1075,3 @@ export default function Dashboard() {
     </>
   );
 }
-
