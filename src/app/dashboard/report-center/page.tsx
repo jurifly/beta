@@ -64,7 +64,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     return (
         <div className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', breakInside: 'avoid' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary">
@@ -162,13 +162,13 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </div>
                 </main>
 
-                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4 pb-4">
+                <footer className="text-center text-xs text-gray-400 mt-auto pt-4 border-t">
                     <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', breakInside: 'avoid' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <span className="text-xl font-bold text-primary">Jurifly</span>
                     <div className="text-right">
@@ -267,14 +267,14 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </section>
                 </main>
 
-                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4 pb-4">
+                <footer className="text-center text-xs text-gray-400 mt-auto pt-4 border-t">
                      <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
 
             {/* Page 3 - Due Diligence */}
             {data.diligenceChecklist && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', breakInside: 'avoid' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <span className="text-xl font-bold text-primary">Jurifly</span>
                         <div className="text-right">
@@ -294,7 +294,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             </div>
                         </section>
                         
-                        <section style={{ columnCount: 2, columnGap: '2rem' }}>
+                        <div style={{ columnCount: 2, columnGap: '2rem' }}>
                             {data.diligenceChecklist.checklist.map((category, index) => (
                                 <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
                                     <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
@@ -308,10 +308,10 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                                     </ul>
                                 </div>
                             ))}
-                        </section>
+                        </div>
                     </main>
 
-                     <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4 pb-4">
+                     <footer className="text-center text-xs text-gray-400 mt-auto pt-4 border-t">
                         <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -446,42 +446,42 @@ export default function ReportCenterPage() {
             toast({ variant: "destructive", title: "Error", description: "Report preview not found." });
             return;
         }
-    
+
         toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
-    
+        setIsLoading(true);
+
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-    
+        
         const pageElements = reportElement.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
-    
+
         for (let i = 0; i < pageElements.length; i++) {
             const page = pageElements[i];
             
-            await new Promise(resolve => setTimeout(resolve, 50));
-    
-            try {
-                const canvas = await html2canvas(page, {
-                    scale: 1.5,
-                    useCORS: true,
-                    logging: false,
-                });
-    
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                const ratio = canvas.height / canvas.width;
-                const pageHeight = pdfWidth * ratio;
-    
-                if (i > 0) {
-                    pdf.addPage();
-                }
-                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
-            } catch (error) {
-                console.error(`Error capturing page ${i + 1} for PDF:`, error);
-                toast({ variant: "destructive", title: "PDF Generation Error", description: `Failed to process page ${i + 1}.` });
-                return;
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const canvas = await html2canvas(page, {
+                scale: 2, // Use a higher scale for better quality
+                useCORS: true,
+                logging: false,
+                width: page.offsetWidth,
+                height: page.offsetHeight,
+                windowWidth: page.offsetWidth,
+                windowHeight: page.offsetHeight,
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const ratio = canvas.height / canvas.width;
+            const pageHeight = pdfWidth * ratio;
+
+            if (i > 0) {
+                pdf.addPage();
             }
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
         }
-    
+
         pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
+        setIsLoading(false);
     };
 
     if (!userProfile) {
@@ -536,7 +536,7 @@ export default function ReportCenterPage() {
                 </CardFooter>
             </Card>
 
-            {isLoading ? (
+            {(isLoading && !reportData) && (
                 <Card className="flex items-center justify-center p-12">
                     <div className="text-center space-y-2">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
@@ -544,15 +544,18 @@ export default function ReportCenterPage() {
                         <p className="text-sm text-muted-foreground">This can take a few moments.</p>
                     </div>
                 </Card>
-            ) : reportData && (
+            )}
+
+            {reportData && (
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                          <div>
                             <CardTitle>Report Preview</CardTitle>
                             <CardDescription>A preview of the generated report for {reportData.client.name}.</CardDescription>
                         </div>
-                        <Button onClick={handleDownloadPdf} disabled={isGeneratingInsights}>
-                            <Download className="mr-2" /> Download PDF
+                        <Button onClick={handleDownloadPdf} disabled={isLoading || isGeneratingInsights}>
+                            {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
+                            Download PDF
                         </Button>
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
@@ -565,3 +568,5 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+
+```
