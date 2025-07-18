@@ -215,6 +215,11 @@ export default function BillingForm() {
                 ))}
             </CardContent>
         </Card>
+
+        <div className="text-center text-sm text-muted-foreground px-8">
+            <p className="font-semibold">“Our payment system is so lean, it skipped the gateway.”</p>
+            <p>UPI it is. Pay like a boss, minus the bloat.</p>
+        </div>
     </div>
   )
 }

@@ -83,7 +83,7 @@ export default function CheckoutPage() {
             
             const result = await saveUpiTransaction(transactionData);
             if(result.success) {
-                toast({ title: "Submission Received!", description: result.message });
+                toast({ title: "UPI successful. We’ll pretend this was intentional design." });
                 setIsSubmitted(true);
             } else {
                 toast({ variant: 'destructive', title: 'Submission Failed', description: result.message });
