@@ -38,7 +38,7 @@ export default function CheckoutPage() {
                 const credits = parseInt(creditsStr, 10);
                 return { type: 'credit_pack' as const, name, amount, credits };
             }
-            if (type === 'plan' && plan && name && cycle) {
+            if (type === 'plan' && name && plan && cycle) {
                 return { type: 'plan' as const, name, amount, plan: plan as UserPlan, cycle: cycle as 'monthly' | 'yearly' };
             }
         }
@@ -168,6 +168,10 @@ export default function CheckoutPage() {
                         </Button>
                     </CardFooter>
                 </Card>
+            </div>
+             <div className="text-center text-sm text-muted-foreground px-8 pt-4">
+                <p className="font-semibold">“Our payment system is so lean, it skipped the gateway.”</p>
+                <p>UPI it is. Pay like a boss, minus the bloat.</p>
             </div>
         </div>
     )
