@@ -162,7 +162,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </div>
                 </main>
 
-                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
+                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4 pb-4">
                     <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
@@ -267,7 +267,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </section>
                 </main>
 
-                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
+                <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4 pb-4">
                      <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
@@ -290,7 +290,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                             </h2>
                             <div className="p-4 bg-gray-50 rounded-lg border">
                                 <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${diligenceProgress}%` }}></div></div>
+                                <Progress value={diligenceProgress} className="h-2.5" />
                             </div>
                         </section>
                         
@@ -311,7 +311,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                         </section>
                     </main>
 
-                     <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4">
+                     <footer className="text-center text-xs text-gray-400 mt-8 border-t pt-4 pb-4">
                         <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -331,7 +331,6 @@ export default function ReportCenterPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        // If there's only one company, pre-select it.
         if (userProfile?.companies && userProfile.companies.length === 1) {
             setSelectedClientId(userProfile.companies[0].id);
         }
@@ -346,7 +345,6 @@ export default function ReportCenterPage() {
         setReportData(null);
         
         try {
-            // 1. Gather all data synchronously first.
             const currentDate = format(new Date(), 'yyyy-MM-dd');
             const filingResponse = await generateFilings({
                 companyType: client.type,
@@ -448,29 +446,39 @@ export default function ReportCenterPage() {
             toast({ variant: "destructive", title: "Error", description: "Report preview not found." });
             return;
         }
-
+    
         toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
-        
+    
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
+    
         const pageElements = reportElement.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
-
+    
         for (let i = 0; i < pageElements.length; i++) {
             const page = pageElements[i];
+            
+            // Give the browser a moment to render the page, especially if it was previously hidden.
+            await new Promise(resolve => setTimeout(resolve, 50));
+    
             try {
                 const canvas = await html2canvas(page, {
-                    scale: 1.5, // A reasonable scale for good quality without huge file size
+                    scale: 1.5, // Reduced scale for smaller file size, but still good quality
                     useCORS: true,
                     logging: false,
                     width: page.offsetWidth,
-                    height: page.scrollHeight, // Use scrollHeight to capture full content
+                    height: page.scrollHeight, // Use scrollHeight to capture full content, even if it overflows
+                    windowWidth: page.scrollWidth,
+                    windowHeight: page.scrollHeight,
                 });
+    
+                const imgData = canvas.toDataURL('image/jpeg', 0.95); // Use JPEG for better compression
                 
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                const imgProps = pdf.getImageProperties(imgData);
-                const ratio = imgProps.height / imgProps.width;
+                // Calculate aspect ratio to fit the A4 page width
+                const canvasHeight = canvas.height;
+                const canvasWidth = canvas.width;
+                const ratio = canvasHeight / canvasWidth;
                 const pageHeight = pdfWidth * ratio;
-
+    
                 if (i > 0) {
                     pdf.addPage();
                 }
@@ -478,13 +486,12 @@ export default function ReportCenterPage() {
             } catch (error) {
                 console.error(`Error capturing page ${i + 1} for PDF:`, error);
                 toast({ variant: "destructive", title: "PDF Generation Error", description: `Failed to process page ${i + 1}.` });
-                return;
+                return; // Stop if one page fails
             }
         }
-        
+    
         pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
     };
-
 
     if (!userProfile) {
         return <Loader2 className="animate-spin" />;
