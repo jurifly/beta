@@ -40,6 +40,7 @@ import {
   CheckCircle,
   Flame,
   GanttChartSquare,
+  LayoutGrid,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -389,7 +390,7 @@ const MoreMenuSheet = ({ lang, setLang, onLockedFeatureClick }: { lang: Language
         <Sheet>
             <SheetTrigger asChild>
                 <button className="inline-flex flex-col items-center justify-center px-1 text-center text-muted-foreground group">
-                    <MoreHorizontal className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
+                    <LayoutGrid className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" />
                     <span className="text-[10px] font-medium">{translations['more'][lang]}</span>
                 </button>
             </SheetTrigger>
@@ -795,3 +796,4 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
+
