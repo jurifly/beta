@@ -81,7 +81,10 @@ export function CreatureAnimation() {
   };
 
   useEffect(() => {
-    initAnimation();
+    // Check if the script is already loaded
+    if ((window as any).anime) {
+      initAnimation();
+    }
   }, []);
 
   const handleScriptLoad = () => {
