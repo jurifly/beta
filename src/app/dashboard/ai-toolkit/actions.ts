@@ -12,7 +12,6 @@ import { reconcileDocuments, type ReconciliationInput, type ReconciliationOutput
 import { performLegalResearch, type LegalResearchInput, type LegalResearchOutput } from '@/ai/flows/legal-research-flow';
 import { generateFinancialForecast, type FinancialForecasterInput, type FinancialForecasterOutput } from '@/ai/flows/financial-forecaster-flow';
 import { predictPenalty, type PenaltyPredictorInput, type PenaltyPredictorOutput } from '@/ai/flows/penalty-predictor-flow';
-import { recommendGrants, type GrantRecommenderInput, type GrantRecommenderOutput } from '@/ai/flows/grant-recommender-flow';
 import { getValuationOptimization, type ValuationOptimizerInput, type ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
 import { getFounderSalaryBreakdown, type FounderSalaryInput, type FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 
@@ -125,16 +124,6 @@ export async function predictPenaltyAction(input: PenaltyPredictorInput): Promis
     console.error('AI Flow Error:', e);
     throw new Error(e.message || 'Could not predict the penalty.');
   }
-}
-
-// --- Grant Recommender Action ---
-export async function recommendGrantsAction(input: GrantRecommenderInput): Promise<GrantRecommenderOutput> {
-    try {
-        return await recommendGrants(input);
-    } catch (e: any) {
-        console.error('AI Flow Error:', e);
-        throw new Error(e.message || 'Could not find grant recommendations.');
-    }
 }
 
 // --- Valuation Optimizer Action ---
