@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock, TrendingUp, GanttChartSquare } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import type { Company, DocumentAnalysis, HistoricalFinancialData, GenerateDDChecklistOutput } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
@@ -65,7 +64,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     return (
         <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', paddingBottom: '2rem' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary">
@@ -169,7 +168,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', paddingBottom: '2rem' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <span className="text-xl font-bold text-primary">Jurifly</span>
                     <div className="text-right">
@@ -275,7 +274,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
 
             {/* Page 3 - Due Diligence */}
             {data.diligenceChecklist && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm', paddingBottom: '2rem' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <span className="text-xl font-bold text-primary">Jurifly</span>
                         <div className="text-right">
@@ -328,7 +327,6 @@ export default function ReportCenterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
     const [reportData, setReportData] = useState<ReportData | null>(null);
-    const reportRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -444,7 +442,7 @@ export default function ReportCenterPage() {
     const handleDownloadPdf = async () => {
         const reportContainer = document.getElementById('report-content-for-pdf');
         if (!reportContainer) {
-            toast({ variant: "destructive", title: "Error", description: "Report preview container not found." });
+            toast({ variant: "destructive", title: "Error", description: "Report container not found." });
             return;
         }
 
@@ -452,33 +450,24 @@ export default function ReportCenterPage() {
         setIsLoading(true);
 
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
 
-        const pageElements = reportContainer.querySelectorAll('.report-page') as NodeListOf<HTMLElement>;
-        
-        for (let i = 0; i < pageElements.length; i++) {
-            const page = pageElements[i];
-            
-            const canvas = await html2canvas(page, {
-                scale: 2, // Higher scale for better quality
-                useCORS: true,
-                logging: false,
-                width: page.offsetWidth,
-                height: page.offsetHeight,
+        try {
+            await pdf.html(reportContainer, {
+                callback: function (doc) {
+                    doc.save(`${reportData?.client.name}_Compliance_Report.pdf`);
+                },
+                x: 0,
+                y: 0,
+                width: 210, // A4 width in mm
+                windowWidth: reportContainer.scrollWidth,
+                autoPaging: 'text',
             });
-
-            const imgData = canvas.toDataURL('image/jpeg', 0.95); // Use JPEG for smaller file size
-            const pageHeight = (canvas.height * pdfWidth) / canvas.width;
-            
-            if (i > 0) {
-                pdf.addPage();
-            }
-            
-            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
+        } catch (error) {
+            console.error("PDF generation error:", error);
+            toast({ variant: "destructive", title: "PDF Error", description: "Failed to generate PDF." });
+        } finally {
+            setIsLoading(false);
         }
-
-        pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
-        setIsLoading(false);
     };
 
     if (!userProfile) {
