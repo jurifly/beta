@@ -19,6 +19,7 @@ import ReactMarkdown from 'react-markdown';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import html2canvas from 'html2canvas';
 
 
 type ReportData = {
@@ -444,29 +445,38 @@ export default function ReportCenterPage() {
     };
     
     const handleDownloadPdf = async () => {
-      const reportContainer = document.getElementById('report-content-for-pdf');
-      if (!reportContainer) {
-          toast({ variant: "destructive", title: "Error", description: "Report container not found." });
+      const container = document.getElementById('report-content-for-pdf');
+      if (!container) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Report container not found.' });
           return;
       }
-  
+
       toast({ title: 'Generating PDF...', description: 'Please wait, this may take a moment.' });
       setIsLoading(true);
-  
-      try {
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        await pdf.html(reportContainer, {
-          autoPaging: 'text',
-          callback: function (doc) {
-            doc.save(`${reportData?.client.name}_Compliance_Report.pdf`);
-          },
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pages = container.querySelectorAll('.report-page');
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        await html2canvas(page, {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pageHeight = canvas.height * pdfWidth / canvas.width;
+            
+            if (i > 0) {
+              pdf.addPage();
+            }
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
         });
-      } catch (error) {
-        console.error("PDF generation error:", error);
-        toast({ variant: "destructive", title: "PDF Error", description: "Failed to generate PDF." });
-      } finally {
-        setIsLoading(false);
       }
+
+      pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
+      setIsLoading(false);
     };
 
     if (!userProfile) {
