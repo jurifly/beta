@@ -1,9 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Mail, MessageSquare } from 'lucide-react';
 
 export default function ContactPage() {
   return (
@@ -16,8 +14,8 @@ export default function ContactPage() {
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="/landing#features">
             Features
           </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/landing#pricing">
-            Pricing
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/landing#faq">
+            FAQs
           </Link>
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="/about">
             About
@@ -26,30 +24,31 @@ export default function ContactPage() {
       </header>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-10 lg:grid-cols-2">
-              <div className="space-y-3">
-                <h1 className="text-3xl font-bold">Contact Us</h1>
-                <p className="text-muted-foreground">
-                  Have a question or feedback? We'd love to hear from you.
-                </p>
+          <div className="container px-4 md:px-6 text-center">
+            <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">Contact Us</h1>
+            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed mt-4">
+              Whether you're a founder building the next unicorn, or a CA trying to scale your practice—JuriFly is for you.
+            </p>
+            <p className="mt-2 text-muted-foreground">Reach out, we're friendly.</p>
+            <div className="mx-auto mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl">
+              <div className="flex flex-col items-center gap-4 p-6 border rounded-lg">
+                <Mail className="h-10 w-10 text-primary" />
+                <h3 className="text-xl font-semibold">Email Us</h3>
+                <p className="text-muted-foreground">Our inbox is always open.</p>
+                <Button asChild>
+                  <a href="mailto:hello@jurifly.in">hello@jurifly.in</a>
+                </Button>
               </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="Enter your name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" placeholder="Enter your message" className="min-h-[100px]" />
-                </div>
-                <Button>Send Message</Button>
+              <div className="flex flex-col items-center gap-4 p-6 border rounded-lg">
+                <MessageSquare className="h-10 w-10 text-primary" />
+                <h3 className="text-xl font-semibold">Support Chat</h3>
+                <p className="text-muted-foreground">Mon–Sat, 10 AM – 7 PM IST</p>
+                <Button disabled>Live Chat (Coming Soon)</Button>
               </div>
             </div>
+             <p className="mt-12 text-sm text-muted-foreground">
+                📍 Remote-first, proudly made in India 🇮🇳
+            </p>
           </div>
         </section>
       </main>
