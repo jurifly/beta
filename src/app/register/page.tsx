@@ -54,7 +54,7 @@ const Logo = () => (
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-8 w-auto mx-auto mb-2 text-primary dark:hidden"
+        className="h-10 w-auto mx-auto mb-2 dark:hidden"
         data-ai-hint="logo company"
       />
       <Image 
@@ -62,7 +62,7 @@ const Logo = () => (
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-8 w-auto mx-auto mb-2 hidden dark:block"
+        className="h-10 w-auto mx-auto mb-2 hidden dark:block"
         data-ai-hint="logo company"
       />
     </>
