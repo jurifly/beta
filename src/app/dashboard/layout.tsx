@@ -323,7 +323,7 @@ const getSidebarNavItems = (role: UserRole) => {
 const Logo = () => (
     <>
       <Image 
-        src="https://i.ibb.co/N6p2H0cq/jurifly-icon-new.png"
+        src="https://i.ibb.co/yBQDJHJ8/1-2.png"
         alt="Jurifly Logo"
         width={114}
         height={24}
@@ -331,7 +331,7 @@ const Logo = () => (
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/B58rpgyK/jurifly-icon-new-dark.png" 
+        src="https://i.ibb.co/yc2DGvPk/2-2.png" 
         alt="Jurifly Logo"
         width={114}
         height={24}
