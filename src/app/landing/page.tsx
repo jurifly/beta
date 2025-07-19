@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -73,7 +74,7 @@ const HeroSection = () => {
         </p>
         <p className="mt-4 font-semibold text-lg">We don’t file forms. We make sure you understand them.</p>
         <div className="mt-8">
-            <Button className="text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+            <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
                 Get Started – It’s Free for Beta Users
                 <ArrowRight className="ml-2"/>
             </Button>
