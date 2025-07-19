@@ -13,7 +13,7 @@ const jobOpenings = [
 const Logo = () => (
     <>
       <Image 
-        src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
+        src="https://i.ibb.co/N6p2H0cq/jurifly-icon-new.png"
         alt="Jurifly Logo"
         width={114}
         height={24}
@@ -21,7 +21,7 @@ const Logo = () => (
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/J3d4mSg/jurifly-logo-new-dark.png" 
+        src="https://i.ibb.co/B58rpgyK/jurifly-icon-new-dark.png" 
         alt="Jurifly Logo"
         width={114}
         height={24}
