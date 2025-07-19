@@ -1,40 +1,28 @@
 
-
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowRight,
-  ChevronDown,
-  FileText,
-  BarChart,
-  HeartHandshake,
+  BrainCircuit,
+  FileSignature,
+  LineChart,
+  Bell,
+  MessageSquare,
   DatabaseZap,
-  KeyRound,
-  ShieldCheck,
-  Building2,
-  TrendingUp,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  LayoutDashboard,
-  PieChart,
-  Network,
-  Receipt,
+  Check,
+  Briefcase,
+  GanttChartSquare,
+  Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { CreatureAnimation } from "./CreatureAnimation";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 const Logo = () => (
@@ -48,22 +36,22 @@ const Logo = () => (
     </svg>
 );
 
-
-// Header Component
 const LandingHeader = () => {
   const router = useRouter();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <button onClick={() => router.push('/landing')} className="flex items-center gap-2 font-bold text-primary font-headline text-xl">
+        <Link href="/" className="flex items-center gap-2 font-bold text-primary font-headline text-xl">
           <Logo />
-          <span>Jurifly</span>
-        </button>
+          <span>JuriFly</span>
+        </Link>
         <nav className="flex items-center gap-2 sm:gap-4">
-          <Button variant="link" onClick={() => router.push('/login')} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-            Sign In
-          </Button>
-          <Button onClick={() => router.push('/register')}>Join Beta</Button>
+          <div className="hidden items-center gap-6 text-sm font-medium md:flex">
+             <Link href="#features" className="text-muted-foreground transition-colors hover:text-foreground">Features</Link>
+             <Link href="#testimonials" className="text-muted-foreground transition-colors hover:text-foreground">Testimonials</Link>
+             <Link href="#faq" className="text-muted-foreground transition-colors hover:text-foreground">FAQs</Link>
+          </div>
+          <Button onClick={() => router.push('/register')} className="hidden sm:inline-flex">Get Started</Button>
           <ThemeToggle />
         </nav>
       </div>
@@ -71,54 +59,50 @@ const LandingHeader = () => {
   );
 };
 
-// Hero Section
 const HeroSection = () => {
-    const router = useRouter();
-    return (
-        <section className="relative w-full py-24 md:py-40">
-            <CreatureAnimation />
-            <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight max-w-4xl mx-auto">
-                Founders Clarity. Finally.
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-                There would be no longer clumsy dashboards. Comparative clarity, all you need on behalf of your company documents, taxes and compliances, in one clean room.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" onClick={() => router.push('/register')}>
-                    Join Beta
-                </Button>
-                <Button className="text-lg w-full sm:w-auto interactive-lift" size="lg" variant="ghost" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
-                    See Features
-                </Button>
-            </div>
-            </div>
-        </section>
-    )
+  const router = useRouter();
+  return (
+    <section className="relative w-full py-24 md:py-32">
+      <div className="container relative mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
+          Your Compliance & Legal Co-Pilot
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
+          JuriFly isn’t your average CA tool or filing software.
+          It's your personal guide through the messy maze of Indian compliance, taxes, and documents — made especially for founders.
+        </p>
+        <p className="mt-4 font-semibold text-lg">We don’t file forms. We make sure you understand them.</p>
+        <div className="mt-8">
+            <Button className="text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+                Get Started – It’s Free for Beta Users
+                <ArrowRight className="ml-2"/>
+            </Button>
+        </div>
+      </div>
+    </section>
+  )
 };
 
-// Value Props Section
-const ValueSection = () => {
-    const valueProps = [
-        { text: "Auto-generate docs", description: "Legal forms made in seconds.", icon: FileText },
-        { text: "Sometimes you have to imagine your finances", description: "Burn-rate, runway, tax summaries, topical and up-to-date.", icon: BarChart },
-        { text: "Sync, store, share", description: "All your documents + filings on your drive and always available.", icon: DatabaseZap },
-        { text: "Advisor Comments Mode", description: "Collaborate on your workspace with your CA or investor with a single-click.", icon: HeartHandshake },
+const FeaturesSection = () => {
+    const features = [
+        { text: "Know What Matters — Instantly", description: "Cut through jargon. Understand what needs to be done, why, and by when — with crisp AI-powered summaries.", icon: BrainCircuit },
+        { text: "Docs Without The Drag", description: "Auto-generate standard legal docs and compliance summaries in seconds. Board resolutions, NDAs, investment term sheets — sorted.", icon: FileSignature },
+        { text: "See The Bigger Picture", description: "Visual dashboards for burn rate, runway, due dates, tax summaries, and upcoming compliances — all in one place.", icon: LineChart },
+        { text: "Smart Notifications", description: "No spam. Just timely nudges and reminders before things become penalties.", icon: Bell },
+        { text: "Workspace That Works", description: "Chat, collaborate, and comment with your CA or investor — on one single dashboard.", icon: MessageSquare },
+        { text: "Sync & Store Everything", description: "Your ROC filings, GST docs, ITR proofs, investor reports — all linked to your Drive and always available.", icon: DatabaseZap },
     ];
-
     return (
-        <section id="features" className="w-full py-20 md:py-32 bg-card/50">
+        <section id="features" className="w-full py-20 md:py-24 bg-card/50">
           <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                    All you expected a CA to do, but not with the wait.
-                </h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why Founders Love JuriFly</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {valueProps.map((feature, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {features.map((feature, index) => (
                     <Card key={index} className="p-6 text-left interactive-lift bg-background/50 animate-in fade-in-25 slide-in-from-bottom-8 duration-500" style={{'animationDelay': `${index * 100}ms`} as React.CSSProperties}>
                         <div className="flex justify-start items-center h-12 w-12 rounded-lg bg-primary/10 text-primary mb-4">
-                            <feature.icon className="h-6 w-6 m-3" suppressHydrationWarning />
+                            <feature.icon className="h-6 w-6 m-3" />
                         </div>
                         <p className="font-semibold text-lg">{feature.text}</p>
                         <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
@@ -130,80 +114,23 @@ const ValueSection = () => {
     );
 }
 
-// Product Glimpse Section
-const ProductGlimpseSection = () => {
-    const glimpses = [
-        { title: "Dashboard", icon: LayoutDashboard, imageUrl: "https://ik.imagekit.io/claariai/Dashboard.png?updatedAt=1752544425831" },
-        { title: "Analytics", icon: TrendingUp, imageUrl: "https://ik.imagekit.io/claariai/Analytics.png?updatedAt=1752544425818" },
-        { title: "Cap Table", icon: PieChart, imageUrl: "https://ik.imagekit.io/claariai/cap%20table.png?updatedAt=1752544425744" },
-        { title: "Launch Pad", icon: Network, imageUrl: "https://ik.imagekit.io/claariai/launch%20pad.png?updatedAt=1752544425723" },
-        { title: "Financials", icon: Receipt, imageUrl: "https://ik.imagekit.io/claariai/Financial.png?updatedAt=1752544425721" },
-    ];
-    const [activeGlimpse, setActiveGlimpse] = useState(glimpses[0]);
-    
-    return (
-        <section className="w-full py-20 md:py-32">
-            <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">This is no software. It's sanity.</h2>
-                <div className="flex flex-wrap justify-center gap-2 md:gap-4 border-b pb-4">
-                    {glimpses.map((glimpse) => (
-                        <Button
-                            key={glimpse.title}
-                            variant={activeGlimpse.title === glimpse.title ? "default" : "outline"}
-                            className="transition-all duration-200"
-                            onClick={() => setActiveGlimpse(glimpse)}
-                        >
-                           <glimpse.icon className="mr-2 h-4 w-4"/>
-                            {glimpse.title}
-                        </Button>
-                    ))}
-                </div>
-                 <div className="group relative mt-8 aspect-[16/10] w-full max-w-5xl mx-auto [perspective:1000px]">
-                    <div className="relative rounded-lg w-full h-full shadow-2xl dark:shadow-black/60 transition-transform duration-500 ease-in-out group-hover:[transform:rotateX(10deg)] [transform-style:preserve-3d]">
-                        <Image
-                          key={activeGlimpse.imageUrl}
-                          src={activeGlimpse.imageUrl}
-                          alt={`${activeGlimpse.title} screenshot`}
-                          width={1200}
-                          height={750}
-                          className="w-full h-full object-contain object-center rounded-md"
-                          data-ai-hint="application screenshot"
-                        />
-                         <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 dark:ring-white/10" />
-                    </div>
-                 </div>
-            </div>
-        </section>
-    );
-};
-
-
-// How It Works Section
-const HowItWorksSection = () => {
-    const steps = [
-        { title: "Register & choose position", description: "Advisor or founder, we make everything personal." },
-        { title: "Include your own company", description: "Simple data → we download documents, organize you your place of work." },
-        { title: "Allow the AI to help me out", description: "PDF-docs, Tax View, share workspace with CA." }
+const TestimonialsSection = () => {
+    const testimonials = [
+        { quote: "JuriFly helped me understand my compliance blind spots, before they became problems.", author: "A founder who stopped fearing MCA." },
+        { quote: "My CA does the work, but I finally get what’s happening. That’s priceless.", author: "A startup CEO using JuriFly during fundraising." }
     ];
     return (
-        <section className="w-full py-20 md:py-32 bg-card/50">
-            <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-lg">
-                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4">
-                    The time that you will begin using this in &lt; 3 mins
-                </h2>
-                <p className="text-lg text-muted-foreground">The 180 seconds concept is - chaos to clarity.</p>
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                    {steps.map((step, index) => (
-                        <div key={index} className="relative flex flex-col items-center gap-4 text-center">
-                            {index < steps.length - 1 && (
-                                <div className="hidden md:block absolute top-1/4 left-1/2 -translate-y-1/2 w-full border-t-2 border-dashed border-muted-foreground/30 -z-10" style={{ transform: 'translateY(-50%)' }}></div>
-                            )}
-                             <div className="flex justify-center items-center h-12 w-12 rounded-full bg-background border text-lg font-bold text-primary z-10">
-                                {index + 1}
-                            </div>
-                            <h3 className="font-semibold text-xl mt-2">{step.title}</h3>
-                            <p className="text-sm text-muted-foreground">{step.description}</p>
-                        </div>
+        <section id="testimonials" className="w-full py-20 md:py-24">
+             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Built For Founders, Not Filers</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    {testimonials.map((testimonial, index) => (
+                        <Card key={index} className="p-6 text-left interactive-lift bg-card/50 text-center">
+                            <CardContent className="p-0">
+                                <blockquote className="text-lg font-medium leading-relaxed">“{testimonial.quote}”</blockquote>
+                                <footer className="mt-4 text-sm text-muted-foreground">— {testimonial.author}</footer>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
             </div>
@@ -211,82 +138,153 @@ const HowItWorksSection = () => {
     );
 }
 
-// Social Validation Section
-const SocialValidationSection = () => {
-    const router = useRouter();
-    const brandLogos = [
-        { name: "Medial", component: <p className="font-bold tracking-widest text-muted-foreground/60">MEDIAL</p> },
-        { name: "Product Hunt", component: <p className="font-bold tracking-wider text-muted-foreground/60">PRODUCT HUNT</p> },
-        { name: "BetaList", component: <p className="font-bold text-muted-foreground/60">BetaList</p> },
+const KeyFeaturesSection = () => {
+    const features = [
+        { name: "Compliance Calendar", description: "Smart reminders mapped to your company’s actual structure." },
+        { name: "Auto-Generated Docs", description: "Get draft NDAs, board resolutions, investment docs, and more." },
+        { name: "Workspace Collaboration", description: "Share comments with CA or advisors. No messy email chains." },
+        { name: "Financial Insights", description: "Visuals for burn, runway, tax dues, and cash compliance." },
+        { name: "Secure Storage", description: "Your filings + important docs, always backed up and in-sync." },
+        { name: "Guided Explanations", description: "Don’t just get alerts — learn what each rule, filing, or form means." },
     ];
     return (
-        <section className="w-full py-20 md:py-32">
-            <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
-                <Card className="p-6 md:p-10 max-w-2xl mx-auto bg-card/50 text-center interactive-lift">
-                    <p className="text-2xl font-medium leading-snug">"Prior to this, I used Gmail to store my legal docs, WhatsApp to send tax reminders, and Notion to manage burn rate. It is now, simply, here - just here in one clear picture."</p>
-                    <p className="font-semibold mt-4">— Here is a Founder of beta #47.</p>
-                </Card>
-                
-                <h3 className="text-lg text-muted-foreground mt-16 mb-4">Constructed on 100+ founders, CAs, and early-stage advisors of the community such as:</h3>
-                <div className="my-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
-                   {brandLogos.map(logo => <div key={logo.name}>{logo.component}</div>)}
+        <section id="key-features" className="w-full py-20 md:py-24 bg-card/50">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+                <div className="text-center mb-12">
+                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Key Features</h2>
                 </div>
-                <Button className="w-full md:w-auto text-lg interactive-lift mt-8" size="lg" onClick={() => router.push('/register')}>
-                    Join Beta
-                </Button>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Feature</TableHead>
+                            <TableHead>Description</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {features.map((feature, i) => (
+                            <TableRow key={i}>
+                                <TableCell className="font-medium">{feature.name}</TableCell>
+                                <TableCell>{feature.description}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </div>
         </section>
     );
 };
 
-
-// Footer
-const LandingFooter = () => {
-    const router = useRouter();
+const FaqSection = () => {
+    const faqs = [
+        { q: "Does JuriFly file my taxes or ROC forms?", a: "Nope. We’re not a filing service. JuriFly helps you understand what needs to be done and why — so you can act smarter (and faster)." },
+        { q: "Can I invite my CA to JuriFly?", a: "Yes. Invite your CA or investor with one click and collaborate directly in your workspace." },
+        { q: "Do I still need a CA?", a: "Yes. We don’t replace your CA — we make your CA 10x faster and you 100x smarter." },
+        { q: "What kind of documents can JuriFly help generate?", a: "Board resolutions, NDAs, founder agreements, pitch doc structures, ESOP templates, investor updates, and more." },
+        { q: "What startup stage is JuriFly for?", a: "From incorporation to fundraising to exit. Pre-seed to Series A and beyond." },
+        { q: "Is my data safe?", a: "Your workspace is encrypted, and document storage is linked to your private drive for extra control." },
+    ];
     return (
-      <footer className="border-t">
-        <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:h-24 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-            <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
-              It is a beta product. It is influenced by your feedback.
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">Terms of Use</Button>
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">Privacy Policy</Button>
-             <Button variant="link" size="sm" onClick={() => router.push('/dashboard/settings?tab=policies')} className="text-muted-foreground">AI Disclaimer</Button>
-          </div>
-        </div>
-      </footer>
+        <section id="faq" className="w-full py-20 md:py-24">
+             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+                <div className="text-center mb-12">
+                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Frequently Asked Questions</h2>
+                </div>
+                <Accordion type="single" collapsible className="w-full">
+                    {faqs.map((faq, i) => (
+                        <AccordionItem value={`item-${i}`} key={i}>
+                            <AccordionTrigger className="text-lg text-left hover:no-underline">{faq.q}</AccordionTrigger>
+                            <AccordionContent className="text-base text-muted-foreground">{faq.a}</AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+             </div>
+        </section>
     );
+}
+
+const PricingSection = () => {
+  const plans = [
+    { name: 'Founder Lite', audience: 'Solo founder or early team', price: '₹69/month' },
+    { name: 'Startup Pro', audience: 'Funded startup or growing team', price: '₹349/month' },
+    { name: 'Advisor Pass', audience: 'For CAs, CFOs, legal advisors', price: '₹10/day' }
+  ];
+  return (
+    <section id="pricing" className="w-full py-20 md:py-24 bg-card/50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Pricing</h2>
+          <p className="text-muted-foreground mt-2">All plans include unlimited AI insights, doc generation, workspace tools, and reminders.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <Card key={plan.name} className="flex flex-col text-center p-6 interactive-lift">
+              <CardHeader className="p-0">
+                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <CardDescription>{plan.audience}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 my-6 p-0">
+                <p className="text-4xl font-bold">{plan.price}</p>
+              </CardContent>
+              <CardFooter className="p-0">
+                <Button className="w-full">Get Started</Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 };
 
 
-// Main Page Component
-export default function LandingPage() {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" suppressHydrationWarning />
+const FinalCtaSection = () => {
+  const router = useRouter();
+  return (
+    <section className="w-full py-20 md:py-24">
+      <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
+        <h2 className="text-3xl md:text-5xl font-bold font-headline">Don’t Worry About Legal Stuff Again.</h2>
+        <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. No filings. Just clarity.</p>
+        <div className="mt-8">
+          <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+            Get Started – It’s Free for Beta Users
+            <ArrowRight className="ml-2" />
+          </Button>
         </div>
-    );
-  }
-  
+      </div>
+    </section>
+  );
+};
+
+const LandingFooter = () => (
+  <footer className="border-t">
+    <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+        <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
+          © {new Date().getFullYear()} JuriFly. A product for founders, by founders.
+        </p>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Button variant="link" size="sm" asChild><Link href="/about">About</Link></Button>
+        <Button variant="link" size="sm" asChild><Link href="/contact">Contact</Link></Button>
+        <Button variant="link" size="sm" asChild><Link href="/dashboard/settings?tab=policies">Terms & Privacy</Link></Button>
+        <Button variant="link" size="sm" asChild><Link href="/careers">Careers</Link></Button>
+      </div>
+    </div>
+  </footer>
+);
+
+export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body">
       <LandingHeader />
       <main className="flex-1">
         <HeroSection />
-        <ValueSection />
-        <ProductGlimpseSection />
-        <HowItWorksSection />
-        <SocialValidationSection />
+        <FeaturesSection />
+        <TestimonialsSection />
+        <KeyFeaturesSection />
+        <FaqSection />
+        <PricingSection />
+        <FinalCtaSection />
       </main>
       <LandingFooter />
     </div>
