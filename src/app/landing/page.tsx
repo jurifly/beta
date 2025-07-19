@@ -197,7 +197,7 @@ const FaqSection = () => {
         { q: "Do I still need a CA?", a: "Yes. We don’t replace your CA — we make your CA 10x faster and you 100x smarter." },
         { q: "What kind of documents can JuriFly help generate?", a: "Board resolutions, NDAs, founder agreements, pitch doc structures, ESOP templates, investor updates, and more." },
         { q: "What startup stage is JuriFly for?", a: "From incorporation to fundraising to exit. Pre-seed to Series A and beyond." },
-        { q: "Is my data safe?", a: "Your workspace is encrypted, and document storage is linked to your private drive for extra control." },
+        { q: "How do you handle my data? Is it secure?", a: "Your workspace data is encrypted. For documents, we integrate with your own Google Drive, so your files stay in your control, not on our servers. You grant us permission only to list and manage the files you choose to upload through our interface." },
     ];
     return (
         <section id="faq" className="w-full py-20 md:py-24">
