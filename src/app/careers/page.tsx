@@ -11,14 +11,24 @@ const jobOpenings = [
 ];
 
 const Logo = () => (
-    <Image 
-      src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
-      alt="Jurifly Logo"
-      width={114}
-      height={24}
-      className="h-6 w-auto"
-      data-ai-hint="logo company"
-    />
+    <>
+      <Image 
+        src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-6 w-auto dark:hidden"
+        data-ai-hint="logo company"
+      />
+      <Image 
+        src="https://i.ibb.co/J3d4mSg/jurifly-logo-new-dark.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-6 w-auto hidden dark:block"
+        data-ai-hint="logo company"
+      />
+    </>
 );
 
 
@@ -49,7 +59,7 @@ export default function CareersPage() {
               We're a fast-moving team obsessed with building the smartest legal-finance layer for Indian startups.
             </p>
             <div className="mx-auto mt-8 grid max-w-lg text-left gap-4">
-                <p>We believe:</p>
+                <p className="font-semibold">We believe:</p>
                 <ul className="list-disc list-inside text-muted-foreground">
                     <li>Compliance should be a superpower, not a burden</li>
                     <li>Founders deserve visibility without chaos</li>

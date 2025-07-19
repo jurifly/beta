@@ -12,14 +12,24 @@ const AboutFeature = ({ icon: Icon, text }: { icon: React.ElementType, text: str
 );
 
 const Logo = () => (
-    <Image 
-      src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
-      alt="Jurifly Logo"
-      width={114}
-      height={24}
-      className="h-6 w-auto"
-      data-ai-hint="logo company"
-    />
+    <>
+      <Image 
+        src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-6 w-auto dark:hidden"
+        data-ai-hint="logo company"
+      />
+      <Image 
+        src="https://i.ibb.co/J3d4mSg/jurifly-logo-new-dark.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-6 w-auto hidden dark:block"
+        data-ai-hint="logo company"
+      />
+    </>
 );
 
 
@@ -68,7 +78,10 @@ export default function AboutPage() {
                     Built for entrepreneurs and chartered accountants, JuriFly acts as your intelligent co-pilot—demystifying compliance, visualizing financials, and turning jargon into action.
                 </p>
                  <p className="max-w-[600px] text-muted-foreground">
-                    No more waiting weeks for updates. No more scrambling through WhatsApp chats or buried emails. We don't just show your numbers—we help you understand them.
+                    No more waiting weeks for updates. No more scrambling through WhatsApp chats or buried emails.
+                </p>
+                 <p className="font-semibold text-lg max-w-[600px]">
+                    We don't just show your numbers—we help you understand them.
                 </p>
               </div>
               <div className="flex flex-col justify-center space-y-4 rounded-lg bg-muted/50 p-6 border">

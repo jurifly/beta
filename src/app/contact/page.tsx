@@ -5,14 +5,24 @@ import { Mail, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
 const Logo = () => (
-    <Image 
-      src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
-      alt="Jurifly Logo"
-      width={114}
-      height={24}
-      className="h-6 w-auto"
-      data-ai-hint="logo company"
-    />
+    <>
+      <Image 
+        src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-6 w-auto dark:hidden"
+        data-ai-hint="logo company"
+      />
+      <Image 
+        src="https://i.ibb.co/J3d4mSg/jurifly-logo-new-dark.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-6 w-auto hidden dark:block"
+        data-ai-hint="logo company"
+      />
+    </>
 );
 
 

@@ -63,14 +63,16 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     }, [data.diligenceChecklist]);
     
     const Logo = () => (
-      <Image 
-        src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
-        alt="Jurifly Logo"
-        width={114}
-        height={24}
-        className="h-8 w-auto text-primary"
-        data-ai-hint="logo company"
-      />
+      <>
+        <Image 
+          src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
+          alt="Jurifly Logo"
+          width={114}
+          height={24}
+          className="h-8 w-auto text-primary"
+          data-ai-hint="logo company"
+        />
+      </>
     );
 
     return (

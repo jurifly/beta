@@ -43,14 +43,24 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 const Logo = () => (
-    <Image 
-      src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
-      alt="Jurifly Logo"
-      width={114}
-      height={24}
-      className="h-8 w-auto mx-auto mb-2 text-primary"
-      data-ai-hint="logo company"
-    />
+    <>
+      <Image 
+        src="https://i.ibb.co/L5hVv0M/jurifly-logo-new.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-8 w-auto mx-auto mb-2 text-primary dark:hidden"
+        data-ai-hint="logo company"
+      />
+      <Image 
+        src="https://i.ibb.co/J3d4mSg/jurifly-logo-new-dark.png" 
+        alt="Jurifly Logo"
+        width={114}
+        height={24}
+        className="h-8 w-auto mx-auto mb-2 hidden dark:block"
+        data-ai-hint="logo company"
+      />
+    </>
 );
 
 
