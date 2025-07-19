@@ -30,19 +30,19 @@ import Image from 'next/image';
 const Logo = () => (
     <>
       <Image 
-        src="https://i.ibb.co/yBQDJHJ8/1-2.png"
+        src="https://i.ibb.co/yc2DGvPk/2-2.png"
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-20 w-auto dark:hidden"
+        className="h-10 w-auto dark:hidden"
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/yc2DGvPk/2-2.png" 
+        src="https://i.ibb.co/yBQDJHJ8/1-2.png" 
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-20 w-auto hidden dark:block"
+        className="h-10 w-auto hidden dark:block"
         data-ai-hint="logo company"
       />
     </>
@@ -98,7 +98,7 @@ const FeaturesSection = () => {
     const features = [
         { text: "Know What Matters — Instantly", description: "Cut through jargon. Understand what needs to be done, why, and by when — with crisp AI-powered summaries.", icon: BrainCircuit },
         { text: "Docs Without The Drag", description: "Auto-generate standard legal docs and compliance summaries in seconds. Board resolutions, NDAs, investment term sheets — sorted.", icon: FileSignature },
-        { text: "See The Bigger Picture", description: "Visual dashboards for burn rate, runway, due dates, tax summaries, and upcoming compliances — all in one place.", icon: LineChart },
+        { text: "See The Bigger Picture", description: "Visual dashboards for burn, runway, due dates, tax summaries, and upcoming compliances — all in one place.", icon: LineChart },
         { text: "Smart Notifications", description: "No spam. Just timely nudges and reminders before things become penalties.", icon: Bell },
         { text: "Workspace That Works", description: "Chat, collaborate, and comment with your CA or investor — on one single dashboard.", icon: MessageSquare },
         { text: "Sync & Store Everything", description: "Your ROC filings, GST docs, ITR proofs, investor reports — all linked to your Drive and always available.", icon: DatabaseZap },

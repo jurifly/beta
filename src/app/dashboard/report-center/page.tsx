@@ -65,7 +65,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     const Logo = () => (
       <>
         <Image 
-          src="https://i.ibb.co/yBQDJHJ8/1-2.png"
+          src="https://i.ibb.co/yc2DGvPk/2-2.png"
           alt="Jurifly Logo"
           width={114}
           height={24}
