@@ -51,7 +51,7 @@ const LandingHeader = () => {
              <Link href="#testimonials" className="text-muted-foreground transition-colors hover:text-foreground">Testimonials</Link>
              <Link href="#faq" className="text-muted-foreground transition-colors hover:text-foreground">FAQs</Link>
           </div>
-          <Button onClick={() => router.push('/register')} className="hidden sm:inline-flex">Get Started</Button>
+          <Button onClick={() => router.push('/register')} className="hidden sm:inline-flex interactive-lift">Get Started</Button>
           <ThemeToggle />
         </nav>
       </div>
@@ -153,22 +153,37 @@ const KeyFeaturesSection = () => {
                 <div className="text-center mb-12">
                      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Key Features</h2>
                 </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Feature</TableHead>
-                            <TableHead>Description</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {features.map((feature, i) => (
-                            <TableRow key={i}>
-                                <TableCell className="font-medium">{feature.name}</TableCell>
-                                <TableCell>{feature.description}</TableCell>
+                {/* Responsive Cards for Mobile */}
+                <div className="space-y-4 md:hidden">
+                    {features.map((feature, i) => (
+                        <Card key={i} className="interactive-lift">
+                           <CardHeader>
+                            <CardTitle className="text-base">{feature.name}</CardTitle>
+                            <CardDescription>{feature.description}</CardDescription>
+                           </CardHeader>
+                        </Card>
+                    ))}
+                </div>
+
+                {/* Table for Desktop */}
+                <div className="hidden md:block">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-1/3">Feature</TableHead>
+                                <TableHead>Description</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {features.map((feature, i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="font-medium">{feature.name}</TableCell>
+                                    <TableCell>{feature.description}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
         </section>
     );
@@ -226,7 +241,7 @@ const PricingSection = () => {
                 <p className="text-4xl font-bold">{plan.price}</p>
               </CardContent>
               <CardFooter className="p-0">
-                <Button className="w-full">Get Started</Button>
+                <Button className="w-full interactive-lift">Get Started</Button>
               </CardFooter>
             </Card>
           ))}
@@ -257,18 +272,18 @@ const FinalCtaSection = () => {
 
 const LandingFooter = () => (
   <footer className="border-t">
-    <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
+    <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:flex-row px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
         <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
           © {new Date().getFullYear()} JuriFly. A product for founders, by founders.
         </p>
       </div>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap justify-center">
         <Button variant="link" size="sm" asChild><Link href="/about">About</Link></Button>
         <Button variant="link" size="sm" asChild><Link href="/contact">Contact</Link></Button>
         <Button variant="link" size="sm" asChild><Link href="/dashboard/settings?tab=policies">Terms & Privacy</Link></Button>
         <Button variant="link" size="sm" asChild><Link href="/careers">Careers</Link></Button>
-      </div>
+      </nav>
     </div>
   </footer>
 );

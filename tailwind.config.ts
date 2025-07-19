@@ -13,7 +13,6 @@ export default {
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
-        code: ['var(--font-source-code-pro)', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -56,16 +55,6 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
-        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -89,53 +78,13 @@ export default {
             height: '0',
           },
         },
-        "slide-in-from-top-2": {
-          from: { transform: "translateY(-0.5rem)", opacity: "0" },
+        "slide-in-from-bottom-8": {
+          from: { transform: "translateY(2rem)", opacity: "0" },
           to: { transform: "translateY(0)", opacity: "1" },
         },
-         "slide-in-from-right-2": {
-          from: { transform: "translateX(0.5rem)", opacity: "0" },
-          to: { transform: "translateX(0)", opacity: "1" },
-        },
-         "slide-in-from-left-2": {
-          from: { transform: "translateX(-0.5rem)", opacity: "0" },
-          to: { transform: "translateX(0)", opacity: "1" },
-        },
-         "slide-in-from-bottom-2": {
-          from: { transform: "translateY(0.5rem)", opacity: "0" },
-          to: { transform: "translateY(0)", opacity: "1" },
-        },
-        "fade-in-0": {
-          from: { opacity: "0" },
+        "fade-in-25": {
+          from: { opacity: "0.25" },
           to: { opacity: "1" },
-        },
-         "zoom-in-95": {
-          from: { opacity: "0", transform: "scale(.95)" },
-          to: { opacity: "1", transform: "scale(1)" },
-        },
-         "fade-out-0": {
-          from: { opacity: "1" },
-          to: { opacity: "0" },
-        },
-         "zoom-out-95": {
-          from: { opacity: "1", transform: "scale(1)" },
-          to: { opacity: "0", transform: "scale(.95)" },
-        },
-        "slide-out-to-top-2": {
-          from: { transform: "translateY(0)", opacity: "1" },
-          to: { transform: "translateY(-0.5rem)", opacity: "0" },
-        },
-         "slide-out-to-right-2": {
-          from: { transform: "translateX(0)", opacity: "1" },
-          to: { transform: "translateX(0.5rem)", opacity: "0" },
-        },
-         "slide-out-to-left-2": {
-          from: { transform: "translateX(0)", opacity: "1" },
-          to: { transform: "translateX(-0.5rem)", opacity: "0" },
-        },
-        "slide-out-to-bottom-2": {
-          from: { transform: "translateY(0)", opacity: "1" },
-          to: { transform: "translateY(0.5rem)", opacity: "0" },
         },
       },
       animation: {
@@ -143,16 +92,8 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'in': 'slide-in-from-top-2 0.2s ease-out, fade-in-0 0.2s ease-out',
         'zoom-in-95': 'zoom-in-95 0.1s ease-out',
-        "fade-in-0": "fade-in-0 0.2s ease-out",
-        "fade-out-0": "fade-out-0 0.2s ease-out",
-        "slide-in-from-top-2": "slide-in-from-top-2 0.2s ease-out",
-        "slide-in-from-right-2": "slide-in-from-right-2 0.2s ease-out",
-        "slide-in-from-bottom-2": "slide-in-from-bottom-2 0.2s ease-out",
-        "slide-in-from-left-2": "slide-in-from-left-2 0.2s ease-out",
-        "slide-out-to-top-2": "slide-out-to-top-2 0.2s ease-out",
-        "slide-out-to-right-2": "slide-out-to-right-2 0.2s ease-out",
-        "slide-out-to-bottom-2": "slide-out-to-bottom-2 0.2s ease-out",
-        "slide-out-to-left-2": "slide-out-to-left-2 0.2s ease-out",
+        'slide-in-from-bottom-8': 'slide-in-from-bottom-8 0.5s ease-out',
+        'fade-in-25': 'fade-in-25 0.5s ease-out',
       },
     },
   },
