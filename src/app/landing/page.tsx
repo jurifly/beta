@@ -32,15 +32,15 @@ const Logo = () => (
     <>
       <Image 
         src="https://i.ibb.co/yc2DGvPk/2-2.png"
-        alt="Jurifly Logo"
+        alt="2-2"
         width={114}
         height={24}
         className="h-20 w-auto dark:hidden"
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/4wdbj1XL/claifyblacko-1.png" 
-        alt="Jurifly Logo"
+        src="https://i.ibb.co/4wdbj1XL/claifyblacko-1.png"
+        alt="claifyblacko-1"
         width={114}
         height={24}
         className="h-20 w-auto hidden dark:block"
@@ -90,7 +90,7 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2"/>
             </Button>
             <p className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-500 bg-clip-text text-transparent font-semibold">
-              <Flame className="text-orange-500" />
+              <Flame className="text-orange-500 animate-pulse" />
               Daily free 5 credits
             </p>
         </div>
