@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowRight,
@@ -197,7 +197,7 @@ const FaqSection = () => {
         { q: "Do I still need a CA?", a: "Yes. We don’t replace your CA — we make your CA 10x faster and you 100x smarter." },
         { q: "What kind of documents can JuriFly help generate?", a: "Board resolutions, NDAs, founder agreements, pitch doc structures, ESOP templates, investor updates, and more." },
         { q: "What startup stage is JuriFly for?", a: "From incorporation to fundraising to exit. Pre-seed to Series A and beyond." },
-        { q: "How do you handle my data? Is it secure?", a: "Your workspace data is encrypted. For documents, we integrate with your own Google Drive, so your files stay in your control, not on our servers. You grant us permission only to list and manage the files you choose to upload through our interface." },
+        { q: "How do you handle my data? Is it secure?", a: "Your workspace is encrypted. For documents, we integrate directly with your Google Drive, meaning your files stay in your control, not on our servers. You grant us permission only to list and manage the files you choose to upload through our interface." },
     ];
     return (
         <section id="faq" className="w-full py-20 md:py-24">
@@ -217,41 +217,6 @@ const FaqSection = () => {
         </section>
     );
 }
-
-const PricingSection = () => {
-  const plans = [
-    { name: 'Founder Lite', audience: 'Solo founder or early team', price: '₹69/month' },
-    { name: 'Startup Pro', audience: 'Funded startup or growing team', price: '₹349/month' },
-    { name: 'Advisor Pass', audience: 'For CAs, CFOs, legal advisors', price: '₹10/day' }
-  ];
-  return (
-    <section id="pricing" className="w-full py-20 md:py-24 bg-card/50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Pricing</h2>
-          <p className="text-muted-foreground mt-2">All plans include unlimited AI insights, doc generation, workspace tools, and reminders.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans.map((plan) => (
-            <Card key={plan.name} className="flex flex-col text-center p-6 interactive-lift">
-              <CardHeader className="p-0">
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <CardDescription>{plan.audience}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 my-6 p-0">
-                <p className="text-4xl font-bold">{plan.price}</p>
-              </CardContent>
-              <CardFooter className="p-0">
-                <Button className="w-full interactive-lift">Get Started</Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
 
 const FinalCtaSection = () => {
   const router = useRouter();
@@ -299,7 +264,6 @@ export default function LandingPage() {
         <TestimonialsSection />
         <KeyFeaturesSection />
         <FaqSection />
-        <PricingSection />
         <FinalCtaSection />
       </main>
       <LandingFooter />
