@@ -19,6 +19,7 @@ import {
   Briefcase,
   GanttChartSquare,
   Users,
+  Flame,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
@@ -88,6 +89,10 @@ const HeroSection = () => {
                 Get Started – It’s Free for Beta Users
                 <ArrowRight className="ml-2"/>
             </Button>
+            <p className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-500 bg-clip-text text-transparent font-semibold">
+              <Flame className="text-orange-500" />
+              Daily free 5 credits
+            </p>
         </div>
       </div>
     </section>
