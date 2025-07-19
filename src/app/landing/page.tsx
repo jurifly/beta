@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowRight,
@@ -52,7 +52,7 @@ const LandingHeader = () => {
              <Link href="#testimonials" className="text-muted-foreground transition-colors hover:text-foreground">Testimonials</Link>
              <Link href="#faq" className="text-muted-foreground transition-colors hover:text-foreground">FAQs</Link>
           </div>
-          <Button onClick={() => router.push('/register')} className="hidden sm:inline-flex interactive-lift">Get Started</Button>
+          <Button onClick={() => router.push('/login')} className="hidden sm:inline-flex interactive-lift">Get Started</Button>
           <ThemeToggle />
         </nav>
       </div>
@@ -74,7 +74,7 @@ const HeroSection = () => {
         </p>
         <p className="mt-4 font-semibold text-lg">We don’t file forms. We make sure you understand them.</p>
         <div className="mt-8">
-            <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+            <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>
                 Get Started – It’s Free for Beta Users
                 <ArrowRight className="ml-2"/>
             </Button>
@@ -226,7 +226,7 @@ const FinalCtaSection = () => {
         <h2 className="text-3xl md:text-5xl font-bold font-headline">Don’t Worry About Legal Stuff Again.</h2>
         <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. No filings. Just clarity.</p>
         <div className="mt-8">
-          <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+          <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>
             Get Started – It’s Free for Beta Users
             <ArrowRight className="ml-2" />
           </Button>
