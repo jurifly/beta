@@ -54,15 +54,15 @@ const Logo = () => (
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-10 w-auto mx-auto mb-2 dark:hidden"
+        className="h-20 w-auto mx-auto mb-2 dark:hidden"
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/yBQDJHJ8/1-2.png" 
+        src="https://i.ibb.co/4wdbj1XL/claifyblacko-1.png" 
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-10 w-auto mx-auto mb-2 hidden dark:block"
+        className="h-20 w-auto mx-auto mb-2 hidden dark:block"
         data-ai-hint="logo company"
       />
     </>

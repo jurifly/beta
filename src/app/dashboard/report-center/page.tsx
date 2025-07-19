@@ -69,7 +69,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
           alt="Jurifly Logo"
           width={114}
           height={24}
-          className="h-8 w-auto text-primary"
+          className="h-20 w-auto text-primary"
           data-ai-hint="logo company"
         />
       </>
