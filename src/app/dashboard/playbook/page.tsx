@@ -299,7 +299,7 @@ const InvestorDiscoveryTab = () => {
                         </div>
                     </CardContent>
                     <CardFooter className="flex-col gap-2">
-                         <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <SearchIcon className="mr-2 h-4 w-4" />}
                             Find Opportunities
                         </Button>
@@ -548,3 +548,4 @@ export default function PlaybookPage() {
         </div>
     );
 }
+
