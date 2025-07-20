@@ -79,7 +79,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
     return (
         <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <Logo />
@@ -90,7 +90,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </div>
                 </header>
 
-                <main className="mt-8 flex-1">
+                <main className="mt-8">
                     <section className="p-6 border-2 border-primary/20 bg-primary/5 rounded-lg mb-8">
                         <h2 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
                             <Sparkles className="h-5 w-5"/> AI Executive Summary
@@ -175,7 +175,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                  <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <Logo />
                     <div className="text-right">
@@ -184,7 +184,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </div>
                 </header>
 
-                <main className="mt-8 flex-1">
+                <main className="mt-8">
                     <section className="mb-8">
                         <h2 className="text-xl font-semibold text-red-700 mb-3 flex items-center gap-2">
                            <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
@@ -281,7 +281,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
 
             {/* Page 3 - Due Diligence */}
             {data.diligenceChecklist && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl flex flex-col report-page" style={{ width: '210mm', minHeight: '297mm' }}>
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm', minHeight: '297mm' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
@@ -290,7 +290,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                         </div>
                     </header>
 
-                    <main className="mt-8 flex-1">
+                    <main className="mt-8">
                         <section className="mb-6">
                             <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
