@@ -81,32 +81,32 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
     return (
         <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
+            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <Logo />
                     </div>
                     <div className="text-right">
-                        <h1 className="text-4xl font-bold text-gray-800">Compliance Health Report</h1>
-                        <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
+                        <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Compliance Health Report</h1>
+                        <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
                 <main className="mt-12 space-y-12">
                      <div className="grid grid-cols-3 gap-8">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
-                            <h3 className="text-xl font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-6xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
-                            <p className="text-lg font-medium text-gray-500">Out of 100</p>
+                            <h3 style={{fontSize: '18px'}} className="font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                            <div className={`text-6xl font-bold ${scoreColor}`} style={{fontSize: '72px'}}>{data.hygieneScore}</div>
+                            <p style={{fontSize: '16px'}} className="font-medium text-gray-500">Out of 100</p>
                         </div>
                         <div className="col-span-2 bg-gray-50 p-8 rounded-lg border flex flex-col justify-center">
-                            <h3 className="text-2xl font-semibold text-gray-700 mb-6">Score Breakdown</h3>
+                            <h3 style={{fontSize: '24px'}} className="font-semibold text-gray-700 mb-6">Score Breakdown</h3>
                             <div className="space-y-6">
                                 <div>
-                                    <div className="flex justify-between text-lg mb-2"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                    <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
                                     <Progress value={data.filingPerformance} className="h-3" />
                                 </div>
                                 <div>
-                                    <div className="flex justify-between text-lg mb-2"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                    <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
                                      <Progress value={data.profileCompleteness} className="h-3"/>
                                 </div>
                             </div>
@@ -114,7 +114,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                     </div>
                     <div className="grid grid-cols-2 gap-8">
                         <div className="p-6 border rounded-lg bg-white" data-jspdf-ignore="true">
-                            <h3 className="text-2xl font-semibold text-gray-700 mb-4 flex items-center gap-2"><PieChartIcon className="w-6 h-6"/> Ownership Structure</h3>
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-4 flex items-center gap-2" style={{fontSize: '24px'}}><PieChartIcon className="w-6 h-6"/> Ownership Structure</h3>
                             {data.ownershipData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={250}>
                                     <RechartsPieChart>
@@ -130,45 +130,45 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <p className="text-lg text-center text-gray-500 py-10">No cap table data available.</p>
+                                <p className="text-lg text-center text-gray-500 py-10" style={{fontSize: '18px'}}>No cap table data available.</p>
                             )}
                         </div>
                          <div className="p-6 border rounded-lg bg-white flex flex-col">
-                            <h3 className="text-2xl font-semibold text-gray-700 mb-4">Financial Snapshot</h3>
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-4" style={{fontSize: '24px'}}>Financial Snapshot</h3>
                             <div className="flex-1 flex flex-col justify-center space-y-6">
                                 <div className="text-center p-4 bg-gray-50 rounded-md">
-                                    <p className="text-lg font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                    <p className={`text-4xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
+                                    <p className="text-lg font-medium text-gray-500" style={{fontSize: '18px'}}>{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                    <p className={`text-4xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`} style={{fontSize: '36px'}}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
                                 </div>
                                 <div className="text-center p-4 bg-gray-50 rounded-md">
-                                    <p className="text-lg font-medium text-gray-500">Estimated Runway</p>
-                                    <p className="text-4xl font-bold">{data.financials.runway}</p>
+                                    <p className="text-lg font-medium text-gray-500" style={{fontSize: '18px'}}>Estimated Runway</p>
+                                    <p className="text-4xl font-bold" style={{fontSize: '36px'}}>{data.financials.runway}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </main>
-                <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
+                <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
                     <p>Page 1 of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
+            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <Logo />
                     <div className="text-right">
-                        <h1 className="text-4xl font-bold text-gray-800">Compliance & Financials</h1>
-                        <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
+                        <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Compliance & Financials</h1>
+                        <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
                 <main className="mt-12 space-y-12">
                     <section>
-                        <h2 className="text-3xl font-semibold text-red-700 mb-4 flex items-center gap-3">
+                        <h2 className="text-3xl font-semibold text-red-700 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
                         </h2>
                         {data.overdueFilings.length > 0 ? (
-                            <table className="w-full text-lg text-left">
+                            <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="p-3 font-semibold">Task</th>
@@ -184,14 +184,14 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                                     ))}
                                 </tbody>
                             </table>
-                        ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
+                        ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg" style={{fontSize: '18px'}}>No overdue tasks. Well done!</p>}
                     </section>
                     <section>
-                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3">
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
                         </h2>
                          {data.upcomingFilings.length > 0 ? (
-                             <table className="w-full text-lg text-left">
+                             <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="p-3 font-semibold">Task</th>
@@ -207,15 +207,15 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                                     ))}
                                 </tbody>
                             </table>
-                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
+                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg" style={{fontSize: '18px'}}>No filings due in the next 30 days.</p>}
                     </section>
                      <section>
-                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3">
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <TrendingUp /> Year-over-Year Financials
                         </h2>
                          {data.financials.historicalData.length > 0 ? (
                             <div className="space-y-6">
-                                <table className="w-full text-lg text-left">
+                                <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th className="p-3 font-semibold">Financial Year</th>
@@ -247,41 +247,41 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                                     </ResponsiveContainer>
                                 </div>
                             </div>
-                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
+                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg" style={{fontSize: '18px'}}>No historical financial data available for analysis.</p>}
                     </section>
                 </main>
-                <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
+                <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
                      <p>Page 2 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
 
             {/* Page 3 - Due Diligence Part 1 */}
             {data.diligenceChecklist && diligencePage1.length > 0 && (
-                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
+                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-4xl font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
-                            <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
+                            <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
+                            <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
                     <main className="mt-12">
                         <section className="mb-8">
-                            <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3">
+                            <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
                                <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
                             </h2>
                             <div className="p-6 bg-gray-50 rounded-lg border">
-                                <div className="flex justify-between text-lg mb-2"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
+                                <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
                                 <Progress value={diligenceProgress} className="h-3"/>
                             </div>
                         </section>
                         <div style={{ columnCount: 2, columnGap: '2rem' }}>
                             {diligencePage1.map((category, index) => (
                                 <div key={index} className="mb-8" style={{ breakInside: 'avoid' }}>
-                                    <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
+                                    <h3 style={{fontSize: '20px'}} className="font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
                                     <ul className="space-y-2">
                                         {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-3 text-lg">
+                                            <li key={item.id} className="flex items-center gap-3 text-lg" style={{fontSize: '16px'}}>
                                                 <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                                 <span>{item.task}</span>
                                             </li>
@@ -291,7 +291,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                             ))}
                         </div>
                     </main>
-                    <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
+                    <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
                         <p>Page 3 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -299,22 +299,22 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
             
             {/* Page 4 - Due Diligence Part 2 */}
             {data.diligenceChecklist && diligencePage2.length > 0 && (
-                 <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
+                 <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-4xl font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
-                            <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
+                            <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
+                            <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
                     <main className="mt-12">
                         <div style={{ columnCount: 2, columnGap: '2rem' }}>
                             {diligencePage2.map((category, index) => (
                                 <div key={index} className="mb-8" style={{ breakInside: 'avoid' }}>
-                                    <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
+                                    <h3 style={{fontSize: '20px'}} className="font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
                                     <ul className="space-y-2">
                                         {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-3 text-lg">
+                                            <li key={item.id} className="flex items-center gap-3 text-lg" style={{fontSize: '16px'}}>
                                                 <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                                 <span>{item.task}</span>
                                             </li>
@@ -324,7 +324,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                             ))}
                         </div>
                     </main>
-                    <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
+                    <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
                         <p>Page 4 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -332,16 +332,16 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
 
             {/* Page 5 - AI Summary */}
             {executiveSummary && (
-                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
+                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-4xl font-bold text-gray-800">AI Executive Summary</h1>
-                            <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
+                            <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">AI Executive Summary</h1>
+                            <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
                     <main className="mt-12">
-                        <div className="prose prose-xl max-w-none">
+                        <div className="prose prose-xl max-w-none" style={{fontSize: '18px'}}>
                             <ReactMarkdown
                                 components={{
                                     ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-4" {...props} />,
@@ -352,7 +352,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                             </ReactMarkdown>
                         </div>
                     </main>
-                    <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
+                    <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
                         <p>Page {totalPages} of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -680,3 +680,4 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+

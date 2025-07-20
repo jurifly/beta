@@ -20,6 +20,7 @@ import {
   GanttChartSquare,
   Users,
   Flame,
+  Star,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
@@ -107,7 +108,7 @@ const FeaturesSection = () => {
         { text: "See The Bigger Picture", description: "Visual dashboards for burn, runway, due dates, tax summaries, and upcoming compliances — all in one place.", icon: LineChart },
         { text: "Smart Notifications", description: "No spam. Just timely nudges and reminders before things become penalties.", icon: Bell },
         { text: "Workspace That Works", description: "Chat, collaborate, and comment with your CA or investor — on one single dashboard.", icon: MessageSquare },
-        { text: "Sync & Store Everything", description: "Your ROC filings, GST docs, ITR proofs, investor reports — all linked to your Drive and always available.", icon: DatabaseZap },
+        { text: "Sync & Store Everything", description: "Your ROC filings, GST docs, ITR proofs, investor reports — all linked to your Drive and always backed up and in-sync.", icon: DatabaseZap },
     ];
     return (
         <section id="features" className="w-full py-20 md:py-24 bg-card/50">
@@ -133,18 +134,26 @@ const FeaturesSection = () => {
 
 const TestimonialsSection = () => {
     const testimonials = [
-        { quote: "JuriFly helped me understand my compliance blind spots, before they became problems.", author: "A founder who stopped fearing MCA." },
-        { quote: "My CA does the work, but I finally get what’s happening. That’s priceless.", author: "A startup CEO using JuriFly during fundraising." }
+        { quote: "JuriFly helped me understand my compliance blind spots, before they became problems.", author: "A founder who stopped fearing MCA" },
+        { quote: "My CA does the work, but I finally get what’s happening. That’s priceless.", author: "A startup CEO using JuriFly" },
+        { quote: "This is the co-pilot every founder needs. It doesn't just show you data, it explains it.", author: "An early-stage entrepreneur" }
     ];
     return (
         <section id="testimonials" className="w-full py-20 md:py-24">
              <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Built For Founders, Not Filers</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Here's the tea</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                     {testimonials.map((testimonial, index) => (
-                        <Card key={index} className="p-6 text-left interactive-lift bg-card/50 text-center">
-                            <CardContent className="p-0">
-                                <blockquote className="text-lg font-medium leading-relaxed">“{testimonial.quote}”</blockquote>
+                        <Card key={index} className="p-6 text-center interactive-lift bg-card/50">
+                            <CardContent className="p-0 flex flex-col items-center">
+                                <div className="flex items-center gap-0.5 text-yellow-400">
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <Star className="w-5 h-5 fill-current" />
+                                </div>
+                                <blockquote className="text-lg font-medium leading-relaxed mt-4">“{testimonial.quote}”</blockquote>
                                 <footer className="mt-4 text-sm text-muted-foreground">— {testimonial.author}</footer>
                             </CardContent>
                         </Card>
