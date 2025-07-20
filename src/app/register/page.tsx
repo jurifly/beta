@@ -54,7 +54,7 @@ const Logo = () => (
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-20 w-auto mx-auto mb-2 dark:hidden"
+        className="h-20 w-auto dark:hidden"
         data-ai-hint="logo company"
       />
       <Image 
@@ -62,7 +62,7 @@ const Logo = () => (
         alt="Jurifly Logo"
         width={114}
         height={24}
-        className="h-20 w-auto mx-auto mb-2 hidden dark:block"
+        className="h-20 w-auto hidden dark:block"
         data-ai-hint="logo company"
       />
     </>
@@ -116,101 +116,121 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <Logo />
-          <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Get started with Jurifly today.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-                <Label>I am a...</Label>
-                <Controller
-                    name="role"
-                    control={control}
-                    render={({ field }) => (
-                        <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-2 gap-2">
-                           {betaRoles.map(role => (
-                                <Label key={role.id} htmlFor={role.id} className={cn("flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 text-sm font-semibold hover:bg-accent hover:text-accent-foreground cursor-pointer", field.value === role.id && "border-primary")}>
-                                    <RadioGroupItem value={role.id} id={role.id} className="sr-only" />
-                                    {role.label}
-                                </Label>
-                           ))}
-                        </RadioGroup>
-                    )}
-                />
-                 {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" {...register("name")} />
-              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-            </div>
-             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register("email")} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register("password")} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-            </div>
-             <div className="space-y-1">
-              <Label>Legal Region</Label>
-                <Controller
-                    name="legalRegion"
-                    control={control}
-                    render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select your country..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {legalRegions.map(region => (
-                                    <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    )}
-                />
-              {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
-            </div>
-             <div className="space-y-1">
-                <Label htmlFor="accessPass" className="flex items-center gap-2">
-                    Access Pass <span className="text-xs text-muted-foreground">(Optional)</span>
-                    <KeyRound className="h-4 w-4 text-muted-foreground" />
-                </Label>
-                <Input id="accessPass" placeholder="Enter code for special access" {...register("accessPass")} />
-            </div>
-             <div className="items-top flex space-x-2">
-                <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />
-                <div className="grid gap-1.5 leading-none">
-                  <label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    I agree to the
-                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Terms of Service </Link> 
-                    and 
-                    <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Privacy Policy</Link>.
-                  </label>
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
+      <div className="flex items-center justify-center py-12 px-4">
+        <Card className="w-full max-w-md mx-auto">
+            <CardHeader className="text-center">
+              <div className="mx-auto">
+                <Logo />
+              </div>
+              <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
+              <CardDescription>Get started with JuriFly today.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-2">
+                    <Label>I am a...</Label>
+                    <Controller
+                        name="role"
+                        control={control}
+                        render={({ field }) => (
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-2 gap-2">
+                               {betaRoles.map(role => (
+                                    <Label key={role.id} htmlFor={role.id} className={cn("flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 text-sm font-semibold hover:bg-accent hover:text-accent-foreground cursor-pointer", field.value === role.id && "border-primary")}>
+                                        <RadioGroupItem value={role.id} id={role.id} className="sr-only" />
+                                        {role.label}
+                                    </Label>
+                               ))}
+                            </RadioGroup>
+                        )}
+                    />
+                     {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
                 </div>
+                <div className="space-y-1">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" {...register("name")} />
+                  {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                </div>
+                 <div className="space-y-1">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" {...register("email")} />
+                  {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" {...register("password")} />
+                  {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+                </div>
+                 <div className="space-y-1">
+                  <Label>Legal Region</Label>
+                    <Controller
+                        name="legalRegion"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your country..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {legalRegions.map(region => (
+                                        <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                  {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
+                </div>
+                 <div className="space-y-1">
+                    <Label htmlFor="accessPass" className="flex items-center gap-2">
+                        Access Pass <span className="text-xs text-muted-foreground">(Optional)</span>
+                        <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    </Label>
+                    <Input id="accessPass" placeholder="Enter code for special access" {...register("accessPass")} />
+                </div>
+                 <div className="items-top flex space-x-2">
+                    <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        I agree to the
+                        <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Terms of Service </Link> 
+                        and 
+                        <Link href="/dashboard/settings?tab=policies" target="_blank" className="underline text-primary"> Privacy Policy</Link>.
+                      </label>
+                    </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isSubmitting || !agreedToTerms}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Create Account
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter className="text-center text-sm">
+              <p className="w-full">
+                Already have an account?{" "}
+                <Link href="/login" className="font-semibold text-primary hover:underline">
+                  Log in
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
+      </div>
+      <div className="hidden lg:flex items-center justify-center bg-muted">
+        <div className="relative w-full h-full">
+           <Image
+              src="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1974&auto=format&fit=crop"
+              alt="People collaborating"
+              fill
+              className="object-cover"
+              data-ai-hint="collaboration business"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div className="absolute bottom-10 left-10 text-white max-w-md">
+                <h2 className="text-3xl font-bold">Clarity, not Chaos.</h2>
+                <p className="mt-2 text-lg opacity-90">Join founders and CAs who are finally getting on the same page.</p>
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting || !agreedToTerms}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="text-center text-sm">
-          <p className="w-full">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
-              Log in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
