@@ -41,6 +41,8 @@ import {
   Flame,
   GanttChartSquare,
   LayoutGrid,
+  Building,
+  ChevronsUpDown,
 } from "lucide-react";
 import Image from 'next/image';
 
@@ -65,7 +67,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
-import type { UserProfile, UserRole, AppNotification } from "@/lib/types";
+import type { UserProfile, UserRole, AppNotification, Company } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
@@ -76,6 +78,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { FounderQuoteBanner } from './founder-quote-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -516,7 +520,7 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
 
 
 function AppShell({ children }: { children: ReactNode }) {
-  const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode } = useAuth();
+  const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
@@ -599,9 +603,12 @@ function AppShell({ children }: { children: ReactNode }) {
             <DesktopSidebar navItems={navItems} userProfile={userProfile} onLockedFeatureClick={handleLockedFeatureClick} lang={lang} />
             <div className="flex flex-1 flex-col">
             <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-                <Link href="/dashboard" className="flex items-center gap-2 font-semibold md:hidden">
-                    <Logo />
-                </Link>
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard" className="flex items-center gap-2 font-semibold md:hidden">
+                        <Logo />
+                    </Link>
+                    <CompanySwitcher />
+                </div>
                 <div className="w-full flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -716,6 +723,66 @@ export default function DashboardLayout({
   return <AppShell>{children}</AppShell>;
 }
 
+const CompanySwitcher = () => {
+    const { userProfile, updateUserProfile } = useAuth();
+    const [open, setOpen] = useState(false);
+    
+    if (!userProfile || !userProfile.companies || userProfile.companies.length <= 1) {
+        return null;
+    }
+    
+    const activeCompany = userProfile.companies.find(c => c.id === userProfile.activeCompanyId);
+    
+    const handleSelectCompany = (company: Company) => {
+        updateUserProfile({ activeCompanyId: company.id });
+        setOpen(false);
+    };
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-[200px] justify-between hidden md:flex"
+                >
+                    <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4" />
+                        <span className="truncate">{activeCompany ? activeCompany.name : "Select Company..."}</span>
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+                <Command>
+                    <CommandInput placeholder="Search company..." />
+                    <CommandList>
+                        <CommandEmpty>No company found.</CommandEmpty>
+                        <CommandGroup>
+                            {userProfile.companies.map((company) => (
+                                <CommandItem
+                                    key={company.id}
+                                    value={company.name}
+                                    onSelect={() => handleSelectCompany(company)}
+                                >
+                                    <CheckCircle
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            activeCompany?.id === company.id ? "opacity-100 text-primary" : "opacity-0"
+                                        )}
+                                    />
+                                    {company.name}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
 const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (featureName: string, type: 'pro' | 'beta') => void, lang: Language }) => {
     const pathname = usePathname();
     const { isDevMode } = useAuth();
@@ -803,3 +870,4 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
       </div>
     );
 };
+    
