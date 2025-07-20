@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -103,7 +102,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                      <div className="grid grid-cols-3 gap-6 mb-8">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
                             <h3 className="text-base font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-6xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <div className={`text-5xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
                             <p className="text-sm font-medium text-gray-500">Out of 100</p>
                         </div>
                         <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
@@ -129,7 +128,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                          <RechartsTooltip formatter={(value, name, props) => {
                                             const total = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
                                             const percentage = total > 0 ? ((value as number / total) * 100).toFixed(1) : 0;
-                                            return [`${percentage}%`, name];
+                                            return [`${percentage}% (${(props.payload.value || 0).toLocaleString()})`, name];
                                         }} />
                                         <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
                                             {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
@@ -156,7 +155,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                         </div>
                     </div>
                 </main>
-                <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
                     <p>Page 1 of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
@@ -258,7 +257,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                          ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
                     </section>
                 </main>
-                <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
                      <p>Page 2 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
@@ -299,7 +298,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             ))}
                         </div>
                     </main>
-                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                    <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
                         <p>Page 3 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -360,7 +359,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             </ReactMarkdown>
                         </div>
                     </main>
-                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                    <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
                         <p>Page {totalPages} of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -529,7 +528,7 @@ export default function ReportCenterPage() {
           pdf.addPage();
         }
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
       }
 
       pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
@@ -597,7 +596,7 @@ export default function ReportCenterPage() {
                     </div>
                 </Card>
             )}
-            
+
             {reportData && (
                  <Card>
                     <CardHeader>
@@ -680,4 +679,5 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+
 
