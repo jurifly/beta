@@ -483,7 +483,7 @@ export default function ReportCenterPage() {
 
             setExecutiveSummary(insightsResponse.executiveSummary);
         } catch (error: any) {
-            toast({ variant: 'destructive', title: "AI Summary Failed", description: "The model may be overloaded. Please try again." });
+            toast({ variant: "destructive", title: "AI Summary Failed", description: "The model may be overloaded. Please try again." });
         } finally {
             setIsGeneratingInsights(false);
         }
@@ -648,7 +648,7 @@ export default function ReportCenterPage() {
                     </CardFooter>
                 </Card>
             )}
-
+            
             {reportData && (
               <>
                 <Card>
