@@ -95,13 +95,18 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
     };
     
     const ITEMS_PER_PAGE = 15;
+    const yoyDataExists = data.financials.historicalData && data.financials.historicalData.length > 0;
     const overduePages = chunkArray(data.overdueFilings, ITEMS_PER_PAGE);
     const upcomingPages = chunkArray(data.upcomingFilings, ITEMS_PER_PAGE);
     const diligenceChecklist = data.diligenceChecklist?.checklist || [];
     const DILIGENCE_CATEGORIES_PER_PAGE = 4;
     const diligencePages = chunkArray(diligenceChecklist, DILIGENCE_CATEGORIES_PER_PAGE);
 
-    let totalPages = 1 + overduePages.length + upcomingPages.length + diligencePages.length;
+    let totalPages = 1;
+    if(yoyDataExists) totalPages++;
+    totalPages += overduePages.length;
+    totalPages += upcomingPages.length;
+    totalPages += diligencePages.length;
     if(executiveSummary) totalPages++;
     let currentPageNum = 1;
 
@@ -164,23 +169,39 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                         </div>
                     </div>
                 </div>
-                 {data.financials.historicalData.length > 1 && (
-                    <div className="p-6 border rounded-xl bg-white">
-                        <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2" style={{fontSize: '24px'}}><TrendingUp className="w-6 h-6"/> YoY Financial Trends</h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <LineChart data={data.financials.historicalData.sort((a,b) => a.year.localeCompare(b.year))}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                                <XAxis dataKey="year" style={{ fontSize: '14px' }}/>
-                                <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} style={{ fontSize: '14px' }}/>
-                                <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} wrapperStyle={{fontSize: '16px'}} />
-                                <Legend wrapperStyle={{fontSize: '16px'}} />
-                                <Line type="monotone" dataKey="revenue" stroke={COLORS[0]} strokeWidth={3} name="Revenue"/>
-                                <Line type="monotone" dataKey="expenses" stroke={COLORS[3]} strokeWidth={3} name="Expenses"/>
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                 )}
             </ReportPageShell>
+            
+             {yoyDataExists && (
+                <ReportPageShell pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
+                    <section>
+                         <h2 className="text-3xl font-semibold text-gray-800 mb-6 flex items-center gap-3" style={{fontSize: '28px'}}>
+                           <TrendingUp /> Year-Over-Year Financial Analysis
+                        </h2>
+                         <div className="p-6 border rounded-xl bg-white mb-8">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={data.financials.historicalData.sort((a,b) => a.year.localeCompare(b.year))}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false}/>
+                                    <XAxis dataKey="year" style={{ fontSize: '14px' }}/>
+                                    <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} style={{ fontSize: '14px' }}/>
+                                    <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} wrapperStyle={{fontSize: '16px'}} />
+                                    <Legend wrapperStyle={{fontSize: '16px'}} />
+                                    <Line type="monotone" dataKey="revenue" stroke={COLORS[0]} strokeWidth={3} name="Revenue"/>
+                                    <Line type="monotone" dataKey="expenses" stroke={COLORS[3]} strokeWidth={3} name="Expenses"/>
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="space-y-4">
+                             {data.financials.historicalData.sort((a,b) => a.year.localeCompare(b.year)).map(item => (
+                                <div key={item.year} className="grid grid-cols-3 gap-4 items-center p-4 border rounded-lg bg-gray-50">
+                                    <p className="font-bold col-span-1" style={{fontSize: '22px'}}>{item.year}</p>
+                                    <p className="text-green-600 col-span-1" style={{fontSize: '18px'}}>Revenue: <span className="font-semibold">{formatCurrency(item.revenue)}</span></p>
+                                    <p className="text-red-600 col-span-1" style={{fontSize: '18px'}}>Expenses: <span className="font-semibold">{formatCurrency(item.expenses)}</span></p>
+                                </div>
+                             ))}
+                        </div>
+                    </section>
+                </ReportPageShell>
+             )}
             
             {overduePages.map((pageItems, index) => (
                 <ReportPageShell key={`overdue-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
