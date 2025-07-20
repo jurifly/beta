@@ -26,6 +26,7 @@ import type { UserProfile, UserRole } from "@/lib/types";
 import { Badge } from "../ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { SupporterBadge } from "./supporter-badge";
 
 export function UserNav() {
   const router = useRouter();
@@ -82,24 +83,25 @@ export function UserNav() {
       <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none flex items-center gap-2">
-              {userProfile.name}
-              {userProfile.plan !== 'Starter' && <Badge variant="secondary" className="border-violet-500/30 py-0 px-2 text-violet-500">{userProfile.plan}</Badge>}
-            </p>
+             {userProfile.supporter ? (
+              <SupporterBadge username={userProfile.name} />
+            ) : (
+               <p className="text-sm font-medium leading-none flex items-center gap-2">
+                {userProfile.name}
+              </p>
+            )}
             <p className="text-xs leading-none text-muted-foreground">
               {userProfile.email}
             </p>
           </div>
         </DropdownMenuLabel>
+        
+        <DropdownMenuSeparator />
 
-        {activeCompany && (
-            <>
-                <DropdownMenuSeparator />
-                <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                    Active Company: {activeCompany.name}
-                </div>
-            </>
-        )}
+        <div className="px-2 py-1.5 text-xs text-muted-foreground">
+          <p>Plan: <span className="font-semibold text-foreground">{userProfile.plan}</span></p>
+          {activeCompany && <p>Active: <span className="font-semibold text-foreground truncate">{activeCompany.name}</span></p>}
+        </div>
         
         <DropdownMenuSeparator />
 
