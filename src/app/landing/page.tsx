@@ -29,6 +29,7 @@ import {
   Repeat,
   Sparkles,
   Book,
+  Globe,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
