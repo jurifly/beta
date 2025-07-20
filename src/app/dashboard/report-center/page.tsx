@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import html2canvas from 'html2canvas';
 import Image from 'next/image';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 type ReportData = {
@@ -50,7 +51,7 @@ const formatCurrency = (num: number, region = 'India') => {
   return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
 }
 
-const ReportTemplate = ({ data }: { data: ReportData }) => {
+const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiveSummary?: string | null }) => {
     const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
@@ -67,7 +68,10 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
     const diligencePage1 = diligenceChecklist.slice(0, checklistMidpoint);
     const diligencePage2 = diligenceChecklist.slice(checklistMidpoint);
 
-    const totalPages = data.diligenceChecklist ? (diligencePage2.length > 0 ? 4 : 3) : 2;
+    let totalPages = 2;
+    if(data.diligenceChecklist && diligencePage1.length > 0) totalPages++;
+    if(data.diligenceChecklist && diligencePage2.length > 0) totalPages++;
+    if(executiveSummary) totalPages++;
 
     const Logo = () => (
       <>
@@ -333,6 +337,34 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                     </footer>
                 </div>
             )}
+
+            {/* Page 5 - AI Summary */}
+            {executiveSummary && (
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                        <Logo />
+                        <div className="text-right">
+                            <h1 className="text-2xl font-bold text-gray-800">AI Executive Summary</h1>
+                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                        </div>
+                    </header>
+                    <main className="mt-8">
+                        <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
+                            <ReactMarkdown
+                                components={{
+                                    ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
+                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
+                                }}
+                            >
+                                {executiveSummary}
+                            </ReactMarkdown>
+                        </div>
+                    </main>
+                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                        <p>Page {totalPages} of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                    </footer>
+                </div>
+            )}
         </div>
     );
 };
@@ -345,6 +377,7 @@ export default function ReportCenterPage() {
     const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
     const [reportData, setReportData] = useState<ReportData | null>(null);
     const [executiveSummary, setExecutiveSummary] = useState<string | null>(null);
+    const [includeSummaryInPdf, setIncludeSummaryInPdf] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -366,6 +399,7 @@ export default function ReportCenterPage() {
         setIsLoading(true);
         setReportData(null);
         setExecutiveSummary(null);
+        setIncludeSummaryInPdf(false);
         
         try {
             const currentDate = format(new Date(), 'yyyy-MM-dd');
@@ -464,7 +498,7 @@ export default function ReportCenterPage() {
     }
     
     const handleDownloadPdf = async () => {
-      const container = document.getElementById('report-content-for-pdf');
+      const container = document.getElementById('report-content-for-pdf-download');
       if (!container) {
           toast({ variant: 'destructive', title: 'Error', description: 'Report container not found.' });
           return;
@@ -495,7 +529,7 @@ export default function ReportCenterPage() {
           pdf.addPage();
         }
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       }
 
       pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
@@ -594,11 +628,23 @@ export default function ReportCenterPage() {
                            </div>
                         )}
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <Button onClick={handleGenerateInsights} disabled={isGeneratingInsights}>
                             {isGeneratingInsights ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
                             {executiveSummary ? "Regenerate Summary" : "Generate AI Summary"} (1 Credit)
                         </Button>
+                        {executiveSummary && (
+                            <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id="include-summary" 
+                                    checked={includeSummaryInPdf}
+                                    onCheckedChange={(checked) => setIncludeSummaryInPdf(!!checked)}
+                                />
+                                <Label htmlFor="include-summary" className="text-sm font-normal">
+                                    Include summary in PDF
+                                </Label>
+                            </div>
+                        )}
                     </CardFooter>
                 </Card>
             )}
@@ -617,6 +663,13 @@ export default function ReportCenterPage() {
                         </Button>
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
+                        {/* Hidden div for PDF generation, ensures light theme */}
+                        <div className="absolute -left-[9999px] -top-[9999px] light">
+                            <div id="report-content-for-pdf-download">
+                                <ReportTemplate data={reportData} executiveSummary={includeSummaryInPdf ? executiveSummary : null} />
+                            </div>
+                        </div>
+                        {/* Visible preview div */}
                         <div id="report-preview-container">
                             <ReportTemplate data={reportData} />
                         </div>
@@ -627,5 +680,4 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
 
