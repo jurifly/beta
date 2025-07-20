@@ -19,7 +19,7 @@ const ReportInsightsInputSchema = z.object({
 export type ReportInsightsInput = z.infer<typeof ReportInsightsInputSchema>;
 
 const ReportInsightsOutputSchema = z.object({
-  executiveSummary: z.string().describe("A 3-5 point executive summary in Markdown format. It should summarize the compliance posture, identify the most urgent issue, and provide 2-3 prioritized action items in a bulleted list."),
+  executiveSummary: z.string().describe("A 6-8 point executive summary in Markdown format. It should summarize the compliance posture, identify the most urgent issue, and provide prioritized action items in a bulleted list."),
 });
 export type ReportInsightsOutput = z.infer<typeof ReportInsightsOutputSchema>;
 
@@ -48,17 +48,16 @@ const prompt = ai.definePrompt({
 {{/unless}}
 
 **Instructions:**
-Generate a 3-5 point executive summary using Markdown bullet points.
+Generate a 6-8 point executive summary using Markdown bullet points.
 
 *   **Overall Posture:** Start with a bullet point summarizing the company's current legal and financial health. Reference the Hygiene Score. Example: "- **Overall Health:** Strong legal posture with a {{hygieneScore}}/100 score and stable financials."
-
-*   **Most Urgent Issue:** Dedicate a bullet point to the single most critical issue that requires immediate attention. State the problem clearly. Example: "- **Urgent Priority:** The placeholder 'Valuation Cap' in recent contracts poses a significant risk of unfavorable dilution and investor disputes."
-
-*   **Action Plan:** Provide 2-3 clear, prioritized, and actionable steps as sub-bullets under a main "Action Plan" bullet. Example:
-    - **Action Plan:**
-        - Immediately engage a qualified financial advisor to conduct a formal valuation.
-        - Renegotiate the Valuation Cap clause in the relevant contracts to reflect the new valuation.
-        - Update all signed documents and communicate the change to investors.
+*   **Compliance Status:** Comment on the filings. Example: "With {{overdueFilings}} overdue tasks, immediate attention is needed to avoid penalties." or "You have {{upcomingFilings}} tasks due soon; proactive management is key."
+*   **Financial Health:** Analyze the burn rate and runway. Example: "The current burn rate of {{burnRate}} gives you a runway of {{runwayInMonths}}, which is a critical timeline to manage."
+*   **Contractual Risks:** Mention the most critical risk from the provided flags. Example: "- **Urgent Priority:** The placeholder 'Valuation Cap' in recent contracts poses a significant risk of unfavorable dilution and investor disputes."
+*   **Action Item 1 (Urgent):** Provide the most critical action item.
+*   **Action Item 2 (Important):** Provide the next most important action item.
+*   **Action Item 3 (Strategic):** Provide a longer-term strategic suggestion.
+*   **Concluding Remark:** A final sentence summarizing the path forward.
 
 **CRITICAL QUALITY CONTROL**: Before returning your response, you MUST act as a meticulous editor. Your analysis must be professional, well-written, and completely free of any spelling or grammatical errors. Ensure the summary is actionable and directly addresses the provided data points.
 `,
@@ -78,3 +77,4 @@ const generateReportInsightsFlow = ai.defineFlow(
     return output;
   }
 );
+

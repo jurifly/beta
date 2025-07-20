@@ -38,7 +38,6 @@ type ReportData = {
     runway: string;
     historicalData: HistoricalFinancialData[];
   };
-  executiveSummary?: string;
   diligenceChecklist?: GenerateDDChecklistOutput;
 };
 
@@ -51,7 +50,7 @@ const formatCurrency = (num: number, region = 'India') => {
   return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
 }
 
-const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGeneratingInsights: boolean }) => {
+const ReportTemplate = ({ data }: { data: ReportData }) => {
     const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
@@ -80,251 +79,214 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
         <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
             <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm' }}>
-                <div className="flex flex-col min-h-[277mm]">
-                    <div className="flex-grow">
-                         <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                            <div className="flex items-center gap-3">
-                                <Logo />
-                            </div>
-                            <div className="text-right">
-                                <h1 className="text-2xl font-bold text-gray-800">Compliance Health Report</h1>
-                                <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
-                            </div>
-                        </header>
-                        <main className="mt-8">
-                            {data.executiveSummary && (
-                                <section className="p-6 border-2 border-primary/20 bg-primary/5 rounded-lg mb-8">
-                                    <h2 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
-                                        <Sparkles className="h-5 w-5"/> AI Executive Summary
-                                    </h2>
-                                    {isGeneratingInsights ? (
-                                        <div className="space-y-2 py-2">
-                                           <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
-                                           <div className="h-4 bg-primary/20 rounded w-5/6 animate-pulse"></div>
-                                           <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
-                                        </div>
-                                    ) : (
-                                         <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
-                                            <ReactMarkdown
-                                              components={{
-                                                ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
-                                                li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-primary mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
-                                              }}
-                                            >
-                                                {data.executiveSummary}
-                                            </ReactMarkdown>
-                                        </div>
-                                    )}
-                                </section>
-                            )}
-                             <div className="grid grid-cols-3 gap-6">
-                                 <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
-                                    <h3 className="text-base font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                                    <div className={`text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
-                                    <p className="text-sm font-medium text-gray-500">Out of 100</p>
-                                </div>
-                                <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
-                                    <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
-                                            <Progress value={data.filingPerformance} />
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
-                                             <Progress value={data.profileCompleteness} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-6 mt-6">
-                                <div className="p-4 border rounded-lg bg-white" data-jspdf-ignore="true">
-                                    <h3 className="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
-                                    {data.ownershipData.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height={200}>
-                                            <RechartsPieChart>
-                                                <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
-                                                <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                                                    {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                                </Pie>
-                                                <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
-                                            </RechartsPieChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <p className="text-sm text-center text-gray-500 py-10">No cap table data available.</p>
-                                    )}
-                                </div>
-                                 <div className="p-4 border rounded-lg bg-white flex flex-col">
-                                    <h3 className="text-base font-semibold text-gray-700 mb-3">Financial Snapshot</h3>
-                                    <div className="flex-1 flex flex-col justify-center space-y-4">
-                                        <div className="text-center p-3 bg-gray-50 rounded-md">
-                                            <p className="text-sm font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                            <p className={`text-2xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
-                                        </div>
-                                        <div className="text-center p-3 bg-gray-50 rounded-md">
-                                            <p className="text-sm font-medium text-gray-500">Estimated Runway</p>
-                                            <p className="text-2xl font-bold">{data.financials.runway}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </main>
+                <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                    <div className="flex items-center gap-3">
+                        <Logo />
                     </div>
-                     <footer className="text-center text-xs text-gray-400 pt-4 border-t">
-                        <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
-                    </footer>
-                </div>
+                    <div className="text-right">
+                        <h1 className="text-2xl font-bold text-gray-800">Compliance Health Report</h1>
+                        <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                    </div>
+                </header>
+                <main className="mt-8">
+                     <div className="grid grid-cols-3 gap-6 mb-8">
+                         <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
+                            <h3 className="text-base font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                            <div className={`text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <p className="text-sm font-medium text-gray-500">Out of 100</p>
+                        </div>
+                        <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
+                            <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                    <Progress value={data.filingPerformance} />
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                     <Progress value={data.profileCompleteness} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6 mt-6">
+                        <div className="p-4 border rounded-lg bg-white" data-jspdf-ignore="true">
+                            <h3 className="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
+                            {data.ownershipData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <RechartsPieChart>
+                                        <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
+                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                                            {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                        </Pie>
+                                        <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
+                                    </RechartsPieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p className="text-sm text-center text-gray-500 py-10">No cap table data available.</p>
+                            )}
+                        </div>
+                         <div className="p-4 border rounded-lg bg-white flex flex-col">
+                            <h3 className="text-base font-semibold text-gray-700 mb-3">Financial Snapshot</h3>
+                            <div className="flex-1 flex flex-col justify-center space-y-4">
+                                <div className="text-center p-3 bg-gray-50 rounded-md">
+                                    <p className="text-sm font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                    <p className={`text-2xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
+                                </div>
+                                <div className="text-center p-3 bg-gray-50 rounded-md">
+                                    <p className="text-sm font-medium text-gray-500">Estimated Runway</p>
+                                    <p className="text-2xl font-bold">{data.financials.runway}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                    <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
+                </footer>
             </div>
             
             {/* Page 2 */}
             <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm' }}>
-                <div className="flex flex-col min-h-[277mm]">
-                    <div className="flex-grow">
-                        <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                            <Logo />
-                            <div className="text-right">
-                                <h1 className="text-2xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
-                                <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
-                            </div>
-                        </header>
-                        <main className="mt-8">
-                            <section className="mb-8">
-                                <h2 className="text-xl font-semibold text-red-700 mb-3 flex items-center gap-2">
-                                   <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
-                                </h2>
-                                {data.overdueFilings.length > 0 ? (
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="p-2 font-semibold">Task</th>
-                                                <th className="p-2 font-semibold text-right">Due Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.overdueFilings.map((f: any) => (
-                                                <tr key={f.id} className="border-b">
-                                                    <td className="p-2">{f.text}</td>
-                                                    <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
-                            </section>
-                            <section className="mb-8">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                   <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
-                                </h2>
-                                 {data.upcomingFilings.length > 0 ? (
-                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="p-2 font-semibold">Task</th>
-                                                <th className="p-2 font-semibold text-right">Due Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.upcomingFilings.map((f: any) => (
-                                                <tr key={f.id} className="border-b">
-                                                    <td className="p-2">{f.text}</td>
-                                                    <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                 ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
-                            </section>
-                             <section>
-                                <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                   <TrendingUp /> Year-over-Year Financials
-                                </h2>
-                                 {data.financials.historicalData.length > 0 ? (
-                                    <div className="space-y-4">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="bg-gray-50">
-                                                <tr>
-                                                    <th className="p-2 font-semibold">Financial Year</th>
-                                                    <th className="p-2 font-semibold text-right">Total Revenue</th>
-                                                    <th className="p-2 font-semibold text-right">Total Expenses</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
-                                                    <tr key={item.year} className="border-b">
-                                                        <td className="p-2 font-medium">{item.year}</td>
-                                                        <td className="p-2 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
-                                                        <td className="p-2 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                        <div className="h-64 w-full pt-4" data-jspdf-ignore="true">
-                                             <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                                    <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
-                                                    <YAxis fontSize={12} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
-                                                    <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} />
-                                                    <Legend wrapperStyle={{fontSize: '12px'}}/>
-                                                    <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2} name="Revenue" />
-                                                    <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={2} name="Expenses" />
-                                                </LineChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                 ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
-                            </section>
-                        </main>
+                <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                    <Logo />
+                    <div className="text-right">
+                        <h1 className="text-2xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
+                        <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
                     </div>
-                    <footer className="text-center text-xs text-gray-400 pt-4 border-t">
-                         <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
-                    </footer>
-                </div>
+                </header>
+                <main className="mt-8">
+                    <section className="mb-8">
+                        <h2 className="text-xl font-semibold text-red-700 mb-3 flex items-center gap-2">
+                           <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
+                        </h2>
+                        {data.overdueFilings.length > 0 ? (
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-2 font-semibold">Task</th>
+                                        <th className="p-2 font-semibold text-right">Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.overdueFilings.map((f: any) => (
+                                        <tr key={f.id} className="border-b">
+                                            <td className="p-2">{f.text}</td>
+                                            <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
+                    </section>
+                    <section className="mb-8">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                           <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
+                        </h2>
+                         {data.upcomingFilings.length > 0 ? (
+                             <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-2 font-semibold">Task</th>
+                                        <th className="p-2 font-semibold text-right">Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.upcomingFilings.map((f: any) => (
+                                        <tr key={f.id} className="border-b">
+                                            <td className="p-2">{f.text}</td>
+                                            <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
+                    </section>
+                     <section>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                           <TrendingUp /> Year-over-Year Financials
+                        </h2>
+                         {data.financials.historicalData.length > 0 ? (
+                            <div className="space-y-4">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="p-2 font-semibold">Financial Year</th>
+                                            <th className="p-2 font-semibold text-right">Total Revenue</th>
+                                            <th className="p-2 font-semibold text-right">Total Expenses</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
+                                            <tr key={item.year} className="border-b">
+                                                <td className="p-2 font-medium">{item.year}</td>
+                                                <td className="p-2 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
+                                                <td className="p-2 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <div className="h-64 w-full pt-4" data-jspdf-ignore="true">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
+                                            <YAxis fontSize={12} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
+                                            <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} />
+                                            <Legend wrapperStyle={{fontSize: '12px'}}/>
+                                            <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2} name="Revenue" />
+                                            <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={2} name="Expenses" />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
+                    </section>
+                </main>
+                <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-auto">
+                     <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                </footer>
             </div>
 
             {/* Page 3 - Due Diligence */}
             {data.diligenceChecklist && (
                 <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm' }}>
-                    <div className="flex flex-col min-h-[277mm]">
-                        <div className="flex-grow">
-                            <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                                <Logo />
-                                <div className="text-right">
-                                    <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix</h1>
-                                    <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
-                                </div>
-                            </header>
-                            <main className="mt-8">
-                                <section className="mb-6">
-                                    <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                       <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
-                                    </h2>
-                                    <div className="p-4 bg-gray-50 rounded-lg border">
-                                        <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
-                                        <Progress value={diligenceProgress} />
-                                    </div>
-                                </section>
-                                <div style={{ columnCount: 2, columnGap: '2rem' }}>
-                                    {data.diligenceChecklist.checklist.map((category, index) => (
-                                        <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
-                                            <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
-                                            <ul className="space-y-1">
-                                                {category.items.map(item => (
-                                                    <li key={item.id} className="flex items-center gap-2 text-sm">
-                                                        <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                                        <span>{item.task}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </div>
-                            </main>
+                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                        <Logo />
+                        <div className="text-right">
+                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix</h1>
+                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
                         </div>
-                        <footer className="text-center text-xs text-gray-400 pt-4 border-t">
-                            <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
-                        </footer>
-                    </div>
+                    </header>
+                    <main className="mt-8">
+                        <section className="mb-6">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                               <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
+                            </h2>
+                            <div className="p-4 bg-gray-50 rounded-lg border">
+                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
+                                <Progress value={diligenceProgress} />
+                            </div>
+                        </section>
+                        <div style={{ columnCount: 2, columnGap: '2rem' }}>
+                            {data.diligenceChecklist.checklist.map((category, index) => (
+                                <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
+                                    <ul className="space-y-1">
+                                        {category.items.map(item => (
+                                            <li key={item.id} className="flex items-center gap-2 text-sm">
+                                                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                                <span>{item.task}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-auto">
+                        <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                    </footer>
                 </div>
             )}
         </div>
@@ -338,6 +300,7 @@ export default function ReportCenterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
     const [reportData, setReportData] = useState<ReportData | null>(null);
+    const [executiveSummary, setExecutiveSummary] = useState<string | null>(null);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -358,6 +321,7 @@ export default function ReportCenterPage() {
         
         setIsLoading(true);
         setReportData(null);
+        setExecutiveSummary(null);
         
         try {
             const currentDate = format(new Date(), 'yyyy-MM-dd');
@@ -429,6 +393,7 @@ export default function ReportCenterPage() {
         if (!await deductCredits(1)) return;
         
         setIsGeneratingInsights(true);
+        setExecutiveSummary(null);
         try {
             const { client, hygieneScore, overdueFilings, upcomingFilings, financials } = reportData;
             const docHistoryKey = 'documentIntelligenceHistory';
@@ -446,9 +411,9 @@ export default function ReportCenterPage() {
                 legalRegion: client.legalRegion
             });
 
-            setReportData(prevData => prevData ? { ...prevData, executiveSummary: insightsResponse.executiveSummary } : null);
+            setExecutiveSummary(insightsResponse.executiveSummary);
         } catch (error: any) {
-            toast({ variant: 'destructive', title: "AI Summary Failed", description: "The model may be overloaded, but the rest of the report is ready." });
+            toast({ variant: 'destructive', title: "AI Summary Failed", description: "The model may be overloaded. Please try again." });
         } finally {
             setIsGeneratingInsights(false);
         }
@@ -540,12 +505,12 @@ export default function ReportCenterPage() {
                 <CardFooter>
                      <Button onClick={handleGenerateReport} disabled={!selectedClientId || isLoading}>
                         {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <FileText className="mr-2"/>}
-                        Generate Report
+                        Generate Report Preview
                     </Button>
                 </CardFooter>
             </Card>
 
-            {(isLoading && !reportData) && (
+            {isLoading && !reportData && (
                 <Card className="flex items-center justify-center p-12">
                     <div className="text-center space-y-2">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
@@ -556,37 +521,64 @@ export default function ReportCenterPage() {
             )}
 
             {reportData && (
+              <>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>AI Executive Summary</CardTitle>
+                        <CardDescription>Generate an AI-powered summary of the report's key findings.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isGeneratingInsights ? (
+                             <div className="space-y-2 py-2">
+                                <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
+                                <div className="h-4 bg-primary/20 rounded w-5/6 animate-pulse"></div>
+                                <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
+                            </div>
+                        ) : executiveSummary ? (
+                            <div className="prose prose-sm prose-p:text-gray-700 dark:prose-invert max-w-none p-4 bg-muted/50 border rounded-lg">
+                                <ReactMarkdown
+                                  components={{
+                                    ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
+                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-primary mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
+                                  }}
+                                >
+                                    {executiveSummary}
+                                </ReactMarkdown>
+                            </div>
+                        ) : (
+                           <div className="text-center p-6 border-2 border-dashed rounded-lg">
+                               <p className="text-muted-foreground">Click the button below to generate insights.</p>
+                           </div>
+                        )}
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={handleGenerateInsights} disabled={isGeneratingInsights}>
+                            {isGeneratingInsights ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
+                            {executiveSummary ? "Regenerate Summary" : "Generate AI Summary"} (1 Credit)
+                        </Button>
+                    </CardFooter>
+                </Card>
+
                 <Card>
                     <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                          <div>
                             <CardTitle>Report Preview</CardTitle>
                             <CardDescription>A preview of the generated report for {reportData.client.name}.</CardDescription>
                         </div>
-                        <div className="flex w-full sm:w-auto gap-2">
-                            {reportData.executiveSummary ? (
-                                <Button onClick={handleGenerateInsights} disabled={isGeneratingInsights} variant="outline" className="text-primary border-primary">
-                                    <Sparkles className="mr-2"/>
-                                    Regenerate Summary
-                                </Button>
-                            ) : (
-                                <Button onClick={handleGenerateInsights} disabled={isGeneratingInsights} variant="outline">
-                                    {isGeneratingInsights ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
-                                    Generate AI Summary (1 Credit)
-                                </Button>
-                            )}
-                             <Button onClick={handleDownloadPdf} disabled={isLoading || isGeneratingInsights}>
-                                {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
-                                Download PDF
-                            </Button>
-                        </div>
+                        <Button onClick={handleDownloadPdf} disabled={isLoading || isGeneratingInsights}>
+                            {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
+                            Download PDF
+                        </Button>
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
                         <div id="report-preview-container">
-                            <ReportTemplate data={reportData} isGeneratingInsights={isGeneratingInsights} />
+                            <ReportTemplate data={reportData} />
                         </div>
                     </CardContent>
                 </Card>
+              </>
             )}
         </div>
     );
 }
+
