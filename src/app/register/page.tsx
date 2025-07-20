@@ -216,20 +216,10 @@ export default function RegisterPage() {
           </Card>
       </div>
       <div className="hidden lg:flex items-center justify-center bg-muted">
-        <div className="relative w-full h-full">
-           <Image
-              src="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1974&auto=format&fit=crop"
-              alt="People collaborating"
-              fill
-              className="object-cover"
-              data-ai-hint="collaboration business"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-            <div className="absolute bottom-10 left-10 text-white max-w-md">
-                <h2 className="text-3xl font-bold">Clarity, not Chaos.</h2>
-                <p className="mt-2 text-lg opacity-90">Join founders and CAs who are finally getting on the same page.</p>
-            </div>
-        </div>
+          <div className="p-10 text-center">
+            <h2 className="text-3xl font-bold">Clarity, not Chaos.</h2>
+            <p className="mt-2 text-lg opacity-90">Join founders and CAs who are finally getting on the same page.</p>
+          </div>
       </div>
     </div>
   );
