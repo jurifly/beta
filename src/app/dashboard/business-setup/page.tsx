@@ -24,6 +24,7 @@ import {
   Lock,
   Globe,
   GanttChartSquare,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +54,7 @@ import ReactMarkdown from "react-markdown";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const STEPS = [
   { id: 1, name: "Business Type", icon: Building2 },
@@ -505,15 +507,17 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
 const allIndianStates = [ 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Puducherry' ];
 
 function Step3Infrastructure({ onComplete, updateState, initialState }: StepProps) {
-    const { toast } = useToast();
+    const { toast, ...rest } = useToast();
+    const { deductCredits } = useAuth();
     const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<StateAssistantFormData>({
       resolver: zodResolver(stateAssistantSchema),
-      defaultValues: { statesToCompare: [], hiringPlan: '1-10 Employees' }
+      defaultValues: { statesToCompare: [], hiringPlan: '1-10 Employees', businessType: 'Tech/IT/SaaS', fundingStage: 'Bootstrapped' }
     });
 
     const [result, setResult] = useState<StateComparisonOutput | undefined>(initialState.stateAssistantResult);
     
     const onSubmit = async (data: StateAssistantFormData) => {
+      if (!await deductCredits(1)) return;
       setResult(undefined);
       try {
         const response = await compareStatesAction(data);
@@ -530,17 +534,52 @@ function Step3Infrastructure({ onComplete, updateState, initialState }: StepProp
             <p className="text-muted-foreground mt-1">Compare Indian states to find the best place to register your business based on your specific needs.</p>
             <Card>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
-                         <Controller name="businessType" control={control} render={({ field }) => (<div className="space-y-2"><Label>Business Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger><SelectContent><SelectItem value="Tech/IT/SaaS">Tech/IT/SaaS</SelectItem><SelectItem value="Manufacturing">Manufacturing</SelectItem><SelectItem value="Services (Non-IT)">Services (Non-IT)</SelectItem><SelectItem value="Agri-business">Agri-business</SelectItem><SelectItem value="E-commerce/Retail">E-commerce/Retail</SelectItem></SelectContent></Select>{errors.businessType && <p className="text-sm text-destructive">{errors.businessType.message}</p>}</div>)} />
-                         <Controller name="fundingStage" control={control} render={({ field }) => (<div className="space-y-2"><Label>Funding Stage</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent><SelectItem value="Bootstrapped">Bootstrapped</SelectItem><SelectItem value="Pre-Seed/Angel">Pre-Seed/Angel</SelectItem><SelectItem value="VC Funded">VC Funded</SelectItem></SelectContent></Select>{errors.fundingStage && <p className="text-sm text-destructive">{errors.fundingStage.message}</p>}</div>)} />
-                         <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-xs", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
-                         <Controller name="statesToCompare" control={control} render={({ field }) => (<div className="space-y-2"><Label>Compare States (Max 3)</Label><Select onValueChange={(value) => {const current = field.value || []; const newValues = current.includes(value) ? current.filter(v => v !== value) : [...current, value].slice(-3); field.onChange(newValues);}} value="placeholder"><SelectTrigger><SelectValue placeholder="Select states..."/></SelectTrigger><SelectContent><div className="grid grid-cols-2 gap-1 p-2">{allIndianStates.map(state => (<div key={state} className="flex items-center space-x-2 p-2 border rounded-md"><Checkbox id={state} checked={field.value?.includes(state)} onCheckedChange={(checked) => {const current = field.value || []; return checked ? field.onChange([...current, state]) : field.onChange(current.filter(value => value !== state))}}/><Label htmlFor={state} className="text-sm font-normal">{state}</Label></div>))}</div></SelectContent></Select><div className="flex flex-wrap gap-1 mt-2">{field.value?.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}</div>{errors.statesToCompare && <p className="text-sm text-destructive">{errors.statesToCompare.message}</p>}</div>)} />
+                    <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-6 pt-6">
+                         <div className="md:col-span-3 space-y-6">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Controller name="businessType" control={control} render={({ field }) => (<div className="space-y-2"><Label>Business Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger><SelectContent><SelectItem value="Tech/IT/SaaS">Tech/IT/SaaS</SelectItem><SelectItem value="Manufacturing">Manufacturing</SelectItem><SelectItem value="Services (Non-IT)">Services (Non-IT)</SelectItem><SelectItem value="Agri-business">Agri-business</SelectItem><SelectItem value="E-commerce/Retail">E-commerce/Retail</SelectItem></SelectContent></Select>{errors.businessType && <p className="text-sm text-destructive">{errors.businessType.message}</p>}</div>)} />
+                                <Controller name="fundingStage" control={control} render={({ field }) => (<div className="space-y-2"><Label>Funding Stage</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent><SelectItem value="Bootstrapped">Bootstrapped</SelectItem><SelectItem value="Pre-Seed/Angel">Pre-Seed/Angel</SelectItem><SelectItem value="VC Funded">VC Funded</SelectItem></SelectContent></Select>{errors.fundingStage && <p className="text-sm text-destructive">{errors.fundingStage.message}</p>}</div>)} />
+                             </div>
+                             <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-sm", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
+                             <Button type="submit" disabled={isSubmitting} className="w-full">
+                                {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Search className="mr-2"/>} Compare States (1 Credit)
+                            </Button>
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                             <Label>States to Compare (Max 3)</Label>
+                            <Controller
+                                name="statesToCompare"
+                                control={control}
+                                render={({ field }) => (
+                                    <>
+                                    <ScrollArea className="h-48 w-full rounded-md border p-2 bg-muted/50">
+                                        <div className="space-y-2">
+                                            {allIndianStates.map((state) => (
+                                                <div key={state} className="flex items-center space-x-2 rounded-md hover:bg-background p-2">
+                                                    <Checkbox
+                                                        id={state}
+                                                        checked={field.value?.includes(state)}
+                                                        onCheckedChange={(checked) => {
+                                                            const current = field.value || [];
+                                                            let newValues;
+                                                            if (checked) { newValues = [...current, state]; } else { newValues = current.filter((value) => value !== state); }
+                                                            if (newValues.length > 3) { toast({ variant: "destructive", title: "Limit Reached", description: "You can only compare up to 3 states."}) } else { field.onChange(newValues); }
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={state} className="text-sm font-normal flex-1 cursor-pointer">{state}</Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                    <div className="flex flex-wrap gap-1 pt-2 min-h-[2rem]">
+                                        {field.value?.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}
+                                    </div>
+                                    </>
+                                )}
+                            />
+                            {errors.statesToCompare && <p className="text-sm text-destructive">{errors.statesToCompare.message}</p>}
+                        </div>
                     </CardContent>
-                    <CardFooter>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>} Compare States
-                        </Button>
-                    </CardFooter>
                 </form>
             </Card>
             {isSubmitting && (<div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Comparing state policies...</p></div>)}
