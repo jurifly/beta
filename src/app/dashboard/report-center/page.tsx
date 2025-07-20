@@ -91,29 +91,31 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                 </header>
 
                 <main className="mt-8">
-                    <section className="p-6 border-2 border-primary/20 bg-primary/5 rounded-lg mb-8">
-                        <h2 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
-                            <Sparkles className="h-5 w-5"/> AI Executive Summary
-                        </h2>
-                        {isGeneratingInsights ? (
-                            <div className="space-y-2 py-2">
-                               <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
-                               <div className="h-4 bg-primary/20 rounded w-5/6 animate-pulse"></div>
-                               <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
-                            </div>
-                        ) : (
-                             <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
-                                <ReactMarkdown
-                                  components={{
-                                    ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
-                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-primary mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
-                                  }}
-                                >
-                                    {data.executiveSummary || "No summary available."}
-                                </ReactMarkdown>
-                            </div>
-                        )}
-                    </section>
+                    {data.executiveSummary && (
+                        <section className="p-6 border-2 border-primary/20 bg-primary/5 rounded-lg mb-8">
+                            <h2 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
+                                <Sparkles className="h-5 w-5"/> AI Executive Summary
+                            </h2>
+                            {isGeneratingInsights ? (
+                                <div className="space-y-2 py-2">
+                                   <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
+                                   <div className="h-4 bg-primary/20 rounded w-5/6 animate-pulse"></div>
+                                   <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
+                                </div>
+                            ) : (
+                                 <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
+                                    <ReactMarkdown
+                                      components={{
+                                        ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
+                                        li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-primary mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
+                                      }}
+                                    >
+                                        {data.executiveSummary}
+                                    </ReactMarkdown>
+                                </div>
+                            )}
+                        </section>
+                    )}
                     
                     <div className="grid grid-cols-3 gap-6">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
@@ -400,12 +402,7 @@ export default function ReportCenterPage() {
             const runway = financials && burn > 0 && financials.cashBalance > 0 ? `${Math.floor(financials.cashBalance / burn)} months` : "Profitable / N/A";
             const historicalData = client.historicalFinancials || [];
             
-            const docHistoryKey = 'documentIntelligenceHistory';
-            const savedHistory = localStorage.getItem(docHistoryKey);
-            const allAnalyzedDocs: DocumentAnalysis[] = savedHistory ? JSON.parse(savedHistory) : [];
-            const recentRisks = allAnalyzedDocs.slice(0, 3).flatMap(doc => doc.riskFlags).filter(flag => flag.severity === 'High').map(flag => flag.risk).slice(0, 3);
-            
-            const initialReportData = {
+            setReportData({
                 client,
                 hygieneScore,
                 filingPerformance: filingPerf,
@@ -416,40 +413,44 @@ export default function ReportCenterPage() {
                 ownershipData,
                 financials: { burnRate: burn, runway, historicalData },
                 diligenceChecklist: client.diligenceChecklist,
-                executiveSummary: "Generating AI insights..."
-            };
-            
-            setReportData(initialReportData);
-            setIsGeneratingInsights(true);
-
-            let executiveSummary = "Could not generate AI summary at this time.";
-            if (await deductCredits(1)) {
-                try {
-                    const insightsResponse = await generateReportInsights({
-                        hygieneScore,
-                        overdueFilings: overdueFilings.length,
-                        upcomingFilings: upcomingFilings.length,
-                        burnRate: burn > 0 ? burn : 0,
-                        runwayInMonths: runway,
-                        recentRiskFlags: recentRisks,
-                        legalRegion: client.legalRegion
-                    });
-                    executiveSummary = insightsResponse.executiveSummary;
-                } catch (aiError: any) {
-                    console.error("AI Insight generation failed:", aiError);
-                    toast({ variant: 'destructive', title: "AI Summary Failed", description: "The model may be overloaded, but the rest of the report is ready." });
-                }
-            }
-
-            setReportData({ ...initialReportData, executiveSummary });
+            });
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to generate report data. ' + error.message });
         } finally {
             setIsLoading(false);
-            setIsGeneratingInsights(false);
         }
     };
+
+    const handleGenerateInsights = async () => {
+        if (!reportData || !userProfile) return;
+        if (!await deductCredits(1)) return;
+        
+        setIsGeneratingInsights(true);
+        try {
+            const { client, hygieneScore, overdueFilings, upcomingFilings, financials } = reportData;
+            const docHistoryKey = 'documentIntelligenceHistory';
+            const savedHistory = localStorage.getItem(docHistoryKey);
+            const allAnalyzedDocs: DocumentAnalysis[] = savedHistory ? JSON.parse(savedHistory) : [];
+            const recentRisks = allAnalyzedDocs.slice(0, 3).flatMap(doc => doc.riskFlags).filter(flag => flag.severity === 'High').map(flag => flag.risk).slice(0, 3);
+
+            const insightsResponse = await generateReportInsights({
+                hygieneScore,
+                overdueFilings: overdueFilings.length,
+                upcomingFilings: upcomingFilings.length,
+                burnRate: financials.burnRate > 0 ? financials.burnRate : 0,
+                runwayInMonths: financials.runway,
+                recentRiskFlags: recentRisks,
+                legalRegion: client.legalRegion
+            });
+
+            setReportData(prevData => prevData ? { ...prevData, executiveSummary: insightsResponse.executiveSummary } : null);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: "AI Summary Failed", description: "The model may be overloaded, but the rest of the report is ready." });
+        } finally {
+            setIsGeneratingInsights(false);
+        }
+    }
     
     const handleDownloadPdf = async () => {
       const container = document.getElementById('report-content-for-pdf');
@@ -537,7 +538,7 @@ export default function ReportCenterPage() {
                 <CardFooter>
                      <Button onClick={handleGenerateReport} disabled={!selectedClientId || isLoading}>
                         {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <FileText className="mr-2"/>}
-                        Generate Report (1 Credit)
+                        Generate Report
                     </Button>
                 </CardFooter>
             </Card>
@@ -554,15 +555,23 @@ export default function ReportCenterPage() {
 
             {reportData && (
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                          <div>
                             <CardTitle>Report Preview</CardTitle>
                             <CardDescription>A preview of the generated report for {reportData.client.name}.</CardDescription>
                         </div>
-                        <Button onClick={handleDownloadPdf} disabled={isLoading || isGeneratingInsights}>
-                            {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
-                            Download PDF
-                        </Button>
+                        <div className="flex w-full sm:w-auto gap-2">
+                            {!reportData.executiveSummary && (
+                                <Button onClick={handleGenerateInsights} disabled={isGeneratingInsights} variant="outline">
+                                    {isGeneratingInsights ? <Loader2 className="mr-2 animate-spin"/> : <Sparkles className="mr-2"/>}
+                                    Generate AI Summary (1 Credit)
+                                </Button>
+                            )}
+                             <Button onClick={handleDownloadPdf} disabled={isLoading || isGeneratingInsights}>
+                                {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
+                                Download PDF
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
                         <div id="report-preview-container">
