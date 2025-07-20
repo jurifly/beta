@@ -72,7 +72,7 @@ For each state, provide a detailed analysis covering the following points. Tailo
     *   **Key Schemes**: Name 2-3 major, currently active startup schemes or policies in that state.
     *   **Incentives**: Summarize the types of benefits offered (e.g., seed funding, patent filing reimbursement, rent subsidy).
 4.  **Tax & Labour**:
-    *   **Professional Tax**: Is it applicable? What are the typical rates? Use the word "annually" instead of "per annum".
+    *   **Professional Tax**: Provide details on Professional Tax applicability and its slabs (e.g., "Applicable on salaries above X, with a maximum of ₹2,500 annually"). Do not invent numbers if unsure, describe the general structure instead.
     *   **Labour Law Compliance**: Comment on the complexity and strictness of state-level labour law enforcement.
 5.  **Risks & Flags**:
     *   **Common Issues**: Mention 1-2 well-known challenges for businesses in that state (e.g., high real estate costs, political instability, bureaucratic delays).
