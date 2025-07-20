@@ -38,7 +38,7 @@ Analyze the user's situation:
 Based on this, provide a structured analysis:
 
 1.  **Penalty Amount**: Estimate the likely financial penalty. Be specific. If it's a daily penalty, state that. If it's a range, provide it. Use the currency symbol relevant to {{legalRegion}}.
-2.  **Risk Level**: Classify the risk as 'Low', 'Medium', or 'High'. Consider factors like financial impact, legal consequences (e.g., prosecution), and operational disruption.
+2.  **Risk Level**: Classify the risk as 'Low', 'Medium', 'High'. Consider factors like financial impact, legal consequences (e.g., prosecution), and operational disruption.
 3.  **Reasoning**: Explain *why* the penalty and risk are what they are. Briefly cite the relevant act or rule if possible (e.g., "as per Section 234F of the Income Tax Act").
 4.  **Mitigation Steps**: Provide 2-3 clear, actionable steps the user should take immediately to address the issue. For example, "File the return immediately with the late fee," or "Prepare a letter explaining the delay and submit to the concerned officer."
 

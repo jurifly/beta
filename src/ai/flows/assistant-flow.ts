@@ -5,7 +5,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const AssistantInputSchema = z.object({
   topic: z.string().describe('The topic or question for the AI assistant.'),
