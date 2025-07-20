@@ -16,14 +16,15 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { BookCheck } from "lucide-react"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
+import { BookCheck, ChevronDown } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
 
 const chartConfig = {
   activity: {
@@ -38,6 +39,7 @@ interface ComplianceActivityChartProps {
 
 export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartProps) {
   const [isMounted, setIsMounted] = React.useState(false);
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -95,16 +97,30 @@ export function ComplianceActivityChart({ dataByYear }: ComplianceActivityChartP
                 <CardDescription>Your legal and compliance actions for {selectedYear}.</CardDescription>
             </div>
             {years.length > 0 && (
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-full sm:w-[120px]">
-                      <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {years.map(year => (
-                          <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full sm:w-auto">
+                          {selectedYear}
+                          <ChevronDown className="ml-2 h-4 w-4"/>
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                      <ScrollArea className="h-[200px]">
+                          <div className="p-2 space-y-1">
+                          {years.map(year => (
+                              <div key={year} className="flex items-center justify-between gap-4 p-2 rounded-md hover:bg-muted">
+                                  <button 
+                                      onClick={() => { setSelectedYear(year); setPopoverOpen(false); }}
+                                      className={cn("flex-1 text-left flex items-center gap-2", selectedYear === year && "font-bold text-primary")}
+                                  >
+                                      {year}
+                                  </button>
+                              </div>
+                          ))}
+                          </div>
+                      </ScrollArea>
+                  </PopoverContent>
+              </Popover>
             )}
         </div>
       </CardHeader>
