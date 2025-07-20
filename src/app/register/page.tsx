@@ -117,7 +117,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40 py-12 px-4">
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full max-w-xl mx-auto">
           <CardHeader className="text-center">
             <div className="mx-auto">
               <Logo />
@@ -145,15 +145,17 @@ export default function RegisterPage() {
                   />
                    {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" {...register("name")} />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
-               <div className="space-y-1">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...register("email")} />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" {...register("name")} />
+                  {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" {...register("email")} />
+                  {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                </div>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="password">Password</Label>
