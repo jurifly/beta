@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -29,6 +30,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
 
+const CreatureAnimation = dynamic(
+  () => import('./CreatureAnimation').then(mod => mod.CreatureAnimation),
+  { ssr: false }
+);
 
 const Logo = () => (
     <>
@@ -78,6 +83,7 @@ const HeroSection = () => {
   return (
     <section className="relative w-full py-24 md:py-32">
       <div className="container relative mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 text-center">
+        <CreatureAnimation />
         <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
           Your Compliance & Legal Co-Pilot
         </h1>

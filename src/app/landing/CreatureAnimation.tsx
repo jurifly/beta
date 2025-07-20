@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -9,7 +10,7 @@ export function CreatureAnimation() {
   const isInitialized = useRef(false);
 
   const initAnimation = () => {
-      if (isInitialized.current || !creatureRef.current || typeof (window as any).anime !== 'function') return;
+      if (typeof window === 'undefined' || isInitialized.current || !creatureRef.current || typeof (window as any).anime !== 'function') return;
       
       isInitialized.current = true;
       const anime = (window as any).anime;
@@ -82,7 +83,7 @@ export function CreatureAnimation() {
 
   useEffect(() => {
     // Check if the script is already loaded
-    if ((window as any).anime) {
+    if (typeof window !== 'undefined' && (window as any).anime) {
       initAnimation();
     }
   }, []);
@@ -98,7 +99,7 @@ export function CreatureAnimation() {
         strategy="lazyOnload"
         onLoad={handleScriptLoad}
       />
-      <div id="creature-wrapper" className="-z-10">
+      <div id="creature-wrapper" className="-z-10 absolute inset-0 overflow-hidden">
         <div id="creature" ref={creatureRef}></div>
       </div>
     </>
