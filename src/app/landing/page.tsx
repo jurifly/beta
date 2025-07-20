@@ -22,6 +22,13 @@ import {
   Users,
   Flame,
   Star,
+  FileText,
+  AlertTriangle,
+  HeartHandshake,
+  Mail,
+  Repeat,
+  Sparkles,
+  Book,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
@@ -39,7 +46,7 @@ const Logo = () => (
     <>
       <Image 
         src="https://i.ibb.co/yc2DGvPk/2-2.png"
-        alt="2-2"
+        alt="Jurifly Logo"
         width={114}
         height={24}
         className="h-20 w-auto dark:hidden"
@@ -47,7 +54,7 @@ const Logo = () => (
       />
       <Image 
         src="https://i.ibb.co/4wdbj1XL/claifyblacko-1.png"
-        alt="claifyblacko-1"
+        alt="Jurifly Logo"
         width={114}
         height={24}
         className="h-20 w-auto hidden dark:block"
@@ -85,80 +92,183 @@ const HeroSection = () => {
       <div className="container relative mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 text-center">
         <CreatureAnimation />
         <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
-          Your Compliance & Legal Co-Pilot
+          India's Smartest Legal & Compliance Buddy for Founders & CAs.
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-          JuriFly isn’t your average CA tool or filing software.
-          It's your personal guide through the messy maze of Indian compliance, taxes, and documents — made especially for founders.
+          Why juggle GST, ROC, ITR, MCA, FEMA, ESOPs, and random panic attacks?
+          Let jurifly do the boring bits, while you build the next big thing.
         </p>
-        <p className="mt-4 font-semibold text-lg">We don’t file forms. We make sure you understand them.</p>
-        <div className="mt-8">
-            <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>
-                Get Started – It’s Free for Beta Users
-                <ArrowRight className="ml-2"/>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+                Sign up for Beta
             </Button>
-            <p className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-500 bg-clip-text text-transparent font-semibold">
-              <Flame className="text-orange-500 animate-flicker" />
-              Daily free 5 credits
-            </p>
+             <Button variant="outline" className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
+                <Link href="#newsletter">Subscribe to Newsletter</Link>
+            </Button>
         </div>
       </div>
     </section>
   )
 };
 
-const FeaturesSection = () => {
-    const features = [
-        { text: "Know What Matters — Instantly", description: "Cut through jargon. Understand what needs to be done, why, and by when — with crisp AI-powered summaries.", icon: BrainCircuit },
-        { text: "Docs Without The Drag", description: "Auto-generate standard legal docs and compliance summaries in seconds. Board resolutions, NDAs, investment term sheets — sorted.", icon: FileSignature },
-        { text: "See The Bigger Picture", description: "Visual dashboards for burn, runway, due dates, tax summaries, and upcoming compliances — all in one place.", icon: LineChart },
-        { text: "Smart Notifications", description: "No spam. Just timely nudges and reminders before things become penalties.", icon: Bell },
-        { text: "Workspace That Works", description: "Chat, collaborate, and comment with your CA or investor — on one single dashboard.", icon: MessageSquare },
-        { text: "Sync & Store Everything", description: "Your ROC filings, GST docs, ITR proofs, investor reports — all linked to your Drive and always backed up and in-sync.", icon: DatabaseZap },
+const ProblemSection = () => {
+    const founderProblems = [
+        "Tired of WhatsApp pinging “Send PAN card again”?",
+        "Missed an MCA deadline… again?",
+        "No clue what 'DIR-3 KYC' even means?",
+        "Your CA ghosted you mid-funding round?",
+        "Getting notices you don't even understand?",
+    ];
+    const caProblems = [
+        "Clients ask “Why GST again?” every month",
+        "Buried under reminders, mails, Excel sheets",
+        "Missed filings = angry clients = less renewals",
+        "Founders want “one app” but your tools are scattered",
+        "You manage 60+ clients with no smart assistant?",
     ];
     return (
-        <section id="features" className="w-full py-20 md:py-24 bg-muted">
+         <section id="problem" className="w-full py-20 md:py-24 bg-muted">
+            <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+                 <div className="text-center">
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">The Big Problem We're Solving</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <Card className="interactive-lift bg-background/50">
+                        <CardHeader>
+                            <CardTitle className="text-2xl font-semibold flex items-center gap-3"><AlertTriangle className="text-destructive"/> For Founders:</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {founderProblems.map((problem, i) => (
+                                <div key={i} className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-destructive mt-1 shrink-0" />
+                                    <p className="text-muted-foreground">{problem}</p>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                     <Card className="interactive-lift bg-background/50">
+                        <CardHeader>
+                            <CardTitle className="text-2xl font-semibold flex items-center gap-3"><BrainCircuit className="text-primary"/> For CAs:</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                             {caProblems.map((problem, i) => (
+                                <div key={i} className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-primary mt-1 shrink-0" />
+                                    <p className="text-muted-foreground">{problem}</p>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </div>
+                <p className="text-center text-lg text-muted-foreground pt-8">
+                    Welcome to Jurifly. We make legal + compliance feel less like brain surgery.
+                </p>
+            </div>
+        </section>
+    );
+};
+
+const OffersSection = () => {
+    const founderFeatures = [
+        { text: "Compliance Dashboard", desc: "GST, MCA, ROC, PF/ESI etc.", icon: LineChart },
+        { text: "Smart Reminders & Alerts", desc: "Never miss a deadline again.", icon: Bell },
+        { text: "Auto-generated Docs", desc: "MOUs, NDAs, Founders' Agreements etc.", icon: FileSignature },
+        { text: "One-click Document Vault", desc: "Secure, synced, and shareable.", icon: DatabaseZap },
+        { text: "Chat with Verified CAs", desc: "Get expert advice when you need it.", icon: Users },
+        { text: "Plain-English Explainers", desc: "For every legal jargon.", icon: Book },
+        { text: "Multi-language support", desc: "(Coming soon)", icon: Globe },
+    ];
+    const caFeatures = [
+        { text: "Client-wise dashboard", desc: "One view for your entire portfolio.", icon: Briefcase },
+        { text: "Recurring task automations", desc: "Set reminders, track status.", icon: Repeat },
+        { text: "AI Summary of Notices", desc: "Understand queries & docs instantly.", icon: Sparkles },
+        { text: "Auto-mail client nudges", desc: "e.g. “Send docs by EOD”", icon: Mail },
+        { text: "Branded Workspace for Your Firm", desc: "Professional look for your practice.", icon: GanttChartSquare },
+        { text: "Reports to show value", desc: "Compliance health scores etc.", icon: FileText },
+        { text: "Internal notes for each client", desc: "Stay organized, collaborate.", icon: MessageSquare },
+    ];
+
+    return (
+        <section id="features" className="w-full py-20 md:py-24">
           <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why Founders Love JuriFly</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">What Jurifly Offers:</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {features.map((feature, index) => (
-                    <Card key={index} className="p-6 text-left interactive-lift bg-background/50 animate-in fade-in-25 slide-in-from-bottom-8 duration-500" style={{'animationDelay': `${index * 100}ms`} as React.CSSProperties}>
-                        <div className="flex justify-start items-center h-12 w-12 rounded-lg bg-primary/10 text-primary mb-4">
-                            <feature.icon className="h-6 w-6 m-3" />
-                        </div>
-                        <p className="font-semibold text-lg">{feature.text}</p>
-                        <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
-                    </Card>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                 <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-center">For Founders</h3>
+                     {founderFeatures.map((feature, i) => (
+                        <Card key={i} className="interactive-lift">
+                            <CardHeader className="flex flex-row items-center gap-4">
+                                <div className="p-3 bg-primary/10 rounded-lg text-primary"><feature.icon className="h-6 w-6" /></div>
+                                <div>
+                                    <CardTitle className="text-base">{feature.text}</CardTitle>
+                                    <CardDescription>{feature.desc}</CardDescription>
+                                </div>
+                            </CardHeader>
+                        </Card>
+                     ))}
+                 </div>
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-center">For CAs</h3>
+                     {caFeatures.map((feature, i) => (
+                        <Card key={i} className="interactive-lift">
+                           <CardHeader className="flex flex-row items-center gap-4">
+                                <div className="p-3 bg-primary/10 rounded-lg text-primary"><feature.icon className="h-6 w-6" /></div>
+                                <div>
+                                    <CardTitle className="text-base">{feature.text}</CardTitle>
+                                    <CardDescription>{feature.desc}</CardDescription>
+                                </div>
+                            </CardHeader>
+                        </Card>
+                     ))}
+                 </div>
             </div>
           </div>
         </section>
     );
 }
 
+const FounderLoveSection = () => {
+    const quotes = [
+        "Finally an app that understands startup chaos.",
+        "Sent my CA docs before she even asked. Miracles do happen.",
+        "JuriFly helped me prep for due diligence in 2 hours. Life saver.",
+        "I stopped being afraid of MCA emails.",
+        "My CA thinks I’m suddenly very organized. Lol.",
+    ];
+    return (
+        <section id="love" className="w-full py-20 md:py-24 bg-muted">
+            <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg text-center">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why Founders Love JuriFly</h2>
+                <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+                    {quotes.map((quote, index) => (
+                        <Card key={index} className="p-6 text-left interactive-lift bg-background/50 break-inside-avoid">
+                            <CardContent className="p-0">
+                                <blockquote className="text-lg font-medium">“{quote}”</blockquote>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </section>
+    )
+}
+
 const TestimonialsSection = () => {
     const testimonials = [
-        { quote: "JuriFly helped me understand my compliance blind spots, before they became problems.", author: "A founder who stopped fearing MCA" },
-        { quote: "My CA does the work, but I finally get what’s happening. That’s priceless.", author: "A startup CEO using JuriFly" },
-        { quote: "This is the co-pilot every founder needs. It doesn't just show you data, it explains it.", author: "An early-stage entrepreneur" }
+        { quote: "JuriFly is like Notion + AI + LegalZoom made for India.", author: "Rachit Jain, Founder, Pre-seed Startup" },
+        { quote: "Earlier I had 40 unread mails from clients daily. Now? 3.", author: "Neha Gupta, CA, 10+ years" },
+        { quote: "It felt like my co-founder… but for compliance.", author: "Siddharth Mehra, YC alum" },
+        { quote: "Our clients LOVE the dashboard. We saved 10+ hours a week.", author: "Nikhil Agrawal, CA, runs a 40-client firm" },
     ];
     return (
         <section id="testimonials" className="w-full py-20 md:py-24">
              <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Built For Founders, Not Filers</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                     {testimonials.map((testimonial, index) => (
                         <Card key={index} className="p-6 text-center interactive-lift bg-card/50">
                             <CardContent className="p-0 flex flex-col items-center">
-                                <div className="flex items-center gap-0.5 text-yellow-400">
-                                    <Star className="w-5 h-5 fill-current" />
-                                    <Star className="w-5 h-5 fill-current" />
-                                    <Star className="w-5 h-5 fill-current" />
-                                    <Star className="w-5 h-5 fill-current" />
-                                    <Star className="w-5 h-5 fill-current" />
-                                </div>
                                 <blockquote className="text-lg font-medium leading-relaxed mt-4">“{testimonial.quote}”</blockquote>
                                 <footer className="mt-4 text-sm text-muted-foreground">— {testimonial.author}</footer>
                             </CardContent>
@@ -170,57 +280,6 @@ const TestimonialsSection = () => {
     );
 }
 
-const KeyFeaturesSection = () => {
-    const features = [
-        { name: "Compliance Calendar", description: "Smart reminders mapped to your company’s actual structure." },
-        { name: "Auto-Generated Docs", description: "Get draft NDAs, board resolutions, investment docs, and more." },
-        { name: "Workspace Collaboration", description: "Share comments with CA or advisors. No messy email chains." },
-        { name: "Financial Insights", description: "Visuals for burn, runway, tax dues, and cash compliance." },
-        { name: "Secure Storage", description: "Your filings + important docs, always backed up and in-sync." },
-        { name: "Guided Explanations", description: "Don’t just get alerts — learn what each rule, filing, or form means." },
-    ];
-    return (
-        <section id="key-features" className="w-full py-20 md:py-24 bg-muted">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
-                <div className="text-center mb-12">
-                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Key Features</h2>
-                </div>
-                {/* Responsive Cards for Mobile */}
-                <div className="space-y-4 md:hidden">
-                    {features.map((feature, i) => (
-                        <Card key={i} className="interactive-lift">
-                           <CardHeader>
-                            <CardTitle className="text-base">{feature.name}</CardTitle>
-                            <CardDescription>{feature.description}</CardDescription>
-                           </CardHeader>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* Table for Desktop */}
-                <div className="hidden md:block">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-1/3">Feature</TableHead>
-                                <TableHead>Description</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {features.map((feature, i) => (
-                                <TableRow key={i} className="interactive-lift">
-                                    <TableCell className="font-medium">{feature.name}</TableCell>
-                                    <TableCell>{feature.description}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
-        </section>
-    );
-};
-
 const FaqSection = () => {
     const faqs = [
         { q: "Does JuriFly file my taxes or ROC forms?", a: "Nope. We’re not a filing service. JuriFly helps you understand what needs to be done and why — so you can act smarter (and faster)." },
@@ -231,7 +290,7 @@ const FaqSection = () => {
         { q: "How do you handle my data? Is it secure?", a: "Your workspace is encrypted. For documents, we integrate directly with your Google Drive, meaning your files stay in your control, not on our servers. You grant us permission only to list and manage the files you choose to upload through our interface." },
     ];
     return (
-        <section id="faq" className="w-full py-20 md:py-24">
+        <section id="faq" className="w-full py-20 md:py-24 bg-muted">
              <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                 <div className="text-center mb-12">
                      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Frequently Asked Questions</h2>
@@ -251,33 +310,21 @@ const FaqSection = () => {
 
 const NewsletterSection = () => {
     return (
-        <section id="newsletter" className="w-full py-20 md:py-24 bg-card/50">
+        <section id="newsletter" className="w-full py-20 md:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
-                <Card className="interactive-lift overflow-hidden">
-                    <div className="grid md:grid-cols-2">
-                        <div className="p-8 md:p-10 flex flex-col justify-center">
-                            <h2 className="text-2xl font-bold font-headline">Stay Ahead of the Curve</h2>
-                            <p className="mt-2 text-muted-foreground">Get curated legal-tech updates, compliance tips, and founder stories. No spam, ever.</p>
-                            <form className="mt-6 flex flex-col sm:flex-row gap-3">
-                                <Input
-                                    type="email"
-                                    placeholder="your.email@company.com"
-                                    className="flex-1"
-                                    aria-label="Email for newsletter"
-                                />
-                                <Button type="submit" className="sm:w-auto">Subscribe</Button>
-                            </form>
-                        </div>
-                        <div className="hidden md:block bg-muted p-4">
-                           <Image 
-                             src="https://images.unsplash.com/photo-1593642702909-dec73df255d7?q=80&w=2360&auto=format&fit=crop&ixlib=rb-4.1.0"
-                             alt="Newsletter illustration"
-                             width={600}
-                             height={400}
-                             className="object-cover w-full h-full rounded-md"
-                             data-ai-hint="legal documents"
-                           />
-                        </div>
+                <Card className="interactive-lift overflow-hidden bg-card/50">
+                     <div className="p-8 md:p-10 flex flex-col justify-center text-center">
+                        <h2 className="text-2xl font-bold font-headline">Want to Stay in the Loop?</h2>
+                        <p className="mt-2 text-muted-foreground max-w-xl mx-auto">Get weekly founder-friendly tips + early access invites + memes that only startup folks get.</p>
+                        <form className="mt-6 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                            <Input
+                                type="email"
+                                placeholder="your.email@company.com"
+                                className="flex-1"
+                                aria-label="Email for newsletter"
+                            />
+                            <Button type="submit" className="sm:w-auto">Subscribe to Jurifly Mail</Button>
+                        </form>
                     </div>
                 </Card>
             </div>
@@ -308,15 +355,16 @@ const LandingFooter = () => (
     <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:flex-row px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
         <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
-          © {new Date().getFullYear()} JuriFly. A product for founders, by founders.
+          💡 Built with ❤️ in India by founders, for founders
         </p>
       </div>
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap justify-center">
+      <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap justify-center">
+        <p>⚡ Jurifly is currently in beta</p>
+        <span className="mx-1">|</span>
         <Button variant="link" size="sm" asChild><Link href="/about">About</Link></Button>
         <Button variant="link" size="sm" asChild><Link href="/contact">Contact</Link></Button>
-        <Button variant="link" size="sm" asChild><Link href="/dashboard/settings?tab=policies">Terms & Privacy</Link></Button>
-        <Button variant="link" size="sm" asChild><Link href="/careers">Careers</Link></Button>
-      </nav>
+        <Button variant="link" size="sm" asChild><Link href="/dashboard/settings?tab=policies">Terms</Link></Button>
+      </div>
     </div>
   </footer>
 );
@@ -327,9 +375,10 @@ export default function LandingPage() {
       <LandingHeader />
       <main className="flex-1">
         <HeroSection />
-        <FeaturesSection />
+        <ProblemSection />
+        <OffersSection />
+        <FounderLoveSection />
         <TestimonialsSection />
-        <KeyFeaturesSection />
         <FaqSection />
         <NewsletterSection />
         <FinalCtaSection />
