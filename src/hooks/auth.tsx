@@ -116,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       invites: [],
       activityLog: [{ id: Date.now().toString(), userName: 'System', action: 'Created workspace', timestamp: new Date().toISOString() }],
       accessPassesUsed: [],
+      supporter: false, // Default to not a supporter
     };
     
     await setDoc(userDocRef, newProfile);
@@ -169,6 +170,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (profile.dailyCreditsUsed === undefined) updatesToApply.dailyCreditsUsed = 0;
       if (!profile.lastCreditReset) updatesToApply.lastCreditReset = new Date(0).toISOString();
       if (!profile.accessPassesUsed) updatesToApply.accessPassesUsed = [];
+      if (profile.supporter === undefined) updatesToApply.supporter = false;
+
 
       const today = new Date();
       const lastResetDate = new Date(updatesToApply.lastCreditReset || profile.lastCreditReset!);
@@ -442,8 +445,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (firebaseUser) {
         await updateFirebaseProfile(firebaseUser, { displayName: name });
         const userData: User = {
-            uid: firebaseUser.user.uid,
-            email: firebaseUser.user.email,
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
             displayName: name,
         };
         const newProfile = await createNewUserProfile(userData, legalRegion, role, refId);
@@ -601,10 +604,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Only CAs can invite clients.' };
     }
     try {
-        const newInviteData = {
-            type: 'ca_to_client', caId: user.uid, caName: userProfile.name,
-            caEmail: userProfile.email, // Using CA's email for querying invites
-            clientEmail, status: 'pending', createdAt: new Date().toISOString(),
+        const newInviteData: Omit<Invite, 'id'> = {
+            type: 'ca_to_client', 
+            founderId: user.uid, // The CA is the one sending the invite
+            founderName: userProfile.name, 
+            caEmail: clientEmail, // The client's email is the target
+            companyId: user.uid, // Placeholder, client will create their own
+            companyName: 'New Client Workspace',
+            status: 'pending', 
+            createdAt: new Date().toISOString(),
         };
         const inviteDocRef = await addDoc(collection(db, "invites"), newInviteData);
         // Add invite to CA's own profile to update the UI
@@ -623,6 +631,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (existingInvite) return { success: false, message: "An invitation has already been sent to this advisor for this company." };
 
     const newInviteData: Omit<Invite, 'id'> = {
+        type: 'founder_to_ca',
         caEmail, founderId: user.uid, founderName: userProfile.name,
         companyId, companyName, status: 'pending', createdAt: new Date().toISOString(),
     };

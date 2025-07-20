@@ -88,7 +88,7 @@ const supporterBadgeStyles = `
 
 export function SupporterBadge({ username }: { username: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const badgeRef = useRef<HTMLSpanElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
   const particles = useRef<Particle[]>([]);
 
   useEffect(() => {
@@ -101,14 +101,17 @@ export function SupporterBadge({ username }: { username: string }) {
     let animationFrameId: number;
 
     const resizeCanvasToBadge = () => {
-      canvas.width = badge.clientWidth;
-      canvas.height = badge.clientHeight;
+      if (badge) {
+        canvas.width = badge.clientWidth;
+        canvas.height = badge.clientHeight;
+      }
     };
     resizeCanvasToBadge();
 
     const colors = ["#f472b6", "#facc15", "#c084fc", "#60a5fa", "#34d399"];
     
     const spawnFirework = () => {
+      if (!canvas) return;
       const x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.6;
       const y = canvas.height / 2 + (Math.random() - 0.5) * canvas.height * 0.4;
       const count = 20 + Math.floor(Math.random() * 10);
@@ -121,6 +124,7 @@ export function SupporterBadge({ username }: { username: string }) {
     };
 
     const animate = () => {
+      if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.current = particles.current.filter(p => p.alpha > 0);
       particles.current.forEach(p => {

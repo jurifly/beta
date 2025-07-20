@@ -68,26 +68,27 @@ export interface TeamMember {
 
 export interface Invite {
     id: string;
-    caEmail: string;
-    role?: 'Admin' | 'Member' | 'Viewer' | 'Billing';
-    founderId: string;
+    caEmail: string; // The email of the person being invited (could be a CA, client, or team member)
+    role?: TeamMember['role'] | 'Billing';
+    founderId: string; // The person sending the invite
     founderName: string;
     companyId: string;
     companyName: string;
     status: 'pending' | 'accepted' | 'revoked' | 'processed';
-    createdAt: string;
-    caId?: string; // Add this
-    caName?: string; // Add this
-    acceptedAt?: string; // Add this
+    createdAt: string; // ISO String
+    caId?: string; // UID of the advisor who accepts
+    caName?: string;
+    acceptedAt?: string;
     type?: 'founder_to_ca' | 'ca_to_client' | 'team_invite';
     clientEmail?: string;
 }
 
-export interface ActivityLog {
+export interface ActivityLogItem {
     id: string;
     userName: string;
     action: string;
-    timestamp: string;
+    timestamp: string; // ISO String
+    clientName?: string;
 }
 
 export interface HistoricalFinancialData {
@@ -163,6 +164,7 @@ export interface UserProfile {
   dailyCreditsUsed?: number;
   lastCreditReset?: string; // ISO string
   accessPassesUsed?: { code: string; usedOn: string; rewardType: string; }[];
+  supporter?: boolean;
 
 
   // Founder-CA Connection
@@ -219,14 +221,6 @@ export type Workflow = {
   trigger: string;
   action: string;
   notification: string;
-};
-
-export type ActivityLogItem = {
-    id: string;
-    timestamp: Date;
-    icon: React.ElementType;
-    title: string;
-    description: string;
 };
 
 export interface Transaction {
