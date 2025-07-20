@@ -83,11 +83,9 @@ const ReportPageShell = ({ children, pageNumber, totalPages, clientName }: { chi
 };
 
 const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: ReportData, executiveSummary?: string | null, diligenceProgress: number }) => {
-    const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
+    const COLORS = ["hsl(221, 68%, 40%)", "hsl(215, 84%, 51%)", "hsl(160, 60%, 45%)", "hsl(260, 80%, 65%)"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
-    // --- Pagination Logic ---
-    const ITEMS_PER_PAGE = 15; // Adjust as needed
     const chunkArray = (arr: any[], size: number) => {
         const chunkedArr = [];
         for (let i = 0; i < arr.length; i += size) {
@@ -96,10 +94,10 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
         return chunkedArr;
     };
     
+    const ITEMS_PER_PAGE = 15;
     const overduePages = chunkArray(data.overdueFilings, ITEMS_PER_PAGE);
     const upcomingPages = chunkArray(data.upcomingFilings, ITEMS_PER_PAGE);
     const diligenceChecklist = data.diligenceChecklist?.checklist || [];
-
     const DILIGENCE_CATEGORIES_PER_PAGE = 4;
     const diligencePages = chunkArray(diligenceChecklist, DILIGENCE_CATEGORIES_PER_PAGE);
 
@@ -114,8 +112,8 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                  <div className="grid grid-cols-3 gap-8 mb-10">
                      <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border">
                         <h3 style={{fontSize: '18px'}} className="font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                        <div className={`font-bold ${scoreColor}`} style={{fontSize: '72px'}}>{data.hygieneScore}</div>
-                        <p style={{fontSize: '16px'}} className="font-medium text-gray-500">Out of 100</p>
+                        <div className={`font-bold ${scoreColor}`} style={{fontSize: '60px'}}>{data.hygieneScore}</div>
+                        <p style={{fontSize: '14px'}} className="font-medium text-gray-500">Out of 100</p>
                     </div>
                     <div className="col-span-2 bg-gray-50 p-8 rounded-xl border flex flex-col justify-center">
                         <h3 style={{fontSize: '24px'}} className="font-semibold text-gray-700 mb-6">Score Breakdown</h3>
@@ -168,7 +166,6 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                 </div>
             </ReportPageShell>
             
-            {/* Overdue Items Pages */}
             {overduePages.map((pageItems, index) => (
                 <ReportPageShell key={`overdue-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section>
@@ -183,7 +180,6 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                 </ReportPageShell>
             ))}
 
-            {/* Upcoming Items Pages */}
             {upcomingPages.map((pageItems, index) => (
                  <ReportPageShell key={`upcoming-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section>
@@ -198,7 +194,6 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                 </ReportPageShell>
             ))}
             
-            {/* Diligence Checklist Pages */}
             {diligencePages.map((pageCategories, index) => (
                  <ReportPageShell key={`diligence-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section className="mb-8">
@@ -228,7 +223,6 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                 </ReportPageShell>
             ))}
 
-            {/* AI Summary Page */}
             {executiveSummary && (
                 <ReportPageShell pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                      <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
@@ -403,6 +397,7 @@ export default function ReportCenterPage() {
             logging: false,
         });
 
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         
         if (i > 0) {
