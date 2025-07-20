@@ -2,11 +2,10 @@
 'use server';
 /**
  * @fileOverview A rule-based engine for generating a realistic list of compliance filings.
- * This flow is deterministic and does not use an LLM for calculations to ensure accuracy.
+ * This function is deterministic and does not use an LLM for calculations to ensure accuracy.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { z } from 'zod';
 import { format, addDays, addMonths, setYear, parse, getYear } from 'date-fns';
 
 const FilingGeneratorInputSchema = z.object({
@@ -30,11 +29,6 @@ const FilingGeneratorOutputSchema = z.object({
     filings: z.array(FilingItemSchema).describe("A list of plausible compliance filings for a full year.")
 });
 export type FilingGeneratorOutput = z.infer<typeof FilingGeneratorOutputSchema>;
-
-export async function generateFilings(input: FilingGeneratorInput): Promise<FilingGeneratorOutput> {
-  return filingGeneratorFlow(input);
-}
-
 
 // --- Rule-Based Compliance Generation ---
 
@@ -74,7 +68,7 @@ const complianceRules: Record<string, Record<string, FilingRule[]>> = {
 };
 
 
-function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorOutput {
+export async function generateFilings(input: FilingGeneratorInput): Promise<FilingGeneratorOutput> {
     const { companyType, incorporationDate, currentDate, legalRegion, gstin } = input;
     const rules = complianceRules[legalRegion]?.[companyType];
 
@@ -182,15 +176,3 @@ function generateFilingsFromRules(input: FilingGeneratorInput): FilingGeneratorO
 
     return { filings: finalFilings };
 }
-
-
-const filingGeneratorFlow = ai.defineFlow(
-  {
-    name: 'filingGeneratorFlow',
-    inputSchema: FilingGeneratorInputSchema,
-    outputSchema: FilingGeneratorOutputSchema,
-  },
-  async (input) => {
-    return generateFilingsFromRules(input);
-  }
-);
