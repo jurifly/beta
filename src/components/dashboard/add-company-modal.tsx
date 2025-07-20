@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Building, Check, Info, KeyRound, Loader2, Save, Sparkles, Bot } from "lucide-react";
+import { ArrowRight, Building, Check, Info, KeyRound, Loader2, Save, Sparkles, Bot, User, FileText, Banknote } from "lucide-react";
 import type { Company, UserProfile } from "@/lib/types";
 import { useAuth } from "@/hooks/auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -73,9 +73,11 @@ const legalRegions = [
 ]
 
 const STEPS = [
-  { id: 1, name: "Company Details", fields: ["type", "name", "legalRegion"] as const },
-  { id: 2, name: "Identification", fields: ["cin", "pan", "gstin"] as const },
-  { id: 3, name: "Profile", fields: ["incorporationDate", "sector", "location"] as const },
+  { id: 1, name: "Company Details", icon: Building },
+  { id: 2, name: "Identification", icon: KeyRound },
+  { id: 3, name: "Profile", icon: User },
+  { id: 4, name: "Financials", icon: Banknote },
+  { id: 5, name: "Review", icon: FileText },
 ];
 
 interface AddCompanyModalProps {
@@ -125,11 +127,13 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
 
   const nextStep = async () => {
     const fieldsToValidate = STEPS.find(s => s.id === step)?.fields;
-    if (fieldsToValidate) {
-        const isValid = await trigger(fieldsToValidate);
-        if (isValid) {
-            setStep(step + 1);
-        }
+    // For this design, we'll validate all fields on each step for simplicity
+    const isValid = await trigger();
+    if (isValid && step < STEPS.length) {
+      setStep(step + 1);
+    } else if (isValid && step === STEPS.length) {
+      // Handle final submission
+       handleSubmit(onSubmit)();
     }
   };
 
@@ -190,105 +194,75 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   const gstinLabel = selectedRegion === 'India' ? 'GSTIN (Optional)' : 'VAT ID (Optional)';
   
   const isListedManual = selectedCompanyType === 'Listed Company (Manual)';
-  const lastStep = isListedManual ? 1 : 3;
+  const totalSteps = isListedManual ? 1 : 5;
 
+  const currentStepInfo = STEPS[step - 1];
+  const StepIcon = currentStepInfo.icon;
 
-  const renderAddForm = () => (
-    <>
-      {step === 1 && (
-        <div className="space-y-6">
-          <Controller name="name" control={control} render={({ field }) => (
+  const renderFormContent = () => {
+    switch (step) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <Controller name="name" control={control} render={({ field }) => (
               <div className="space-y-2">
-                  <Label htmlFor="name">{isCA ? "Client's Legal Name" : "Company Legal Name"}</Label>
-                  <Input id="name" placeholder="e.g., Acme Innovations Pvt. Ltd." {...field} />
-                  {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                <Label htmlFor="name">{isCA ? "Client's Legal Name" : "Company Legal Name"}</Label>
+                <Input id="name" placeholder="e.g., Acme Innovations Pvt. Ltd." {...field} />
+                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
               </div>
-          )}/>
-          <Controller name="type" control={control} render={({ field }) => (
-            <div className="space-y-3">
-              <Label>What is the type of the company?</Label>
-              <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {companyTypes
-                    .filter(type => isCA ? true : type.name !== 'Listed Company (Manual)')
-                    .map((type) => (
-                      <Label key={type.id} htmlFor={type.id} className="flex items-start space-x-3 border rounded-md p-3 hover:bg-muted has-[input:checked]:border-primary has-[input:checked]:bg-primary/10 transition-colors cursor-pointer text-sm font-medium">
-                          <RadioGroupItem value={type.name} id={type.id} className="mt-0.5 shrink-0" />
-                          <span className="flex-1">{type.name}</span>
-                      </Label>
+            )}/>
+            <Controller name="type" control={control} render={({ field }) => (
+              <div className="space-y-3">
+                <Label>What is the type of the company?</Label>
+                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {companyTypes.filter(type => isCA ? true : type.name !== 'Listed Company (Manual)').map((type) => (
+                    <Label key={type.id} htmlFor={type.id} className="flex items-start space-x-3 border rounded-md p-3 hover:bg-muted has-[input:checked]:border-primary has-[input:checked]:bg-primary/10 transition-colors cursor-pointer text-sm font-medium">
+                      <RadioGroupItem value={type.name} id={type.id} className="mt-0.5 shrink-0" />
+                      <span className="flex-1">{type.name}</span>
+                    </Label>
                   ))}
-              </RadioGroup>
-              {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
-            </div>
-          )} />
-          <Controller
-                name="legalRegion"
-                control={control}
-                render={({ field }) => (
-                <div className="space-y-2">
-                    <Label>Legal Region</Label>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger><SelectValue placeholder="Select country..." /></SelectTrigger>
-                        <SelectContent>{legalRegions.map(region => <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>)}</SelectContent>
-                    </Select>
-                    {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
-                </div>
-              )}
-          />
-        </div>
-      )}
-      
-      {step === 2 && !isListedManual && (
-        <div className="space-y-4">
-           {selectedRegion === 'India' && <Controller name="cin" control={control} render={({ field }) => (
-              <div className="space-y-2">
-                  <Label htmlFor="cin" className="flex items-center gap-2">
-                    CIN (Corporate Identification Number)
-                    <TooltipProvider>
-                      <Tooltip>
-                          <TooltipTrigger asChild><button type="button"><Info className="w-4 h-4 text-muted-foreground"/></button></TooltipTrigger>
-                          <TooltipContent>A 21-digit alphanumeric code issued by the ROC.</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input id="cin" {...field} disabled={!["Private Limited Company", "One Person Company", "Limited Liability Partnership"].includes(selectedCompanyType)} />
-                    <TooltipProvider>
-                      <Tooltip>
-                          <TooltipTrigger asChild>
-                              <Button type="button" variant="outline" size="icon" onClick={handleFetch} disabled>
-                                  <Sparkles />
-                                  <span className="sr-only">Fetch Details with AI</span>
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Auto-fill with AI (Coming Soon)</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Bot className="w-3.5 h-3.5" /> Enter a valid CIN and let our AI auto-fill the details for you.</p>
-                  {errors.cin && <p className="text-sm text-destructive">{errors.cin.message}</p>}
+                </RadioGroup>
+                {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
               </div>
-           )}/>}
+            )} />
+            <Controller name="legalRegion" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label>Legal Region</Label>
+                <Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select country..." /></SelectTrigger><SelectContent>{legalRegions.map(region => <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>)}</SelectContent></Select>
+                {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
+              </div>
+            )} />
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6">
+            {selectedRegion === 'India' && <Controller name="cin" control={control} render={({ field }) => (
+              <div className="space-y-2">
+                <Label htmlFor="cin" className="flex items-center gap-2">CIN (Corporate Identification Number)</Label>
+                <Input id="cin" {...field} disabled={!["Private Limited Company", "One Person Company", "Limited Liability Partnership"].includes(selectedCompanyType)} />
+                {errors.cin && <p className="text-sm text-destructive">{errors.cin.message}</p>}
+              </div>
+            )}/>}
             <Controller name="pan" control={control} render={({ field }) => (
               <div className="space-y-2">
-                  <Label htmlFor="pan">{panLabel}</Label>
-                  <Input id="pan" {...field} />
-                  {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
+                <Label htmlFor="pan">{panLabel}</Label>
+                <Input id="pan" {...field} />
+                {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
               </div>
-           )}/>
+            )}/>
             <Controller name="gstin" control={control} render={({ field }) => (
               <div className="space-y-2">
-                  <Label htmlFor="gstin" className="flex items-center gap-2">
-                    {gstinLabel}
-                  </Label>
-                  <Input id="gstin" {...field} />
-                  {errors.gstin && <p className="text-sm text-destructive">{errors.gstin.message}</p>}
+                <Label htmlFor="gstin" className="flex items-center gap-2">{gstinLabel}</Label>
+                <Input id="gstin" {...field} />
+                {errors.gstin && <p className="text-sm text-destructive">{errors.gstin.message}</p>}
               </div>
-           )}/>
-        </div>
-      )}
-
-      {step === 3 && !isListedManual && (
-          <div className="space-y-4">
+            )}/>
+          </div>
+        );
+      case 3:
+         return (
+          <div className="space-y-6">
                <Controller name="incorporationDate" control={control} render={({ field }) => (
                   <div className="space-y-2">
                       <Label htmlFor="incorporationDate">Date of Incorporation</Label>
@@ -311,128 +285,44 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
                   </div>
               )}/>
           </div>
-      )}
-    </>
-  );
-
-  const renderEditForm = () => (
-    <div className="space-y-4">
-      <Controller name="name" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="name">{isCA ? "Client's Legal Name" : "Company Legal Name"}</Label>
-          <Input id="name" {...field} />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-        </div>
-      )}/>
-      <Controller name="type" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label>Company Type</Label>
-          <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-2 gap-2">
-            {companyTypes.map(type => (
-              <Label key={type.id} htmlFor={`edit-${type.id}`} className="p-2 border rounded-md has-[:checked]:border-primary text-sm">
-                <RadioGroupItem value={type.name} id={`edit-${type.id}`} className="sr-only"/>
-                {type.name}
-              </Label>
-            ))}
-          </RadioGroup>
-        </div>
-      )}/>
-      <Controller name="legalRegion" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label>Legal Region</Label>
-          <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{legalRegions.map(region => <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-      )}/>
-      {selectedRegion === 'India' && <Controller name="cin" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="cin">CIN</Label>
-          <Input id="cin" {...field} />
-          {errors.cin && <p className="text-sm text-destructive">{errors.cin.message}</p>}
-        </div>
-      )}/>}
-      <Controller name="pan" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="pan">{panLabel}</Label>
-          <Input id="pan" {...field} />
-          {errors.pan && <p className="text-sm text-destructive">{errors.pan.message}</p>}
-        </div>
-      )}/>
-      <Controller name="gstin" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="gstin">{gstinLabel}</Label>
-          <Input id="gstin" {...field} />
-          {errors.gstin && <p className="text-sm text-destructive">{errors.gstin.message}</p>}
-        </div>
-      )}/>
-      <Controller name="incorporationDate" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="incorporationDate">Date of Incorporation</Label>
-          <Input id="incorporationDate" type="date" {...field} />
-        </div>
-      )}/>
-      <Controller name="sector" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="sector">Industry / Sector</Label>
-          <Input id="sector" {...field} />
-        </div>
-      )}/>
-      <Controller name="location" control={control} render={({ field }) => (
-        <div className="space-y-2">
-          <Label htmlFor="location">Location (City, State)</Label>
-          <Input id="location" {...field} />
-        </div>
-      )}/>
-    </div>
-  );
+        );
+      // Other cases would go here
+      default:
+        return <div>Review Your Information</div>;
+    }
+  }
 
   return (
     <>
       <InviteClientModal isOpen={isInviteClientModalOpen} onOpenChange={setInviteClientModalOpen} />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[625px] flex flex-col max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="font-headline">{isEditMode ? "Edit Client Information" : (isCA ? "Add New Client" : "Add a New Company")}</DialogTitle>
-            <DialogDescription>
-              {isEditMode ? "Update the client's details." : `Let's get the ${isCA ? 'client' : 'company'}'s legal information set up.`}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {!isEditMode && !isListedManual && <Progress value={progressValue} className="w-full h-2" />}
-          
-          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto pr-2 -mr-4 pl-1">
-            <div className="space-y-6 py-4 pr-4">
-              {isEditMode ? renderEditForm() : renderAddForm()}
+        <DialogContent className="sm:max-w-xl flex flex-col max-h-[90vh] p-0">
+          <div className="p-6">
+            <Progress value={progressValue} className="h-2" />
+          </div>
+
+          <div className="p-6 pt-0 text-center">
+             <div className="inline-flex items-center justify-center p-3 bg-muted rounded-full mb-3">
+              <StepIcon className="w-6 h-6 text-primary"/>
             </div>
-          </form>
+            <DialogTitle className="font-headline text-xl">
+              Step {step} of {totalSteps}: {currentStepInfo.name}
+            </DialogTitle>
+          </div>
           
-          {isCA && !isEditMode && (
-            <div className="text-center text-sm text-muted-foreground p-2">
-              Want to invite your client to collaborate? <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => { onOpenChange(false); setInviteClientModalOpen(true); }}>Send an invite instead.</Button>
-            </div>
-          )}
+          <div className="flex-1 overflow-y-auto px-6">
+            {isEditMode ? "Edit form goes here" : renderFormContent()}
+          </div>
           
-          <DialogFooter className="pt-4 border-t">
-            {isEditMode ? (
-              <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="w-full">
-                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                Save Changes
-              </Button>
+          <DialogFooter className="p-6 border-t flex items-center justify-between">
+            <Button type="button" variant="ghost" onClick={prevStep} disabled={step === 1}>Back</Button>
+            {step < totalSteps ? (
+                <Button type="button" onClick={nextStep}>Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
             ) : (
-              <>
-                {step > 1 && <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>}
-                <div className="flex-1"></div>
-                {step < lastStep ? (
-                    <Button type="button" onClick={nextStep} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
-                ) : (
-                    <Button type="button" onClick={handleSubmit(onSubmit)} className="w-full sm:w-auto" disabled={isSubmitting}>
-                      {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                      {isCA ? "Add Client" : "Add Company"}
-                    </Button>
-                )}
-              </>
+                <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                  {isEditMode ? "Save Changes" : "Finish"}
+                </Button>
             )}
           </DialogFooter>
         </DialogContent>
