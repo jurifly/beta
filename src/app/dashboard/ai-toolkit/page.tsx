@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
-import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, Activity, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle, Gift, PiggyBank, Handshake, TrendingUp } from 'lucide-react';
+import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle, Gift, PiggyBank, Handshake, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -742,165 +742,188 @@ const templatePlaceholders: Record<string, { context: string; reason: string }> 
 };
 
 const DocumentGenerator = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [generatedDoc, setGeneratedDoc] = useState<DocumentGeneratorOutput | null>(null);
-  const { toast } = useToast();
-  const { userProfile, deductCredits } = useAuth();
-  
-  const [editorContent, setEditorContent] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const hasUserEdited = useRef(false);
-  const typewriterText = useTypewriter(isTyping ? (generatedDoc?.content || '') : '', 1);
+    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [generatedDocs, setGeneratedDocs] = useState<(DocumentGeneratorOutput & { id: string; timestamp: string })[]>([]);
+    const [activeDocId, setActiveDocId] = useState<string | null>(null);
+    const { toast } = useToast();
+    const { userProfile, deductCredits } = useAuth();
+    
+    const [context, setContext] = useState("");
+    const [reason, setReason] = useState("");
+    const [placeholders, setPlaceholders] = useState(templatePlaceholders.Default);
 
-  const [context, setContext] = useState("");
-  const [reason, setReason] = useState("");
-  const [placeholders, setPlaceholders] = useState(templatePlaceholders.Default);
+    const STORAGE_KEY = 'docGenHistory';
+    
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) setGeneratedDocs(JSON.parse(saved));
+        } catch (error) {
+            console.error("Failed to load history from localStorage", error);
+        }
+    }, []);
 
-  useEffect(() => {
-    if (selectedTemplate && templatePlaceholders[selectedTemplate]) {
-        setPlaceholders(templatePlaceholders[selectedTemplate]);
-    } else {
-        setPlaceholders(templatePlaceholders.Default);
-    }
-    setContext('');
-    setReason('');
-  }, [selectedTemplate]);
+    const saveDocs = (docs: (DocumentGeneratorOutput & { id: string; timestamp: string })[]) => {
+        setGeneratedDocs(docs);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+    };
 
-  useEffect(() => { if (isTyping && !hasUserEdited.current) setEditorContent(typewriterText); if (isTyping && typewriterText.length > 0 && typewriterText.length === (generatedDoc?.content || '').length) setIsTyping(false); }, [typewriterText, isTyping, generatedDoc]);
-  const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { if (isTyping) { hasUserEdited.current = true; setIsTyping(false); } setEditorContent(e.target.value); };
-  
-  const availableCategories = useMemo(() => {
-    if (!userProfile) return [];
-    return templateLibrary.filter(category => category.roles.includes(userProfile.role));
-  }, [userProfile]);
-  
-  const editorRef = useRef<HTMLTextAreaElement>(null);
-  
-  useEffect(() => {
-    if (editorRef.current) {
-        editorRef.current.scrollTop = editorRef.current.scrollHeight;
-    }
-  }, [editorContent]);
+    useEffect(() => {
+        if (selectedTemplate && templatePlaceholders[selectedTemplate]) {
+            setPlaceholders(templatePlaceholders[selectedTemplate]);
+        } else {
+            setPlaceholders(templatePlaceholders.Default);
+        }
+        setContext('');
+        setReason('');
+    }, [selectedTemplate]);
+    
+    const availableCategories = useMemo(() => {
+        if (!userProfile) return [];
+        return templateLibrary.filter(category => category.roles.includes(userProfile.role));
+    }, [userProfile]);
 
+    const handleGenerateClick = async () => {
+        if (!selectedTemplate) { toast({ title: 'No Template Selected', description: 'Please select a template from the library first.', variant: 'destructive' }); return; }
+        if (!userProfile) { toast({ title: 'Error', description: 'User profile not found.', variant: 'destructive' }); return; }
 
-  const handleGenerateClick = async () => {
-    if (!selectedTemplate) { toast({ title: 'No Template Selected', description: 'Please select a template from the library first.', variant: 'destructive' }); return; }
-    if (!userProfile) { toast({ title: 'Error', description: 'User profile not found.', variant: 'destructive' }); return; }
+        if (!await deductCredits(3)) return;
+        setLoading(true);
+        try { 
+            const result = await AiActions.generateDocumentAction({ 
+                templateName: selectedTemplate, 
+                legalRegion: userProfile.legalRegion,
+                context: context,
+                reason: reason,
+            }); 
+            const newDoc = { ...result, id: Date.now().toString(), timestamp: new Date().toISOString() };
+            saveDocs([newDoc, ...generatedDocs]);
+            setActiveDocId(newDoc.id);
+        } catch (error: any) { 
+            toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); 
+        } finally { 
+            setLoading(false); 
+        }
+    };
+    
+    const handleDeleteDoc = (id: string) => {
+        saveDocs(generatedDocs.filter(d => d.id !== id));
+        if (activeDocId === id) setActiveDocId(null);
+        toast({ title: 'Deleted', description: 'Document removed from history.' });
+    };
 
-    if (!await deductCredits(3)) return;
-    setLoading(true); setGeneratedDoc(null); setEditorContent(''); hasUserEdited.current = false;
-    try { 
-        const result = await AiActions.generateDocumentAction({ 
-            templateName: selectedTemplate, 
-            legalRegion: userProfile.legalRegion,
-            context: context,
-            reason: reason,
-        }); 
-        setGeneratedDoc(result); 
-        setIsTyping(true); 
-    } catch (error: any) { 
-        toast({ title: 'Generation Failed', description: error.message, variant: 'destructive' }); 
-    } finally { 
-        setLoading(false); 
-    }
-  };
+    const activeDoc = generatedDocs.find(d => d.id === activeDocId);
 
-  const handleDownload = () => { if (!generatedDoc) return; const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.setAttribute('download', `${generatedDoc.title.replace(/ /g, '_')}.txt`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
-  
-  const handleCopy = () => {
-    if (!editorContent) return;
-    navigator.clipboard.writeText(editorContent);
-    toast({ title: "Copied to clipboard!" });
-  };
+    if (!userProfile) return null;
 
-  if (!userProfile) return null;
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
+            <div className="lg:col-span-1 xl:col-span-1 flex flex-col space-y-6">
+                <Card className="flex flex-col bg-card interactive-lift">
+                    <CardHeader>
+                        <CardTitle className="text-base">1. Select a Template</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                        <ScrollArea className="h-[400px]">
+                            <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
+                                <Accordion type="single" collapsible className="w-full">
+                                    {availableCategories.map((category) => (
+                                        <AccordionItem value={category.name} key={category.name}>
+                                            <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="flex flex-col gap-1 pl-2">
+                                                    {category.templates.map((template) => {
+                                                        const isLocked = template.isPremium;
+                                                        return (
+                                                            <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}>
+                                                                <RadioGroupItem value={template.name} id={template.name} />
+                                                                <span className="font-normal text-sm">{template.name}</span>
+                                                            </Label>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            </RadioGroup>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+                
+                {selectedTemplate && (
+                    <Card className="animate-in fade-in-50">
+                        <CardHeader>
+                            <CardTitle className="text-base">2. Add Context (Optional)</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="context" className="text-xs font-normal">Situation / Context</Label>
+                                <Textarea id="context" value={context} onChange={(e) => setContext(e.target.value)} placeholder={placeholders.context} className="text-xs h-20" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="reason" className="text-xs font-normal">Goal / Reason</Label>
+                                <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder={placeholders.reason} className="text-xs h-20" />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex flex-col gap-2">
+                            <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
+                                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
+                            </Button>
+                            <p className="text-xs text-muted-foreground">3 Credits per generation.</p>
+                        </CardFooter>
+                    </Card>
+                )}
+            </div>
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
-      <div className="lg:col-span-1 xl:col-span-1 flex flex-col space-y-6">
-        <Card className="flex flex-col bg-card interactive-lift">
-            <CardHeader>
-                <CardTitle className="text-base">1. Select a Template</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1">
-                <ScrollArea className="h-[400px]">
-                    <RadioGroup value={selectedTemplate || ''} onValueChange={setSelectedTemplate} className="w-full">
-                        <Accordion type="single" collapsible className="w-full">
-                            {availableCategories.map((category) => (
-                                <AccordionItem value={category.name} key={category.name}>
-                                    <AccordionTrigger className="text-sm font-medium hover:no-underline interactive-lift py-2 px-2">{category.name}</AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="flex flex-col gap-1 pl-2">
-                                            {category.templates.map((template) => {
-                                                const isLocked = template.isPremium;
-                                                return (
-                                                    <Label key={template.name} className={cn("flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted interactive-lift", selectedTemplate === template.name && "bg-muted")}>
-                                                        <RadioGroupItem value={template.name} id={template.name} />
-                                                        <span className="font-normal text-sm">{template.name}</span>
-                                                    </Label>
-                                                )
-                                            })}
+            <div className="lg:col-span-2 xl:col-span-3 space-y-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Document History</CardTitle>
+                        <CardDescription>View and manage your previously generated documents.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {generatedDocs.length > 0 ? (
+                             <ScrollArea className="h-48">
+                                <div className="space-y-2">
+                                    {generatedDocs.map(doc => (
+                                        <div key={doc.id} className={cn("flex items-center gap-4 p-3 rounded-md border cursor-pointer hover:bg-muted", activeDocId === doc.id && "bg-muted border-primary")}>
+                                            <FileText className="h-5 w-5 text-muted-foreground" />
+                                            <div className="flex-1" onClick={() => setActiveDocId(doc.id)}>
+                                                <p className="font-medium text-sm">{doc.title}</p>
+                                                <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(doc.timestamp), { addSuffix: true })}</p>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDoc(doc.id)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
                                         </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </RadioGroup>
-                </ScrollArea>
-            </CardContent>
-        </Card>
-        
-        {selectedTemplate && (
-          <Card className="animate-in fade-in-50">
-            <CardHeader>
-              <CardTitle className="text-base">2. Add Context (Optional)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                  <Label htmlFor="context" className="text-xs font-normal">Situation / Context</Label>
-                  <Textarea
-                      id="context"
-                      value={context}
-                      onChange={(e) => setContext(e.target.value)}
-                      placeholder={placeholders.context}
-                      className="text-xs h-20"
-                  />
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="reason" className="text-xs font-normal">Goal / Reason</Label>
-                  <Textarea
-                      id="reason"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      placeholder={placeholders.reason}
-                      className="text-xs h-20"
-                  />
-              </div>
-            </CardContent>
-             <CardFooter className="flex flex-col gap-2">
-              <Button onClick={handleGenerateClick} disabled={loading || !selectedTemplate} className="w-full">
-                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate Document</>}
-              </Button>
-              <p className="text-xs text-muted-foreground">3 Credits per generation.</p>
-            </CardFooter>
-          </Card>
-        )}
-      </div>
-
-      <div className="lg:col-span-2 xl:col-span-3 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <h2 className="text-xl font-bold font-headline">Document Preview & Edit</h2>
-            <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" disabled={!generatedDoc || isTyping} onClick={handleCopy} className="interactive-lift"><Copy className="mr-2 h-4 w-4" /> Copy</Button>
-                <Button disabled={!generatedDoc || isTyping} onClick={handleDownload} className="interactive-lift"><Download className="mr-2 h-4 w-4" /> Download</Button>
+                                    ))}
+                                </div>
+                             </ScrollArea>
+                        ) : (
+                            <div className="text-center text-muted-foreground p-8 border-dashed border-2 rounded-md">
+                                Your generated documents will appear here.
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+                {activeDoc && (
+                    <Card className="min-h-[400px] flex flex-col interactive-lift animate-in fade-in-50">
+                        <CardHeader>
+                            <CardTitle>{activeDoc.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 overflow-y-auto">
+                            <Textarea value={activeDoc.content} readOnly className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" />
+                        </CardContent>
+                        <CardFooter className="flex-wrap items-center justify-end gap-2">
+                            <Button variant="outline" onClick={() => { navigator.clipboard.writeText(activeDoc.content); toast({ title: 'Copied!' }); }}><Copy className="mr-2 h-4 w-4"/>Copy</Button>
+                        </CardFooter>
+                    </Card>
+                )}
             </div>
         </div>
-        {loading ? <Card className="min-h-[400px]"><CardHeader><Skeleton className="h-6 w-1/2"/></CardHeader><CardContent className="space-y-4 pt-4"><Skeleton className="h-4 w-full"/><Skeleton className="h-4 w-5/6"/></CardContent></Card> : generatedDoc ? <Card className="min-h-[400px] flex flex-col"><CardHeader><CardTitle>{generatedDoc.title}</CardTitle></CardHeader><CardContent className="flex-1 overflow-y-auto"><Textarea ref={editorRef} value={editorContent} onChange={handleEditorChange} readOnly={isTyping} className="font-code text-sm text-card-foreground min-h-[500px] flex-1 resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0" /></CardContent></Card> : <Card className="border-dashed min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-card"><div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mb-4"><Library className="w-8 h-8 text-muted-foreground" /></div><h3 className="text-xl font-semibold mb-1">Your Document Appears Here</h3><p className="text-muted-foreground max-w-xs">Select a template, add optional context, and click "Generate" to get started.</p></Card>}
-      </div>
-    </div>
-  )
+    )
 }
+
 
 const WikiGenerator = () => {
     const [file, setFile] = useState<File | null>(null);

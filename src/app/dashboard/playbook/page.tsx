@@ -237,9 +237,18 @@ const InvestorDiscoveryTab = () => {
         }
     });
 
+    const STORAGE_KEY = 'investorFinderResult';
+    
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) setResult(JSON.parse(saved));
+        } catch (error) { console.error("Failed to load state from localStorage", error); }
+    }, []);
+
     const onSubmit = async (data: InvestorFinderFormData) => {
         if (!userProfile) return;
-        if (!await deductCredits(2)) return;
+        if (!await deductCredits(1)) return;
 
         setResult(null);
 
@@ -249,6 +258,7 @@ const InvestorDiscoveryTab = () => {
                 legalRegion: userProfile.legalRegion,
             });
             setResult(response);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(response));
             toast({ title: "Investor List Generated!", description: "We've found some potential investors for your startup." });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -288,11 +298,12 @@ const InvestorDiscoveryTab = () => {
                            {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
                         </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex-col gap-2">
                          <Button type="submit" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <SearchIcon className="mr-2 h-4 w-4" />}
-                            Find Opportunities (2 Credits)
+                            Find Opportunities
                         </Button>
+                        <p className="text-xs text-muted-foreground">1 Credit per search</p>
                     </CardFooter>
                  </Card>
             </form>
@@ -394,12 +405,22 @@ function StateAssistantTab() {
     defaultValues: { statesToCompare: [], hiringPlan: '1-10 Employees' }
   });
   
+  const STORAGE_KEY = 'stateComparisonResult';
+  
+  useEffect(() => {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) setResult(JSON.parse(saved));
+    } catch (error) { console.error("Failed to load state from localStorage", error); }
+  }, []);
+
   const onSubmit = async (data: StateAssistantFormData) => {
     if (!await deductCredits(1)) return;
     setResult(null);
     try {
       const response = await compareStatesAction(data);
       setResult(response);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(response));
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Analysis Failed', description: e.message });
     }

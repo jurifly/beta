@@ -1,10 +1,12 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { cn } from '@/lib/utils';
-import { Lightbulb, Rocket, Clapperboard, ClapperboardIcon, PersonStanding, Drama } from 'lucide-react';
+import { Lightbulb, Rocket, Clapperboard, ClapperboardIcon, PersonStanding, Drama, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const founderQuotes = [
     { text: "Burn rate high. Morale low. But let’s f*kn go.", icon: Rocket },
@@ -29,13 +31,28 @@ const founderQuotes = [
     { text: "Startups: Where plans change faster than app versions.", icon: Rocket },
 ];
 
+const getStorageKey = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return `founderQuoteDismissed_${today}`;
+};
 
 export function FounderQuoteBanner() {
   const { userProfile } = useAuth();
   const [dailyQuote, setDailyQuote] = useState<{ text: string; icon: React.ElementType } | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (userProfile?.role === 'Founder') {
+      try {
+        const dismissed = localStorage.getItem(getStorageKey());
+        if (dismissed !== 'true') {
+          setIsVisible(true);
+        }
+      } catch (error) {
+        console.error('Could not access localStorage:', error);
+        setIsVisible(true);
+      }
+
       const getDayOfYear = (date: Date) => {
         const start = new Date(date.getFullYear(), 0, 0);
         const diff = (date.getTime() - start.getTime()) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
@@ -49,8 +66,16 @@ export function FounderQuoteBanner() {
     }
   }, [userProfile]);
 
+  const handleDismiss = () => {
+    try {
+      localStorage.setItem(getStorageKey(), 'true');
+    } catch (error) {
+      console.error('Could not write to localStorage:', error);
+    }
+    setIsVisible(false);
+  };
 
-  if (!dailyQuote || userProfile?.role !== 'Founder') {
+  if (!isVisible || !dailyQuote || userProfile?.role !== 'Founder') {
     return null;
   }
   
@@ -59,12 +84,23 @@ export function FounderQuoteBanner() {
   return (
     <div
       className={cn(
-        'relative flex w-full items-center justify-center gap-3 rounded-lg border bg-amber-500/10 p-2.5 text-sm shadow-sm mb-6 border-amber-500/20 text-amber-900 dark:text-amber-300',
+        'relative flex w-full items-center justify-between gap-3 rounded-lg border bg-amber-500/10 p-2.5 text-sm shadow-sm mb-6 border-amber-500/20 text-amber-900 dark:text-amber-300',
         'animate-in fade-in-50'
       )}
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      <p className="font-medium text-center italic">{dailyQuote.text}</p>
+      <div className="flex items-center gap-3 flex-1 justify-center">
+        <Icon className="h-4 w-4 shrink-0" />
+        <p className="font-medium text-center italic">{dailyQuote.text}</p>
+      </div>
+       <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-amber-900/50 dark:text-amber-300/50 hover:bg-amber-500/20 hover:text-amber-900 dark:hover:text-amber-300"
+        onClick={handleDismiss}
+      >
+        <X className="h-4 w-4" />
+        <span className="sr-only">Dismiss</span>
+      </Button>
     </div>
   );
 }
