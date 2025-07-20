@@ -240,7 +240,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
     });
 
     const onSubmit = async (data: BusinessTypeFormData) => {
-        if (!await deductCredits(2)) return;
+        if (!initialState.businessTypeResult && !await deductCredits(3)) return;
         setIsLoading(true);
         setResult(undefined);
         updateState({ businessTypeForm: data });
@@ -316,7 +316,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                     </div>
                     <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
-                        Get Recommendation (2 Credits)
+                        {initialState.businessTypeResult ? 'Regenerate Recommendation' : 'Get Recommendation (3 Credits)'}
                     </Button>
                 </form>
             </div>
@@ -517,7 +517,6 @@ function Step3Infrastructure({ onComplete, updateState, initialState }: StepProp
     const [result, setResult] = useState<StateComparisonOutput | undefined>(initialState.stateAssistantResult);
     
     const onSubmit = async (data: StateAssistantFormData) => {
-      if (!await deductCredits(1)) return;
       setResult(undefined);
       try {
         const response = await compareStatesAction(data);
@@ -542,7 +541,7 @@ function Step3Infrastructure({ onComplete, updateState, initialState }: StepProp
                              </div>
                              <Controller name="hiringPlan" control={control} render={({ field }) => (<div className="space-y-2"><Label>Hiring Plan</Label><RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-3 gap-2">{['1-10 Employees', '11-50 Employees', '50+ Employees'].map(val => <Label key={val} className={cn("p-2 border rounded-md text-center cursor-pointer text-sm", field.value === val && 'bg-primary/10 border-primary ring-1 ring-primary')}><RadioGroupItem value={val} className="sr-only"/>{val}</Label>)}</RadioGroup></div>)} />
                              <Button type="submit" disabled={isSubmitting} className="w-full">
-                                {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Search className="mr-2"/>} Compare States (1 Credit)
+                                {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Search className="mr-2"/>} Compare States
                             </Button>
                         </div>
                         <div className="md:col-span-2 space-y-2">
