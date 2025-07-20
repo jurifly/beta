@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -94,26 +95,26 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                         <Logo />
                     </div>
                     <div className="text-right">
-                        <h1 className="text-2xl font-bold text-gray-800">Compliance Health Report</h1>
-                        <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                        <h1 className="text-3xl font-bold text-gray-800">Compliance Health Report</h1>
+                        <p className="text-base font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
                 <main className="mt-8">
                      <div className="grid grid-cols-3 gap-6 mb-8">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
-                            <h3 className="text-base font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-5xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
-                            <p className="text-sm font-medium text-gray-500">Out of 100</p>
+                            <h3 className="text-lg font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                            <div className={`text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <p className="text-base font-medium text-gray-500">Out of 100</p>
                         </div>
                         <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
-                            <h3 className="font-semibold text-gray-700 mb-4">Score Breakdown</h3>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-4">Score Breakdown</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                    <div className="flex justify-between text-base mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
                                     <Progress value={data.filingPerformance} />
                                 </div>
                                 <div>
-                                    <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                    <div className="flex justify-between text-base mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
                                      <Progress value={data.profileCompleteness} />
                                 </div>
                             </div>
@@ -121,7 +122,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                     </div>
                     <div className="grid grid-cols-2 gap-6 mt-6">
                         <div className="p-4 border rounded-lg bg-white" data-jspdf-ignore="true">
-                            <h3 className="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
                             {data.ownershipData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={200}>
                                     <RechartsPieChart>
@@ -133,29 +134,29 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                         <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
                                             {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                         </Pie>
-                                        <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
+                                        <Legend iconSize={10} wrapperStyle={{ fontSize: '14px' }}/>
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <p className="text-sm text-center text-gray-500 py-10">No cap table data available.</p>
+                                <p className="text-base text-center text-gray-500 py-10">No cap table data available.</p>
                             )}
                         </div>
                          <div className="p-4 border rounded-lg bg-white flex flex-col">
-                            <h3 className="text-base font-semibold text-gray-700 mb-3">Financial Snapshot</h3>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-3">Financial Snapshot</h3>
                             <div className="flex-1 flex flex-col justify-center space-y-4">
                                 <div className="text-center p-3 bg-gray-50 rounded-md">
-                                    <p className="text-sm font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                    <p className={`text-2xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
+                                    <p className="text-base font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                    <p className={`text-3xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
                                 </div>
                                 <div className="text-center p-3 bg-gray-50 rounded-md">
-                                    <p className="text-sm font-medium text-gray-500">Estimated Runway</p>
-                                    <p className="text-2xl font-bold">{data.financials.runway}</p>
+                                    <p className="text-base font-medium text-gray-500">Estimated Runway</p>
+                                    <p className="text-3xl font-bold">{data.financials.runway}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </main>
-                <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
+                <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
                     <p>Page 1 of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
@@ -165,17 +166,17 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <Logo />
                     <div className="text-right">
-                        <h1 className="text-2xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
-                        <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                        <h1 className="text-3xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
+                        <p className="text-base font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
                 <main className="mt-8">
                     <section className="mb-8">
-                        <h2 className="text-xl font-semibold text-red-700 mb-3 flex items-center gap-2">
+                        <h2 className="text-2xl font-semibold text-red-700 mb-3 flex items-center gap-2">
                            <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
                         </h2>
                         {data.overdueFilings.length > 0 ? (
-                            <table className="w-full text-sm text-left">
+                            <table className="w-full text-base text-left">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="p-2 font-semibold">Task</th>
@@ -191,14 +192,14 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                     ))}
                                 </tbody>
                             </table>
-                        ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
+                        ) : <p className="text-base text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
                     </section>
                     <section className="mb-8">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <h2 className="text-2xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
                            <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
                         </h2>
                          {data.upcomingFilings.length > 0 ? (
-                             <table className="w-full text-sm text-left">
+                             <table className="w-full text-base text-left">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="p-2 font-semibold">Task</th>
@@ -214,15 +215,15 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                     ))}
                                 </tbody>
                             </table>
-                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
+                         ) : <p className="text-base text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
                     </section>
                      <section>
-                        <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <h2 className="text-2xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
                            <TrendingUp /> Year-over-Year Financials
                         </h2>
                          {data.financials.historicalData.length > 0 ? (
                             <div className="space-y-4">
-                                <table className="w-full text-sm text-left">
+                                <table className="w-full text-base text-left">
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th className="p-2 font-semibold">Financial Year</th>
@@ -244,20 +245,20 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                      <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
-                                            <YAxis fontSize={12} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
+                                            <XAxis dataKey="year" fontSize={14} tickLine={false} axisLine={false} />
+                                            <YAxis fontSize={14} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
                                             <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} />
-                                            <Legend wrapperStyle={{fontSize: '12px'}}/>
+                                            <Legend wrapperStyle={{fontSize: '14px'}}/>
                                             <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2} name="Revenue" />
                                             <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={2} name="Expenses" />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
-                         ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
+                         ) : <p className="text-base text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
                     </section>
                 </main>
-                <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
+                <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
                      <p>Page 2 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
@@ -268,17 +269,17 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
-                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                            <h1 className="text-3xl font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
+                            <p className="text-base font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
                     <main className="mt-8">
                         <section className="mb-6">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <h2 className="text-2xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
                             </h2>
                             <div className="p-4 bg-gray-50 rounded-lg border">
-                                <div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
+                                <div className="flex justify-between text-base mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
                                 <Progress value={diligenceProgress} />
                             </div>
                         </section>
@@ -288,7 +289,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                     <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
                                     <ul className="space-y-1">
                                         {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-2 text-sm">
+                                            <li key={item.id} className="flex items-center gap-2 text-base">
                                                 <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                                 <span>{item.task}</span>
                                             </li>
@@ -298,7 +299,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             ))}
                         </div>
                     </main>
-                    <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
+                    <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
                         <p>Page 3 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -310,8 +311,8 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
-                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                            <h1 className="text-3xl font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
+                            <p className="text-base font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
                     <main className="mt-8">
@@ -321,7 +322,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                     <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
                                     <ul className="space-y-1">
                                         {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-2 text-sm">
+                                            <li key={item.id} className="flex items-center gap-2 text-base">
                                                 <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                                 <span>{item.task}</span>
                                             </li>
@@ -331,7 +332,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             ))}
                         </div>
                     </main>
-                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                    <footer className="text-sm text-gray-400 pt-8 border-t mt-8 text-center">
                         <p>Page 4 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -343,12 +344,12 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-2xl font-bold text-gray-800">AI Executive Summary</h1>
-                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                            <h1 className="text-3xl font-bold text-gray-800">AI Executive Summary</h1>
+                            <p className="text-base font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
                     <main className="mt-8">
-                        <div className="prose prose-sm prose-p:text-gray-700 max-w-none">
+                        <div className="prose prose-base prose-p:text-gray-700 max-w-none">
                             <ReactMarkdown
                                 components={{
                                     ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
@@ -359,7 +360,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             </ReactMarkdown>
                         </div>
                     </main>
-                    <footer className="text-center text-xs text-gray-400 border-t mt-8 pt-4">
+                    <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
                         <p>Page {totalPages} of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -670,7 +671,7 @@ export default function ReportCenterPage() {
                         </div>
                         {/* Visible preview div */}
                         <div id="report-preview-container">
-                            <ReportTemplate data={reportData} />
+                             <ReportTemplate data={reportData} />
                         </div>
                     </CardContent>
                 </Card>
@@ -679,5 +680,3 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
-
