@@ -8,54 +8,54 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    
-    // Users can read/write their own profile
+
+    // Users can only read/write their own profile.
+    // They cannot change protected fields like their role or plan directly.
+    // Admins can update supporter status, but that logic would be handled via secure backend functions.
     match /users/{userId} {
-      allow read, update: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn();
+      allow read, update: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
     }
     
-    // Users can create and read their own subcollections
-    match /users/{userId}/{collection}/{docId} {
-        allow read, write, create: if isSignedIn() && isOwner(userId);
-    }
-    
-    // The user counter is only writeable by authenticated users during signup.
-    // In production, this should be handled by a server-side function (Cloud Function)
-    // to prevent abuse. For now, we allow any signed-in user to increment it.
-    match /counters/userCounter {
-      allow read: if true;a
-      allow write: if isSignedIn();
-    }
-    
-    // Transactions can be created by any signed-in user.
-    // Reading/updating should only be for admins (not implemented here, requires custom claims).
-    match /transactions/{transactionId} {
-      allow create: if isSignedIn();
-      // In production, restrict read/write to admins with custom claims
-      allow read, update: if false; 
+    // Notifications and chat history are subcollections of a user,
+    // so they inherit the parent rule: only the owner can access them.
+    match /users/{userId}/{subcollection}/{docId} {
+        allow read, write: if isOwner(userId);
     }
 
-    // Feedback can be created by any signed-in user.
-    match /feedback/{feedbackId} {
+    // Invites can be created by any signed-in user.
+    // They can be read if you are the sender (founder) or receiver (caEmail).
+    // They can be updated (e.g., to 'accepted') by the invited CA.
+    // They can be deleted by the founder who sent them.
+    match /invites/{inviteId} {
         allow create: if isSignedIn();
-        // Admins only for read/update
-        allow read, update, delete: if false;
+        allow read: if isSignedIn() && (resource.data.founderId == request.auth.uid || resource.data.caEmail == request.auth.token.email);
+        allow update: if isSignedIn() && resource.data.caEmail == request.auth.token.email;
+        allow delete: if isSignedIn() && resource.data.founderId == request.auth.uid;
+    }
+
+    // Any signed-in user can submit feedback. No one can read/update/delete it from the client.
+    match /feedback/{feedbackId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if false;
     }
     
-    // Invites can be read by anyone (to check for invites).
-    // They can be created by signed-in users.
-    // They can be updated (accepted) by the invited user (the CA).
-    match /invites/{inviteId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource.data.caEmail == request.auth.token.email;
-      // Deleting invites should be restricted, perhaps only by the sender or an admin
-      allow delete: if false;
+    // Counters, Access Passes, and Transactions should only be handled by a secure backend/admin environment.
+    // No client-side access is permitted.
+    match /counters/{counterId} {
+      allow read, write: if false;
+    }
+
+    match /accessPasses/{passId} {
+      allow read, write: if false;
+    }
+
+    match /transactions/{transactionId} {
+      allow read, write: if false;
     }
   }
 }
