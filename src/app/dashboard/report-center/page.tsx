@@ -111,13 +111,13 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
             <ReportPageShell pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                  <div className="grid grid-cols-3 gap-8 mb-10">
                      <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border">
-                        <h3 style={{fontSize: '18px'}} className="font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                        <div className={`font-bold ${scoreColor}`} style={{fontSize: '60px'}}>{data.hygieneScore}</div>
-                        <p style={{fontSize: '14px'}} className="font-medium text-gray-500">Out of 100</p>
+                        <h3 style={{fontSize: '20px'}} className="font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                        <div className={`font-bold ${scoreColor}`} style={{fontSize: '72px'}}>{data.hygieneScore}</div>
+                        <p style={{fontSize: '16px'}} className="font-medium text-gray-500">Out of 100</p>
                     </div>
                     <div className="col-span-2 bg-gray-50 p-8 rounded-xl border flex flex-col justify-center">
                         <h3 style={{fontSize: '24px'}} className="font-semibold text-gray-700 mb-6">Score Breakdown</h3>
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             <div>
                                 <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
                                 <Progress value={data.filingPerformance} className="h-3" />
@@ -129,7 +129,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-2 gap-8 mb-10">
                     <div className="p-6 border rounded-xl bg-white" data-jspdf-ignore="true">
                         <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2" style={{fontSize: '24px'}}><PieChartIcon className="w-6 h-6"/> Ownership</h3>
                         {data.ownershipData.length > 0 ? (
@@ -164,17 +164,33 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
                         </div>
                     </div>
                 </div>
+                 {data.financials.historicalData.length > 1 && (
+                    <div className="p-6 border rounded-xl bg-white">
+                        <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2" style={{fontSize: '24px'}}><TrendingUp className="w-6 h-6"/> YoY Financial Trends</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                            <LineChart data={data.financials.historicalData.sort((a,b) => a.year.localeCompare(b.year))}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false}/>
+                                <XAxis dataKey="year" style={{ fontSize: '14px' }}/>
+                                <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} style={{ fontSize: '14px' }}/>
+                                <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} wrapperStyle={{fontSize: '16px'}} />
+                                <Legend wrapperStyle={{fontSize: '16px'}} />
+                                <Line type="monotone" dataKey="revenue" stroke={COLORS[0]} strokeWidth={3} name="Revenue"/>
+                                <Line type="monotone" dataKey="expenses" stroke={COLORS[3]} strokeWidth={3} name="Expenses"/>
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                 )}
             </ReportPageShell>
             
             {overduePages.map((pageItems, index) => (
                 <ReportPageShell key={`overdue-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section>
-                        <h2 className="text-3xl font-semibold text-red-700 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
+                        <h2 className="text-3xl font-semibold text-red-700 mb-6 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
                         </h2>
-                        <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
-                            <thead className="bg-gray-50"><tr><th className="p-3 font-semibold">Task</th><th className="p-3 font-semibold text-right">Due Date</th></tr></thead>
-                            <tbody>{pageItems.map((f: any) => (<tr key={f.id} className="border-b"><td className="p-3">{f.text}</td><td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td></tr>))}</tbody>
+                        <table className="w-full text-lg text-left" style={{fontSize: '18px'}}>
+                            <thead className="bg-gray-50"><tr><th className="p-4 font-semibold">Task</th><th className="p-4 font-semibold text-right">Due Date</th></tr></thead>
+                            <tbody>{pageItems.map((f: any) => (<tr key={f.id} className="border-b"><td className="p-4">{f.text}</td><td className="p-4 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td></tr>))}</tbody>
                         </table>
                     </section>
                 </ReportPageShell>
@@ -183,12 +199,12 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
             {upcomingPages.map((pageItems, index) => (
                  <ReportPageShell key={`upcoming-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section>
-                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-6 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
                         </h2>
-                         <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
-                            <thead className="bg-gray-50"><tr><th className="p-3 font-semibold">Task</th><th className="p-3 font-semibold text-right">Due Date</th></tr></thead>
-                            <tbody>{pageItems.map((f: any) => (<tr key={f.id} className="border-b"><td className="p-3">{f.text}</td><td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td></tr>))}</tbody>
+                         <table className="w-full text-lg text-left" style={{fontSize: '18px'}}>
+                            <thead className="bg-gray-50"><tr><th className="p-4 font-semibold">Task</th><th className="p-4 font-semibold text-right">Due Date</th></tr></thead>
+                            <tbody>{pageItems.map((f: any) => (<tr key={f.id} className="border-b"><td className="p-4">{f.text}</td><td className="p-4 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td></tr>))}</tbody>
                         </table>
                     </section>
                 </ReportPageShell>
@@ -225,7 +241,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
 
             {executiveSummary && (
                 <ReportPageShell pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
-                     <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
+                     <h2 className="text-3xl font-semibold text-gray-800 mb-6 flex items-center gap-3" style={{fontSize: '28px'}}>
                        <Sparkles className="text-primary"/> AI Executive Summary
                     </h2>
                     <div className="prose prose-xl max-w-none" style={{fontSize: '18px'}}>
@@ -563,3 +579,4 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+
