@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -168,7 +169,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </div>
                 </main>
 
-                <footer className="text-center text-xs text-gray-400 mt-auto pt-4 border-t">
+                <footer className="text-center text-xs text-gray-400 mt-8 pt-4 border-t">
                     <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
@@ -273,7 +274,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                     </section>
                 </main>
 
-                <footer className="text-center text-xs text-gray-400 mt-auto pt-4 border-t">
+                <footer className="text-center text-xs text-gray-400 mt-8 pt-4 border-t">
                      <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
@@ -317,7 +318,7 @@ const ReportTemplate = ({ data, isGeneratingInsights }: { data: ReportData, isGe
                         </div>
                     </main>
 
-                     <footer className="text-center text-xs text-gray-400 mt-auto pt-4 border-t">
+                     <footer className="text-center text-xs text-gray-400 mt-8 pt-4 border-t">
                         <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
