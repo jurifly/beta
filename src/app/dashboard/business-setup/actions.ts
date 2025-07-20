@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { recommendBusinessStructure, type BusinessRecommenderInput, type BusinessRecommenderOutput } from '@/ai/flows/business-recommender-flow';
@@ -50,3 +51,4 @@ export async function compareStatesAction(input: StateComparisonInput): Promise<
     throw new Error(`AI state comparison is currently unavailable: ${errorMessage}`);
   }
 }
+

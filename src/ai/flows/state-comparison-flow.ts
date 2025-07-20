@@ -1,4 +1,5 @@
 
+
 'use server';
 /**
  * @fileOverview An AI flow for comparing Indian states for business registration.
@@ -71,7 +72,7 @@ For each state, provide a detailed analysis covering the following points. Tailo
     *   **Key Schemes**: Name 2-3 major, currently active startup schemes or policies in that state.
     *   **Incentives**: Summarize the types of benefits offered (e.g., seed funding, patent filing reimbursement, rent subsidy).
 4.  **Tax & Labour**:
-    *   **Professional Tax**: Is it applicable? What are the typical rates?
+    *   **Professional Tax**: Is it applicable? What are the typical rates? Use the word "annually" instead of "per annum".
     *   **Labour Law Compliance**: Comment on the complexity and strictness of state-level labour law enforcement.
 5.  **Risks & Flags**:
     *   **Common Issues**: Mention 1-2 well-known challenges for businesses in that state (e.g., high real estate costs, political instability, bureaucratic delays).
@@ -97,3 +98,4 @@ const stateComparisonFlow = ai.defineFlow(
     return output;
   }
 );
+
