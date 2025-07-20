@@ -62,6 +62,13 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
         return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
     }, [data.diligenceChecklist]);
     
+    const diligenceChecklist = data.diligenceChecklist?.checklist || [];
+    const checklistMidpoint = Math.ceil(diligenceChecklist.length / 2);
+    const diligencePage1 = diligenceChecklist.slice(0, checklistMidpoint);
+    const diligencePage2 = diligenceChecklist.slice(checklistMidpoint);
+
+    const totalPages = data.diligenceChecklist ? (diligencePage2.length > 0 ? 4 : 3) : 2;
+
     const Logo = () => (
       <>
         <Image 
@@ -142,12 +149,12 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                     </div>
                 </main>
                 <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
-                    <p>Page 1 of {data.diligenceChecklist ? 3 : 2} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
+                    <p>Page 1 of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <Logo />
                     <div className="text-right">
@@ -243,18 +250,18 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                          ) : <p className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
                     </section>
                 </main>
-                <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-auto">
-                     <p>Page 2 of {data.diligenceChecklist ? 3 : 2} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                     <p>Page 2 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
 
-            {/* Page 3 - Due Diligence */}
-            {data.diligenceChecklist && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm' }}>
+            {/* Page 3 - Due Diligence Part 1 */}
+            {data.diligenceChecklist && diligencePage1.length > 0 && (
+                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix</h1>
+                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
                             <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
@@ -269,7 +276,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                             </div>
                         </section>
                         <div style={{ columnCount: 2, columnGap: '2rem' }}>
-                            {data.diligenceChecklist.checklist.map((category, index) => (
+                            {diligencePage1.map((category, index) => (
                                 <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
                                     <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
                                     <ul className="space-y-1">
@@ -284,8 +291,41 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                             ))}
                         </div>
                     </main>
-                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-auto">
-                        <p>Page 3 of 3 | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                        <p>Page 3 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
+                    </footer>
+                </div>
+            )}
+            
+            {/* Page 4 - Due Diligence Part 2 */}
+            {data.diligenceChecklist && diligencePage2.length > 0 && (
+                 <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                        <Logo />
+                        <div className="text-right">
+                            <h1 className="text-2xl font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
+                            <p className="text-sm font-medium text-gray-600">{data.client.name}</p>
+                        </div>
+                    </header>
+                    <main className="mt-8">
+                        <div style={{ columnCount: 2, columnGap: '2rem' }}>
+                            {diligencePage2.map((category, index) => (
+                                <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
+                                    <ul className="space-y-1">
+                                        {category.items.map(item => (
+                                            <li key={item.id} className="flex items-center gap-2 text-sm">
+                                                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                                <span>{item.task}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                    <footer className="text-center text-xs text-gray-400 pt-8 border-t mt-8">
+                        <p>Page 4 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
             )}
@@ -519,9 +559,8 @@ export default function ReportCenterPage() {
                     </div>
                 </Card>
             )}
-
+            
             {reportData && (
-              <>
                 <Card>
                     <CardHeader>
                         <CardTitle>AI Executive Summary</CardTitle>
@@ -558,7 +597,10 @@ export default function ReportCenterPage() {
                         </Button>
                     </CardFooter>
                 </Card>
+            )}
 
+            {reportData && (
+              <>
                 <Card>
                     <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                          <div>
