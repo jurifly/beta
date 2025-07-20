@@ -51,7 +51,7 @@ const formatCurrency = (num: number, region = 'India') => {
   return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
 }
 
-const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiveSummary?: string | null }) => {
+const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: ReportData, executiveSummary?: string | null, diligenceProgress: number }) => {
     const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
@@ -95,7 +95,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                      <div className="grid grid-cols-3 gap-8">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
                             <h3 className="text-xl font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-8xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <div className={`text-6xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
                             <p className="text-lg font-medium text-gray-500">Out of 100</p>
                         </div>
                         <div className="col-span-2 bg-gray-50 p-8 rounded-lg border flex flex-col justify-center">
@@ -120,8 +120,8 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                                     <RechartsPieChart>
                                          <RechartsTooltip formatter={(value, name, props) => {
                                             const total = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
-                                            const percentage = total > 0 ? ((value as number / total) * 100).toFixed(1) : 0;
-                                            return [`${percentage}% (${(props.payload.value || 0).toLocaleString()})`, name];
+                                            const percentage = total > 0 ? ((props.payload.value / total) * 100).toFixed(1) : 0;
+                                            return [`${percentage}% (${(props.payload.value || 0).toLocaleString()} shares)`, name];
                                         }} />
                                         <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3}>
                                             {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
@@ -515,13 +515,13 @@ export default function ReportCenterPage() {
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const pageHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         
         if (i > 0) {
           pdf.addPage();
         }
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       }
 
       pdf.save(`${reportData?.client.name}_Compliance_Report.pdf`);
@@ -531,6 +531,14 @@ export default function ReportCenterPage() {
     if (!userProfile) {
         return <Loader2 className="animate-spin" />;
     }
+
+    const { diligenceProgress } = useMemo(() => {
+        if (!reportData?.diligenceChecklist) return { diligenceProgress: 0 };
+        const allItems = reportData.diligenceChecklist.checklist.flatMap(c => c.items);
+        if (allItems.length === 0) return { diligenceProgress: 0 };
+        const completedItems = allItems.filter(i => i.status === 'Completed').length;
+        return { diligenceProgress: Math.round((completedItems / allItems.length) * 100) };
+    }, [reportData?.diligenceChecklist]);
 
     const reportTypes = [
         { id: 'health', name: 'Client Compliance Health Report', description: 'A detailed summary of a client\'s compliance and corporate health.' },
@@ -658,12 +666,12 @@ export default function ReportCenterPage() {
                         {/* Hidden div for PDF generation, ensures light theme */}
                         <div className="absolute -left-[9999px] -top-[9999px]">
                             <div id="report-content-for-pdf-download" className="light">
-                                <ReportTemplate data={reportData} executiveSummary={includeSummaryInPdf ? executiveSummary : null} />
+                                <ReportTemplate data={reportData} executiveSummary={includeSummaryInPdf ? executiveSummary : null} diligenceProgress={diligenceProgress} />
                             </div>
                         </div>
                         {/* Visible preview div */}
                         <div id="report-preview-container">
-                             <ReportTemplate data={reportData} />
+                             <ReportTemplate data={reportData} executiveSummary={null} diligenceProgress={diligenceProgress} />
                         </div>
                     </CardContent>
                 </Card>
@@ -672,4 +680,3 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
