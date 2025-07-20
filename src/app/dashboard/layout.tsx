@@ -832,7 +832,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       href={isLocked ? '#' : item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative interactive-lift hover:bg-muted",
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative interactive-lift hover:text-accent-foreground hover:bg-accent",
                           isActive && "text-primary font-semibold bg-muted",
                           isLocked && "cursor-not-allowed"
                       )}
