@@ -111,7 +111,7 @@ const FeaturesSection = () => {
         { text: "Sync & Store Everything", description: "Your ROC filings, GST docs, ITR proofs, investor reports — all linked to your Drive and always backed up and in-sync.", icon: DatabaseZap },
     ];
     return (
-        <section id="features" className="w-full py-20 md:py-24 bg-card/50">
+        <section id="features" className="w-full py-20 md:py-24 bg-muted">
           <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why Founders Love JuriFly</h2>
@@ -174,7 +174,7 @@ const KeyFeaturesSection = () => {
         { name: "Guided Explanations", description: "Don’t just get alerts — learn what each rule, filing, or form means." },
     ];
     return (
-        <section id="key-features" className="w-full py-20 md:py-24 bg-card/50">
+        <section id="key-features" className="w-full py-20 md:py-24 bg-muted">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                 <div className="text-center mb-12">
                      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Key Features</h2>
