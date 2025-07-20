@@ -26,6 +26,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Image from 'next/image';
+import { Input } from "@/components/ui/input";
 
 
 const Logo = () => (
@@ -90,7 +91,7 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2"/>
             </Button>
             <p className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-500 bg-clip-text text-transparent font-semibold">
-              <Flame className="text-orange-500 animate-pulse" />
+              <Flame className="text-orange-500 animate-flicker" />
               Daily free 5 credits
             </p>
         </div>
@@ -233,6 +234,42 @@ const FaqSection = () => {
     );
 }
 
+const NewsletterSection = () => {
+    return (
+        <section id="newsletter" className="w-full py-20 md:py-24 bg-card/50">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+                <Card className="interactive-lift overflow-hidden">
+                    <div className="grid md:grid-cols-2">
+                        <div className="p-8 md:p-10 flex flex-col justify-center">
+                            <h2 className="text-2xl font-bold font-headline">Stay Ahead of the Curve</h2>
+                            <p className="mt-2 text-muted-foreground">Get curated legal-tech updates, compliance tips, and founder stories. No spam, ever.</p>
+                            <form className="mt-6 flex flex-col sm:flex-row gap-3">
+                                <Input
+                                    type="email"
+                                    placeholder="your.email@company.com"
+                                    className="flex-1"
+                                    aria-label="Email for newsletter"
+                                />
+                                <Button type="submit" className="sm:w-auto">Subscribe</Button>
+                            </form>
+                        </div>
+                        <div className="hidden md:block bg-muted p-4">
+                           <Image 
+                             src="https://placehold.co/600x400.png"
+                             alt="Newsletter illustration"
+                             width={600}
+                             height={400}
+                             className="object-cover w-full h-full rounded-md"
+                             data-ai-hint="legal books"
+                           />
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        </section>
+    );
+};
+
 const FinalCtaSection = () => {
   const router = useRouter();
   return (
@@ -279,6 +316,7 @@ export default function LandingPage() {
         <TestimonialsSection />
         <KeyFeaturesSection />
         <FaqSection />
+        <NewsletterSection />
         <FinalCtaSection />
       </main>
       <LandingFooter />
