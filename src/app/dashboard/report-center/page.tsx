@@ -55,14 +55,6 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
     const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
-    const diligenceProgress = useMemo(() => {
-        if (!data.diligenceChecklist) return 0;
-        const allItems = data.diligenceChecklist.checklist.flatMap(c => c.items);
-        const completedItems = allItems.filter(i => i.status === 'Completed').length;
-        const totalItems = allItems.length;
-        return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-    }, [data.diligenceChecklist]);
-    
     const diligenceChecklist = data.diligenceChecklist?.checklist || [];
     const checklistMidpoint = Math.ceil(diligenceChecklist.length / 2);
     const diligencePage1 = diligenceChecklist.slice(0, checklistMidpoint);
@@ -89,208 +81,208 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
     return (
         <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <Logo />
                     </div>
                     <div className="text-right">
-                        <h1 className="text-3xl font-bold text-gray-800">Compliance Health Report</h1>
-                        <p className="text-base font-medium text-gray-600">{data.client.name}</p>
+                        <h1 className="text-4xl font-bold text-gray-800">Compliance Health Report</h1>
+                        <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
-                <main className="mt-8">
-                     <div className="grid grid-cols-3 gap-6 mb-8">
+                <main className="mt-12 space-y-12">
+                     <div className="grid grid-cols-3 gap-8">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
-                            <h3 className="text-lg font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
-                            <p className="text-base font-medium text-gray-500">Out of 100</p>
+                            <h3 className="text-xl font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                            <div className={`text-8xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <p className="text-lg font-medium text-gray-500">Out of 100</p>
                         </div>
-                        <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
-                            <h3 className="text-xl font-semibold text-gray-700 mb-4">Score Breakdown</h3>
-                            <div className="space-y-4">
+                        <div className="col-span-2 bg-gray-50 p-8 rounded-lg border flex flex-col justify-center">
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-6">Score Breakdown</h3>
+                            <div className="space-y-6">
                                 <div>
-                                    <div className="flex justify-between text-base mb-1"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
-                                    <Progress value={data.filingPerformance} />
+                                    <div className="flex justify-between text-lg mb-2"><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                    <Progress value={data.filingPerformance} className="h-3" />
                                 </div>
                                 <div>
-                                    <div className="flex justify-between text-base mb-1"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
-                                     <Progress value={data.profileCompleteness} />
+                                    <div className="flex justify-between text-lg mb-2"><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                     <Progress value={data.profileCompleteness} className="h-3"/>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-6 mt-6">
-                        <div className="p-4 border rounded-lg bg-white" data-jspdf-ignore="true">
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2 flex items-center gap-2"><PieChartIcon className="w-5 h-5"/> Ownership Structure</h3>
+                    <div className="grid grid-cols-2 gap-8">
+                        <div className="p-6 border rounded-lg bg-white" data-jspdf-ignore="true">
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-4 flex items-center gap-2"><PieChartIcon className="w-6 h-6"/> Ownership Structure</h3>
                             {data.ownershipData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={200}>
+                                <ResponsiveContainer width="100%" height={250}>
                                     <RechartsPieChart>
                                          <RechartsTooltip formatter={(value, name, props) => {
                                             const total = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
                                             const percentage = total > 0 ? ((value as number / total) * 100).toFixed(1) : 0;
                                             return [`${percentage}% (${(props.payload.value || 0).toLocaleString()})`, name];
                                         }} />
-                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3}>
                                             {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                         </Pie>
-                                        <Legend iconSize={10} wrapperStyle={{ fontSize: '14px' }}/>
+                                        <Legend iconSize={12} wrapperStyle={{ fontSize: '16px', paddingTop: '20px' }}/>
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <p className="text-base text-center text-gray-500 py-10">No cap table data available.</p>
+                                <p className="text-lg text-center text-gray-500 py-10">No cap table data available.</p>
                             )}
                         </div>
-                         <div className="p-4 border rounded-lg bg-white flex flex-col">
-                            <h3 className="text-xl font-semibold text-gray-700 mb-3">Financial Snapshot</h3>
-                            <div className="flex-1 flex flex-col justify-center space-y-4">
-                                <div className="text-center p-3 bg-gray-50 rounded-md">
-                                    <p className="text-base font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                    <p className={`text-3xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
+                         <div className="p-6 border rounded-lg bg-white flex flex-col">
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-4">Financial Snapshot</h3>
+                            <div className="flex-1 flex flex-col justify-center space-y-6">
+                                <div className="text-center p-4 bg-gray-50 rounded-md">
+                                    <p className="text-lg font-medium text-gray-500">{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                    <p className={`text-4xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
                                 </div>
-                                <div className="text-center p-3 bg-gray-50 rounded-md">
-                                    <p className="text-base font-medium text-gray-500">Estimated Runway</p>
-                                    <p className="text-3xl font-bold">{data.financials.runway}</p>
+                                <div className="text-center p-4 bg-gray-50 rounded-md">
+                                    <p className="text-lg font-medium text-gray-500">Estimated Runway</p>
+                                    <p className="text-4xl font-bold">{data.financials.runway}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </main>
-                <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
+                <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
                     <p>Page 1 of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
                 </footer>
             </div>
             
             {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <Logo />
                     <div className="text-right">
-                        <h1 className="text-3xl font-bold text-gray-800">Compliance & Financial Appendix</h1>
-                        <p className="text-base font-medium text-gray-600">{data.client.name}</p>
+                        <h1 className="text-4xl font-bold text-gray-800">Compliance & Financials</h1>
+                        <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
                     </div>
                 </header>
-                <main className="mt-8">
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-red-700 mb-3 flex items-center gap-2">
+                <main className="mt-12 space-y-12">
+                    <section>
+                        <h2 className="text-3xl font-semibold text-red-700 mb-4 flex items-center gap-3">
                            <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
                         </h2>
                         {data.overdueFilings.length > 0 ? (
-                            <table className="w-full text-base text-left">
+                            <table className="w-full text-lg text-left">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="p-2 font-semibold">Task</th>
-                                        <th className="p-2 font-semibold text-right">Due Date</th>
+                                        <th className="p-3 font-semibold">Task</th>
+                                        <th className="p-3 font-semibold text-right">Due Date</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data.overdueFilings.map((f: any) => (
                                         <tr key={f.id} className="border-b">
-                                            <td className="p-2">{f.text}</td>
-                                            <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
+                                            <td className="p-3">{f.text}</td>
+                                            <td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        ) : <p className="text-base text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
+                        ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg">No overdue tasks. Well done!</p>}
                     </section>
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <section>
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3">
                            <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
                         </h2>
                          {data.upcomingFilings.length > 0 ? (
-                             <table className="w-full text-base text-left">
+                             <table className="w-full text-lg text-left">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="p-2 font-semibold">Task</th>
-                                        <th className="p-2 font-semibold text-right">Due Date</th>
+                                        <th className="p-3 font-semibold">Task</th>
+                                        <th className="p-3 font-semibold text-right">Due Date</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data.upcomingFilings.map((f: any) => (
                                         <tr key={f.id} className="border-b">
-                                            <td className="p-2">{f.text}</td>
-                                            <td className="p-2 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
+                                            <td className="p-3">{f.text}</td>
+                                            <td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                         ) : <p className="text-base text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
+                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg">No filings due in the next 30 days.</p>}
                     </section>
                      <section>
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3">
                            <TrendingUp /> Year-over-Year Financials
                         </h2>
                          {data.financials.historicalData.length > 0 ? (
-                            <div className="space-y-4">
-                                <table className="w-full text-base text-left">
+                            <div className="space-y-6">
+                                <table className="w-full text-lg text-left">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="p-2 font-semibold">Financial Year</th>
-                                            <th className="p-2 font-semibold text-right">Total Revenue</th>
-                                            <th className="p-2 font-semibold text-right">Total Expenses</th>
+                                            <th className="p-3 font-semibold">Financial Year</th>
+                                            <th className="p-3 font-semibold text-right">Total Revenue</th>
+                                            <th className="p-3 font-semibold text-right">Total Expenses</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
                                             <tr key={item.year} className="border-b">
-                                                <td className="p-2 font-medium">{item.year}</td>
-                                                <td className="p-2 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
-                                                <td className="p-2 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
+                                                <td className="p-3 font-medium">{item.year}</td>
+                                                <td className="p-3 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
+                                                <td className="p-3 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
-                                <div className="h-64 w-full pt-4" data-jspdf-ignore="true">
+                                <div className="h-80 w-full pt-4" data-jspdf-ignore="true">
                                      <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                        <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="year" fontSize={14} tickLine={false} axisLine={false} />
-                                            <YAxis fontSize={14} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
-                                            <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} />
-                                            <Legend wrapperStyle={{fontSize: '14px'}}/>
-                                            <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2} name="Revenue" />
-                                            <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={2} name="Expenses" />
+                                            <XAxis dataKey="year" fontSize={16} tickLine={false} axisLine={false} />
+                                            <YAxis fontSize={16} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
+                                            <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} wrapperStyle={{ fontSize: '16px' }}/>
+                                            <Legend wrapperStyle={{fontSize: '16px'}}/>
+                                            <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={3} name="Revenue" />
+                                            <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={3} name="Expenses" />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
-                         ) : <p className="text-base text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
+                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg">No historical financial data available for analysis.</p>}
                     </section>
                 </main>
-                <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
+                <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
                      <p>Page 2 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                 </footer>
             </div>
 
             {/* Page 3 - Due Diligence Part 1 */}
             {data.diligenceChecklist && diligencePage1.length > 0 && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-3xl font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
-                            <p className="text-base font-medium text-gray-600">{data.client.name}</p>
+                            <h1 className="text-4xl font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
+                            <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
-                    <main className="mt-8">
-                        <section className="mb-6">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <main className="mt-12">
+                        <section className="mb-8">
+                            <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3">
                                <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
                             </h2>
-                            <div className="p-4 bg-gray-50 rounded-lg border">
-                                <div className="flex justify-between text-base mb-1"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
-                                <Progress value={diligenceProgress} />
+                            <div className="p-6 bg-gray-50 rounded-lg border">
+                                <div className="flex justify-between text-lg mb-2"><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
+                                <Progress value={diligenceProgress} className="h-3"/>
                             </div>
                         </section>
                         <div style={{ columnCount: 2, columnGap: '2rem' }}>
                             {diligencePage1.map((category, index) => (
-                                <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
-                                    <ul className="space-y-1">
+                                <div key={index} className="mb-8" style={{ breakInside: 'avoid' }}>
+                                    <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
+                                    <ul className="space-y-2">
                                         {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-2 text-base">
-                                                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                            <li key={item.id} className="flex items-center gap-3 text-lg">
+                                                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                                 <span>{item.task}</span>
                                             </li>
                                         ))}
@@ -299,7 +291,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             ))}
                         </div>
                     </main>
-                    <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
+                    <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
                         <p>Page 3 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -307,23 +299,23 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
             
             {/* Page 4 - Due Diligence Part 2 */}
             {data.diligenceChecklist && diligencePage2.length > 0 && (
-                 <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+                 <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-3xl font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
-                            <p className="text-base font-medium text-gray-600">{data.client.name}</p>
+                            <h1 className="text-4xl font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
+                            <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
-                    <main className="mt-8">
+                    <main className="mt-12">
                         <div style={{ columnCount: 2, columnGap: '2rem' }}>
                             {diligencePage2.map((category, index) => (
-                                <div key={index} className="mb-6" style={{ breakInside: 'avoid' }}>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">{category.category}</h3>
-                                    <ul className="space-y-1">
+                                <div key={index} className="mb-8" style={{ breakInside: 'avoid' }}>
+                                    <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
+                                    <ul className="space-y-2">
                                         {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-2 text-base">
-                                                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                            <li key={item.id} className="flex items-center gap-3 text-lg">
+                                                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                                 <span>{item.task}</span>
                                             </li>
                                         ))}
@@ -332,7 +324,7 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
                             ))}
                         </div>
                     </main>
-                    <footer className="text-sm text-gray-400 pt-8 border-t mt-8 text-center">
+                    <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
                         <p>Page 4 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -340,27 +332,27 @@ const ReportTemplate = ({ data, executiveSummary }: { data: ReportData, executiv
 
             {/* Page 5 - AI Summary */}
             {executiveSummary && (
-                <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
+                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page">
                     <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                         <Logo />
                         <div className="text-right">
-                            <h1 className="text-3xl font-bold text-gray-800">AI Executive Summary</h1>
-                            <p className="text-base font-medium text-gray-600">{data.client.name}</p>
+                            <h1 className="text-4xl font-bold text-gray-800">AI Executive Summary</h1>
+                            <p className="text-lg font-medium text-gray-600">{data.client.name}</p>
                         </div>
                     </header>
-                    <main className="mt-8">
-                        <div className="prose prose-base prose-p:text-gray-700 max-w-none">
+                    <main className="mt-12">
+                        <div className="prose prose-xl max-w-none">
                             <ReactMarkdown
                                 components={{
-                                    ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
-                                    li: ({ node, ...props }) => <li className="flex items-start gap-2 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
+                                    ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-4" {...props} />,
+                                    li: ({ node, ...props }) => <li className="flex items-start gap-3 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
                                 }}
                             >
                                 {executiveSummary}
                             </ReactMarkdown>
                         </div>
                     </main>
-                    <footer className="text-sm text-gray-400 border-t mt-8 pt-4 text-center">
+                    <footer className="text-base text-gray-400 border-t mt-12 pt-6 text-center">
                         <p>Page {totalPages} of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
                     </footer>
                 </div>
@@ -612,7 +604,7 @@ export default function ReportCenterPage() {
                                 <div className="h-4 bg-primary/20 rounded w-full animate-pulse"></div>
                             </div>
                         ) : executiveSummary ? (
-                            <div className="prose prose-sm prose-p:text-gray-700 dark:prose-invert max-w-none p-4 bg-muted/50 border rounded-lg">
+                            <div className="prose prose-sm dark:prose-invert max-w-none p-4 bg-muted/50 border rounded-lg">
                                 <ReactMarkdown
                                   components={{
                                     ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-2" {...props} />,
@@ -664,8 +656,8 @@ export default function ReportCenterPage() {
                     </CardHeader>
                     <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
                         {/* Hidden div for PDF generation, ensures light theme */}
-                        <div className="absolute -left-[9999px] -top-[9999px] light">
-                            <div id="report-content-for-pdf-download">
+                        <div className="absolute -left-[9999px] -top-[9999px]">
+                            <div id="report-content-for-pdf-download" className="light">
                                 <ReportTemplate data={reportData} executiveSummary={includeSummaryInPdf ? executiveSummary : null} />
                             </div>
                         </div>
@@ -680,3 +672,4 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+
