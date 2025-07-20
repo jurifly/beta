@@ -75,6 +75,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { FounderQuoteBanner } from './founder-quote-banner';
+import { CaQuoteBanner } from './ca-quote-banner';
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -679,6 +680,7 @@ function AppShell({ children }: { children: ReactNode }) {
             >
                 <BetaBanner />
                 <FounderQuoteBanner />
+                <CaQuoteBanner />
                 {childrenWithLang}
             </main>
             <BottomNavBar lang={lang} setLang={handleLanguageChange} onLockedFeatureClick={handleLockedFeatureClick}/>
