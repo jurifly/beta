@@ -586,6 +586,8 @@ function AppShell({ children }: { children: ReactNode }) {
     }
     return child;
   });
+  
+  const isAdvisorRole = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor';
 
   return (
       <>
@@ -607,7 +609,7 @@ function AppShell({ children }: { children: ReactNode }) {
                     <Link href="/dashboard" className="flex items-center gap-2 font-semibold md:hidden">
                         <Logo />
                     </Link>
-                    <CompanySwitcher />
+                    {!isAdvisorRole && <CompanySwitcher />}
                 </div>
                 <div className="w-full flex-1 flex items-center gap-2 md:gap-4 justify-end">
                 <DropdownMenu>
