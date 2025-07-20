@@ -85,7 +85,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
     return (
         <div id="report-content-for-pdf" className="space-y-4">
             {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page" style={{ width: '210mm' }}>
+            <div className="bg-white text-gray-800 font-sans p-8 shadow-2xl report-page">
                 <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
                     <div className="flex items-center gap-3">
                         <Logo />
@@ -99,7 +99,7 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                      <div className="grid grid-cols-3 gap-6 mb-8">
                          <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
                             <h3 className="text-base font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-7xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
+                            <div className={`text-6xl font-bold ${scoreColor}`}>{data.hygieneScore}</div>
                             <p className="text-sm font-medium text-gray-500">Out of 100</p>
                         </div>
                         <div className="col-span-2 bg-gray-50 p-6 rounded-lg border flex flex-col justify-center">
@@ -122,7 +122,11 @@ const ReportTemplate = ({ data }: { data: ReportData }) => {
                             {data.ownershipData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={200}>
                                     <RechartsPieChart>
-                                        <RechartsTooltip formatter={(value, name, props) => [`${(props.payload.value / data.ownershipData.reduce((acc, p) => acc + p.value, 0) * 100).toFixed(1)}%`, name]} />
+                                         <RechartsTooltip formatter={(value, name, props) => {
+                                            const total = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
+                                            const percentage = total > 0 ? ((value as number / total) * 100).toFixed(1) : 0;
+                                            return [`${percentage}%`, name];
+                                        }} />
                                         <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
                                             {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                         </Pie>
@@ -561,7 +565,7 @@ export default function ReportCenterPage() {
             )}
             
             {reportData && (
-                <Card>
+                 <Card>
                     <CardHeader>
                         <CardTitle>AI Executive Summary</CardTitle>
                         <CardDescription>Generate an AI-powered summary of the report's key findings.</CardDescription>
@@ -623,4 +627,5 @@ export default function ReportCenterPage() {
         </div>
     );
 }
+
 
