@@ -308,78 +308,80 @@ const InvestorDiscoveryTab = () => {
                  </Card>
             </form>
              <div className="lg:col-span-3">
-                 <Card className="min-h-[400px] interactive-lift">
+                 <Card className="min-h-[400px] interactive-lift flex flex-col">
                     <CardHeader><CardTitle>AI-Curated Funding Opportunities</CardTitle></CardHeader>
-                     <CardContent>
-                        {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Scanning our network...</p></div>}
-                        {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><SearchIcon className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your investor & grant matches will appear here.</p></div>}
-                        {result && (
-                          <div className="space-y-6 animate-in fade-in-50">
-                            {result.investors?.length > 0 && (
-                                <Accordion type="multiple" className="w-full space-y-4">
-                                    <h3 className="text-lg font-semibold text-center">Investor Matches</h3>
-                                    {result.investors.map((investor, i) => (
-                                        <AccordionItem key={i} value={`item-${i}`} className="border-0">
-                                            <Card>
-                                                <AccordionTrigger className="p-4 hover:no-underline text-left">
-                                                    <div className="flex-1 space-y-1">
-                                                        <p className="font-semibold">{investor.firmName}</p>
-                                                        <p className="text-sm text-muted-foreground">{investor.chequeSize}</p>
-                                                    </div>
-                                                </AccordionTrigger>
-                                                <AccordionContent className="p-4 pt-0">
-                                                    <div className="space-y-3">
-                                                        <div className="flex flex-wrap gap-2">{investor.sectorFocus.split(',').map(s => <Badge key={s} variant="secondary">{s.trim()}</Badge>)}</div>
-                                                        <div>
-                                                            <h4 className="text-xs font-semibold mb-1">KEY PARTNERS</h4>
-                                                            <div className="flex flex-col gap-1.5">
-                                                                {investor.keyPartners.map(p => <a key={p.name} href={p.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm flex items-center gap-1.5 hover:underline text-blue-600"><Linkedin className="w-3.5 h-3.5"/>{p.name}</a>)}
+                     <CardContent className="flex-1 min-h-0">
+                        <ScrollArea className="h-[600px] pr-4 -mr-4">
+                            {isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8"><Loader2 className="w-10 h-10 animate-spin text-primary" /><p className="mt-4 font-semibold">Scanning our network...</p></div>}
+                            {!result && !isSubmitting && <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg"><SearchIcon className="w-12 h-12 text-primary/20 mb-4" /><p className="font-medium">Your investor & grant matches will appear here.</p></div>}
+                            {result && (
+                            <div className="space-y-6 animate-in fade-in-50">
+                                {result.investors?.length > 0 && (
+                                    <Accordion type="multiple" className="w-full space-y-4">
+                                        <h3 className="text-lg font-semibold text-center">Investor Matches</h3>
+                                        {result.investors.map((investor, i) => (
+                                            <AccordionItem key={i} value={`item-${i}`} className="border-0">
+                                                <Card>
+                                                    <AccordionTrigger className="p-4 hover:no-underline text-left">
+                                                        <div className="flex-1 space-y-1">
+                                                            <p className="font-semibold">{investor.firmName}</p>
+                                                            <p className="text-sm text-muted-foreground">{investor.chequeSize}</p>
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="p-4 pt-0">
+                                                        <div className="space-y-3">
+                                                            <div className="flex flex-wrap gap-2">{investor.sectorFocus.split(',').map(s => <Badge key={s} variant="secondary">{s.trim()}</Badge>)}</div>
+                                                            <div>
+                                                                <h4 className="text-xs font-semibold mb-1">KEY PARTNERS</h4>
+                                                                <div className="flex flex-col gap-1.5">
+                                                                    {investor.keyPartners.map(p => <a key={p.name} href={p.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm flex items-center gap-1.5 hover:underline text-blue-600"><Linkedin className="w-3.5 h-3.5"/>{p.name}</a>)}
+                                                                </div>
+                                                            </div>
+                                                            {investor.portfolio && investor.portfolio.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-xs font-semibold mb-1">NOTABLE PORTFOLIO</h4>
+                                                                <p className="text-sm text-muted-foreground">{investor.portfolio.join(', ')}</p>
+                                                            </div>
+                                                            )}
+                                                            <div className="flex gap-2 pt-2 border-t">
+                                                                <Button asChild size="sm" variant="outline"><a href={investor.website} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 w-3.5 h-3.5"/>Website</a></Button>
+                                                                <Button asChild size="sm" variant="outline"><a href={investor.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="mr-2 w-3.5 h-3.5"/>LinkedIn</a></Button>
                                                             </div>
                                                         </div>
-                                                        {investor.portfolio && investor.portfolio.length > 0 && (
-                                                          <div>
-                                                            <h4 className="text-xs font-semibold mb-1">NOTABLE PORTFOLIO</h4>
-                                                            <p className="text-sm text-muted-foreground">{investor.portfolio.join(', ')}</p>
-                                                          </div>
-                                                        )}
-                                                        <div className="flex gap-2 pt-2 border-t">
-                                                            <Button asChild size="sm" variant="outline"><a href={investor.website} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 w-3.5 h-3.5"/>Website</a></Button>
-                                                            <Button asChild size="sm" variant="outline"><a href={investor.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="mr-2 w-3.5 h-3.5"/>LinkedIn</a></Button>
-                                                        </div>
-                                                    </div>
-                                                </AccordionContent>
+                                                    </AccordionContent>
+                                                </Card>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
+                                )}
+                                {result.grants && result.grants.length > 0 && (
+                                    <div className="space-y-4">
+                                        <Separator />
+                                        <h3 className="text-lg font-semibold text-center">Relevant Grants & Schemes</h3>
+                                        {result.grants.map((grant, i) => (
+                                            <Card key={i}>
+                                                <CardHeader>
+                                                    <CardTitle className="text-base">{grant.name}</CardTitle>
+                                                    <CardDescription>{grant.description}</CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm font-semibold mb-1">Eligibility Summary:</p>
+                                                    <p className="text-sm text-muted-foreground">{grant.eligibilitySummary}</p>
+                                                </CardContent>
+                                                <CardFooter>
+                                                    <Button asChild variant="link" className="p-0 h-auto">
+                                                        <a href={grant.link} target="_blank" rel="noopener noreferrer">
+                                                            Official Link <ExternalLink className="ml-2 w-3.5 h-3.5" />
+                                                        </a>
+                                                    </Button>
+                                                </CardFooter>
                                             </Card>
-                                        </AccordionItem>
-                                    ))}
-                                </Accordion>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                             )}
-                            {result.grants && result.grants.length > 0 && (
-                                <div className="space-y-4">
-                                    <Separator />
-                                    <h3 className="text-lg font-semibold text-center">Relevant Grants & Schemes</h3>
-                                    {result.grants.map((grant, i) => (
-                                        <Card key={i}>
-                                            <CardHeader>
-                                                <CardTitle className="text-base">{grant.name}</CardTitle>
-                                                <CardDescription>{grant.description}</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm font-semibold mb-1">Eligibility Summary:</p>
-                                                <p className="text-sm text-muted-foreground">{grant.eligibilitySummary}</p>
-                                            </CardContent>
-                                            <CardFooter>
-                                                <Button asChild variant="link" className="p-0 h-auto">
-                                                    <a href={grant.link} target="_blank" rel="noopener noreferrer">
-                                                        Official Link <ExternalLink className="ml-2 w-3.5 h-3.5" />
-                                                    </a>
-                                                </Button>
-                                            </CardFooter>
-                                        </Card>
-                                    ))}
-                                </div>
-                            )}
-                          </div>
-                        )}
+                        </ScrollArea>
                      </CardContent>
                  </Card>
             </div>
@@ -548,4 +550,3 @@ export default function PlaybookPage() {
         </div>
     );
 }
-
