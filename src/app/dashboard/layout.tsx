@@ -74,6 +74,7 @@ import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal"
 import { formatDistanceToNow } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
+import { FounderQuoteBanner } from './founder-quote-banner';
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -677,6 +678,7 @@ function AppShell({ children }: { children: ReactNode }) {
                 className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto animate-in fade-in-50"
             >
                 <BetaBanner />
+                <FounderQuoteBanner />
                 {childrenWithLang}
             </main>
             <BottomNavBar lang={lang} setLang={handleLanguageChange} onLockedFeatureClick={handleLockedFeatureClick}/>
