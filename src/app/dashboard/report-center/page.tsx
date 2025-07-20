@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, type ReactNode } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, FileText, Download, Sparkles, AlertTriangle, ShieldCheck, CheckCircle, PieChart as PieChartIcon, CalendarClock, TrendingUp, GanttChartSquare } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
-import type { Company, DocumentAnalysis, HistoricalFinancialData, GenerateDDChecklistOutput } from '@/lib/types';
+import type { Company, DocumentAnalysis, HistoricalFinancialData, GenerateDDChecklistOutput, ChecklistItem, ChecklistCategory } from '@/lib/types';
 import { generateFilings } from '@/ai/flows/filing-generator-flow';
 import { generateReportInsights } from '@/ai/flows/generate-report-insights-flow';
 import { format, startOfToday, parseISO } from 'date-fns';
@@ -51,311 +51,200 @@ const formatCurrency = (num: number, region = 'India') => {
   return new Intl.NumberFormat(region === 'India' ? 'en-IN' : 'en-US', options).format(num);
 }
 
+const ReportPageShell = ({ children, pageNumber, totalPages, clientName }: { children: ReactNode, pageNumber: number, totalPages: number, clientName: string }) => {
+    const Logo = () => (
+      <Image 
+        src="https://i.ibb.co/yc2DGvPk/2-2.png"
+        alt="Jurifly Logo"
+        width={100}
+        height={21}
+        className="h-12 w-auto"
+        data-ai-hint="logo company"
+      />
+    );
+    return (
+        <div className="bg-white text-gray-800 font-sans p-10 shadow-lg report-page" style={{ width: '800px', minHeight: '1120px', display: 'flex', flexDirection: 'column' }}>
+            <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
+                <Logo />
+                <div className="text-right">
+                    <h1 style={{fontSize: '28px'}} className="font-bold text-gray-800">Compliance Health Report</h1>
+                    <p style={{fontSize: '16px'}} className="font-medium text-gray-600">{clientName}</p>
+                </div>
+            </header>
+            <main className="mt-10 flex-grow">
+                {children}
+            </main>
+            <footer className="text-sm text-gray-400 border-t mt-12 pt-4 text-center">
+                <p>Page {pageNumber} of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
+                <p className="text-xs mt-1">This report is AI-generated and for informational purposes only. Please verify all data.</p>
+            </footer>
+        </div>
+    );
+};
+
 const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: ReportData, executiveSummary?: string | null, diligenceProgress: number }) => {
     const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
     const scoreColor = data.hygieneScore > 80 ? 'text-green-600' : data.hygieneScore > 60 ? 'text-orange-500' : 'text-red-600';
     
+    // --- Pagination Logic ---
+    const ITEMS_PER_PAGE = 15; // Adjust as needed
+    const chunkArray = (arr: any[], size: number) => {
+        const chunkedArr = [];
+        for (let i = 0; i < arr.length; i += size) {
+            chunkedArr.push(arr.slice(i, i + size));
+        }
+        return chunkedArr;
+    };
+    
+    const overduePages = chunkArray(data.overdueFilings, ITEMS_PER_PAGE);
+    const upcomingPages = chunkArray(data.upcomingFilings, ITEMS_PER_PAGE);
     const diligenceChecklist = data.diligenceChecklist?.checklist || [];
-    const checklistMidpoint = Math.ceil(diligenceChecklist.length / 2);
-    const diligencePage1 = diligenceChecklist.slice(0, checklistMidpoint);
-    const diligencePage2 = diligenceChecklist.slice(checklistMidpoint);
 
-    let totalPages = 2;
-    if(data.diligenceChecklist && diligencePage1.length > 0) totalPages++;
-    if(data.diligenceChecklist && diligencePage2.length > 0) totalPages++;
+    const DILIGENCE_CATEGORIES_PER_PAGE = 4;
+    const diligencePages = chunkArray(diligenceChecklist, DILIGENCE_CATEGORIES_PER_PAGE);
+
+    let totalPages = 1 + overduePages.length + upcomingPages.length + diligencePages.length;
     if(executiveSummary) totalPages++;
-
-    const Logo = () => (
-      <>
-        <Image 
-          src="https://i.ibb.co/yc2DGvPk/2-2.png"
-          alt="Jurifly Logo"
-          width={114}
-          height={24}
-          className="h-20 w-auto text-primary"
-          data-ai-hint="logo company"
-        />
-      </>
-    );
+    let currentPageNum = 1;
 
     return (
         <div id="report-content-for-pdf" className="space-y-4">
-            {/* Page 1 */}
-            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
-                <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                    <div className="flex items-center gap-3">
-                        <Logo />
+            {/* Page 1: Overview */}
+            <ReportPageShell pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
+                 <div className="grid grid-cols-3 gap-8 mb-10">
+                     <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border">
+                        <h3 style={{fontSize: '18px'}} className="font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
+                        <div className={`font-bold ${scoreColor}`} style={{fontSize: '72px'}}>{data.hygieneScore}</div>
+                        <p style={{fontSize: '16px'}} className="font-medium text-gray-500">Out of 100</p>
                     </div>
-                    <div className="text-right">
-                        <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Compliance Health Report</h1>
-                        <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
-                    </div>
-                </header>
-                <main className="mt-12 space-y-12">
-                     <div className="grid grid-cols-3 gap-8">
-                         <div className="col-span-1 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-lg border">
-                            <h3 style={{fontSize: '18px'}} className="font-semibold text-gray-600 mb-2">Legal Hygiene Score</h3>
-                            <div className={`text-6xl font-bold ${scoreColor}`} style={{fontSize: '72px'}}>{data.hygieneScore}</div>
-                            <p style={{fontSize: '16px'}} className="font-medium text-gray-500">Out of 100</p>
-                        </div>
-                        <div className="col-span-2 bg-gray-50 p-8 rounded-lg border flex flex-col justify-center">
-                            <h3 style={{fontSize: '24px'}} className="font-semibold text-gray-700 mb-6">Score Breakdown</h3>
-                            <div className="space-y-6">
-                                <div>
-                                    <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
-                                    <Progress value={data.filingPerformance} className="h-3" />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
-                                     <Progress value={data.profileCompleteness} className="h-3"/>
-                                </div>
+                    <div className="col-span-2 bg-gray-50 p-8 rounded-xl border flex flex-col justify-center">
+                        <h3 style={{fontSize: '24px'}} className="font-semibold text-gray-700 mb-6">Score Breakdown</h3>
+                        <div className="space-y-6">
+                            <div>
+                                <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Filing Performance</span><span className="font-semibold text-gray-800">{data.filingPerformance.toFixed(0)}%</span></div>
+                                <Progress value={data.filingPerformance} className="h-3" />
+                            </div>
+                            <div>
+                                <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Profile Completeness</span><span className="font-semibold text-gray-800">{data.profileCompleteness.toFixed(0)}%</span></div>
+                                 <Progress value={data.profileCompleteness} className="h-3"/>
                             </div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-8">
-                        <div className="p-6 border rounded-lg bg-white" data-jspdf-ignore="true">
-                            <h3 className="text-2xl font-semibold text-gray-700 mb-4 flex items-center gap-2" style={{fontSize: '24px'}}><PieChartIcon className="w-6 h-6"/> Ownership Structure</h3>
-                            {data.ownershipData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={250}>
-                                    <RechartsPieChart>
-                                         <RechartsTooltip formatter={(value, name, props) => {
-                                            const total = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
-                                            const percentage = total > 0 ? ((props.payload.value / total) * 100).toFixed(1) : 0;
-                                            return [`${percentage}% (${(props.payload.value || 0).toLocaleString()} shares)`, name];
-                                        }} />
-                                        <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3}>
-                                            {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                        </Pie>
-                                        <Legend iconSize={12} wrapperStyle={{ fontSize: '16px', paddingTop: '20px' }}/>
-                                    </RechartsPieChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <p className="text-lg text-center text-gray-500 py-10" style={{fontSize: '18px'}}>No cap table data available.</p>
-                            )}
-                        </div>
-                         <div className="p-6 border rounded-lg bg-white flex flex-col">
-                            <h3 className="text-2xl font-semibold text-gray-700 mb-4" style={{fontSize: '24px'}}>Financial Snapshot</h3>
-                            <div className="flex-1 flex flex-col justify-center space-y-6">
-                                <div className="text-center p-4 bg-gray-50 rounded-md">
-                                    <p className="text-lg font-medium text-gray-500" style={{fontSize: '18px'}}>{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
-                                    <p className={`text-4xl font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`} style={{fontSize: '36px'}}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
-                                </div>
-                                <div className="text-center p-4 bg-gray-50 rounded-md">
-                                    <p className="text-lg font-medium text-gray-500" style={{fontSize: '18px'}}>Estimated Runway</p>
-                                    <p className="text-4xl font-bold" style={{fontSize: '36px'}}>{data.financials.runway}</p>
-                                </div>
+                </div>
+                <div className="grid grid-cols-2 gap-8">
+                    <div className="p-6 border rounded-xl bg-white" data-jspdf-ignore="true">
+                        <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2" style={{fontSize: '24px'}}><PieChartIcon className="w-6 h-6"/> Ownership</h3>
+                        {data.ownershipData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={250}>
+                                <RechartsPieChart>
+                                     <RechartsTooltip formatter={(value, name, props) => {
+                                        const total = data.ownershipData.reduce((acc, p) => acc + p.value, 0);
+                                        const percentage = total > 0 ? ((props.payload.value / total) * 100).toFixed(1) : 0;
+                                        return [`${percentage}% (${(props.payload.value || 0).toLocaleString()} shares)`, name];
+                                    }} />
+                                    <Pie data={data.ownershipData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3}>
+                                        {data.ownershipData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                    </Pie>
+                                    <Legend iconSize={12} wrapperStyle={{ fontSize: '16px', paddingTop: '20px' }}/>
+                                </RechartsPieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <p className="text-center text-gray-500 py-10" style={{fontSize: '18px'}}>No cap table data available.</p>
+                        )}
+                    </div>
+                     <div className="p-6 border rounded-xl bg-white flex flex-col">
+                        <h3 className="font-semibold text-gray-700 mb-4" style={{fontSize: '24px'}}>Financial Snapshot</h3>
+                        <div className="flex-1 flex flex-col justify-center space-y-6">
+                            <div className="text-center p-4 bg-gray-50 rounded-md">
+                                <p className="font-medium text-gray-500" style={{fontSize: '18px'}}>{data.financials.burnRate > 0 ? "Net Monthly Burn" : "Net Monthly Profit"}</p>
+                                <p className={`font-bold ${data.financials.burnRate > 0 ? 'text-red-600' : 'text-green-600'}`} style={{fontSize: '36px'}}>{formatCurrency(Math.abs(data.financials.burnRate))}</p>
+                            </div>
+                            <div className="text-center p-4 bg-gray-50 rounded-md">
+                                <p className="font-medium text-gray-500" style={{fontSize: '18px'}}>Estimated Runway</p>
+                                <p className="font-bold" style={{fontSize: '36px'}}>{data.financials.runway}</p>
                             </div>
                         </div>
                     </div>
-                </main>
-                <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
-                    <p>Page 1 of {totalPages} | Generated on {format(new Date(), 'PPpp')} by Jurifly AI</p>
-                </footer>
-            </div>
+                </div>
+            </ReportPageShell>
             
-            {/* Page 2 */}
-            <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
-                <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                    <Logo />
-                    <div className="text-right">
-                        <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Compliance & Financials</h1>
-                        <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
-                    </div>
-                </header>
-                <main className="mt-12 space-y-12">
+            {/* Overdue Items Pages */}
+            {overduePages.map((pageItems, index) => (
+                <ReportPageShell key={`overdue-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section>
                         <h2 className="text-3xl font-semibold text-red-700 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <AlertTriangle/> Overdue Filings ({data.overdueFilings.length})
                         </h2>
-                        {data.overdueFilings.length > 0 ? (
-                            <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="p-3 font-semibold">Task</th>
-                                        <th className="p-3 font-semibold text-right">Due Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.overdueFilings.map((f: any) => (
-                                        <tr key={f.id} className="border-b">
-                                            <td className="p-3">{f.text}</td>
-                                            <td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg" style={{fontSize: '18px'}}>No overdue tasks. Well done!</p>}
+                        <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
+                            <thead className="bg-gray-50"><tr><th className="p-3 font-semibold">Task</th><th className="p-3 font-semibold text-right">Due Date</th></tr></thead>
+                            <tbody>{pageItems.map((f: any) => (<tr key={f.id} className="border-b"><td className="p-3">{f.text}</td><td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td></tr>))}</tbody>
+                        </table>
                     </section>
+                </ReportPageShell>
+            ))}
+
+            {/* Upcoming Items Pages */}
+            {upcomingPages.map((pageItems, index) => (
+                 <ReportPageShell key={`upcoming-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
                     <section>
                         <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
                            <CalendarClock /> Upcoming Filings (Next 30 Days) ({data.upcomingFilings.length})
                         </h2>
-                         {data.upcomingFilings.length > 0 ? (
-                             <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="p-3 font-semibold">Task</th>
-                                        <th className="p-3 font-semibold text-right">Due Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.upcomingFilings.map((f: any) => (
-                                        <tr key={f.id} className="border-b">
-                                            <td className="p-3">{f.text}</td>
-                                            <td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg" style={{fontSize: '18px'}}>No filings due in the next 30 days.</p>}
+                         <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
+                            <thead className="bg-gray-50"><tr><th className="p-3 font-semibold">Task</th><th className="p-3 font-semibold text-right">Due Date</th></tr></thead>
+                            <tbody>{pageItems.map((f: any) => (<tr key={f.id} className="border-b"><td className="p-3">{f.text}</td><td className="p-3 text-right font-mono">{format(new Date(f.dueDate + 'T00:00:00'), 'dd-MMM-yyyy')}</td></tr>))}</tbody>
+                        </table>
                     </section>
-                     <section>
-                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
-                           <TrendingUp /> Year-over-Year Financials
-                        </h2>
-                         {data.financials.historicalData.length > 0 ? (
-                            <div className="space-y-6">
-                                <table className="w-full text-lg text-left" style={{fontSize: '16px'}}>
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="p-3 font-semibold">Financial Year</th>
-                                            <th className="p-3 font-semibold text-right">Total Revenue</th>
-                                            <th className="p-3 font-semibold text-right">Total Expenses</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.financials.historicalData.sort((a, b) => a.year.localeCompare(b.year)).map((item) => (
-                                            <tr key={item.year} className="border-b">
-                                                <td className="p-3 font-medium">{item.year}</td>
-                                                <td className="p-3 text-right font-mono text-green-700">{formatCurrency(item.revenue)}</td>
-                                                <td className="p-3 text-right font-mono text-red-700">{formatCurrency(item.expenses)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                <div className="h-80 w-full pt-4" data-jspdf-ignore="true">
-                                     <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={data.financials.historicalData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="year" fontSize={16} tickLine={false} axisLine={false} />
-                                            <YAxis fontSize={16} tickFormatter={(val) => `₹${Number(val)/100000}L`} tickLine={false} axisLine={false}/>
-                                            <RechartsTooltip formatter={(value) => formatCurrency(Number(value))} wrapperStyle={{ fontSize: '16px' }}/>
-                                            <Legend wrapperStyle={{fontSize: '16px'}}/>
-                                            <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={3} name="Revenue" />
-                                            <Line type="monotone" dataKey="expenses" stroke="#dc2626" strokeWidth={3} name="Expenses" />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                         ) : <p className="text-lg text-gray-600 p-4 bg-gray-50 rounded-lg" style={{fontSize: '18px'}}>No historical financial data available for analysis.</p>}
-                    </section>
-                </main>
-                <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
-                     <p>Page 2 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
-                </footer>
-            </div>
-
-            {/* Page 3 - Due Diligence Part 1 */}
-            {data.diligenceChecklist && diligencePage1.length > 0 && (
-                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
-                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                        <Logo />
-                        <div className="text-right">
-                            <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Due Diligence Appendix (1/2)</h1>
-                            <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
-                        </div>
-                    </header>
-                    <main className="mt-12">
-                        <section className="mb-8">
-                            <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
-                               <GanttChartSquare /> {data.diligenceChecklist.reportTitle}
-                            </h2>
-                            <div className="p-6 bg-gray-50 rounded-lg border">
-                                <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
-                                <Progress value={diligenceProgress} className="h-3"/>
-                            </div>
-                        </section>
-                        <div style={{ columnCount: 2, columnGap: '2rem' }}>
-                            {diligencePage1.map((category, index) => (
-                                <div key={index} className="mb-8" style={{ breakInside: 'avoid' }}>
-                                    <h3 style={{fontSize: '20px'}} className="font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
-                                    <ul className="space-y-2">
-                                        {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-3 text-lg" style={{fontSize: '16px'}}>
-                                                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                                <span>{item.task}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                    </main>
-                    <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
-                        <p>Page 3 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
-                    </footer>
-                </div>
-            )}
+                </ReportPageShell>
+            ))}
             
-            {/* Page 4 - Due Diligence Part 2 */}
-            {data.diligenceChecklist && diligencePage2.length > 0 && (
-                 <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
-                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                        <Logo />
-                        <div className="text-right">
-                            <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">Due Diligence Appendix (2/2)</h1>
-                            <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
+            {/* Diligence Checklist Pages */}
+            {diligencePages.map((pageCategories, index) => (
+                 <ReportPageShell key={`diligence-${index}`} pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
+                    <section className="mb-8">
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
+                           <GanttChartSquare /> {data.diligenceChecklist!.reportTitle}
+                        </h2>
+                        <div className="p-6 bg-gray-50 rounded-lg border">
+                            <div className="flex justify-between text-lg mb-2" style={{fontSize: '18px'}}><span className="font-medium text-gray-600">Overall Readiness</span><span className="font-semibold text-gray-800">{diligenceProgress}%</span></div>
+                            <Progress value={diligenceProgress} className="h-3"/>
                         </div>
-                    </header>
-                    <main className="mt-12">
-                        <div style={{ columnCount: 2, columnGap: '2rem' }}>
-                            {diligencePage2.map((category, index) => (
-                                <div key={index} className="mb-8" style={{ breakInside: 'avoid' }}>
-                                    <h3 style={{fontSize: '20px'}} className="font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
-                                    <ul className="space-y-2">
-                                        {category.items.map(item => (
-                                            <li key={item.id} className="flex items-center gap-3 text-lg" style={{fontSize: '16px'}}>
-                                                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                                <span>{item.task}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                    </main>
-                    <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
-                        <p>Page 4 of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
-                    </footer>
-                </div>
-            )}
+                    </section>
+                     <div style={{ columnCount: 2, columnGap: '2rem' }}>
+                        {pageCategories.map((category: ChecklistCategory) => (
+                            <div key={category.category} className="mb-8" style={{ breakInside: 'avoid' }}>
+                                <h3 style={{fontSize: '20px'}} className="font-semibold text-gray-700 mb-3 border-b pb-2">{category.category}</h3>
+                                <ul className="space-y-2">
+                                    {category.items.map((item: ChecklistItem) => (
+                                        <li key={item.id} className="flex items-center gap-3 text-lg" style={{fontSize: '16px'}}>
+                                            <div className={`w-5 h-5 rounded-full flex-shrink-0 ${item.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                            <span>{item.task}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                </ReportPageShell>
+            ))}
 
-            {/* Page 5 - AI Summary */}
+            {/* AI Summary Page */}
             {executiveSummary && (
-                <div className="bg-white text-gray-800 font-sans p-10 shadow-2xl report-page" style={{ width: '800px' }}>
-                    <header className="flex justify-between items-center border-b-2 border-gray-200 pb-4">
-                        <Logo />
-                        <div className="text-right">
-                            <h1 style={{fontSize: '32px'}} className="font-bold text-gray-800">AI Executive Summary</h1>
-                            <p style={{fontSize: '18px'}} className="font-medium text-gray-600">{data.client.name}</p>
-                        </div>
-                    </header>
-                    <main className="mt-12">
-                        <div className="prose prose-xl max-w-none" style={{fontSize: '18px'}}>
-                            <ReactMarkdown
-                                components={{
-                                    ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-4" {...props} />,
-                                    li: ({ node, ...props }) => <li className="flex items-start gap-3 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
-                                }}
-                            >
-                                {executiveSummary}
-                            </ReactMarkdown>
-                        </div>
-                    </main>
-                    <footer className="text-base text-gray-400 border-t mt-16 pt-6 text-center">
-                        <p>Page {totalPages} of {totalPages} | This report is AI-generated and for informational purposes only. Please verify all data.</p>
-                    </footer>
-                </div>
+                <ReportPageShell pageNumber={currentPageNum++} totalPages={totalPages} clientName={data.client.name}>
+                     <h2 className="text-3xl font-semibold text-gray-800 mb-4 flex items-center gap-3" style={{fontSize: '28px'}}>
+                       <Sparkles className="text-primary"/> AI Executive Summary
+                    </h2>
+                    <div className="prose prose-xl max-w-none" style={{fontSize: '18px'}}>
+                        <ReactMarkdown
+                            components={{
+                                ul: ({ node, ...props }) => <ul className="list-none p-0 space-y-4" {...props} />,
+                                li: ({ node, ...props }) => <li className="flex items-start gap-3 before:content-none p-0 m-0"><span className="text-blue-600 mt-1.5">&bull;</span><div className="m-0 flex-1" {...props} /></li>,
+                            }}
+                        >
+                            {executiveSummary}
+                        </ReactMarkdown>
+                    </div>
+                </ReportPageShell>
             )}
         </div>
     );
@@ -514,7 +403,6 @@ export default function ReportCenterPage() {
             logging: false,
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         
         if (i > 0) {
@@ -599,7 +487,7 @@ export default function ReportCenterPage() {
             )}
 
             {reportData && (
-                 <Card>
+                <Card>
                     <CardHeader>
                         <CardTitle>AI Executive Summary</CardTitle>
                         <CardDescription>Generate an AI-powered summary of the report's key findings.</CardDescription>
@@ -662,7 +550,7 @@ export default function ReportCenterPage() {
                             Download PDF
                         </Button>
                     </CardHeader>
-                    <CardContent className="flex justify-center bg-gray-200 p-8 overflow-y-auto max-h-[100vh]">
+                    <CardContent className="flex justify-center bg-gray-200 dark:bg-gray-800 p-8 overflow-x-auto">
                         {/* Hidden div for PDF generation, ensures light theme */}
                         <div className="absolute -left-[9999px] -top-[9999px]">
                             <div id="report-content-for-pdf-download" className="light">
@@ -670,7 +558,7 @@ export default function ReportCenterPage() {
                             </div>
                         </div>
                         {/* Visible preview div */}
-                        <div id="report-preview-container">
+                        <div id="report-preview-container" className="light">
                              <ReportTemplate data={reportData} executiveSummary={null} diligenceProgress={diligenceProgress} />
                         </div>
                     </CardContent>
@@ -680,4 +568,3 @@ export default function ReportCenterPage() {
         </div>
     );
 }
-
