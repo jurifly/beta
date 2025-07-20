@@ -21,26 +21,40 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from 'next/image';
+import { Textarea } from "@/components/ui/textarea";
+
+const founderSchema = z.object({
+  companyName: z.string().optional(),
+  complianceHeadache: z.string().optional(),
+  hasCA: z.enum(['yes', 'no']),
+});
+
+const caSchema = z.object({
+  firmName: z.string().min(1, "Firm name is required."),
+  experience: z.coerce.number().min(0, "Experience cannot be negative."),
+  services: z.string().min(1, "Please select a service."),
+  hasClients: z.enum(['yes', 'no']),
+});
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  legalRegion: z.string({ required_error: "Please select a region." }).min(1, "Please select a region."),
-  role: z.enum(["Founder", "CA", "Legal Advisor", "Enterprise"], { required_error: "Please select a role." }),
-  accessPass: z.string().optional(),
+  role: z.enum(["Founder", "CA"]),
+  referralCode: z.string().optional(),
+  founderDetails: founderSchema.optional(),
+  caDetails: caSchema.optional(),
+}).refine(data => {
+    if (data.role === 'Founder') return !!data.founderDetails;
+    if (data.role === 'CA') return !!data.caDetails;
+    return false;
+}, {
+    message: "Role-specific details are required.",
+    path: ["founderDetails"], // path doesn't matter much as this is a form-level error
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
 
-const legalRegions = [
-    { value: 'India', label: 'India' },
-    { value: 'USA', label: 'United States' },
-    { value: 'UK', label: 'United Kingdom' },
-    { value: 'Singapore', label: 'Singapore' },
-    { value: 'Australia', label: 'Australia' },
-    { value: 'Canada', label: 'Canada' },
-]
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 const betaRoles: { id: UserRole, label: string }[] = [
     { id: "Founder", label: "Founder" },
@@ -75,10 +89,12 @@ export default function RegisterPage() {
   const { toast } = useToast();
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, control } = useForm<RegisterFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, control, watch } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: { role: 'Founder' }
   });
+  
+  const selectedRole = watch('role');
 
   useEffect(() => {
     const refId = searchParams.get('ref');
@@ -96,7 +112,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const refId = localStorage.getItem('referralId');
-      await signUpWithEmailAndPassword(data.email, data.password, data.name, data.legalRegion, data.role, refId || undefined, data.accessPass);
+      // Pass the role-specific details to your auth function if needed
+      // For now, we're just signing up with the core details
+      await signUpWithEmailAndPassword(data.email, data.password, data.name, 'India', data.role, refId || undefined, data.referralCode);
       localStorage.removeItem('referralId'); // Clear after use
     } catch (error: any) {
         toast({
@@ -145,6 +163,8 @@ export default function RegisterPage() {
                   />
                    {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
               </div>
+
+              {/* Common Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="name">Full Name</Label>
@@ -162,32 +182,90 @@ export default function RegisterPage() {
                 <Input id="password" type="password" {...register("password")} />
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
+              
+              {/* Founder-Specific Fields */}
+              {selectedRole === 'Founder' && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50 animate-in fade-in-50">
+                   <div className="space-y-1">
+                      <Label htmlFor="founderDetails.companyName">Startup/Company Name (optional)</Label>
+                      <Input id="founderDetails.companyName" {...register("founderDetails.companyName")} />
+                  </div>
+                  <div className="space-y-1">
+                      <Label htmlFor="founderDetails.complianceHeadache">Biggest compliance/legal headache? (optional)</Label>
+                      <Textarea id="founderDetails.complianceHeadache" {...register("founderDetails.complianceHeadache")} placeholder="e.g., Managing TDS, understanding contracts..." />
+                  </div>
+                  <div className="space-y-2">
+                      <Label>Do you already have a CA?</Label>
+                      <Controller
+                          name="founderDetails.hasCA"
+                          control={control}
+                          render={({ field }) => (
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4">
+                               <Label className="flex items-center gap-2 font-normal"><RadioGroupItem value="yes" /> Yes</Label>
+                               <Label className="flex items-center gap-2 font-normal"><RadioGroupItem value="no" /> No</Label>
+                            </RadioGroup>
+                          )}
+                      />
+                  </div>
+                </div>
+              )}
+              
+              {/* CA-Specific Fields */}
+              {selectedRole === 'CA' && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50 animate-in fade-in-50">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="caDetails.firmName">Firm Name / Independent</Label>
+                            <Input id="caDetails.firmName" {...register("caDetails.firmName")} />
+                            {errors.caDetails?.firmName && <p className="text-sm text-destructive">{errors.caDetails.firmName.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="caDetails.experience">Years of Experience</Label>
+                            <Input id="caDetails.experience" type="number" {...register("caDetails.experience")} />
+                            {errors.caDetails?.experience && <p className="text-sm text-destructive">{errors.caDetails.experience.message}</p>}
+                        </div>
+                    </div>
+                     <div className="space-y-1">
+                        <Label>Services You Offer</Label>
+                        <Controller
+                            name="caDetails.services"
+                            control={control}
+                            render={({ field }) => (
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger><SelectValue placeholder="Select primary service..."/></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Income Tax Filings">Income Tax Filings</SelectItem>
+                                    <SelectItem value="GST Filings & Compliance">GST Filings & Compliance</SelectItem>
+                                    <SelectItem value="Company Secretarial & ROC">Company Secretarial & ROC</SelectItem>
+                                    <SelectItem value="Audit & Assurance">Audit & Assurance</SelectItem>
+                                    <SelectItem value="Fundraising & Valuation">Fundraising & Valuation</SelectItem>
+                                </SelectContent>
+                               </Select>
+                            )}
+                        />
+                         {errors.caDetails?.services && <p className="text-sm text-destructive">{errors.caDetails.services.message}</p>}
+                    </div>
+                     <div className="space-y-2">
+                      <Label>Do you have clients you want to onboard?</Label>
+                       <Controller
+                          name="caDetails.hasClients"
+                          control={control}
+                          render={({ field }) => (
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4">
+                               <Label className="flex items-center gap-2 font-normal"><RadioGroupItem value="yes" /> Yes</Label>
+                               <Label className="flex items-center gap-2 font-normal"><RadioGroupItem value="no" /> Not yet</Label>
+                            </RadioGroup>
+                          )}
+                      />
+                  </div>
+                </div>
+              )}
+
                <div className="space-y-1">
-                <Label>Legal Region</Label>
-                  <Controller
-                      name="legalRegion"
-                      control={control}
-                      render={({ field }) => (
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Select your country..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {legalRegions.map(region => (
-                                      <SelectItem key={region.value} value={region.value}>{region.label}</SelectItem>
-                                  ))}
-                              </SelectContent>
-                          </Select>
-                      )}
-                  />
-                {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
-              </div>
-               <div className="space-y-1">
-                  <Label htmlFor="accessPass" className="flex items-center gap-2">
-                      Access Pass <span className="text-xs text-muted-foreground">(Optional)</span>
-                      <KeyRound className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="referralCode" className="flex items-center gap-2">
+                      Referral Code <span className="text-xs text-muted-foreground">(Optional)</span>
                   </Label>
-                  <Input id="accessPass" placeholder="Enter code for special access" {...register("accessPass")} />
+                  <Input id="referralCode" placeholder="Enter code if you have one" {...register("referralCode")} />
               </div>
                <div className="items-top flex space-x-2">
                   <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />
