@@ -193,7 +193,7 @@ const KeyFeaturesSection = () => {
                         </TableHeader>
                         <TableBody>
                             {features.map((feature, i) => (
-                                <TableRow key={i}>
+                                <TableRow key={i} className="interactive-lift">
                                     <TableCell className="font-medium">{feature.name}</TableCell>
                                     <TableCell>{feature.description}</TableCell>
                                 </TableRow>
@@ -223,7 +223,7 @@ const FaqSection = () => {
                 </div>
                 <Accordion type="single" collapsible className="w-full">
                     {faqs.map((faq, i) => (
-                        <AccordionItem value={`item-${i}`} key={i}>
+                        <AccordionItem value={`item-${i}`} key={i} className="interactive-lift">
                             <AccordionTrigger className="text-lg text-left hover:no-underline">{faq.q}</AccordionTrigger>
                             <AccordionContent className="text-base text-muted-foreground">{faq.a}</AccordionContent>
                         </AccordionItem>
