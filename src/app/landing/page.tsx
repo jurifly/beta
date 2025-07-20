@@ -255,12 +255,12 @@ const NewsletterSection = () => {
                         </div>
                         <div className="hidden md:block bg-muted p-4">
                            <Image 
-                             src="https://placehold.co/600x400.png"
+                             src="https://images.unsplash.com/photo-1593642702909-dec73df255d7?q=80&w=2360&auto=format&fit=crop&ixlib=rb-4.1.0"
                              alt="Newsletter illustration"
                              width={600}
                              height={400}
                              className="object-cover w-full h-full rounded-md"
-                             data-ai-hint="legal books"
+                             data-ai-hint="legal documents"
                            />
                         </div>
                     </div>
