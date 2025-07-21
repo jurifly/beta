@@ -43,6 +43,7 @@ import {
   LayoutGrid,
   Building,
   ChevronsUpDown,
+  LogOut,
 } from "lucide-react";
 import Image from 'next/image';
 
@@ -65,7 +66,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
-import { UserNav } from "@/components/dashboard/user-nav";
 import { useAuth } from "@/hooks/auth";
 import type { UserProfile, UserRole, AppNotification, Company } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
@@ -520,7 +520,8 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
 
 
 function AppShell({ children }: { children: ReactNode }) {
-  const { userProfile, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
+  const router = useRouter();
+  const { userProfile, signOut, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
@@ -536,6 +537,13 @@ function AppShell({ children }: { children: ReactNode }) {
       console.error('Could not access localStorage for language settings.', error);
     }
   }, []);
+
+  const handleLogout = async () => {
+    if (signOut) {
+        router.push("/landing");
+        await signOut();
+    }
+  };
 
   const handleLanguageChange = (langCode: string) => {
     const newLang = langCode as Language;
@@ -681,7 +689,10 @@ function AppShell({ children }: { children: ReactNode }) {
                         </ScrollArea>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <UserNav />
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                    <LogOut className="h-5 w-5" />
+                    <span className="sr-only">Log out</span>
+                </Button>
                 </div>
             </header>
             <main 
