@@ -74,7 +74,7 @@ import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "./beta-banner";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { FounderQuoteBanner } from './founder-quote-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
@@ -789,7 +789,7 @@ const CompanySwitcher = () => {
 
 const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (featureName: string, type: 'pro' | 'beta') => void, lang: Language }) => {
     const pathname = usePathname();
-    const { isDevMode, signOut } = useAuth();
+    const { isDevMode } = useAuth();
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
@@ -834,7 +834,8 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       href={isLocked ? '#' : item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-colors relative hover:bg-muted/50 hover:text-foreground",
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 relative",
+                          "interactive-lift",
                           isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
                           isLocked && "cursor-not-allowed"
                       )}
@@ -875,6 +876,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
