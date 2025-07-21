@@ -27,7 +27,7 @@ const StateAnalysisSchema = z.object({
         incentives: z.string().describe("A summary of available incentives like grants, reimbursements, or co-working space subsidies."),
     }),
     taxAndLabour: z.object({
-        professionalTax: z.string().describe("Details on Professional Tax applicability and slabs."),
+        professionalTax: z.string().describe("Details on Professional Tax applicability and its slabs."),
         labourLawCompliance: z.string().describe("Notes on the complexity of local labour law compliance (e.g., 'Strict enforcement, multiple filings required')."),
     }),
     risksAndFlags: z.object({
@@ -72,7 +72,7 @@ For each state, provide a detailed analysis covering the following points. Tailo
     *   **Key Schemes**: Name 2-3 major, currently active startup schemes or policies in that state.
     *   **Incentives**: Summarize the types of benefits offered (e.g., seed funding, patent filing reimbursement, rent subsidy).
 4.  **Tax & Labour**:
-    *   **Professional Tax**: Provide details on Professional Tax applicability and its slabs (e.g., "Applicable on salaries above X, with a maximum of ₹2,500 annually"). Do not invent numbers if unsure, describe the general structure instead.
+    *   **Professional Tax**: Explain that this is a state-level tax on income earned. Provide details on its applicability (e.g., "Applicable on salaries above X per month"). Clearly state that the maximum tax payable per individual is ₹2,500 per year.
     *   **Labour Law Compliance**: Comment on the complexity and strictness of state-level labour law enforcement.
 5.  **Risks & Flags**:
     *   **Common Issues**: Mention 1-2 well-known challenges for businesses in that state (e.g., high real estate costs, political instability, bureaucratic delays).
@@ -98,4 +98,5 @@ const stateComparisonFlow = ai.defineFlow(
     return output;
   }
 );
+
 
