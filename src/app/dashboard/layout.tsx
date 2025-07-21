@@ -80,6 +80,7 @@ import { FounderQuoteBanner } from './founder-quote-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { UserNav } from "@/components/dashboard/user-nav";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -689,10 +690,7 @@ function AppShell({ children }: { children: ReactNode }) {
                         </ScrollArea>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                 <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/settings')}>
-                    <Settings className="h-5 w-5" />
-                    <span className="sr-only">Settings</span>
-                </Button>
+                <UserNav />
                 </div>
             </header>
             <main 
@@ -900,5 +898,6 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
