@@ -9,6 +9,18 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    fontSize: {
+      xs: '0.7rem',
+      sm: '0.8rem',
+      base: '0.9rem',
+      lg: '1.0rem',
+      xl: '1.1rem',
+      '2xl': '1.3rem',
+      '3xl': '1.6rem',
+      '4xl': '2.0rem',
+      '5xl': '2.5rem',
+      '6xl': '3.0rem',
+    },
     extend: {
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
