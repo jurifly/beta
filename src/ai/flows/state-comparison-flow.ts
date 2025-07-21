@@ -72,7 +72,7 @@ For each state, provide a detailed analysis covering the following points. Tailo
     *   **Key Schemes**: Name 2-3 major, currently active startup schemes or policies in that state.
     *   **Incentives**: Summarize the types of benefits offered (e.g., seed funding, patent filing reimbursement, rent subsidy).
 4.  **Tax & Labour**:
-    *   **Professional Tax**: Explain that this is a state-level tax on income earned. Provide details on its applicability (e.g., "Applicable on salaries above X per month"). Clearly state that the maximum tax payable per individual is ₹2,500 per year.
+    *   **Professional Tax**: Explain that this is a state-level **tax** levied on earned income. Provide details on its applicability (e.g., "Applicable on salaries above X per month"). You MUST clearly state that the **maximum Professional Tax payable per individual is ₹2,500 per year**, ensuring there is no confusion that this is a tax, not a salary.
     *   **Labour Law Compliance**: Comment on the complexity and strictness of state-level labour law enforcement.
 5.  **Risks & Flags**:
     *   **Common Issues**: Mention 1-2 well-known challenges for businesses in that state (e.g., high real estate costs, political instability, bureaucratic delays).
@@ -98,5 +98,6 @@ const stateComparisonFlow = ai.defineFlow(
     return output;
   }
 );
+
 
 
