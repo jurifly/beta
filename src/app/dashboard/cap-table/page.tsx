@@ -111,14 +111,7 @@ export default function CapTablePage() {
     };
 
     const handleModelRoundClick = () => {
-        const isPro = userProfile ? planHierarchy[userProfile.plan] > 0 : false;
-        const canModel = isPro || isDevMode;
-
-        if (canModel) {
-            setIsModelingModalOpen(true);
-        } else {
-            setLockedFeature("Round Modeling");
-        }
+        setIsModelingModalOpen(true);
     };
     
     const handleCompanyChange = (companyId: string) => {
