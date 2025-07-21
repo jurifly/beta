@@ -105,36 +105,7 @@ export function UserNav() {
         </div>
         
         <DropdownMenuSeparator />
-
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Developer Tools</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center justify-between">
-            <Label htmlFor="dev-mode-switch" className="font-normal cursor-pointer">
-                Enable Role Switch
-            </Label>
-            <Switch
-                id="dev-mode-switch"
-                checked={isDevMode}
-                onCheckedChange={handleDevModeToggle}
-            />
-          </DropdownMenuItem>
-           <DropdownMenuSub>
-            <DropdownMenuSubTrigger disabled={!isDevMode}>
-              <span>Switch Role</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                 <DropdownMenuRadioGroup value={userProfile.role} onValueChange={(value) => handleRoleChange(value as UserRole)}>
-                    <DropdownMenuRadioItem value="Founder">Founder</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="CA">Chartered Accountant</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="Legal Advisor">Legal Advisor</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="Enterprise">Enterprise</DropdownMenuRadioItem>
-                 </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
