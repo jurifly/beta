@@ -203,7 +203,7 @@ export const translations: Translations = {
     forUpcomingMA: { en: "For upcoming M&A", hi: "आगामी M&A के लिए", es: "Para futuras fusiones y adquisiciones", zh: "为即将到来的并购", fr: "Pour les futures fusions et acquisitions", de: "Für bevorstehende M&A", pt: "Para futuras fusões e aquisições", ja: "今後のM&Aのために" },
     aiAuditAssistant: { en: "AI Audit Assistant", hi: "AI ऑडिट सहायक", es: "Asistente de Auditoría IA", zh: "AI审计助手", fr: "Assistant d'Audit IA", de: "KI-Audit-Assistent", pt: "Assistente de Auditoria IA", ja: "AI監査アシスタント" },
     aiAuditAssistantDesc: { en: "Prepare for SOC2, ISO, or internal audits by validating your documents against compliance checklists.", hi: "अनुपालन चेकलिस्ट के खिलाफ अपने दस्तावेज़ों को मान्य करके SOC2, ISO, या आंतरिक ऑडिट की तैयारी करें।", es: "Prepárese para auditorías SOC2, ISO o internas validando sus documentos contra listas de verificación de cumplimiento.", zh: "通过对照合规清单验证您的文档，为SOC2、ISO或内部审计做准备。", fr: "Préparez-vous aux audits SOC2, ISO ou internes en validant vos documents par rapport aux listes de contrôle de conformité.", de: "Bereiten Sie sich auf SOC2-, ISO- oder interne Audits vor, indem Sie Ihre Dokumente anhand von Compliance-Checklisten validieren。", pt: "Prepare-se para auditorias SOC2, ISO ou internas, validando seus documentos em listas de verificação de conformidade。", ja: "コンプライアンスチェックリストに対してドキュメントを検証し、SOC2、ISO、または内部監査の準備をします。" },
-    workflowAutomation: { en: "Workflow Automation", hi: "वर्कफ़्लो ऑटोमेशन", es: "Automatización de Flujos de Trabajo", zh: "工作流自动化", fr: "Automatisation des Flux de Travail", de: "Workflow-Automatisierung", pt: "Automação de Fluxos de Trabalho", ja: "ワークフロー自動化" },
+    workflowAutomation: { en: "Workflow Automation", hi: "वर्कफ़्लो ऑटोメेशन", es: "Automatización de Flujos de Trabajo", zh: "工作流自动化", fr: "Automatisation des Flux de Travail", de: "Workflow-Automatisierung", pt: "Automação de Fluxos de Trabalho", ja: "ワークフロー自動化" },
     workflowAutomationDesc: { en: "Create powerful automations to streamline compliance processes and approvals.", hi: "अनुपालन प्रक्रियाओं और अनुमोदनों को सुव्यवस्थित करने के लिए शक्तिशाली ऑटोमेशन बनाएं।", es: "Cree potentes automatizaciones para agilizar los procesos de cumplimiento и las aprobaciones.", zh: "创建强大的自动化以简化合规流程和审批。", fr: "Créez de puissantes automatisations pour rationaliser les processus de conformité et les approbations.", de: "Erstellen Sie leistungsstarke Automatisierungen, um Compliance-Prozesse und Genehmigungen zu optimieren。", pt: "Crie automações poderosas para agilizar os processos de conformidade e as aprovações。", ja: "コンプライアンスプロセスと承認を合理化するための強力な自動化を作成します。" },
     toastComplianceUpdatedTitle: { en: "Compliance Updated", hi: "अनुपालन अपडेट किया गया", es: "Cumplimiento Actualizado", zh: "合规性已更新", fr: "Conformité Mise à Jour", de: "Compliance aktualisiert", pt: "Conformidade Atualizada", ja: "コンプライアンス更新済み" },
     toastComplianceUpdatedDesc: { en: "All past tasks for", hi: "के लिए सभी पिछले कार्य", es: "Todas las tareas pasadas para", zh: "所有过去的任务", fr: "Toutes les tâches passées pour", de: "Alle vergangenen Aufgaben für", pt: "Todas as tarefas passadas para", ja: "のすべての過去のタスク" },
@@ -689,9 +689,9 @@ function AppShell({ children }: { children: ReactNode }) {
                         </ScrollArea>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="ghost" size="icon" onClick={handleLogout}>
-                    <LogOut className="h-5 w-5" />
-                    <span className="sr-only">Log out</span>
+                 <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/settings')}>
+                    <Settings className="h-5 w-5" />
+                    <span className="sr-only">Settings</span>
                 </Button>
                 </div>
             </header>
@@ -798,7 +798,8 @@ const CompanySwitcher = () => {
 
 const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (featureName: string, type: 'pro' | 'beta') => void, lang: Language }) => {
     const pathname = usePathname();
-    const { isDevMode } = useAuth();
+    const { isDevMode, signOut } = useAuth();
+    const router = useRouter();
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
@@ -813,6 +814,13 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
         } else if (isLockedBeta) {
             e.preventDefault();
             onLockedFeatureClick(label, 'beta');
+        }
+    };
+    
+    const handleLogout = async () => {
+        if (signOut) {
+            router.push("/landing");
+            await signOut();
         }
     };
 
@@ -878,10 +886,19 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                      <ChevronRight className="h-4 w-4" />
                 </div>
               </Link>
+              <button onClick={handleLogout} className="w-full">
+                <div className="flex items-center gap-3 rounded-lg p-2 text-sm font-medium text-card-foreground/80 transition-all hover:bg-muted">
+                    <LogOut className="h-5 w-5" />
+                    <div className="flex-1 text-left">
+                       <p className="font-semibold">Logout</p>
+                    </div>
+                </div>
+              </button>
           </div>
         </div>
       </div>
     );
 };
     
+
 
