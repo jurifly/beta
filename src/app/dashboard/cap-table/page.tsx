@@ -206,7 +206,7 @@ export default function CapTablePage() {
                  <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
                     <div className="flex justify-between items-center flex-wrap gap-4">
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-primary">Capitalization Table</h2>
+                            <h2 className="text-2xl font-bold tracking-tight text-primary">Capitalization Table & ESOPs</h2>
                             <p className="text-muted-foreground">An overview of {activeCompany.name}'s equity ownership.</p>
                         </div>
                         {isAdvisorRole && userProfile.companies.length > 1 && (

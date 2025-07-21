@@ -4,7 +4,7 @@
 
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import * as z from "zod";
 import { useState, useRef, useMemo, useEffect, FormEvent } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -1320,7 +1320,7 @@ export default function FinancialsPage() {
     return (
         <div className="space-y-6">
             <div className="p-6 rounded-lg bg-[var(--feature-color,hsl(var(--primary)))]/10 border border-[var(--feature-color,hsl(var(--primary)))]/20">
-                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">{isCA ? 'Taxes & Calculation' : 'Financials & Tax'}</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-[var(--feature-color,hsl(var(--primary)))]">{isCA ? 'Taxes & Calculation' : 'Financials, Runway & Scenarios'}</h1>
                 <p className="text-muted-foreground">Tools to calculate taxes and manage your startup's financial health.</p>
             </div>
             <Tabs defaultValue={defaultTab} value={activeTab} onValueChange={setActiveTab} className="w-full">

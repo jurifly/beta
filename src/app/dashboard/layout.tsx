@@ -103,8 +103,8 @@ export const translations: Translations = {
     connections: { en: "Connections", hi: "कनेक्शन", es: "Conexiones", zh: "连接", fr: "Connexions", de: "Verbindungen", pt: "Conexões", ja: "接続" },
     aiToolkit: { en: "AI Toolkit", hi: "AI टूलकिट", es: "Herramientas de IA", zh: "AI工具箱", fr: "Outils d'IA", de: "KI-Werkzeugkasten", pt: "Kit de Ferramentas de IA", ja: "AIツールキット" },
     launchPad: { en: "Launch Pad", hi: "लॉन्च पैड", es: "Plataforma de Lanzamiento", zh: "启动台", fr: "Rampe de Lancement", de: "Startrampe", pt: "Plataforma de Lançamento", ja: "ローンチパッド" },
-    capTable: { en: "Cap Table", hi: "कैप टेबल", es: "Tabla de Capitalización", zh: "股权结构表", fr: "Table de Capitalisation", de: "Kapitalisierungstabelle", pt: "Tabela de Capitalização", ja: "キャップテーブル" },
-    financials: { en: "Financials", hi: "वित्तीय", es: "Finanzas", zh: "财务", fr: "Finances", de: "Finanzen", pt: "Finanças", ja: "財務" },
+    capTable: { en: "Cap Table & ESOPs", hi: "कैप टेबल और ESOPs", es: "Tabla de Cap y ESOPs", zh: "股权结构表和ESOPs", fr: "Table de Cap & ESOPs", de: "Cap Table & ESOPs", pt: "Tabela de Cap & ESOPs", ja: "キャップテーブルとESOP" },
+    financials: { en: "Runway & Scenarios", hi: "रनवे और परिदृश्य", es: "Pista y Escenarios", zh: "跑道和情景", fr: "Piste & Scénarios", de: "Runway & Szenarien", pt: "Pista e Cenários", ja: "ランウェイとシナリオ" },
     docVault: { en: "Doc Vault", hi: "दस्तावेज़ वॉल्ट", es: "Bóveda de Documentos", zh: "文档保险库", fr: "Coffre-fort de Documents", de: "Dokumententresor", pt: "Cofre de Documentos", ja: "ドキュメント保管庫" },
     portfolioAnalytics: { en: "Portfolio Analytics", hi: "पोर्टफोलियो एनालिटिक्स", es: "Análisis de Cartera", zh: "投资组合分析", fr: "Analyse de Portefeuille", de: "Portfolio-Analyse", pt: "Análise de Portfólio", ja: "ポートフォリオ分析" },
     community: { en: "Community", hi: "समुदाय", es: "Comunidad", zh: "社区", fr: "Communauté", de: "Gemeinschaft", pt: "Comunidade", ja: "コミュニティ" },
@@ -789,7 +789,7 @@ const CompanySwitcher = () => {
 
 const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: { navItems: ThemedNavItem[], userProfile: UserProfile, onLockedFeatureClick: (featureName: string, type: 'pro' | 'beta') => void, lang: Language }) => {
     const pathname = usePathname();
-    const { isDevMode } = useAuth();
+    const { isDevMode, signOut } = useAuth();
     const isPro = planHierarchy[userProfile.plan] > 0;
     
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: ThemedNavItem) => {
@@ -834,8 +834,8 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       href={isLocked ? '#' : item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative interactive-lift hover:text-accent-foreground hover:bg-accent",
-                          isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative hover:bg-muted/50 hover:text-foreground",
+                           isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
                           isLocked && "cursor-not-allowed"
                       )}
                     >
@@ -869,12 +869,21 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                      <ChevronRight className="h-4 w-4" />
                 </div>
               </Link>
+               <Button variant="ghost" className="w-full justify-start p-2" onClick={signOut}>
+                 <div className="flex items-center gap-3 text-sm font-medium text-card-foreground/80">
+                    <LogOut className="h-5 w-5" />
+                    <div className="flex-1">
+                       <p className="font-semibold">Logout</p>
+                    </div>
+                </div>
+               </Button>
           </div>
         </div>
       </div>
     );
 };
     
+
 
 
 
