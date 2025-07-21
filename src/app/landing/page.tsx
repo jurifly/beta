@@ -37,11 +37,7 @@ import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
-
-const CreatureAnimation = dynamic(
-  () => import('./CreatureAnimation').then(mod => mod.CreatureAnimation),
-  { ssr: false }
-);
+import { CreatureAnimation } from "./CreatureAnimation";
 
 const Logo = () => (
     <>
@@ -258,7 +254,7 @@ const FounderLoveSection = () => {
 
 const TestimonialsSection = () => {
     const testimonials = [
-        { quote: "JuriFly is like Notion + AI + LegalZoom made for India.", author: "Rachit Jain, Founder, Pre-seed Startup" },
+        { quote: "JuriFly  is like Notion + AI + LegalZoom made for India.", author: "Rachit Jain, Founder, Pre-seed Startup" },
         { quote: "Earlier I had 40 unread mails from clients daily. Now? 3.", author: "Neha Gupta, CA, 10+ years" },
         { quote: "It felt like my co-founder… but for compliance.", author: "Siddharth Mehra, YC alum" },
         { quote: "Our clients LOVE the dashboard. We saved 10+ hours a week.", author: "Nikhil Agrawal, CA, runs a 40-client firm" },
