@@ -81,6 +81,7 @@ import { CaQuoteBanner } from './ca-quote-banner';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { UserNav } from "@/components/dashboard/user-nav";
+import { PageTransition } from '@/components/dashboard/page-transition';
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -686,13 +687,13 @@ function AppShell({ children }: { children: ReactNode }) {
                 <UserNav />
                 </div>
             </header>
-            <main 
-                className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background pb-20 md:pb-6 overflow-y-auto animate-in fade-in-25 slide-in-from-bottom-8"
-            >
+            <main className="flex-1 flex-col gap-4 lg:gap-6 lg:p-6 p-4 bg-background pb-20 md:pb-6 overflow-y-auto">
                 <BetaBanner />
                 <FounderQuoteBanner />
                 <CaQuoteBanner />
-                {childrenWithLang}
+                <PageTransition pathname={usePathname()}>
+                    {childrenWithLang}
+                </PageTransition>
             </main>
             <BottomNavBar lang={lang} setLang={handleLanguageChange} onLockedFeatureClick={handleLockedFeatureClick}/>
             </div>
@@ -875,6 +876,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
