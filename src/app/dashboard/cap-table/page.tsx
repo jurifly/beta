@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, type MouseEvent } from 'react';
@@ -348,3 +347,5 @@ export default function CapTablePage() {
         </>
     );
 }
+
+    
