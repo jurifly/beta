@@ -834,12 +834,12 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                       href={isLocked ? '#' : item.href}
                       onClick={(e) => handleLinkClick(e, item)}
                       className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-all relative hover:bg-muted/50 hover:text-foreground",
-                           isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 transition-colors relative hover:bg-muted/50 hover:text-foreground",
+                          isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
                           isLocked && "cursor-not-allowed"
                       )}
                     >
-                      <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", isActive && "text-primary")} />
+                      <item.icon className={cn("h-4 w-4 group-hover:scale-110", isActive && "text-primary")} />
                       <span className="group-data-[state=collapsed]/sidebar:hidden">{label}</span>
                       {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50 group-data-[state=collapsed]/sidebar:hidden">{item.badge}</Badge>}
                       {isLocked && (
@@ -869,20 +869,13 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                      <ChevronRight className="h-4 w-4" />
                 </div>
               </Link>
-               <Button variant="ghost" className="w-full justify-start p-2" onClick={signOut}>
-                 <div className="flex items-center gap-3 text-sm font-medium text-card-foreground/80">
-                    <LogOut className="h-5 w-5" />
-                    <div className="flex-1">
-                       <p className="font-semibold">Logout</p>
-                    </div>
-                </div>
-               </Button>
           </div>
         </div>
       </div>
     );
 };
     
+
 
 
 
