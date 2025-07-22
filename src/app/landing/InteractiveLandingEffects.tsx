@@ -12,9 +12,8 @@ const CustomCursor = () => {
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
     
-    // Make the follower more responsive by increasing stiffness and reducing damping
-    const followerX = useSpring(x, { stiffness: 500, damping: 30 });
-    const followerY = useSpring(y, { stiffness: 500, damping: 30 });
+    const followerX = useSpring(x, { stiffness: 800, damping: 50 });
+    const followerY = useSpring(y, { stiffness: 800, damping: 50 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -24,10 +23,8 @@ const CustomCursor = () => {
         
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            // Check if the target or any of its parents is a text element or a link/button
             if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
                 followerRef.current?.classList.add('scale-[2.5]');
-                followerRef.current?.classList.add('bg-primary/20');
             }
         };
         
@@ -35,7 +32,6 @@ const CustomCursor = () => {
             const target = e.target as HTMLElement;
              if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
                 followerRef.current?.classList.remove('scale-[2.5]');
-                followerRef.current?.classList.remove('bg-primary/20');
             }
         };
 
@@ -60,7 +56,7 @@ const CustomCursor = () => {
             <motion.div
                 ref={followerRef}
                 style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
-                className="fixed top-0 left-0 w-10 h-10 border-2 border-primary/50 rounded-full pointer-events-none z-[9999] transition-transform,background-color duration-200 ease-in-out"
+                className="fixed top-0 left-0 w-10 h-10 bg-white rounded-full pointer-events-none z-[9999] transition-transform duration-200 ease-in-out mix-blend-difference"
             />
         </>
     );
@@ -99,15 +95,19 @@ const ParticleCanvas = () => {
       baseY: number;
       density: number;
       color: string;
+      vx: number;
+      vy: number;
 
       constructor(x: number, y: number, color: string) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 1.5 + 0.8; // Slightly larger particles
+        this.size = Math.random() * 1.5 + 0.8;
         this.baseX = this.x;
         this.baseY = this.y;
         this.density = (Math.random() * 40) + 5;
         this.color = color;
+        this.vx = (Math.random() - 0.5) * 0.2;
+        this.vy = (Math.random() - 0.5) * 0.2;
       }
 
       draw() {
@@ -120,6 +120,15 @@ const ParticleCanvas = () => {
       }
 
       update() {
+        // Random drifting
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Wall collision
+        if (this.x > canvas.width || this.x < 0) this.vx *= -1;
+        if (this.y > canvas.height || this.y < 0) this.vy *= -1;
+        
+        // Mouse interaction
         const dx = mouse.current.x - this.x;
         const dy = mouse.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -134,14 +143,13 @@ const ParticleCanvas = () => {
           this.x -= directionX * 0.1;
           this.y -= directionY * 0.1;
         } else {
-          if (this.x !== this.baseX) {
-            const dx = this.x - this.baseX;
-            this.x -= dx / 20;
-          }
-          if (this.y !== this.baseY) {
-            const dy = this.y - this.baseY;
-            this.y -= dy / 20;
-          }
+            // Return to near base position
+             if (Math.abs(this.x - this.baseX) > 10) {
+                 this.vx += (this.baseX - this.x) * 0.001;
+             }
+             if (Math.abs(this.y - this.baseY) > 10) {
+                 this.vy += (this.baseY - this.y) * 0.001;
+             }
         }
       }
     }
@@ -150,9 +158,8 @@ const ParticleCanvas = () => {
 
     const init = () => {
       particles = [];
-      // Use CSS variables for theme-aware particle colors
       const isDark = document.documentElement.classList.contains('dark');
-      particleColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)';
+      particleColor = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
 
       for (let i = 0; i < particleCount; i++) {
         const x = Math.random() * canvas.width;
@@ -190,7 +197,7 @@ const ParticleCanvas = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 opacity-50" />;
+  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 opacity-70" />;
 };
 
 
@@ -254,3 +261,4 @@ export function InteractiveLandingEffects() {
     </>
   );
 }
+
