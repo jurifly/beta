@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef } from "react";
@@ -26,6 +25,7 @@ import {
   Repeat,
   Sparkles,
   Mail,
+  Heart,
   FileText,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
@@ -47,7 +47,7 @@ const Logo = () => (
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/4wdbj1XL/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262"
+        src="https://i.ibb.co/4wdbj1XL/claifyblacko-1.png" 
         alt="Jurifly Logo"
         width={114}
         height={24}
@@ -57,37 +57,14 @@ const Logo = () => (
     </>
 );
 
-const MarqueeText = () => (
-  <>
-    <span>Compliance Simplified</span>
-    <span className="mx-4 text-primary">&bull;</span>
-    <span>AI-Powered Legal Tech</span>
-    <span className="mx-4 text-primary">&bull;</span>
-    <span>For Founders & CAs</span>
-    <span className="mx-4 text-primary">&bull;</span>
-    <span>Stay Ahead, Stay Compliant</span>
-    <span className="mx-4 text-primary">&bull;</span>
-  </>
-)
-
-const TopMarquee = () => (
-    <div className="marquee-container top-marquee">
-        <div className="marquee-content">
-            <MarqueeText />
-            <MarqueeText />
+const Marquee = ({ children, reverse = false }: { children: React.ReactNode, reverse?: boolean}) => (
+    <div className="marquee-container">
+        <div className={cn("marquee-content", reverse && "marquee-reverse")}>
+            {children}
+            {children}
         </div>
     </div>
 );
-
-const BottomMarquee = () => (
-    <div className="marquee-container bottom-marquee">
-        <div className="marquee-content marquee-reverse">
-             <MarqueeText />
-             <MarqueeText />
-        </div>
-    </div>
-);
-
 
 const LandingHeader = () => {
   const router = useRouter();
@@ -427,8 +404,8 @@ const LandingFooter = () => (
   <footer className="border-t">
     <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:flex-row px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-        <p className="text-center text-sm leading-loose md:text-left text-muted-foreground">
-          💡 Built with ❤️ in India by founders, for founders
+        <p className="text-center text-sm leading-loose md:text-left text-muted-foreground flex items-center gap-2">
+            💡 Built with <Heart className="w-4 h-4 text-red-500 fill-current" /> in India by founders, for founders
         </p>
       </div>
       <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap justify-center">
@@ -449,14 +426,24 @@ export default function LandingPage() {
       <main className="flex-1 relative z-10">
         <HeroSection />
         <ParallaxImageSection />
-        <BottomMarquee />
+        <Marquee>
+            <span>Compliance Simplified</span><span className="mx-4 text-primary">&bull;</span>
+            <span>AI-Powered Legal Tech</span><span className="mx-4 text-primary">&bull;</span>
+            <span>For Founders & CAs</span><span className="mx-4 text-primary">&bull;</span>
+            <span>Stay Ahead, Stay Compliant</span><span className="mx-4 text-primary">&bull;</span>
+        </Marquee>
         <ProblemSection />
         <OffersSection />
         <FounderLoveSection />
         <TestimonialsSection />
         <FaqSection />
         <NewsletterSection />
-        <TopMarquee />
+        <Marquee reverse>
+            <span>Investor Discovery</span><span className="mx-4 text-primary">&bull;</span>
+            <span>Due Diligence</span><span className="mx-4 text-primary">&bull;</span>
+            <span>Automated Workflows</span><span className="mx-4 text-primary">&bull;</span>
+            <span>Secure Document Vault</span><span className="mx-4 text-primary">&bull;</span>
+        </Marquee>
         <FinalCtaSection />
       </main>
       <LandingFooter />

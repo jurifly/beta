@@ -12,8 +12,8 @@ const CustomCursor = () => {
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
     
-    const followerX = useSpring(x, { stiffness: 800, damping: 50 });
-    const followerY = useSpring(y, { stiffness: 800, damping: 50 });
+    const followerX = useSpring(x, { stiffness: 1200, damping: 60 });
+    const followerY = useSpring(y, { stiffness: 1200, damping: 60 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -24,14 +24,14 @@ const CustomCursor = () => {
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
-                followerRef.current?.classList.add('scale-[2.5]');
+                followerRef.current?.classList.add('scale-100', 'opacity-100');
             }
         };
         
         const handleMouseOut = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
              if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
-                followerRef.current?.classList.remove('scale-[2.5]');
+                followerRef.current?.classList.remove('scale-100', 'opacity-100');
             }
         };
 
@@ -56,7 +56,7 @@ const CustomCursor = () => {
             <motion.div
                 ref={followerRef}
                 style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
-                className="fixed top-0 left-0 w-10 h-10 bg-white rounded-full pointer-events-none z-[9999] transition-transform duration-200 ease-in-out mix-blend-difference"
+                className="fixed top-0 left-0 w-10 h-10 bg-white rounded-full pointer-events-none z-[9999] transition-transform duration-200 ease-in-out mix-blend-difference scale-0 opacity-0"
             />
         </>
     );
