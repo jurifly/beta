@@ -1,10 +1,9 @@
 
-
 'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -34,10 +33,10 @@ import {
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
-import { CreatureAnimation } from "./CreatureAnimation";
+import { InteractiveLandingEffects } from "./InteractiveLandingEffects";
+
 
 const Logo = () => (
     <>
@@ -85,27 +84,63 @@ const LandingHeader = () => {
 const HeroSection = () => {
   const router = useRouter();
   return (
-    <section className="relative w-full py-24 md:py-32">
-      <div className="container relative mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 text-center">
-        <CreatureAnimation />
-        <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
-          India's Smartest Legal & Compliance Buddy for Founders & CAs.
-        </h1>
-        <p className="text-lg md:text-xl text-muted-foreground mx-auto max-w-3xl mt-6">
-          Why juggle GST, ROC, ITR, MCA, FEMA, ESOPs, and random panic attacks?
-          Let jurifly do the boring bits, while you build the next big thing.
-        </p>
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
-                Sign up for Beta
-            </Button>
-             <Button variant="outline" className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
-                <Link href="#newsletter">Subscribe to Newsletter</Link>
-            </Button>
-        </div>
+    <section className="relative w-full py-24 md:py-32 overflow-hidden">
+      <InteractiveLandingEffects />
+      <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-left"
+        >
+            <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
+              India's Smartest Legal & Compliance Buddy for Founders & CAs.
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6">
+              Why juggle GST, ROC, ITR, MCA, FEMA, ESOPs, and random panic attacks?
+              Let jurifly do the boring bits, while you build the next big thing.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-start justify-start gap-4">
+                <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
+                    Sign up for Beta
+                </Button>
+                 <Button variant="outline" className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
+                    <Link href="#newsletter">Subscribe to Newsletter</Link>
+                </Button>
+            </div>
+        </motion.div>
+        <motion.div
+           initial={{ opacity: 0, scale: 0.8 }}
+           animate={{ opacity: 1, scale: 1 }}
+           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+           className="relative"
+        >
+            <Image 
+                src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
+                alt="Jurifly dashboard preview"
+                width={600}
+                height={600}
+                className="rounded-xl shadow-2xl mx-auto interactive-lift"
+                data-ai-hint="dashboard preview"
+            />
+        </motion.div>
       </div>
     </section>
   )
+};
+
+const AnimatedSection = ({ children, className }: { children: React.ReactNode, className?: string }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className={className}
+        >
+            {children}
+        </motion.div>
+    );
 };
 
 const ProblemSection = () => {
@@ -125,12 +160,12 @@ const ProblemSection = () => {
     ];
     return (
          <section id="problem" className="w-full py-20 md:py-24 bg-muted">
-            <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+            <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
                  <div className="text-center">
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">The Big Problem We're Solving</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <Card className="interactive-lift bg-background/50">
+                    <Card className="interactive-lift bg-card/50 border-destructive/20 from-destructive/5 to-transparent bg-gradient-to-br">
                         <CardHeader>
                             <CardTitle className="text-2xl font-semibold flex items-center gap-3"><AlertTriangle className="text-destructive"/> For Founders:</CardTitle>
                         </CardHeader>
@@ -143,7 +178,7 @@ const ProblemSection = () => {
                             ))}
                         </CardContent>
                     </Card>
-                     <Card className="interactive-lift bg-background/50">
+                     <Card className="interactive-lift bg-card/50 border-primary/20 from-primary/5 to-transparent bg-gradient-to-br">
                         <CardHeader>
                             <CardTitle className="text-2xl font-semibold flex items-center gap-3"><BrainCircuit className="text-primary"/> For CAs:</CardTitle>
                         </CardHeader>
@@ -160,7 +195,7 @@ const ProblemSection = () => {
                 <p className="text-center text-lg text-muted-foreground pt-8">
                     Welcome to Jurifly. We make legal + compliance feel less like brain surgery.
                 </p>
-            </div>
+            </AnimatedSection>
         </section>
     );
 };
@@ -187,7 +222,7 @@ const OffersSection = () => {
 
     return (
         <section id="features" className="w-full py-20 md:py-24">
-          <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+          <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">What Jurifly Offers:</h2>
             </div>
@@ -195,7 +230,7 @@ const OffersSection = () => {
                  <div className="space-y-4">
                     <h3 className="text-2xl font-bold text-center">For Founders</h3>
                      {founderFeatures.map((feature, i) => (
-                        <Card key={i} className="interactive-lift">
+                        <Card key={i} className="interactive-lift bg-card/50">
                             <CardHeader className="flex flex-row items-center gap-4">
                                 <div className="p-3 bg-primary/10 rounded-lg text-primary"><feature.icon className="h-6 w-6" /></div>
                                 <div>
@@ -209,7 +244,7 @@ const OffersSection = () => {
                   <div className="space-y-4">
                     <h3 className="text-2xl font-bold text-center">For CAs</h3>
                      {caFeatures.map((feature, i) => (
-                        <Card key={i} className="interactive-lift">
+                        <Card key={i} className="interactive-lift bg-card/50">
                            <CardHeader className="flex flex-row items-center gap-4">
                                 <div className="p-3 bg-primary/10 rounded-lg text-primary"><feature.icon className="h-6 w-6" /></div>
                                 <div>
@@ -221,7 +256,7 @@ const OffersSection = () => {
                      ))}
                  </div>
             </div>
-          </div>
+          </AnimatedSection>
         </section>
     );
 }
@@ -236,7 +271,7 @@ const FounderLoveSection = () => {
     ];
     return (
         <section id="love" className="w-full py-20 md:py-24 bg-muted">
-            <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg text-center">
+            <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why Founders Love JuriFly</h2>
                 <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
                     {quotes.map((quote, index) => (
@@ -247,7 +282,7 @@ const FounderLoveSection = () => {
                         </Card>
                     ))}
                 </div>
-            </div>
+            </AnimatedSection>
         </section>
     )
 }
@@ -261,7 +296,7 @@ const TestimonialsSection = () => {
     ];
     return (
         <section id="testimonials" className="w-full py-20 md:py-24">
-             <div className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
+             <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl text-center">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                     {testimonials.map((testimonial, index) => (
                         <Card key={index} className="p-6 text-center interactive-lift bg-card/50">
@@ -272,7 +307,7 @@ const TestimonialsSection = () => {
                         </Card>
                     ))}
                 </div>
-            </div>
+            </AnimatedSection>
         </section>
     );
 }
@@ -288,7 +323,7 @@ const FaqSection = () => {
     ];
     return (
         <section id="faq" className="w-full py-20 md:py-24 bg-muted">
-             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+             <AnimatedSection className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                 <div className="text-center mb-12">
                      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Frequently Asked Questions</h2>
                 </div>
@@ -300,7 +335,7 @@ const FaqSection = () => {
                         </AccordionItem>
                     ))}
                 </Accordion>
-             </div>
+             </AnimatedSection>
         </section>
     );
 }
@@ -308,7 +343,7 @@ const FaqSection = () => {
 const NewsletterSection = () => {
     return (
         <section id="newsletter" className="w-full py-20 md:py-24">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+            <AnimatedSection className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                 <Card className="interactive-lift overflow-hidden bg-card/50">
                      <div className="p-8 md:p-10 flex flex-col justify-center text-center">
                         <h2 className="text-2xl font-bold font-headline">Want to Stay in the Loop?</h2>
@@ -324,7 +359,7 @@ const NewsletterSection = () => {
                         </form>
                     </div>
                 </Card>
-            </div>
+            </AnimatedSection>
         </section>
     );
 };
@@ -333,7 +368,7 @@ const FinalCtaSection = () => {
   const router = useRouter();
   return (
     <section className="w-full py-20 md:py-24">
-      <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
+      <AnimatedSection className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
         <h2 className="text-3xl md:text-5xl font-bold font-headline">Don’t Worry About Legal Stuff Again.</h2>
         <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. No filings. Just clarity.</p>
         <div className="mt-8">
@@ -342,7 +377,7 @@ const FinalCtaSection = () => {
             <ArrowRight className="ml-2" />
           </Button>
         </div>
-      </div>
+      </AnimatedSection>
     </section>
   );
 };
