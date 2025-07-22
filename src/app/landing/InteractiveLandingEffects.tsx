@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useSpring } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const CustomCursor = () => {
@@ -73,7 +73,7 @@ const ParticleCanvas = () => {
     if (!ctx) return;
 
     let particles: any[] = [];
-    const particleCount = 70;
+    const particleCount = 150;
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -101,7 +101,7 @@ const ParticleCanvas = () => {
       constructor(x: number, y: number, color: string) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 1.5 + 0.8;
+        this.size = Math.random() * 1.2 + 0.5;
         this.baseX = this.x;
         this.baseY = this.y;
         this.density = (Math.random() * 40) + 5;
