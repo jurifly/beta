@@ -426,19 +426,21 @@ export default function LandingPage() {
       <main className="flex-1 relative z-10">
         <HeroSection />
         <ParallaxImageSection />
-        <div className="top-marquee">
-          <Marquee>
-              <span>Compliance Simplified</span><span className="mx-4 text-primary">&bull;</span>
-              <span>AI-Powered Legal Tech</span><span className="mx-4 text-primary">&bull;</span>
-              <span>For Founders & CAs</span><span className="mx-4 text-primary">&bull;</span>
-              <span>Stay Ahead, Stay Compliant</span><span className="mx-4 text-primary">&bull;</span>
-          </Marquee>
-          <Marquee reverse>
-              <span>Investor Discovery</span><span className="mx-4 text-primary">&bull;</span>
-              <span>Due Diligence</span><span className="mx-4 text-primary">&bull;</span>
-              <span>Automated Workflows</span><span className="mx-4 text-primary">&bull;</span>
-              <span>Secure Document Vault</span><span className="mx-4 text-primary">&bull;</span>
-          </Marquee>
+        <div className="top-marquee py-8">
+            <Marquee>
+                <span>Compliance Simplified</span><span className="mx-4 text-primary">&bull;</span>
+                <span>AI-Powered Legal Tech</span><span className="mx-4 text-primary">&bull;</span>
+                <span>For Founders & CAs</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Stay Ahead, Stay Compliant</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Cap Table Management</span><span className="mx-4 text-primary">&bull;</span>
+            </Marquee>
+            <Marquee reverse>
+                <span>Investor Discovery</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Due Diligence Prep</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Automated Workflows</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Secure Document Vault</span><span className="mx-4 text-primary">&bull;</span>
+                 <span>Financial Runway & Scenarios</span><span className="mx-4 text-primary">&bull;</span>
+            </Marquee>
         </div>
         <ProblemSection />
         <OffersSection />
@@ -446,18 +448,20 @@ export default function LandingPage() {
         <TestimonialsSection />
         <FaqSection />
         <NewsletterSection />
-         <div className="bottom-marquee">
+         <div className="bottom-marquee py-8">
             <Marquee>
                 <span>No Jargon</span><span className="mx-4 text-primary">&bull;</span>
                 <span>No Overwhelm</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Just Clarity</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Your AI Co-pilot</span><span className="mx-4 text-primary">&bull;</span>
+                 <span>One Unified Workspace</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
             <Marquee reverse>
-                <span>Cap Table Management</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Financial Runway</span><span className="mx-4 text-primary">&bull;</span>
                 <span>ESOP Management</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
+                 <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
+                <span>DPIIT & MSME Recognition</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Angel Tax Guidance</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
         </div>
         <FinalCtaSection />
