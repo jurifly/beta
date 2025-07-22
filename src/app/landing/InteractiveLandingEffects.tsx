@@ -7,14 +7,9 @@ import { cn } from '@/lib/utils';
 
 const CustomCursor = () => {
     const cursorRef = useRef<HTMLDivElement>(null);
-    const followerRef = useRef<HTMLDivElement>(null);
 
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
-    
-    // Stiffer spring for less lag
-    const followerX = useSpring(x, { stiffness: 1500, damping: 100 });
-    const followerY = useSpring(y, { stiffness: 1500, damping: 100 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -24,23 +19,25 @@ const CustomCursor = () => {
         
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            if (followerRef.current && cursorRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
+            if (cursorRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
                 const fontSize = window.getComputedStyle(target).fontSize;
                 const size = parseFloat(fontSize) * 1.2;
-                followerRef.current.style.width = `${size}px`;
-                followerRef.current.style.height = `${size}px`;
-                followerRef.current.style.opacity = '1';
-                cursorRef.current.style.transform = 'scale(0)';
+                cursorRef.current.style.width = `${size}px`;
+                cursorRef.current.style.height = `${size}px`;
+                cursorRef.current.style.opacity = '1';
+                cursorRef.current.classList.add('mix-blend-difference', 'bg-white');
+                cursorRef.current.classList.remove('bg-primary');
             }
         };
         
         const handleMouseOut = (e: MouseEvent) => {
              const target = e.target as HTMLElement;
-            if (followerRef.current && cursorRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
-                followerRef.current.style.width = '2px';
-                followerRef.current.style.height = '2px';
-                followerRef.current.style.opacity = '0';
-                cursorRef.current.style.transform = 'scale(1)';
+            if (cursorRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
+                cursorRef.current.style.width = '12px';
+                cursorRef.current.style.height = '12px';
+                cursorRef.current.style.opacity = '1';
+                cursorRef.current.classList.remove('mix-blend-difference', 'bg-white');
+                cursorRef.current.classList.add('bg-primary');
             }
         };
 
@@ -56,21 +53,11 @@ const CustomCursor = () => {
     }, [x, y]);
 
     return (
-        <>
-            <motion.div
-                ref={cursorRef}
-                style={{ translateX: x, translateY: y, x: '-50%', y: '-50%' }}
-                className="fixed top-0 left-0 w-3 h-3 bg-primary rounded-full pointer-events-none z-[9999] transition-transform duration-300 ease-in-out"
-            />
-            <motion.div
-                ref={followerRef}
-                style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
-                className={cn(
-                  "fixed top-0 left-0 rounded-full pointer-events-none z-[9999] transition-[width,height,opacity] duration-300 ease-in-out",
-                  "bg-white mix-blend-difference opacity-0 w-0.5 h-0.5"
-                )}
-            />
-        </>
+        <motion.div
+            ref={cursorRef}
+            style={{ translateX: x, translateY: y, x: '-50%', y: '-50%' }}
+            className="fixed top-0 left-0 w-3 h-3 bg-primary rounded-full pointer-events-none z-[9999] transition-[width,height,opacity] duration-300 ease-in-out"
+        />
     );
 }
 
