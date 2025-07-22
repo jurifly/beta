@@ -27,6 +27,9 @@ import {
   Mail,
   Heart,
   FileText,
+  Cookie,
+  Settings,
+  X
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
@@ -34,6 +37,9 @@ import { cn } from "@/lib/utils";
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
 import { InteractiveLandingEffects } from "./InteractiveLandingEffects";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 
 const Logo = () => (
@@ -85,6 +91,9 @@ const LandingHeader = () => {
              <Link href="#features" className="text-muted-foreground transition-colors hover:text-foreground">Features</Link>
              <Link href="#testimonials" className="text-muted-foreground transition-colors hover:text-foreground">Testimonials</Link>
              <Link href="#faq" className="text-muted-foreground transition-colors hover:text-foreground">FAQs</Link>
+             <Link href="/about" className="text-muted-foreground transition-colors hover:text-foreground">About</Link>
+             <Link href="/contact" className="text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
+             <Link href="/careers" className="text-muted-foreground transition-colors hover:text-foreground">Careers</Link>
           </div>
           <Button onClick={() => router.push('/login')} className="hidden sm:inline-flex interactive-lift">Get Started</Button>
           <ThemeToggle />
@@ -131,30 +140,6 @@ const HeroSection = () => {
     </section>
   )
 };
-
-const ParallaxImageSection = () => {
-  return (
-    <div className="w-full pb-20 md:pb-24">
-       <div className="w-full">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-                <Image 
-                    src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
-                    alt="Jurifly dashboard preview"
-                    width={1200}
-                    height={800}
-                    className="rounded-xl shadow-2xl mx-auto interactive-lift max-w-[90%] sm:max-w-[80%] lg:max-w-4xl"
-                    data-ai-hint="dashboard preview"
-                />
-            </motion.div>
-        </div>
-    </div>
-  );
-}
 
 const AnimatedSection = ({ children, className }: { children: React.ReactNode, className?: string }) => {
     return (
@@ -410,23 +395,123 @@ const FinalCtaSection = () => {
 };
 
 const LandingFooter = () => (
-  <footer className="border-t">
-    <div className="container mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-4 py-8 md:flex-row px-4 sm:px-6 lg:px-8">
-      <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-        <p className="text-center text-sm leading-loose md:text-left text-muted-foreground flex items-center gap-2">
-            💡 Built with <Heart className="w-4 h-4 text-red-500 fill-current" /> in India by founders, for founders
-        </p>
-      </div>
-      <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap justify-center">
-        <p>⚡ <JuriFlyWord /> is currently in beta</p>
-        <span className="mx-1">|</span>
-        <Button variant="link" size="sm" asChild><Link href="/about">About</Link></Button>
-        <Button variant="link" size="sm" asChild><Link href="/contact">Contact</Link></Button>
-        <Button variant="link" size="sm" asChild><Link href="/dashboard/settings?tab=policies">Terms</Link></Button>
-      </div>
-    </div>
-  </footer>
+    <footer className="border-t">
+        <div className="container mx-auto max-w-screen-xl py-12 px-4 sm:px-6 lg:px-8 text-left">
+            <div className="space-y-4">
+                <h1 className="text-6xl md:text-8xl font-extrabold leading-none text-foreground/80">
+                    Live<br />it up!
+                </h1>
+                <p className="text-lg text-muted-foreground font-medium flex items-center gap-2">
+                    Crafted with <Heart className="w-5 h-5 text-red-500 fill-current" /> in Bengaluru, India
+                </p>
+                <p className="text-base text-muted-foreground italic">
+                    <JuriFlyWord /> helps <span className="font-semibold text-foreground/90">CAs</span> and <span className="font-semibold text-foreground/90">Startup Founders</span> stay legally unstoppable.
+                </p>
+            </div>
+            <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+                <p>&copy; {new Date().getFullYear()} JuriFly. All rights reserved.</p>
+                <div className="flex items-center gap-4">
+                     <Link href="/about" className="hover:text-primary">About</Link>
+                     <Link href="/contact" className="hover:text-primary">Contact</Link>
+                     <Link href="/careers" className="hover:text-primary">Careers</Link>
+                     <Link href="/dashboard/settings?tab=policies" className="hover:text-primary">Terms</Link>
+                </div>
+            </div>
+        </div>
+    </footer>
 );
+
+type CookiePreferences = {
+    necessary: boolean;
+    analytics: boolean;
+    marketing: boolean;
+};
+
+const CookieConsentBanner = () => {
+    const [isVisible, setIsVisible] = useState(false);
+    const [isCustomizeOpen, setCustomizeOpen] = useState(false);
+    const [preferences, setPreferences] = useState<CookiePreferences>({
+        necessary: true,
+        analytics: true,
+        marketing: true,
+    });
+
+    useEffect(() => {
+        const consent = localStorage.getItem('jurifly_cookie_consent');
+        if (!consent) {
+            setIsVisible(true);
+        }
+    }, []);
+
+    const handleAcceptAll = () => {
+        localStorage.setItem('jurifly_cookie_consent', JSON.stringify({ accepted: true, preferences }));
+        setIsVisible(false);
+    };
+
+    const handleDeclineAll = () => {
+        const newPreferences = { necessary: true, analytics: false, marketing: false };
+        localStorage.setItem('jurifly_cookie_consent', JSON.stringify({ accepted: false, preferences: newPreferences }));
+        setIsVisible(false);
+    };
+    
+    const handleSavePreferences = () => {
+         localStorage.setItem('jurifly_cookie_consent', JSON.stringify({ accepted: true, preferences }));
+         setIsVisible(false);
+         setCustomizeOpen(false);
+    }
+    
+    const handlePreferenceChange = (key: keyof CookiePreferences, value: boolean) => {
+        setPreferences(prev => ({ ...prev, [key]: value }));
+    };
+
+    if (!isVisible) return null;
+
+    return (
+      <>
+        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-sm border-t p-4 z-[100] animate-in slide-in-from-bottom-8 duration-500">
+            <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <Cookie className="w-5 h-5 text-primary mt-0.5 shrink-0"/>
+                    <p>We use cookies to enhance your experience. By clicking "Accept All", you agree to our use of cookies.</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button onClick={handleAcceptAll}>Accept All</Button>
+                    <Button variant="outline" onClick={() => setCustomizeOpen(true)}>Customize</Button>
+                    <Button variant="ghost" onClick={handleDeclineAll}>Decline</Button>
+                </div>
+            </div>
+        </div>
+         <Dialog open={isCustomizeOpen} onOpenChange={setCustomizeOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Customize Cookie Preferences</DialogTitle>
+                    <DialogDescription>
+                       You can choose which types of cookies you're comfortable with. Necessary cookies are required for the site to function.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="flex items-center justify-between p-3 border rounded-md">
+                        <Label htmlFor="necessary" className="font-medium">Necessary Cookies</Label>
+                        <Checkbox id="necessary" checked disabled />
+                    </div>
+                     <div className="flex items-center justify-between p-3 border rounded-md">
+                        <Label htmlFor="analytics" className="font-medium">Analytics Cookies</Label>
+                        <Checkbox id="analytics" checked={preferences.analytics} onCheckedChange={(c) => handlePreferenceChange('analytics', !!c)} />
+                    </div>
+                     <div className="flex items-center justify-between p-3 border rounded-md">
+                        <Label htmlFor="marketing" className="font-medium">Marketing Cookies</Label>
+                        <Checkbox id="marketing" checked={preferences.marketing} onCheckedChange={(c) => handlePreferenceChange('marketing', !!c)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setCustomizeOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSavePreferences}>Save Preferences</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      </>
+    );
+}
 
 export default function LandingPage() {
   return (
@@ -434,7 +519,6 @@ export default function LandingPage() {
       <LandingHeader />
       <main className="flex-1 relative z-10">
         <HeroSection />
-        <ParallaxImageSection />
         <div className="top-marquee py-8">
             <Marquee>
                 <span>Compliance Simplified</span><span className="mx-4 text-primary">&bull;</span>
@@ -485,6 +569,7 @@ export default function LandingPage() {
       </main>
       <LandingFooter />
       <InteractiveLandingEffects />
+      <CookieConsentBanner />
     </div>
   );
 }
