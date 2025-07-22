@@ -96,7 +96,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-center"
         >
-            <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight" data-cursor-size="large">
               India's Smartest Legal & Compliance Buddy for Founders & CAs.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6 mx-auto">
@@ -167,7 +167,7 @@ const ProblemSection = () => {
          <section id="problem" className="w-full py-20 md:py-24 bg-muted">
             <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
                  <div className="text-center">
-                    <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">The Big Problem We're Solving</h2>
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">The Big Problem We're Solving</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <Card className="interactive-lift bg-card/50 border-destructive/20 from-destructive/5 to-transparent bg-gradient-to-br">
@@ -229,7 +229,7 @@ const OffersSection = () => {
         <section id="features" className="w-full py-20 md:py-24">
           <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">What Jurifly Offers:</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">What Jurifly Offers:</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                  <div className="space-y-4">
@@ -277,7 +277,7 @@ const FounderLoveSection = () => {
     return (
         <section id="love" className="w-full py-20 md:py-24 bg-muted">
             <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why Founders Love JuriFly</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">Why Founders Love JuriFly</h2>
                 <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
                     {quotes.map((quote, index) => (
                         <Card key={index} className="p-6 text-left interactive-lift bg-background/50 break-inside-avoid">
@@ -330,7 +330,7 @@ const FaqSection = () => {
         <section id="faq" className="w-full py-20 md:py-24 bg-muted">
              <AnimatedSection className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                 <div className="text-center mb-12">
-                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Frequently Asked Questions</h2>
+                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">Frequently Asked Questions</h2>
                 </div>
                 <Accordion type="single" collapsible className="w-full">
                     {faqs.map((faq, i) => (
@@ -351,7 +351,7 @@ const NewsletterSection = () => {
             <AnimatedSection className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-lg">
                 <Card className="interactive-lift overflow-hidden bg-card/50">
                      <div className="p-8 md:p-10 flex flex-col justify-center text-center">
-                        <h2 className="text-2xl font-bold font-headline">Want to Stay in the Loop?</h2>
+                        <h2 className="text-2xl font-bold font-headline" data-cursor-size="large">Want to Stay in the Loop?</h2>
                         <p className="mt-2 text-muted-foreground max-w-xl mx-auto">Get weekly founder-friendly tips + early access invites + memes that only startup folks get.</p>
                         <form className="mt-6 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                             <Input
@@ -374,7 +374,7 @@ const FinalCtaSection = () => {
   return (
     <section className="w-full py-20 md:py-24">
       <AnimatedSection className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
-        <h2 className="text-3xl md:text-5xl font-bold font-headline">Don’t Worry About Legal Stuff Again.</h2>
+        <h2 className="text-3xl md:text-5xl font-bold font-headline" data-cursor-size="large">Don’t Worry About Legal Stuff Again.</h2>
         <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. No filings. Just clarity.</p>
         <div className="mt-8">
           <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>

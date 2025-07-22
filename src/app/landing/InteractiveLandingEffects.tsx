@@ -3,6 +3,7 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const CustomCursor = () => {
     const cursorRef = useRef<HTMLDivElement>(null);
@@ -20,8 +21,30 @@ const CustomCursor = () => {
             x.set(e.clientX);
             y.set(e.clientY);
         };
+        
+        const handleMouseOver = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.matches('[data-cursor-size="large"]')) {
+                followerRef.current?.classList.add('scale-150');
+            }
+        };
+        
+        const handleMouseOut = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.matches('[data-cursor-size="large"]')) {
+                followerRef.current?.classList.remove('scale-150');
+            }
+        };
+
         window.addEventListener('mousemove', moveCursor);
-        return () => window.removeEventListener('mousemove', moveCursor);
+        document.addEventListener('mouseover', handleMouseOver);
+        document.addEventListener('mouseout', handleMouseOut);
+        
+        return () => {
+            window.removeEventListener('mousemove', moveCursor);
+            document.removeEventListener('mouseover', handleMouseOver);
+            document.removeEventListener('mouseout', handleMouseOut);
+        };
     }, [x, y]);
 
     return (
@@ -34,7 +57,7 @@ const CustomCursor = () => {
             <motion.div
                 ref={followerRef}
                 style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
-                className="fixed top-0 left-0 w-8 h-8 border-2 border-primary rounded-full pointer-events-none z-[9999]"
+                className="fixed top-0 left-0 w-8 h-8 border-2 border-primary rounded-full pointer-events-none z-[9999] transition-transform duration-300 ease-in-out"
             />
         </>
     );
@@ -122,12 +145,12 @@ const ParticleCanvas = () => {
 
     const init = () => {
       particles = [];
-      const colors = ["hsl(var(--primary))", "hsl(var(--accent))"];
+      // Use CSS variables for theme-aware particle colors
+      const particleColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim();
       for (let i = 0; i < particleCount; i++) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        particles.push(new Particle(x, y, color));
+        particles.push(new Particle(x, y, particleColor));
       }
     };
     init();
@@ -143,9 +166,21 @@ const ParticleCanvas = () => {
     };
     animate();
 
+    // Re-initialize particles on theme change
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+                setTimeout(init, 100);
+            }
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
+      observer.disconnect();
     };
   }, []);
 
