@@ -12,8 +12,9 @@ const CustomCursor = () => {
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
     
-    const followerX = useSpring(x, { stiffness: 1200, damping: 60 });
-    const followerY = useSpring(y, { stiffness: 1200, damping: 60 });
+    // Adjust stiffness and damping for a more responsive feel
+    const followerX = useSpring(x, { stiffness: 1500, damping: 100 });
+    const followerY = useSpring(y, { stiffness: 1500, damping: 100 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {

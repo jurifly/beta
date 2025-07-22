@@ -99,8 +99,8 @@ export default {
           to: { opacity: "1" },
         },
         "marquee": {
-          '0%': { transform: 'translateX(0)' },
-          '100%': { transform: 'translateX(-50%)' },
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
         }
       },
       animation: {

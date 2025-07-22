@@ -100,7 +100,7 @@ html {
 /* Marquee Styles */
 @layer utilities {
   .marquee-container {
-    @apply w-full overflow-hidden text-sm font-medium uppercase tracking-wider text-muted-foreground/50 py-4 my-12;
+    @apply w-full overflow-hidden text-sm font-medium uppercase tracking-wider text-muted-foreground/50 py-4;
   }
   .top-marquee {
     @apply rotate-[-2deg] scale-110;
