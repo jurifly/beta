@@ -57,9 +57,15 @@ const Logo = () => (
     </>
 );
 
+const JuriFlyWord = () => (
+    <span className="jurifly-word">
+        <span className="jurifly-word-gradient">Jurifly</span>
+    </span>
+);
+
 const Marquee = ({ children, reverse = false }: { children: React.ReactNode, reverse?: boolean}) => (
-    <div className="marquee-container">
-        <div className={cn("marquee-content", reverse && "marquee-reverse")}>
+    <div className={cn("marquee-container", reverse && "marquee-reverse")}>
+        <div className="marquee-content">
             {children}
             {children}
         </div>
@@ -108,9 +114,9 @@ const HeroSection = () => {
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight" data-cursor-size="large">
               India's Smartest Legal & Compliance Buddy for Founders & CAs.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6 mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6 mx-auto" data-cursor-size="large">
               Why juggle GST, ROC, ITR, MCA, FEMA, ESOPs, and random panic attacks?
-              Let jurifly do the boring bits, while you build the next big thing.
+              Let <JuriFlyWord /> do the boring bits, while you build the next big thing.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
@@ -213,8 +219,8 @@ const ProblemSection = () => {
                         </CardContent>
                     </Card>
                 </div>
-                <p className="text-center text-lg text-muted-foreground pt-8">
-                    Welcome to Jurifly. We make legal + compliance feel less like brain surgery.
+                <p className="text-center text-lg text-muted-foreground pt-8" data-cursor-size="large">
+                    Welcome to <JuriFlyWord />. We make legal + compliance feel less like brain surgery.
                 </p>
             </AnimatedSection>
         </section>
@@ -245,7 +251,7 @@ const OffersSection = () => {
         <section id="features" className="w-full py-20 md:py-24">
           <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-xl">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">What Jurifly Offers:</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">What <JuriFlyWord /> Offers:</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                  <div className="space-y-4">
@@ -293,7 +299,7 @@ const FounderLoveSection = () => {
     return (
         <section id="love" className="w-full py-20 md:py-24 bg-muted">
             <AnimatedSection className="container mx-auto space-y-12 px-4 sm:px-6 lg:px-8 max-w-screen-lg text-center">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">Why Founders Love JuriFly</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline" data-cursor-size="large">Why Founders Love <JuriFlyWord /></h2>
                 <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
                     {quotes.map((quote, index) => (
                         <Card key={index} className="p-6 text-left interactive-lift bg-background/50 break-inside-avoid">
@@ -310,7 +316,7 @@ const FounderLoveSection = () => {
 
 const TestimonialsSection = () => {
     const testimonials = [
-        { quote: "JuriFly  is like Notion + AI + LegalZoom made for India.", author: "Rachit Jain, Founder, Pre-seed Startup" },
+        { quote: "JuriFly is like Notion + AI + LegalZoom made for India.", author: "Rachit Jain, Founder, Pre-seed Startup" },
         { quote: "Earlier I had 40 unread mails from clients daily. Now? 3.", author: "Neha Gupta, CA, 10+ years" },
         { quote: "It felt like my co-founder… but for compliance.", author: "Siddharth Mehra, YC alum" },
         { quote: "Our clients LOVE the dashboard. We saved 10+ hours a week.", author: "Nikhil Agrawal, CA, runs a 40-client firm" },
@@ -412,7 +418,7 @@ const LandingFooter = () => (
         </p>
       </div>
       <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap justify-center">
-        <p>⚡ Jurifly is currently in beta</p>
+        <p>⚡ <JuriFlyWord /> is currently in beta</p>
         <span className="mx-1">|</span>
         <Button variant="link" size="sm" asChild><Link href="/about">About</Link></Button>
         <Button variant="link" size="sm" asChild><Link href="/contact">Contact</Link></Button>
@@ -437,14 +443,16 @@ export default function LandingPage() {
                 <span>Stay Ahead, Stay Compliant</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Cap Table Management</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Due Diligence Prep</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Automated Workflows</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
             <Marquee reverse>
                 <span>Investor Discovery</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Automated Workflows</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Secure Document Vault</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Financial Runway & Scenarios</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Secure Document Vault</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
+                <span>DPIIT & MSME Recognition</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Founder-Friendly</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
         </div>
         <ProblemSection />
@@ -461,14 +469,16 @@ export default function LandingPage() {
                 <span>Your AI Co-pilot</span><span className="mx-4 text-primary">&bull;</span>
                 <span>One Unified Workspace</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Angel Tax Guidance</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
             <Marquee reverse>
                 <span>ESOP Management</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Built for India</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
                 <span>DPIIT & MSME Recognition</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Founder-Friendly</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Built for India</span><span className="mx-4 text-primary">&bull;</span>
+                <span>No More Spreadsheets</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Your Legal Co-pilot</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
         </div>
         <FinalCtaSection />

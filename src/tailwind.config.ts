@@ -105,6 +105,11 @@ export default {
         "pulse-slow": {
           "50%": { opacity: ".5" },
         },
+        "textGradient": {
+          "to": {
+            "background-position": "200% center"
+          }
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -116,6 +121,7 @@ export default {
         'marquee': 'marquee 40s linear infinite',
         'pulse-slow': 'pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-slower': 'pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'textGradient': 'textGradient 5s ease-in-out infinite',
       },
     },
   },

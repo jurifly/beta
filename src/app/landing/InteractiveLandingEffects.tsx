@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 const CustomCursor = () => {
     const cursorRef = useRef<HTMLDivElement>(null);
 
-    const x = useMotionValue(-100);
-    const y = useMotionValue(-100);
+    const x = useSpring(-100, { stiffness: 400, damping: 40 });
+    const y = useSpring(-100, { stiffness: 400, damping: 40 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -36,7 +36,7 @@ const CustomCursor = () => {
             if (cursorRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
                 cursorRef.current.style.width = '12px';
                 cursorRef.current.style.height = '12px';
-                cursorRef.current.style.opacity = '1';
+                cursorRef.current.style.opacity = '0';
                 cursorRef.current.classList.remove('mix-blend-difference', 'bg-white');
                 cursorRef.current.classList.add('bg-primary');
             }
@@ -57,7 +57,7 @@ const CustomCursor = () => {
         <motion.div
             ref={cursorRef}
             style={{ translateX: x, translateY: y, x: '-50%', y: '-50%' }}
-            className="fixed top-0 left-0 w-3 h-3 bg-primary rounded-full pointer-events-none z-[9999] transition-[width,height,opacity] duration-300 ease-in-out"
+            className="fixed top-0 left-0 w-3 h-3 bg-primary rounded-full pointer-events-none z-[9999] transition-[width,height,opacity] duration-300 ease-in-out opacity-0"
         />
     );
 }
