@@ -150,14 +150,21 @@ const ParallaxImageSection = () => {
   return (
     <div className="w-full pb-20 md:pb-24">
        <div className="w-full">
-            <Image 
-                src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
-                alt="Jurifly dashboard preview"
-                width={1200}
-                height={800}
-                className="rounded-xl shadow-2xl mx-auto interactive-lift max-w-[90%] sm:max-w-[80%] lg:max-w-4xl"
-                data-ai-hint="dashboard preview"
-            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+                <Image 
+                    src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
+                    alt="Jurifly dashboard preview"
+                    width={1200}
+                    height={800}
+                    className="rounded-xl shadow-2xl mx-auto interactive-lift max-w-[90%] sm:max-w-[80%] lg:max-w-4xl"
+                    data-ai-hint="dashboard preview"
+                />
+            </motion.div>
         </div>
     </div>
   );
@@ -437,22 +444,22 @@ const LandingFooter = () => (
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden">
-      <TopMarquee />
+    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden no-cursor-effect">
       <LandingHeader />
       <main className="flex-1 relative z-10">
         <HeroSection />
         <ParallaxImageSection />
+        <BottomMarquee />
         <ProblemSection />
         <OffersSection />
         <FounderLoveSection />
         <TestimonialsSection />
         <FaqSection />
         <NewsletterSection />
+        <TopMarquee />
         <FinalCtaSection />
       </main>
       <LandingFooter />
-      <BottomMarquee />
       <InteractiveLandingEffects />
     </div>
   );

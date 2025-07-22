@@ -12,9 +12,9 @@ const CustomCursor = () => {
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
     
-    // Make the follower more responsive
-    const followerX = useSpring(x, { stiffness: 400, damping: 25 });
-    const followerY = useSpring(y, { stiffness: 400, damping: 25 });
+    // Make the follower more responsive by increasing stiffness and reducing damping
+    const followerX = useSpring(x, { stiffness: 500, damping: 30 });
+    const followerY = useSpring(y, { stiffness: 500, damping: 30 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -24,7 +24,8 @@ const CustomCursor = () => {
         
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            if (target.matches('[data-cursor-size="large"]')) {
+            // Check if the target or any of its parents is a text element or a link/button
+            if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
                 followerRef.current?.classList.add('scale-[2.5]');
                 followerRef.current?.classList.add('bg-primary/20');
             }
@@ -32,7 +33,7 @@ const CustomCursor = () => {
         
         const handleMouseOut = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            if (target.matches('[data-cursor-size="large"]')) {
+             if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
                 followerRef.current?.classList.remove('scale-[2.5]');
                 followerRef.current?.classList.remove('bg-primary/20');
             }
@@ -102,7 +103,7 @@ const ParticleCanvas = () => {
       constructor(x: number, y: number, color: string) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 1.2 + 0.5;
+        this.size = Math.random() * 1.5 + 0.8; // Slightly larger particles
         this.baseX = this.x;
         this.baseY = this.y;
         this.density = (Math.random() * 40) + 5;
@@ -189,7 +190,7 @@ const ParticleCanvas = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 opacity-20" />;
+  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 opacity-50" />;
 };
 
 

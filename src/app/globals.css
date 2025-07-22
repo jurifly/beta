@@ -100,13 +100,13 @@ html {
 /* Marquee Styles */
 @layer utilities {
   .marquee-container {
-    @apply pointer-events-none fixed left-0 z-50 w-full overflow-hidden text-sm font-medium uppercase tracking-wider text-muted-foreground/50;
+    @apply w-full overflow-hidden text-sm font-medium uppercase tracking-wider text-muted-foreground/50 py-4 my-12;
   }
   .top-marquee {
-    @apply top-0 -translate-y-1/2 rotate-[-2deg] scale-110;
+    @apply rotate-[-2deg] scale-110;
   }
   .bottom-marquee {
-    @apply bottom-0 translate-y-1/2 rotate-[2deg] scale-110;
+    @apply rotate-[2deg] scale-110;
   }
   .marquee-content {
     @apply flex w-max whitespace-nowrap;
