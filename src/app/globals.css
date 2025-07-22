@@ -100,7 +100,9 @@ html {
   }
 
   .marquee-container {
-    @apply w-full overflow-hidden text-sm font-medium uppercase tracking-wider text-muted-foreground/50 py-4 border-y border-border/20;
+    @apply w-full overflow-hidden text-sm font-medium uppercase tracking-wider py-4 border-border/20;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
   }
   .top-marquee {
     @apply rotate-[-3deg] scale-110;
