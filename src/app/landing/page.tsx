@@ -4,9 +4,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowRight,
@@ -20,16 +20,12 @@ import {
   Briefcase,
   GanttChartSquare,
   Users,
-  Flame,
-  Star,
-  FileText,
   AlertTriangle,
-  HeartHandshake,
-  Mail,
-  Repeat,
-  Sparkles,
   Book,
   Globe,
+  Repeat,
+  Sparkles,
+  Mail,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";
@@ -59,6 +55,38 @@ const Logo = () => (
       />
     </>
 );
+
+const MarqueeText = () => (
+  <>
+    <span>Compliance Simplified</span>
+    <span className="mx-4 text-primary">&bull;</span>
+    <span>AI-Powered Legal Tech</span>
+    <span className="mx-4 text-primary">&bull;</span>
+    <span>For Founders & CAs</span>
+    <span className="mx-4 text-primary">&bull;</span>
+    <span>Stay Ahead, Stay Compliant</span>
+    <span className="mx-4 text-primary">&bull;</span>
+  </>
+)
+
+const TopMarquee = () => (
+    <div className="marquee-container top-marquee">
+        <div className="marquee-content">
+            <MarqueeText />
+            <MarqueeText />
+        </div>
+    </div>
+);
+
+const BottomMarquee = () => (
+    <div className="marquee-container bottom-marquee">
+        <div className="marquee-content marquee-reverse">
+             <MarqueeText />
+             <MarqueeText />
+        </div>
+    </div>
+);
+
 
 const LandingHeader = () => {
   const router = useRouter();
@@ -408,7 +436,8 @@ const LandingFooter = () => (
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area">
+    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden">
+      <TopMarquee />
       <LandingHeader />
       <main className="flex-1 relative z-10">
         <HeroSection />
@@ -422,6 +451,7 @@ export default function LandingPage() {
         <FinalCtaSection />
       </main>
       <LandingFooter />
+      <BottomMarquee />
       <InteractiveLandingEffects />
     </div>
   );

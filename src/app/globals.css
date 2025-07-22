@@ -97,6 +97,35 @@ html {
   }
 }
 
+/* Marquee Styles */
+@layer utilities {
+  .marquee-container {
+    @apply pointer-events-none fixed left-0 z-50 w-full overflow-hidden text-sm font-medium uppercase tracking-wider text-muted-foreground/50;
+  }
+  .top-marquee {
+    @apply top-0 -translate-y-1/2 rotate-[-2deg] scale-110;
+  }
+  .bottom-marquee {
+    @apply bottom-0 translate-y-1/2 rotate-[2deg] scale-110;
+  }
+  .marquee-content {
+    @apply flex w-max animate-marquee whitespace-nowrap;
+  }
+  .marquee-reverse {
+    animation-direction: reverse;
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+
 /* Supporter Badge Styles */
 @keyframes textGradient {
   0% { background-position: 0% 50%; }

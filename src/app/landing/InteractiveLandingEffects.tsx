@@ -13,8 +13,8 @@ const CustomCursor = () => {
     const y = useMotionValue(-100);
     
     // Make the follower more responsive
-    const followerX = useSpring(x, { stiffness: 500, damping: 30 });
-    const followerY = useSpring(y, { stiffness: 500, damping: 30 });
+    const followerX = useSpring(x, { stiffness: 400, damping: 25 });
+    const followerY = useSpring(y, { stiffness: 400, damping: 25 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -25,14 +25,16 @@ const CustomCursor = () => {
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             if (target.matches('[data-cursor-size="large"]')) {
-                followerRef.current?.classList.add('scale-150');
+                followerRef.current?.classList.add('scale-[2.5]');
+                followerRef.current?.classList.add('bg-primary/20');
             }
         };
         
         const handleMouseOut = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             if (target.matches('[data-cursor-size="large"]')) {
-                followerRef.current?.classList.remove('scale-150');
+                followerRef.current?.classList.remove('scale-[2.5]');
+                followerRef.current?.classList.remove('bg-primary/20');
             }
         };
 
@@ -57,7 +59,7 @@ const CustomCursor = () => {
             <motion.div
                 ref={followerRef}
                 style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
-                className="fixed top-0 left-0 w-8 h-8 border-2 border-primary rounded-full pointer-events-none z-[9999] transition-transform duration-300 ease-in-out"
+                className="fixed top-0 left-0 w-10 h-10 border-2 border-primary/50 rounded-full pointer-events-none z-[9999] transition-transform,background-color duration-200 ease-in-out"
             />
         </>
     );
@@ -74,7 +76,7 @@ const ParticleCanvas = () => {
     if (!ctx) return;
 
     let particles: any[] = [];
-    const particleCount = 50;
+    const particleCount = 70;
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -100,10 +102,10 @@ const ParticleCanvas = () => {
       constructor(x: number, y: number, color: string) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 1.5 + 1;
+        this.size = Math.random() * 1.2 + 0.5;
         this.baseX = this.x;
         this.baseY = this.y;
-        this.density = (Math.random() * 30) + 1;
+        this.density = (Math.random() * 40) + 5;
         this.color = color;
       }
 
@@ -122,31 +124,35 @@ const ParticleCanvas = () => {
         const distance = Math.sqrt(dx * dx + dy * dy);
         const forceDirectionX = dx / distance;
         const forceDirectionY = dy / distance;
-        const maxDistance = 100;
+        const maxDistance = 120;
         const force = (maxDistance - distance) / maxDistance;
         const directionX = forceDirectionX * force * this.density;
         const directionY = forceDirectionY * force * this.density;
 
         if (distance < maxDistance) {
-          this.x -= directionX;
-          this.y -= directionY;
+          this.x -= directionX * 0.1;
+          this.y -= directionY * 0.1;
         } else {
           if (this.x !== this.baseX) {
             const dx = this.x - this.baseX;
-            this.x -= dx / 10;
+            this.x -= dx / 20;
           }
           if (this.y !== this.baseY) {
             const dy = this.y - this.baseY;
-            this.y -= dy / 10;
+            this.y -= dy / 20;
           }
         }
       }
     }
+    
+    let particleColor = 'rgba(255, 255, 255, 0.5)';
 
     const init = () => {
       particles = [];
       // Use CSS variables for theme-aware particle colors
-      const particleColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim();
+      const isDark = document.documentElement.classList.contains('dark');
+      particleColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)';
+
       for (let i = 0; i < particleCount; i++) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
@@ -166,7 +172,6 @@ const ParticleCanvas = () => {
     };
     animate();
 
-    // Re-initialize particles on theme change
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.attributeName === 'class') {
@@ -217,15 +222,15 @@ export function InteractiveLandingEffects() {
       left: '50%',
       top: '50%',
       transform: 'translate(-50%, -50%)',
-      position: 'absolute',
+      position: 'fixed',
       width: '30vmax',
       aspectRatio: '1',
       background: 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)))',
       animation: 'rotate 20s infinite',
       borderRadius: '50%',
-      filter: 'blur(100px)',
-      opacity: 0.25,
-      zIndex: -1,
+      filter: 'blur(120px)',
+      opacity: 0.15,
+      zIndex: -2,
   };
   
   const keyframes = `
