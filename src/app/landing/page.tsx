@@ -86,6 +86,9 @@ const HeroSection = () => {
   const router = useRouter();
   return (
     <section className="relative w-full py-24 md:py-32 overflow-hidden">
+      <div 
+        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(30,64,175,0.1),transparent)]"
+      />
       <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
         <motion.div 
           initial={{ opacity: 0, y: -50 }}

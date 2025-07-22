@@ -11,8 +11,9 @@ const CustomCursor = () => {
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
     
-    const followerX = useSpring(x, { stiffness: 150, damping: 20 });
-    const followerY = useSpring(y, { stiffness: 150, damping: 20 });
+    // Make the follower more responsive
+    const followerX = useSpring(x, { stiffness: 500, damping: 30 });
+    const followerY = useSpring(y, { stiffness: 500, damping: 30 });
 
     useEffect(() => {
         const moveCursor = (e: MouseEvent) => {
@@ -27,17 +28,130 @@ const CustomCursor = () => {
         <>
             <motion.div
                 ref={cursorRef}
-                style={{ translateX: x, translateY: y }}
+                style={{ translateX: x, translateY: y, x: '-50%', y: '-50%' }}
                 className="fixed top-0 left-0 w-3 h-3 bg-primary rounded-full pointer-events-none z-[9999]"
             />
             <motion.div
                 ref={followerRef}
-                style={{ translateX: followerX, translateY: followerY }}
-                className="fixed top-0 left-0 w-8 h-8 border-2 border-primary rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2"
+                style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
+                className="fixed top-0 left-0 w-8 h-8 border-2 border-primary rounded-full pointer-events-none z-[9999]"
             />
         </>
     );
 }
+
+const ParticleCanvas = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let particles: any[] = [];
+    const particleCount = 50;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    class Particle {
+      x: number;
+      y: number;
+      size: number;
+      baseX: number;
+      baseY: number;
+      density: number;
+      color: string;
+
+      constructor(x: number, y: number, color: string) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 1.5 + 1;
+        this.baseX = this.x;
+        this.baseY = this.y;
+        this.density = (Math.random() * 30) + 1;
+        this.color = color;
+      }
+
+      draw() {
+        if (!ctx) return;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      update() {
+        const dx = mouse.current.x - this.x;
+        const dy = mouse.current.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const forceDirectionX = dx / distance;
+        const forceDirectionY = dy / distance;
+        const maxDistance = 100;
+        const force = (maxDistance - distance) / maxDistance;
+        const directionX = forceDirectionX * force * this.density;
+        const directionY = forceDirectionY * force * this.density;
+
+        if (distance < maxDistance) {
+          this.x -= directionX;
+          this.y -= directionY;
+        } else {
+          if (this.x !== this.baseX) {
+            const dx = this.x - this.baseX;
+            this.x -= dx / 10;
+          }
+          if (this.y !== this.baseY) {
+            const dy = this.y - this.baseY;
+            this.y -= dy / 10;
+          }
+        }
+      }
+    }
+
+    const init = () => {
+      particles = [];
+      const colors = ["hsl(var(--primary))", "hsl(var(--accent))"];
+      for (let i = 0; i < particleCount; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particles.push(new Particle(x, y, color));
+      }
+    };
+    init();
+
+    const animate = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+      }
+      requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 opacity-20" />;
+};
+
 
 export function InteractiveLandingEffects() {
   const blobRef = useRef<HTMLDivElement>(null);
@@ -94,6 +208,7 @@ export function InteractiveLandingEffects() {
     <>
         <style>{keyframes}</style>
         <div ref={blobRef} style={blobStyles}></div>
+        <ParticleCanvas />
         <CustomCursor />
     </>
   );
