@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -50,7 +50,7 @@ const Logo = () => (
         data-ai-hint="logo company"
       />
       <Image 
-        src="https://i.ibb.co/4wdbj1XL/claifyblacko-1.png"
+        src="https://i.ibb.co/4wdbj1XL/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262"
         alt="Jurifly Logo"
         width={114}
         height={24}
@@ -87,21 +87,21 @@ const HeroSection = () => {
   return (
     <section className="relative w-full py-24 md:py-32 overflow-hidden">
       <InteractiveLandingEffects />
-      <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
+      <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
         <motion.div 
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-left"
+          className="text-center"
         >
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight">
               India's Smartest Legal & Compliance Buddy for Founders & CAs.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6 mx-auto">
               Why juggle GST, ROC, ITR, MCA, FEMA, ESOPs, and random panic attacks?
               Let jurifly do the boring bits, while you build the next big thing.
             </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-start justify-start gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
                     Sign up for Beta
                 </Button>
@@ -110,25 +110,68 @@ const HeroSection = () => {
                 </Button>
             </div>
         </motion.div>
-        <motion.div
-           initial={{ opacity: 0, scale: 0.8 }}
-           animate={{ opacity: 1, scale: 1 }}
-           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-           className="relative"
-        >
-            <Image 
-                src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
-                alt="Jurifly dashboard preview"
-                width={600}
-                height={600}
-                className="rounded-xl shadow-2xl mx-auto interactive-lift"
-                data-ai-hint="dashboard preview"
-            />
-        </motion.div>
       </div>
     </section>
   )
 };
+
+const ParallaxImageSection = () => {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const springX = useSpring(x, { stiffness: 100, damping: 20 });
+  const springY = useSpring(y, { stiffness: 100, damping: 20 });
+
+  const transformX = useTransform(springX, [-0.5, 0.5], ['-5px', '5px']);
+  const transformY = useTransform(springY, [-0.5, 0.5], ['-5px', '5px']);
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (ref.current) {
+      const { left, top, width, height } = (ref.current as HTMLElement).getBoundingClientRect();
+      const mouseX = event.clientX - left;
+      const mouseY = event.clientY - top;
+      
+      const normalizedX = (mouseX / width) - 0.5;
+      const normalizedY = (mouseY / height) - 0.5;
+
+      x.set(normalizedX);
+      y.set(normalizedY);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+  
+  return (
+    <motion.div
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="w-full pb-20 md:pb-24"
+    >
+       <motion.div 
+         className="w-full"
+         style={{
+            translateX: transformX,
+            translateY: transformY,
+            transition: 'transform 0.1s ease-out'
+         }}
+        >
+            <Image 
+                src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
+                alt="Jurifly dashboard preview"
+                width={1200}
+                height={800}
+                className="rounded-xl shadow-2xl mx-auto interactive-lift max-w-[90%] sm:max-w-[80%] lg:max-w-4xl"
+                data-ai-hint="dashboard preview"
+            />
+        </motion.div>
+    </motion.div>
+  );
+}
 
 const AnimatedSection = ({ children, className }: { children: React.ReactNode, className?: string }) => {
     return (
@@ -408,6 +451,7 @@ export default function LandingPage() {
       <LandingHeader />
       <main className="flex-1">
         <HeroSection />
+        <ParallaxImageSection />
         <ProblemSection />
         <OffersSection />
         <FounderLoveSection />
