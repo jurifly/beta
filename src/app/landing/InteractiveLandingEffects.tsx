@@ -12,7 +12,7 @@ const CustomCursor = () => {
     const x = useMotionValue(-100);
     const y = useMotionValue(-100);
     
-    // Adjust stiffness and damping for a more responsive feel
+    // Stiffer spring for less lag
     const followerX = useSpring(x, { stiffness: 1500, damping: 100 });
     const followerY = useSpring(y, { stiffness: 1500, damping: 100 });
 
@@ -24,15 +24,22 @@ const CustomCursor = () => {
         
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
-                followerRef.current?.classList.add('scale-100', 'opacity-100');
+            if (followerRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
+                const fontSize = window.getComputedStyle(target).fontSize;
+                const size = parseFloat(fontSize) * 1.2; // A bit larger than the font
+                followerRef.current.style.width = `${size}px`;
+                followerRef.current.style.height = `${size}px`;
+                followerRef.current.style.opacity = '1';
             }
         };
         
         const handleMouseOut = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-             if (target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]') && !target.closest('.no-cursor-effect')) {
-                followerRef.current?.classList.remove('scale-100', 'opacity-100');
+             const target = e.target as HTMLElement;
+            if (followerRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
+                // Revert to default size
+                followerRef.current.style.width = '2px';
+                followerRef.current.style.height = '2px';
+                followerRef.current.style.opacity = '0';
             }
         };
 
@@ -57,7 +64,10 @@ const CustomCursor = () => {
             <motion.div
                 ref={followerRef}
                 style={{ translateX: followerX, translateY: followerY, x: '-50%', y: '-50%' }}
-                className="fixed top-0 left-0 w-10 h-10 bg-white rounded-full pointer-events-none z-[9999] transition-transform duration-200 ease-in-out mix-blend-difference scale-0 opacity-0"
+                className={cn(
+                  "fixed top-0 left-0 rounded-full pointer-events-none z-[9999] transition-[width,height,opacity] duration-300 ease-in-out",
+                  "bg-white mix-blend-difference opacity-0 w-0.5 h-0.5" // Default state: 2px diameter (1px radius), invisible
+                )}
             />
         </>
     );
@@ -227,36 +237,9 @@ export function InteractiveLandingEffects() {
     };
   }, []);
   
-  const blobStyles: React.CSSProperties = {
-      left: '50%',
-      top: '50%',
-      transform: 'translate(-50%, -50%)',
-      position: 'fixed',
-      width: '30vmax',
-      aspectRatio: '1',
-      background: 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)))',
-      animation: 'rotate 20s infinite',
-      borderRadius: '50%',
-      filter: 'blur(120px)',
-      opacity: 0.15,
-      zIndex: -2,
-  };
-  
-  const keyframes = `
-    @keyframes rotate {
-      from {
-        transform: translate(-50%, -50%) rotate(0deg);
-      }
-      to {
-        transform: translate(-50%, -50%) rotate(360deg);
-      }
-    }
-  `;
-
   return (
     <>
-        <style>{keyframes}</style>
-        <div ref={blobRef} style={blobStyles}></div>
+        <div ref={blobRef} className="background-blob"></div>
         <ParticleCanvas />
         <CustomCursor />
     </>

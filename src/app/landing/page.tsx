@@ -93,8 +93,11 @@ const HeroSection = () => {
   return (
     <section className="relative w-full py-24 md:py-32 overflow-hidden">
       <div 
-        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(30,64,175,0.1),transparent)]"
-      />
+        className="absolute inset-0 -z-10"
+      >
+        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-[120px] animate-pulse-slow"></div>
+        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-accent/5 rounded-full blur-[120px] animate-pulse-slower"></div>
+      </div>
       <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
         <motion.div 
           initial={{ opacity: 0, y: -50 }}
@@ -433,13 +436,15 @@ export default function LandingPage() {
                 <span>For Founders & CAs</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Stay Ahead, Stay Compliant</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Cap Table Management</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Due Diligence Prep</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
             <Marquee reverse>
                 <span>Investor Discovery</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Due Diligence Prep</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Automated Workflows</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Secure Document Vault</span><span className="mx-4 text-primary">&bull;</span>
-                 <span>Financial Runway & Scenarios</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Financial Runway & Scenarios</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
         </div>
         <ProblemSection />
@@ -448,20 +453,22 @@ export default function LandingPage() {
         <TestimonialsSection />
         <FaqSection />
         <NewsletterSection />
-         <div className="bottom-marquee py-8">
+        <div className="bottom-marquee py-8">
             <Marquee>
                 <span>No Jargon</span><span className="mx-4 text-primary">&bull;</span>
                 <span>No Overwhelm</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Just Clarity</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Your AI Co-pilot</span><span className="mx-4 text-primary">&bull;</span>
-                 <span>One Unified Workspace</span><span className="mx-4 text-primary">&bull;</span>
+                <span>One Unified Workspace</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Angel Tax Guidance</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
             <Marquee reverse>
                 <span>ESOP Management</span><span className="mx-4 text-primary">&bull;</span>
                 <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
-                 <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
                 <span>DPIIT & MSME Recognition</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Angel Tax Guidance</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Founder-Friendly</span><span className="mx-4 text-primary">&bull;</span>
+                <span>Built for India</span><span className="mx-4 text-primary">&bull;</span>
             </Marquee>
         </div>
         <FinalCtaSection />

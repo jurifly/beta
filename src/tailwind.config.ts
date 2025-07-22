@@ -101,7 +101,10 @@ export default {
         "marquee": {
           from: { transform: 'translateX(0)' },
           to: { transform: 'translateX(-50%)' },
-        }
+        },
+        "pulse-slow": {
+          "50%": { opacity: ".5" },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -111,6 +114,8 @@ export default {
         'slide-in-from-bottom-8': 'slide-in-from-bottom-8 0.5s ease-out',
         'fade-in-25': 'fade-in-25 0.5s ease-out',
         'marquee': 'marquee 40s linear infinite',
+        'pulse-slow': 'pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-slower': 'pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
