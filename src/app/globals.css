@@ -106,8 +106,7 @@ html {
     @apply rotate-[2deg] scale-110;
   }
   .marquee-content {
-    @apply flex w-max whitespace-nowrap;
-    animation: marquee 80s linear infinite;
+    @apply flex w-max whitespace-nowrap animate-marquee;
   }
   .marquee-reverse {
     animation-direction: reverse;
