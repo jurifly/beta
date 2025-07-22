@@ -26,6 +26,7 @@ import {
   Repeat,
   Sparkles,
   Mail,
+  FileText,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import Link from "next/link";

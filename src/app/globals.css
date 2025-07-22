@@ -109,19 +109,11 @@ html {
     @apply bottom-0 translate-y-1/2 rotate-[2deg] scale-110;
   }
   .marquee-content {
-    @apply flex w-max animate-marquee whitespace-nowrap;
+    @apply flex w-max whitespace-nowrap;
+    animation: marquee 80s linear infinite;
   }
   .marquee-reverse {
     animation-direction: reverse;
-  }
-
-  @keyframes marquee {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
   }
 }
 
