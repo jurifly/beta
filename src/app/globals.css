@@ -129,3 +129,11 @@ html {
   position: relative;
   overflow: visible; /* Allow particles to go a bit outside if needed */
 }
+
+/* Custom Cursor for landing page */
+.landing-page-cursor-area {
+    cursor: none;
+}
+.landing-page-cursor-area * {
+    cursor: none;
+}

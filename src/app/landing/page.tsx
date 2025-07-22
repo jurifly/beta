@@ -86,7 +86,6 @@ const HeroSection = () => {
   const router = useRouter();
   return (
     <section className="relative w-full py-24 md:py-32 overflow-hidden">
-      <InteractiveLandingEffects />
       <div className="container relative mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 text-center">
         <motion.div 
           initial={{ opacity: 0, y: -50 }}
@@ -116,50 +115,9 @@ const HeroSection = () => {
 };
 
 const ParallaxImageSection = () => {
-  const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const springX = useSpring(x, { stiffness: 100, damping: 20 });
-  const springY = useSpring(y, { stiffness: 100, damping: 20 });
-
-  const transformX = useTransform(springX, [-0.5, 0.5], ['-5px', '5px']);
-  const transformY = useTransform(springY, [-0.5, 0.5], ['-5px', '5px']);
-
-  const handleMouseMove = (event: React.MouseEvent) => {
-    if (ref.current) {
-      const { left, top, width, height } = (ref.current as HTMLElement).getBoundingClientRect();
-      const mouseX = event.clientX - left;
-      const mouseY = event.clientY - top;
-      
-      const normalizedX = (mouseX / width) - 0.5;
-      const normalizedY = (mouseY / height) - 0.5;
-
-      x.set(normalizedX);
-      y.set(normalizedY);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-  
   return (
-    <motion.div
-        ref={ref}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="w-full pb-20 md:pb-24"
-    >
-       <motion.div 
-         className="w-full"
-         style={{
-            translateX: transformX,
-            translateY: transformY,
-            transition: 'transform 0.1s ease-out'
-         }}
-        >
+    <div className="w-full pb-20 md:pb-24">
+       <div className="w-full">
             <Image 
                 src="https://ik.imagekit.io/claariai/Untitled%20design%20(5)%20(1).png?updatedAt=1753176057262" 
                 alt="Jurifly dashboard preview"
@@ -168,8 +126,8 @@ const ParallaxImageSection = () => {
                 className="rounded-xl shadow-2xl mx-auto interactive-lift max-w-[90%] sm:max-w-[80%] lg:max-w-4xl"
                 data-ai-hint="dashboard preview"
             />
-        </motion.div>
-    </motion.div>
+        </div>
+    </div>
   );
 }
 
@@ -447,9 +405,9 @@ const LandingFooter = () => (
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background font-body">
+    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area">
       <LandingHeader />
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         <HeroSection />
         <ParallaxImageSection />
         <ProblemSection />
@@ -461,6 +419,7 @@ export default function LandingPage() {
         <FinalCtaSection />
       </main>
       <LandingFooter />
+      <InteractiveLandingEffects />
     </div>
   );
 }
