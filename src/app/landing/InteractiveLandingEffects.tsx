@@ -20,8 +20,7 @@ const CustomCursor = () => {
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             if (cursorRef.current && target.matches('h1, h2, h3, p, a, button, blockquote, [data-cursor-size="large"]')) {
-                const fontSize = window.getComputedStyle(target).fontSize;
-                const size = parseFloat(fontSize) * 1.2;
+                const size = 36;
                 cursorRef.current.style.width = `${size}px`;
                 cursorRef.current.style.height = `${size}px`;
                 cursorRef.current.style.opacity = '1';
