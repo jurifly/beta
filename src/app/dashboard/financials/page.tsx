@@ -31,6 +31,8 @@ import type { ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-fl
 import type { FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 import ReactMarkdown from "react-markdown";
 
+export const maxDuration = 300; 
+
 const personalIncomeSchema = z.object({
   salary: z.coerce.number().min(0).default(0),
   businessIncome: z.coerce.number().min(0).default(0),

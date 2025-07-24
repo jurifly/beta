@@ -90,7 +90,15 @@ export default function LatestNewsPage() {
     const categories = newsCategories[legalRegion as keyof typeof newsCategories] || newsCategories['India'];
     const [activeCategory, setActiveCategory] = useState(categories[0].key);
 
+    const isApiConfigured = !!process.env.NEXT_PUBLIC_NEWS_API_KEY;
+
     useEffect(() => {
+        if (!isApiConfigured) {
+            setError("The news service is not configured. Please add a NewsAPI.org key to your environment variables.");
+            setIsLoading(false);
+            return;
+        }
+
         const fetchNews = async () => {
             if (!userProfile) return;
             setIsLoading(true);
@@ -108,7 +116,7 @@ export default function LatestNewsPage() {
         };
 
         fetchNews();
-    }, [activeCategory, userProfile]);
+    }, [activeCategory, userProfile, isApiConfigured]);
 
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;

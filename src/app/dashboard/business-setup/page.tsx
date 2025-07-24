@@ -56,6 +56,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+export const maxDuration = 300; 
+
 const STEPS = [
   { id: 1, name: "Business Type", icon: Building2 },
   { id: 2, name: "INC Code Finder", icon: Fingerprint },

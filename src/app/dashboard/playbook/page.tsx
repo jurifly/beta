@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format, formatDistanceToNow, differenceInMonths } from 'date-fns';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import * as AiActions from './actions';
 import type { GenerateDDChecklistOutput, ChecklistCategory, UserProfile } from "@/lib/types";
 import type { GenerateChecklistOutput as RawChecklistOutput } from '@/ai/flows/generate-checklist-flow';
@@ -31,6 +31,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { compareStatesAction } from './actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+
+export const maxDuration = 300; 
 
 // --- Dataroom Audit Tab ---
 

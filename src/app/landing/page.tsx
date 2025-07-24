@@ -103,6 +103,19 @@ const LandingHeader = () => {
   );
 };
 
+const PrototypeBanner = () => {
+    return (
+        <div className="bg-yellow-100 dark:bg-yellow-900/30 border-t border-b border-yellow-200 dark:border-yellow-800/50 text-yellow-800 dark:text-yellow-200">
+            <div className="container mx-auto px-4 py-2 text-center text-sm flex items-center justify-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                <p>
+                    <span className="font-semibold">Prototype for User Testing:</span> All AI-generated content is for demonstration and should be verified.
+                </p>
+            </div>
+        </div>
+    )
+}
+
 const HeroSection = () => {
   const router = useRouter();
   return (
@@ -517,6 +530,7 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden no-cursor-effect">
       <LandingHeader />
+      <PrototypeBanner />
       <main className="flex-1 relative z-10">
         <HeroSection />
         <div className="top-marquee py-8">

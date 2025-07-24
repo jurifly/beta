@@ -285,12 +285,12 @@ export default function RegisterPage() {
             </form>
           </CardContent>
           <CardFooter className="text-center text-sm">
-            <p className="w-full">
+            <div className="w-full">
               Already have an account?{" "}
               <Link href="/login" className="font-semibold text-primary hover:underline">
                 Log in
               </Link>
-            </p>
+            </div>
           </CardFooter>
         </Card>
     </div>
