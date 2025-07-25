@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Loader2, Rss } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -40,6 +40,7 @@ const ArticleCard = ({ article }: { article: NewsArticle }) => (
                     src={article.urlToImage}
                     alt={article.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
                     data-ai-hint="news article"
                 />
@@ -80,7 +81,7 @@ const ArticleSkeleton = () => (
     </Card>
 );
 
-export default function LatestNewsPage() {
+function LatestNewsContent() {
     const { userProfile } = useAuth();
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -90,11 +91,11 @@ export default function LatestNewsPage() {
     const categories = newsCategories[legalRegion as keyof typeof newsCategories] || newsCategories['India'];
     const [activeCategory, setActiveCategory] = useState(categories[0].key);
 
-    const isApiConfigured = !!process.env.NEXT_PUBLIC_NEWS_API_KEY;
+    const isApiConfigured = process.env.NEXT_PUBLIC_NEWS_API_KEY && process.env.NEXT_PUBLIC_NEWS_API_KEY !== "YOUR_NEWS_API_KEY_HERE";
 
     useEffect(() => {
         if (!isApiConfigured) {
-            setError("The news service is not configured. Please add a NewsAPI.org key to your environment variables.");
+            setError("The news service is not configured. Please add a NewsAPI.org key to your environment variables to enable this feature.");
             setIsLoading(false);
             return;
         }
@@ -168,4 +169,12 @@ export default function LatestNewsPage() {
             </div>
         </div>
     );
+}
+
+export default function LatestNewsPage() {
+  return (
+    <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+      <LatestNewsContent />
+    </Suspense>
+  );
 }

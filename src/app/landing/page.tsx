@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from "react";
@@ -415,11 +416,11 @@ const LandingFooter = () => (
                     Live<br />it up!
                 </h1>
                 <p className="text-lg text-muted-foreground font-medium flex items-center gap-2">
-                    Crafted with <Heart className="w-5 h-5 text-red-500 fill-current" /> in Bengaluru, India
+                    Made with <Heart className="w-5 h-5 text-red-500 fill-current" /> in India
                 </p>
-                <p className="text-base text-muted-foreground italic">
-                    <JuriFlyWord /> helps <span className="font-semibold text-foreground/90">CAs</span> and <span className="font-semibold text-foreground/90">Startup Founders</span> stay legally unstoppable.
-                </p>
+                <div className="text-base text-muted-foreground italic">
+                  <JuriFlyWord /> helps <span className="font-semibold text-foreground/90">CAs</span> and <span className="font-semibold text-foreground/90">Startup Founders</span> stay legally unstoppable.
+                </div>
             </div>
             <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
                 <p>&copy; {new Date().getFullYear()} JuriFly. All rights reserved.</p>

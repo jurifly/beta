@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, useTransition, useMemo } from 'react';
+import { useState, useRef, useEffect, useTransition, useMemo, Suspense } from 'react';
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -515,8 +515,7 @@ function StateAssistantTab() {
   );
 }
 
-// --- Main Page Component ---
-export default function PlaybookPage() {
+function PlaybookPageContent() {
     const { userProfile } = useAuth();
     if (!userProfile) {
         return <div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -550,5 +549,14 @@ export default function PlaybookPage() {
                 )}
             </Tabs>
         </div>
+    );
+}
+
+// --- Main Page Component ---
+export default function PlaybookPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <PlaybookPageContent />
+        </Suspense>
     );
 }

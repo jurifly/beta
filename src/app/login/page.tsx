@@ -142,12 +142,12 @@ export default function LoginPage() {
           </Button>
         </CardContent>
          <CardFooter className="text-center text-sm">
-          <p className="w-full">
+          <div className="w-full">
             Don't have an account?{" "}
             <Link href="/register" className="font-semibold text-primary hover:underline">
               Sign up
             </Link>
-          </p>
+          </div>
         </CardFooter>
       </Card>
     </div>

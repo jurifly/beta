@@ -1,14 +1,15 @@
 
+
 "use client"
 
 import { useAuth } from "@/hooks/auth"
 import { Loader2, ArrowLeft } from "lucide-react"
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { FounderAnalytics, CAAnalytics, LegalAdvisorAnalytics, EnterpriseAnalytics } from "./AnalyticsViews";
 
 
-export default function AnalyticsPage() {
+function AnalyticsPageContent() {
   const { userProfile } = useAuth();
   const router = useRouter();
 
@@ -50,3 +51,12 @@ export default function AnalyticsPage() {
     </div>
   )
 }
+
+export default function AnalyticsPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <AnalyticsPageContent />
+        </Suspense>
+    );
+}
+

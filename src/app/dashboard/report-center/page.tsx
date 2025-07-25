@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useRef, useEffect, useMemo, type ReactNode, Suspense } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import html2canvas from 'html2canvas';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 
+export const maxDuration = 300;
 
 type ReportData = {
   client: Company;
@@ -281,8 +282,7 @@ const ReportTemplate = ({ data, executiveSummary, diligenceProgress }: { data: R
     );
 };
 
-
-export default function ReportCenterPage() {
+function ReportCenterContent() {
     const { userProfile, deductCredits } = useAuth();
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -601,3 +601,10 @@ export default function ReportCenterPage() {
     );
 }
 
+export default function ReportCenterPageWrapper() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <ReportCenterContent />
+        </Suspense>
+    )
+}

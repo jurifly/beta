@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment } from 'react';
+import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment, Suspense } from 'react';
 import { Bot, Check, Clipboard, FileText, Loader2, Send, Sparkles, User, History, MessageSquare, Clock, FolderCheck, Download, FileUp, Share2, UploadCloud, RefreshCw, Lock, ShieldCheck, GanttChartSquare, FilePenLine, Search, RadioTower, Building2, Banknote, DatabaseZap, Globe, Telescope, FileScan, BookText, Library, Zap, Workflow, Play, Trash2, PlusCircle, ArrowRight, FileWarning, AlertCircle, CalendarPlus, StickyNote, Edit, Copy, Scale, Info, CheckCircle, ThumbsDown, ThumbsUp, Gavel, FileSignature, Save, Calculator, HelpCircle, Gift, PiggyBank, Handshake, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -1288,7 +1288,7 @@ const PenaltyPredictorTab = () => {
                             </div>
                         )}
                     </CardContent>
-                </Card>
+                 </Card>
             </div>
         </div>
     )
@@ -1314,9 +1314,7 @@ const WorkflowTab = () => {
     );
 };
 
-
-// --- Main AI Toolkit Page ---
-export default function AiToolkitPage() {
+function AiToolkitPageContent() {
     const { userProfile, isDevMode } = useAuth();
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
@@ -1420,5 +1418,14 @@ export default function AiToolkitPage() {
                 </div>
             </Tabs>
         </div>
+    );
+}
+
+// --- Main AI Toolkit Page ---
+export default function AiToolkitPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <AiToolkitPageContent />
+        </Suspense>
     );
 }

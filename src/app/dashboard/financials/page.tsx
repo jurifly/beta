@@ -5,7 +5,7 @@
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState, useRef, useMemo, useEffect, FormEvent } from "react";
+import { useState, useRef, useMemo, useEffect, FormEvent, Suspense } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1288,8 +1288,7 @@ const FounderSalaryPlannerTab = () => {
   )
 };
 
-
-export default function FinancialsPage() {
+function FinancialsPageContent() {
     const { userProfile } = useAuth();
     const [activeTab, setActiveTab] = useState('runway');
 
@@ -1360,5 +1359,13 @@ export default function FinancialsPage() {
                 ))}
             </Tabs>
         </div>
+    );
+}
+
+export default function FinancialsPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <FinancialsPageContent />
+        </Suspense>
     );
 }

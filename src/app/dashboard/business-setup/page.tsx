@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState, type ReactNode, useRef, useEffect } from "react";
+import { useState, type ReactNode, useRef, useEffect, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -101,7 +102,7 @@ type NavigatorState = {
 };
 
 // Main Page Component
-export default function BusinessSetupPage() {
+function BusinessSetupContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const [navigatorState, setNavigatorState] = useState<NavigatorState>({ completedSteps: [] });
   const { userProfile, loading } = useAuth();
@@ -215,6 +216,14 @@ export default function BusinessSetupPage() {
       </Card>
     </div>
   );
+}
+
+export default function BusinessSetupPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <BusinessSetupContent />
+        </Suspense>
+    )
 }
 
 // --- Step 1: Business Type Recommender ---

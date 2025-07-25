@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -60,7 +61,7 @@ const ReceivedInviteCard = ({ invite, onAccept, isAccepting }: { invite: Invite,
     </Card>
 );
 
-export default function InvitationsPage() {
+function InvitationsContent() {
     const { userProfile, updateUserProfile, getPendingInvites, acceptInvite } = useAuth();
     const [sentInvites, setSentInvites] = useState<Invite[]>([]);
     const [receivedInvites, setReceivedInvites] = useState<Invite[]>([]);
@@ -177,5 +178,13 @@ export default function InvitationsPage() {
             </Tabs>
         </div>
         </>
+    )
+}
+
+export default function InvitationsPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <InvitationsContent />
+        </Suspense>
     )
 }

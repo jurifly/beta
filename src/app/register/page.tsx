@@ -1,10 +1,10 @@
 
 
-"use client"
+'use client';
 
 import { useAuth } from "@/hooks/auth";
 import { useRouter, redirect, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,16 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, KeyRound } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type UserRole } from "@/lib/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from 'next/image';
 import { Textarea } from "@/components/ui/textarea";
+import type { UserRole } from "@/lib/types";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 
 const founderSchema = z.object({
   companyName: z.string().optional(),
@@ -83,7 +84,7 @@ const Logo = () => (
 );
 
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { user, signUpWithEmailAndPassword, loading } = useAuth();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -112,10 +113,8 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const refId = localStorage.getItem('referralId');
-      // Pass the role-specific details to your auth function if needed
-      // For now, we're just signing up with the core details
       await signUpWithEmailAndPassword(data.email, data.password, data.name, 'India', data.role, refId || undefined, data.referralCode);
-      localStorage.removeItem('referralId'); // Clear after use
+      localStorage.removeItem('referralId');
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -164,7 +163,6 @@ export default function RegisterPage() {
                    {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
               </div>
 
-              {/* Common Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="name">Full Name</Label>
@@ -183,7 +181,6 @@ export default function RegisterPage() {
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
               
-              {/* Founder-Specific Fields */}
               {selectedRole === 'Founder' && (
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/50 animate-in fade-in-50">
                    <div className="space-y-1">
@@ -210,7 +207,6 @@ export default function RegisterPage() {
                 </div>
               )}
               
-              {/* CA-Specific Fields */}
               {selectedRole === 'CA' && (
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/50 animate-in fade-in-50">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -295,4 +291,12 @@ export default function RegisterPage() {
         </Card>
     </div>
   );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-muted/40 p-4"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+      <RegisterForm />
+    </Suspense>
+  )
 }

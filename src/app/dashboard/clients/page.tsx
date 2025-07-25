@@ -1,7 +1,8 @@
 
+
 "use client"
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +24,7 @@ export type ClientHealthInfo = Company & {
   upcomingDeadlines: { title: string; dueDate: string }[];
 };
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const { userProfile, updateUserProfile } = useAuth();
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const router = useRouter();
@@ -232,3 +233,12 @@ export default function ClientsPage() {
     </>
   );
 }
+
+export default function ClientsPage() {
+    return (
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <ClientsPageContent />
+        </Suspense>
+    );
+}
+
