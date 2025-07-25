@@ -411,16 +411,16 @@ const FinalCtaSection = () => {
 const LandingFooter = () => (
     <footer className="border-t">
         <div className="container mx-auto max-w-screen-xl py-12 px-4 sm:px-6 lg:px-8 text-left">
-            <div className="space-y-4">
-                <h1 className="text-6xl md:text-8xl font-extrabold leading-none text-foreground/80">
-                    Live<br />it up!
-                </h1>
-                <p className="text-lg text-muted-foreground font-medium flex items-center gap-2">
-                    Made with <Heart className="w-5 h-5 text-red-500 fill-current" /> in India
-                </p>
-                <div className="text-base text-muted-foreground italic">
-                  <JuriFlyWord /> helps <span className="font-semibold text-foreground/90">CAs</span> and <span className="font-semibold text-foreground/90">Startup Founders</span> stay legally unstoppable.
-                </div>
+             <div style={{textAlign: 'left'}}>
+              <h1 className="text-[80px] font-extrabold leading-[1.1] text-foreground/80" data-cursor-size="large">
+                Live<br />it up!
+              </h1>
+              <p className="mt-6 text-[18px] text-muted-foreground font-medium flex items-center gap-2">
+                Made with <Heart className="w-5 h-5 text-red-500 fill-current" /> in India
+              </p>
+              <p className="mt-3 text-[16px] text-muted-foreground font-normal italic">
+                <JuriFlyWord /> helps <span className="font-semibold text-foreground/90">CAs</span> and <span className="font-semibold text-foreground/90">Startup Founders</span> stay legally unstoppable.
+              </p>
             </div>
             <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
                 <p>&copy; {new Date().getFullYear()} JuriFly. All rights reserved.</p>

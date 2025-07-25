@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import { useState, useRef, useEffect, useMemo, type ReactNode, Suspense } from 'react';
 import { useAuth } from '@/hooks/auth';

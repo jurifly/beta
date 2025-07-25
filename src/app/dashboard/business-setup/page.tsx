@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import { useState, type ReactNode, useRef, useEffect, Suspense } from "react";
 import { useForm, Controller } from "react-hook-form";
