@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users can only read and write their own profile data.
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
+    }
+    
+    // Users can manage their own sub-collections.
+    match /users/{userId}/{collectionId}/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Counters should be read-only from the client.
+    // The server-side transaction for signup will bypass this rule.
+    match /counters/{counterId} {
+      allow read: if request.auth != null;
+      allow write: if false; 
+    }
+    
+    // Access passes should not be readable or writable from the client.
+    // The server-side transaction will handle redemption securely.
+    match /accessPasses/{passId} {
+      allow read, write: if false;
+    }
+    
+    // Any authenticated user can create feedback.
+    match /feedback/{feedbackId} {
+        allow create: if request.auth != null;
+    }
+
+    // Any authenticated user can create a transaction record.
+    match /transactions/{transactionId} {
+      allow create: if request.auth != null;
+    }
+    
+    // Rules for the root 'invites' collection
+    match /invites/{inviteId} {
+      // Any authenticated user can create an invite.
+      allow create: if request.auth != null;
+      
+      // An invite can be read by the sender or the intended recipient.
+      allow read: if request.auth != null && (request.auth.uid == resource.data.founderId || request.auth.token.email == resource.data.caEmail);
+      
+      // An invited user (caEmail) can update the invite to accept it.
+      // The sender (founderId) can update it (e.g., to revoke, though delete is used for that).
+      allow update: if request.auth != null && (request.auth.token.email == resource.data.caEmail || request.auth.uid == resource.data.founderId);
+      
+      // The original sender of the invite can delete/revoke it.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.founderId;
+    }
+  }
+}
