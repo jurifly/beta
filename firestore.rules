@@ -1,4 +1,6 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     
@@ -6,50 +8,51 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null;
-    }
-    
-    // Users can manage their own sub-collections.
-    match /users/{userId}/{collectionId}/{docId} {
+      
+      // Users can read/write their own subcollections.
+      match /notifications/{notificationId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Counters should be read-only from the client.
-    // The server-side transaction for signup will bypass this rule.
-    match /counters/{counterId} {
-      allow read: if request.auth != null;
-      allow write: if false; 
+      }
+      match /chatHistory/{chatId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
-    // Access passes should not be readable or writable from the client.
-    // The server-side transaction will handle redemption securely.
-    match /accessPasses/{passId} {
-      allow read, write: if false;
-    }
-    
-    // Any authenticated user can create feedback.
+    // Anyone authenticated can create feedback.
     match /feedback/{feedbackId} {
-        allow create: if request.auth != null;
+      allow create: if request.auth != null;
     }
 
-    // Any authenticated user can create a transaction record.
+    // Anyone authenticated can create transactions.
     match /transactions/{transactionId} {
       allow create: if request.auth != null;
     }
+
+    // Admins can manage the user counter.
+    match /counters/userCounter {
+      allow read, write: if false; // Secure by default, manage from backend/console
+    }
     
-    // Rules for the root 'invites' collection
+    // Invite logic
     match /invites/{inviteId} {
-      // Any authenticated user can create an invite.
+      // Allow creation if user is authenticated
       allow create: if request.auth != null;
       
-      // An invite can be read by the sender or the intended recipient.
+      // Allow the sender (founder) or receiver (caEmail) to read
       allow read: if request.auth != null && (request.auth.uid == resource.data.founderId || request.auth.token.email == resource.data.caEmail);
       
-      // An invited user (caEmail) can update the invite to accept it.
-      // The sender (founderId) can update it (e.g., to revoke, though delete is used for that).
-      allow update: if request.auth != null && (request.auth.token.email == resource.data.caEmail || request.auth.uid == resource.data.founderId);
+      // Allow the invited CA to accept the invite
+      allow update: if request.auth != null && request.auth.token.email == resource.data.caEmail && request.resource.data.status == 'accepted';
       
-      // The original sender of the invite can delete/revoke it.
+      // Allow the founder who sent it to revoke it (delete)
       allow delete: if request.auth != null && request.auth.uid == resource.data.founderId;
+    }
+
+    // Access passes can be read by any authenticated user to check validity
+    match /accessPasses/{passId} {
+      allow read: if request.auth != null;
+      // Write access should be restricted to admins (e.g., via console or admin SDK)
+      allow write: if false;
     }
   }
 }
