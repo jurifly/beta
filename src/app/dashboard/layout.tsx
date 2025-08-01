@@ -74,7 +74,7 @@ import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "./beta-banner";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { FounderQuoteBanner } from './founder-quote-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
@@ -885,13 +885,3 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
-
-
-
-
-
-
-
-
-
-
