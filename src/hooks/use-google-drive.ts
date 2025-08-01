@@ -3,46 +3,36 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useGoogleLogin, googleLogout, type TokenResponse } from '@react-oauth/google';
-import { gapi } from 'gapi-script';
 import type { VaultItem } from '@/lib/types';
 import { useToast } from './use-toast';
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY!;
-const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 const SCOPES = "https://www.googleapis.com/auth/drive";
 
-// Module-level state to prevent re-initialization and race conditions
-let gapiLoadPromise: Promise<void> | null = null;
-let gapiClientInitialized = false;
+const GOOGLE_API_BASE_URL = 'https://www.googleapis.com/drive/v3';
 
-function loadGapiClient() {
-    if (gapiLoadPromise) {
-        return gapiLoadPromise;
+// Helper function to make authenticated API calls
+const fetchGoogleAPI = async (endpoint: string, options: RequestInit = {}) => {
+    const tokenItem = localStorage.getItem('google-token');
+    if (!tokenItem) {
+        throw new Error("User not authenticated with Google.");
     }
+    const token = JSON.parse(tokenItem);
 
-    gapiLoadPromise = new Promise<void>((resolve, reject) => {
-        gapi.load('client', () => {
-            if (gapiClientInitialized) {
-                resolve();
-                return;
-            }
-            gapi.client.init({
-                apiKey: API_KEY,
-                discoveryDocs: DISCOVERY_DOCS,
-            }).then(() => {
-                gapiClientInitialized = true;
-                resolve();
-            }, (error: any) => {
-                console.error("GAPI Client Init Error:", error);
-                // Reset promise to allow retries on subsequent actions if the first one fails
-                gapiLoadPromise = null;
-                reject(error);
-            });
-        });
+    const headers = new Headers(options.headers);
+    headers.set('Authorization', `Bearer ${token.access_token}`);
+
+    const response = await fetch(`${GOOGLE_API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
     });
 
-    return gapiLoadPromise;
-}
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error.message || 'An API error occurred');
+    }
+
+    return response.json();
+};
 
 export function useGoogleDrive() {
   const { toast } = useToast();
@@ -50,42 +40,31 @@ export function useGoogleDrive() {
   const [files, setFiles] = useState<VaultItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Effect to initialize and check auth status on component mount
+  // Check auth status on component mount
   useEffect(() => {
     setIsLoading(true);
-    loadGapiClient().then(() => {
-        const tokenItem = localStorage.getItem('google-token');
-        if (tokenItem) {
-            const token = JSON.parse(tokenItem);
-            if (new Date().getTime() < token.expires_at) {
-                gapi.client.setToken({ access_token: token.access_token });
-                setIsLoggedIn(true);
-            } else {
-                localStorage.removeItem('google-token');
-                setIsLoggedIn(false);
-            }
+    const tokenItem = localStorage.getItem('google-token');
+    if (tokenItem) {
+        const token = JSON.parse(tokenItem);
+        if (new Date().getTime() < token.expires_at) {
+            setIsLoggedIn(true);
         } else {
+            localStorage.removeItem('google-token');
             setIsLoggedIn(false);
         }
-    }).catch((error) => {
-        toast({ variant: 'destructive', title: 'Connection Error', description: 'Could not initialize Google Drive connection. Please check your API key.' });
-    }).finally(() => {
-        setIsLoading(false);
-    });
-  }, [toast]);
+    } else {
+        setIsLoggedIn(false);
+    }
+    setIsLoading(false);
+  }, []);
   
   const handleAuthResponse = useCallback((tokenResponse: Omit<TokenResponse, "error" | "error_description" | "error_uri">) => {
-    loadGapiClient().then(() => {
-      gapi.client.setToken({ access_token: tokenResponse.access_token });
-      setIsLoggedIn(true);
-      localStorage.setItem('google-token', JSON.stringify({
-          ...tokenResponse,
-          expires_at: new Date().getTime() + (tokenResponse.expires_in * 1000)
-      }));
-      toast({ title: 'Connected!', description: 'Successfully connected to Google Drive.' });
-    }).catch(err => {
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not set up Google Drive after login.' });
-    });
+    setIsLoggedIn(true);
+    localStorage.setItem('google-token', JSON.stringify({
+        ...tokenResponse,
+        expires_at: new Date().getTime() + (tokenResponse.expires_in * 1000)
+    }));
+    toast({ title: 'Connected!', description: 'Successfully connected to Google Drive.' });
   }, [toast]);
 
   const logIn = useGoogleLogin({
@@ -99,7 +78,6 @@ export function useGoogleDrive() {
 
   const logOut = () => {
     googleLogout();
-    if(gapi.client) gapi.client.setToken(null);
     setIsLoggedIn(false);
     setFiles([]);
     localStorage.removeItem('google-token');
@@ -109,17 +87,10 @@ export function useGoogleDrive() {
   const listFiles = useCallback(async (folderId: string | null = 'root') => {
       setIsLoading(true);
       try {
-          await loadGapiClient();
-          if (!gapi.client?.drive) {
-              throw new Error('Google Drive client is not ready.');
-          }
-          const response = await gapi.client.drive.files.list({
-              q: `'${folderId}' in parents and trashed = false`,
-              fields: 'files(id, name, mimeType, modifiedTime, iconLink, webViewLink, size)',
-              orderBy: 'folder,name',
-          });
-          const driveFiles = response.result.files || [];
-          const vaultItems: VaultItem[] = driveFiles.map(file => ({
+          const response = await fetchGoogleAPI(`/files?q='${folderId}' in parents and trashed = false&fields=files(id, name, mimeType, modifiedTime, iconLink, webViewLink, size)&orderBy=folder,name`);
+          
+          const driveFiles = response.files || [];
+          const vaultItems: VaultItem[] = driveFiles.map((file: any) => ({
               id: file.id!,
               name: file.name!,
               type: file.mimeType === 'application/vnd.google-apps.folder' ? 'folder' : 'file',
@@ -131,9 +102,10 @@ export function useGoogleDrive() {
               mimeType: file.mimeType,
           }));
           setFiles(vaultItems);
-      } catch (error) {
+      } catch (error: any) {
           console.error("Error listing files", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch files from Google Drive.' });
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch files. Please try reconnecting to Google Drive.' });
+          if(error.message.includes("authenticated")) logOut();
       } finally {
           setIsLoading(false);
       }
@@ -141,18 +113,19 @@ export function useGoogleDrive() {
   
   const createFolder = async (name: string, parentId: string | null = 'root') => {
       try {
-          await loadGapiClient();
-          const response = await gapi.client.drive.files.create({
-              resource: {
-                  name,
-                  mimeType: 'application/vnd.google-apps.folder',
-                  parents: parentId ? [parentId] : [],
-              },
-              fields: 'id, name, mimeType, modifiedTime, iconLink, webViewLink'
+          const metadata = {
+              name,
+              mimeType: 'application/vnd.google-apps.folder',
+              parents: parentId && parentId !== 'root' ? [parentId] : [],
+          };
+          await fetchGoogleAPI('/files', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metadata)
           });
           listFiles(parentId);
           toast({ title: 'Folder Created!', description: `Folder "${name}" was created.` });
-      } catch (error) {
+      } catch (error: any) {
           console.error('Error creating folder', error);
           toast({ variant: 'destructive', title: 'Error', description: 'Could not create folder.' });
       }
@@ -160,11 +133,10 @@ export function useGoogleDrive() {
   
   const deleteFile = async (fileId: string) => {
       try {
-          await loadGapiClient();
-          await gapi.client.drive.files.delete({ fileId });
+          await fetchGoogleAPI(`/files/${fileId}`, { method: 'DELETE' });
           setFiles(prev => prev.filter(f => f.id !== fileId));
           toast({ title: 'Item Deleted', description: 'The file or folder has been moved to trash in Google Drive.' });
-      } catch (error) {
+      } catch (error: any) {
           console.error('Error deleting file', error);
           toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the item.' });
       }
@@ -172,19 +144,17 @@ export function useGoogleDrive() {
   
   const uploadFile = async (file: File, parentId: string | null = 'root') => {
     try {
-        await loadGapiClient();
         const metadata = {
             name: file.name,
-            parents: parentId ? [parentId] : []
+            parents: parentId && parentId !== 'root' ? [parentId] : []
         };
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
         form.append('file', file);
 
-        const token = gapi.client.getToken();
-        if (!token?.access_token) {
-            throw new Error("Not authenticated");
-        }
+        const tokenItem = localStorage.getItem('google-token');
+        if (!tokenItem) throw new Error("Not authenticated");
+        const token = JSON.parse(tokenItem);
 
         const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
