@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,10 @@ const LandingHeader = () => {
              <Link href="/contact" className="text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
              <Link href="/careers" className="text-muted-foreground transition-colors hover:text-foreground">Careers</Link>
           </div>
-          <Button onClick={() => router.push('/login')} className="hidden sm:inline-flex interactive-lift">Get Started</Button>
+          <div className="hidden sm:flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push('/login')}>Login</Button>
+            <Button onClick={() => router.push('/register')} className="interactive-lift">Get Started</Button>
+          </div>
           <ThemeToggle />
         </nav>
       </div>
@@ -385,7 +389,7 @@ const FinalCtaSection = () => {
         <h2 className="text-3xl md:text-5xl font-bold font-headline" data-cursor-size="large">Don’t Worry About Legal Stuff Again.</h2>
         <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. No filings. Just clarity.</p>
         <div className="mt-8">
-          <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>
+          <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
             Get Started – It’s Free for Beta Users
             <ArrowRight className="ml-2" />
           </Button>
@@ -517,7 +521,9 @@ const CookieConsentBanner = () => {
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden no-cursor-effect">
-      <WelcomePopup />
+      <Suspense fallback={null}>
+        <WelcomePopup />
+      </Suspense>
       <LandingHeader />
       <main className="flex-1 relative z-10">
         <HeroSection />

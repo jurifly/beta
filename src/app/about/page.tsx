@@ -1,8 +1,10 @@
 
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle, DatabaseZap, BrainCircuit, Workflow, ShieldCheck, LineChart } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const AboutFeature = ({ icon: Icon, text }: { icon: React.ElementType, text: string }) => (
     <div className="flex items-start gap-3">
@@ -34,13 +36,14 @@ const Logo = () => (
 
 
 export default function AboutPage() {
+  const router = useRouter();
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-background border-b">
         <Link className="flex items-center justify-center" href="/landing">
             <Logo />
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
+        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link
             className="text-sm font-medium hover:underline underline-offset-4"
             href="/landing#features"
@@ -59,6 +62,10 @@ export default function AboutPage() {
           >
             About
           </Link>
+           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => router.push('/login')}>Login</Button>
+            <Button size="sm" onClick={() => router.push('/register')}>Get Started</Button>
+          </div>
         </nav>
       </header>
       <main className="flex-1">
