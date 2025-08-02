@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from "react";
@@ -37,11 +36,11 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
-import { InteractiveLandingEffects } from "./InteractiveLandingEffects";
+import { InteractiveLandingEffects } from "@/app/landing/InteractiveLandingEffects";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { WelcomePopup } from "./WelcomePopup";
+import { WelcomePopup } from "@/app/landing/WelcomePopup";
 
 
 const Logo = () => (
@@ -97,9 +96,9 @@ const LandingHeader = () => {
              <Link href="/contact" className="text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
              <Link href="/careers" className="text-muted-foreground transition-colors hover:text-foreground">Careers</Link>
           </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <Button variant="outline" onClick={() => router.push('/login')}>Login</Button>
-            <Button onClick={() => router.push('/register')} className="interactive-lift">Get Started</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => router.push('/login')}>Login</Button>
+            <Button size="sm" onClick={() => router.push('/register')}>Get Started</Button>
           </div>
           <ThemeToggle />
         </nav>
