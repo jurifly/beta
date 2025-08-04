@@ -43,9 +43,9 @@ A founder needs help determining a safe but ambitious valuation for their startu
 
 Your task is to provide a structured valuation analysis.
 
-1.  **Valuation Range**: Suggest a realistic pre-money valuation range. Base this on the industry, stage, traction, and team background. Use industry benchmarks common in {{legalRegion}}.
+1.  **Valuation Range**: Suggest a realistic pre-money valuation range. You MUST heavily factor in the team's experience. A team with strong, relevant background (e.g., ex-FAANG, successful previous exits) justifies a significantly higher valuation than a team of first-time founders, even with similar traction.
 
-2.  **Reasoning**: In markdown, explain *why* you are suggesting this range. Reference their inputs directly. For example: "For a {{stage}} {{industry}} startup with traction like '{{traction}}', this valuation is competitive..."
+2.  **Reasoning**: In markdown, explain *why* you are suggesting this range. Reference their inputs directly, ESPECIALLY the team's background. For example: "Given that the founders are '{{teamSummary}}', which brings significant domain expertise and a strong network, a premium valuation is justified despite the early '{{stage}}' stage..."
 
 3.  **Justification Steps**: Provide 3-4 concrete, actionable steps the founder MUST take to justify this valuation to both investors and tax authorities. This is critical for Angel Tax compliance. Examples:
     *   "Prepare a detailed 5-year financial projection and a Discounted Cash Flow (DCF) valuation model."
