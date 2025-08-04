@@ -1022,6 +1022,9 @@ const ValuationOptimizerTab = () => {
         resolver: zodResolver(valuationOptimizerSchema),
         defaultValues: {
             stage: 'Pre-Seed',
+            industry: '',
+            traction: '',
+            teamSummary: '',
         }
     });
 
