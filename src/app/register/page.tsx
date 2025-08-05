@@ -22,7 +22,7 @@ import Image from 'next/image';
 import { Textarea } from "@/components/ui/textarea";
 import type { UserRole } from "@/lib/types";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-
+import { Separator } from "@/components/ui/separator";
 
 const founderSchema = z.object({
   companyName: z.string().optional(),
@@ -62,6 +62,23 @@ const betaRoles: { id: UserRole, label: string }[] = [
     { id: "CA", label: "Chartered Accountant" },
 ];
 
+function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 48 48" {...props}>
+      <title>Google Logo</title>
+      <clipPath id="g">
+        <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z" />
+      </clipPath>
+      <g clipPath="url(#g)">
+        <path fill="#FBBC05" d="M0 37V11l17 13z" />
+        <path fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z" />
+        <path fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z" />
+        <path fill="#4285F4" d="M48 48L17 24l-4-3 35-10z" />
+      </g>
+    </svg>
+  );
+}
+
 const Logo = () => (
     <>
       <Image 
@@ -85,10 +102,11 @@ const Logo = () => (
 
 
 function RegisterForm() {
-  const { user, signUpWithEmailAndPassword, loading } = useAuth();
+  const { user, signUpWithEmailAndPassword, signInWithGoogle, loading } = useAuth();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, control, watch } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -123,6 +141,17 @@ function RegisterForm() {
         });
     }
   };
+  
+  const handleGoogleSignIn = async () => {
+      setIsGoogleLoading(true);
+      try {
+          await signInWithGoogle();
+      } catch (error) {
+          // Toast is handled within the auth hook
+      } finally {
+          setIsGoogleLoading(false);
+      }
+  }
 
   if (loading) {
      return (
@@ -274,9 +303,21 @@ function RegisterForm() {
                     </label>
                   </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting || !agreedToTerms}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isSubmitting || isGoogleLoading || !agreedToTerms}>
+                {(isSubmitting || isGoogleLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
+              </Button>
+               <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  </div>
+              </div>
+              <Button className="w-full" variant="outline" onClick={handleGoogleSignIn} disabled={isSubmitting || isGoogleLoading}>
+                  <GoogleIcon className="mr-2 h-5 w-5"/>
+                  Sign up with Google
               </Button>
             </form>
           </CardContent>

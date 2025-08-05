@@ -483,9 +483,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDocRef = doc(db, "users", firebaseUser.uid);
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
+                // This is a new user signing up with Google
                 const newProfile = await createNewUserProfile(firebaseUser, 'India', 'Founder');
                 setUserProfile(newProfile);
+                // The useEffect in the layout will redirect to /dashboard
             }
+            // If userDoc exists, it's a returning user. The main useEffect will handle login.
         }
     } catch(error: any) {
         console.error("Google Sign-In Error:", error);

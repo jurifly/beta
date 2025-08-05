@@ -4,7 +4,7 @@
 
 import { useAuth } from "@/hooks/auth";
 import { useRouter, redirect } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -67,6 +67,7 @@ const Logo = () => (
 export default function LoginPage() {
   const { user, signInWithGoogle, signInWithEmailAndPassword, loading } = useAuth();
   const { toast } = useToast();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -89,6 +90,17 @@ export default function LoginPage() {
         });
     }
   };
+
+  const handleGoogleSignIn = async () => {
+      setIsGoogleLoading(true);
+      try {
+          await signInWithGoogle();
+      } catch (error) {
+          // Toast is handled within the auth hook
+      } finally {
+          setIsGoogleLoading(false);
+      }
+  }
 
   if (loading) {
      return (
@@ -123,8 +135,8 @@ export default function LoginPage() {
               <Input id="password" type="password" {...register("password")} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isSubmitting || isGoogleLoading}>
+              {(isSubmitting || isGoogleLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
@@ -136,7 +148,7 @@ export default function LoginPage() {
                   <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
               </div>
           </div>
-          <Button className="w-full" variant="outline" onClick={signInWithGoogle} disabled={isSubmitting}>
+          <Button className="w-full" variant="outline" onClick={handleGoogleSignIn} disabled={isSubmitting || isGoogleLoading}>
               <GoogleIcon className="mr-2 h-5 w-5"/>
               Sign in with Google
           </Button>
