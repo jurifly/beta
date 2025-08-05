@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from "react";
@@ -38,11 +37,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
-import { InteractiveLandingEffects } from "@/app/landing/InteractiveLandingEffects";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { WelcomePopup } from "./WelcomePopup";
 
 const Logo = () => (
     <>
@@ -536,9 +533,6 @@ export default function LandingPage() {
       <PrototypeBanner />
       <main className="flex-1 relative z-10">
         <HeroSection />
-        <Suspense fallback={<div className="h-10" />}>
-          <WelcomePopup />
-        </Suspense>
         <div className="top-marquee py-8">
             <Marquee>
                 <span>Compliance Simplified</span><span className="mx-4 text-primary">&bull;</span>
@@ -588,7 +582,6 @@ export default function LandingPage() {
         <FinalCtaSection />
       </main>
       <LandingFooter />
-      <InteractiveLandingEffects />
       <CookieConsentBanner />
     </div>
   );
