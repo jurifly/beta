@@ -63,7 +63,7 @@ export default function ContactPage() {
                   <a href="mailto:hello@jurifly.in">hello@jurifly.in</a>
                 </Button>
               </div>
-              <div className="flex flex-col items-center gap-4 p-6 border rounded-lg">
+              <div className="flex flex-col items-center justify-center gap-4 p-6 border rounded-lg">
                 <MessageSquare className="h-10 w-10 text-primary" />
                 <h3 className="text-xl font-semibold">Support Chat</h3>
                 <p className="text-muted-foreground">Mon–Sat, 10 AM – 7 PM IST</p>

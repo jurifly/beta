@@ -582,7 +582,9 @@ export default function LandingPage() {
         <FinalCtaSection />
       </main>
       <LandingFooter />
-      <CookieConsentBanner />
+      <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <CookieConsentBanner />
+      </Suspense>
     </div>
   );
 }
