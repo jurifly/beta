@@ -13,11 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, Handshake, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Loader2, Sparkles, Download, CheckCircle, XCircle, Lightbulb, TrendingUp, AlertTriangle, User, Building, Save, BarChart as BarChartIcon, FileText, Calculator, PlusCircle, Trash2, LineChart as LineChartIcon, Handshake, ThumbsUp, ThumbsDown, Info } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar, Tooltip as RechartsTooltip, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { generateFinancialForecast } from "@/ai/flows/financial-forecaster-flow";
 import type { FinancialForecasterOutput } from "@/ai/flows/financial-forecaster-flow";
@@ -31,6 +31,7 @@ import type { ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-fl
 import type { FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 import ReactMarkdown from "react-markdown";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 export const maxDuration = 300; 
@@ -691,7 +692,16 @@ const FinancialsTab = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 <Card className="interactive-lift">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><BarChartIcon className="w-6 h-6 text-primary"/> Runway Calculator</CardTitle>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <CardTitle className="flex items-center gap-2 cursor-help"><BarChartIcon className="w-6 h-6 text-primary"/> Runway Calculator <Info className="w-4 h-4 text-muted-foreground"/></CardTitle>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Calculate your company's cash runway based on current financials.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         <CardDescription>Input your key monthly financials to calculate your runway and save for analysis.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -736,7 +746,7 @@ const FinancialsTab = () => {
                                 <ChartContainer config={{ revenue: { label: "Revenue" }, expenses: { label: "Expenses" } }} className="h-48 w-full">
                                   <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
-                                      <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                      <RechartsTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
                                       <Pie data={chartData} dataKey="value" nameKey="name" innerRadius="60%" cy="50%">
                                          {chartData.map((entry, index) => (
                                           <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -759,7 +769,16 @@ const FinancialsTab = () => {
             <Card className="col-span-full interactive-lift">
                 <form onSubmit={handleSubmit(onForecastSubmit)}>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><TrendingUp className="w-6 h-6 text-primary"/> Financial Forecaster</CardTitle>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <CardTitle className="flex items-center gap-2 cursor-help"><TrendingUp className="w-6 h-6 text-primary"/> Financial Forecaster <Info className="w-4 h-4 text-muted-foreground"/></CardTitle>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Project your future cash flow based on growth, hiring, and expense assumptions.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         <CardDescription>Add assumptions to project your financial future. Results appear below.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -938,7 +957,16 @@ const FinancialAnalysisTab = () => {
       <div className="space-y-6">
         <Card className="interactive-lift">
             <CardHeader>
-              <CardTitle>Year-Over-Year Financial Analysis</CardTitle>
+              <TooltipProvider>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <CardTitle className="flex items-center gap-2 cursor-help">Year-Over-Year Financial Analysis <Info className="w-4 h-4 text-muted-foreground"/></CardTitle>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p>Analyze historical financial data to identify trends and get AI-powered insights.</p>
+                      </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
               <CardDescription>Add historical data and then generate an AI-powered trend analysis.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -1003,7 +1031,7 @@ const FinancialAnalysisTab = () => {
                               <CartesianGrid strokeDasharray="3 3" vertical={false} />
                               <XAxis dataKey="year" />
                               <YAxis tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                              <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                              <RechartsTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
                               <Legend />
                               <Line type="monotone" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2} name="Revenue" />
                               <Line type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} name="Expenses" />
@@ -1276,7 +1304,7 @@ const FounderSalaryPlannerTab = () => {
                                     <h4 className="font-semibold mb-2">Allocation</h4>
                                      <ChartContainer config={{}} className="mx-auto aspect-square h-52">
                                         <PieChart>
-                                            <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
+                                            <RechartsTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => formatCurrency(Number(value))} hideLabel />} />
                                             <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={40}>
                                                 {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                             </Pie>
