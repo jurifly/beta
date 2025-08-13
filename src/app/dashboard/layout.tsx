@@ -74,7 +74,7 @@ import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "./beta-banner";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { FounderQuoteBanner } from './founder-quote-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
@@ -243,10 +243,10 @@ const navItemConfig: NavItemConfig = {
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true, description: "AI-powered reconciliation of financial documents." },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings, description: "Manage your profile, billing, and workspace settings." },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy, description: "Find answers to frequently asked questions." },
-  analytics: { href: "/dashboard/analytics", translationKey: "analytics", icon: LineChart, locked: 'pro', description: "Track your legal and compliance performance over time." },
+  analytics: { href: "/dashboard/analytics", translationKey: "analytics", icon: LineChart, description: "Track your legal and compliance performance over time." },
   playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare, description: "Actionable guides for key business milestones like fundraising." },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail, description: "Manage your sent and received collaboration invitations." },
-  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, description: "Get the latest business and compliance news." },
+  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, locked: 'beta', description: "Get the latest business and compliance news." },
 
   // Role-specific overrides
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart, description: "Get a health overview of your entire client portfolio." },
@@ -893,6 +893,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
