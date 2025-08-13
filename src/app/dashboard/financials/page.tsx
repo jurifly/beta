@@ -30,6 +30,8 @@ import { getValuationOptimizationAction, getFounderSalaryBreakdownAction } from 
 import type { ValuationOptimizerOutput } from '@/ai/flows/valuation-optimizer-flow';
 import type { FounderSalaryOutput } from '@/ai/flows/founder-salary-flow';
 import ReactMarkdown from "react-markdown";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 
 export const maxDuration = 300; 
 
@@ -940,21 +942,43 @@ const FinancialAnalysisTab = () => {
               <CardDescription>Add historical data and then generate an AI-powered trend analysis.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                    {historicalData.map(data => (
-                        <div key={data.year} className="flex items-center gap-4 p-3 border rounded-md">
-                            <p className="font-semibold flex-1">{data.year}</p>
-                            <p className="text-sm text-green-600">Revenue: {formatCurrency(data.revenue)}</p>
-                            <p className="text-sm text-red-600">Expenses: {formatCurrency(data.expenses)}</p>
-                            <Button variant="ghost" size="icon" onClick={() => removeHistoricalData(data.year)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                        </div>
-                    ))}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border-t">
-                         <div className="space-y-1.5"><Label htmlFor="new-year">Year (e.g., 2023-24)</Label><Input id="new-year" value={newYear} onChange={e => setNewYear(e.target.value)} /></div>
-                         <div className="space-y-1.5"><Label htmlFor="new-revenue">Total Revenue (₹)</Label><Input id="new-revenue" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
-                         <div className="space-y-1.5"><Label htmlFor="new-expenses">Total Expenses (₹)</Label><Input id="new-expenses" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
-                         <Button onClick={addHistoricalData}><PlusCircle className="mr-2"/>Add Year</Button>
-                    </div>
+                 <div className="rounded-lg border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[150px]">Financial Year</TableHead>
+                                <TableHead>Total Revenue</TableHead>
+                                <TableHead>Total Expenses</TableHead>
+                                <TableHead className="w-[50px] text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {historicalData.length > 0 ? historicalData.map(data => (
+                                <TableRow key={data.year}>
+                                    <TableCell className="font-semibold">{data.year}</TableCell>
+                                    <TableCell className="text-green-600 font-mono">{formatCurrency(data.revenue)}</TableCell>
+                                    <TableCell className="text-red-600 font-mono">{formatCurrency(data.expenses)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => removeHistoricalData(data.year)}>
+                                            <Trash2 className="h-4 w-4 text-destructive"/>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                        No historical data added yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end p-4 border-t mt-4">
+                     <div className="space-y-1.5"><Label htmlFor="new-year">Year (e.g., 2023-24)</Label><Input id="new-year" value={newYear} onChange={e => setNewYear(e.target.value)} /></div>
+                     <div className="space-y-1.5"><Label htmlFor="new-revenue">Total Revenue (₹)</Label><Input id="new-revenue" type="number" value={newRevenue} onChange={e => setNewRevenue(Number(e.target.value) || '')} /></div>
+                     <div className="space-y-1.5"><Label htmlFor="new-expenses">Total Expenses (₹)</Label><Input id="new-expenses" type="number" value={newExpenses} onChange={e => setNewExpenses(Number(e.target.value) || '')} /></div>
+                     <Button onClick={addHistoricalData} className="w-full"><PlusCircle className="mr-2"/>Add Year</Button>
                 </div>
             </CardContent>
              <CardFooter className="flex-col gap-2 items-center">
