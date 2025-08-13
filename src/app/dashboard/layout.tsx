@@ -82,6 +82,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { UserNav } from "@/components/dashboard/user-nav";
 import { PageTransition } from '@/components/dashboard/page-transition';
+import { ProductWalkthrough } from "@/components/dashboard/ProductWalkthrough";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -125,7 +126,7 @@ export const translations: Translations = {
     aiCounselTools: { en: "AI Counsel Tools", hi: "AI काउंसिल टूल्स", es: "Herramientas de Asesoría de IA", zh: "AI法律顾问工具", fr: "Outils de Conseil IA", de: "KI-Rechtsberatungstools", pt: "Ferramentas de Aconselhamento de IA", ja: "AIカウンセルツール" },
     aiComplianceSuite: { en: "AI Compliance Suite", hi: "AI अनुपालन सुइट", es: "Suite de Cumplimiento de IA", zh: "AI合规套件", fr: "Suite de Conformité IA", de: "KI-Compliance-Suite", pt: "Suíte de Conformidade de IA", ja: "AIコンプライアンススイート" },
     invitations: { en: "Invitations", hi: "निमंत्रण", es: "Invitaciones", zh: "邀请", fr: "Invitations", de: "Einladungen", pt: "Convites", ja: "招待状" },
-    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算" },
+    taxesCalculation: { en: "Taxes & Calculation", hi: "कर और गणना", es: "Impuestos y Cálculo", zh: "税务与计算", fr: "Taxes & Calcul", de: "Steuern & Berechnung", pt: "税金と計算", ja: "税金と計算" },
     learnHub: { en: "Learn Hub", hi: "लर्न हब", es: "Centro de Aprendizaje", zh: "学习中心", fr: "Pôle d'Apprentissage", de: "Lern-Hub", pt: "Hub de Aprendizagem", ja: "学習ハブ" },
     latestNews: { en: "Latest News", hi: "नवीनतम समाचार", es: "Últimas Noticias", zh: "最新消息", fr: "Dernières Nouvelles", de: "Aktuelle Nachrichten", pt: "Últimas Notícias", ja: "最新ニュース" },
 
@@ -231,12 +232,13 @@ const navItemConfig: NavItemConfig = {
   financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
   docVault: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
+  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText },
+  learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
   community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: 'beta' },
   clients: { href: "/dashboard/clients", translationKey: "clients", icon: Briefcase },
   team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: 'pro' },
   clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library, locked: 'pro' },
   workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: 'beta' },
-  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText },
   reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
   settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
   help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
@@ -249,7 +251,6 @@ const navItemConfig: NavItemConfig = {
   aiComplianceSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiComplianceSuite", icon: Sparkles },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
-  learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
   latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, locked: 'beta' },
 } as const;
 
@@ -691,6 +692,7 @@ function AppShell({ children }: { children: ReactNode }) {
                 <BetaBanner />
                 <FounderQuoteBanner />
                 <CaQuoteBanner />
+                <ProductWalkthrough />
                 <PageTransition pathname={usePathname()}>
                     {childrenWithLang}
                 </PageTransition>
@@ -876,6 +878,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 

@@ -116,7 +116,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       invites: [],
       activityLog: [{ id: Date.now().toString(), userName: 'System', action: 'Created workspace', timestamp: new Date().toISOString() }],
       accessPassesUsed: [],
-      supporter: false, // Default to not a supporter
+      supporter: false,
+      hasCompletedWalkthrough: false,
     };
     
     await setDoc(userDocRef, newProfile);

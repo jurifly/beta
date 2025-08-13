@@ -166,6 +166,9 @@ export interface UserProfile {
   accessPassesUsed?: { code: string; usedOn: string; rewardType: string; }[];
   supporter?: boolean;
 
+  // Onboarding
+  hasCompletedWalkthrough?: boolean;
+
 
   // Founder-CA Connection
   invitedCaEmail?: string;
