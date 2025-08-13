@@ -38,7 +38,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
-import { InteractiveLandingEffects } from "@/app/landing/InteractiveLandingEffects";
+import { InteractiveLandingEffects } from "./InteractiveLandingEffects";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
