@@ -130,7 +130,7 @@ export const ProductWalkthrough = () => {
                     </div>
                 </motion.div>
             </AnimatePresence>
-             <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white hover:text-white hover:bg-white/10" onClick={finishTour}>
+             <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white hover:text-white hover:bg-white/10 z-[101]" onClick={finishTour}>
                 <X/>
                 <span className="sr-only">Skip Tour</span>
             </Button>
