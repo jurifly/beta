@@ -246,7 +246,7 @@ const navItemConfig: NavItemConfig = {
   analytics: { href: "/dashboard/analytics", translationKey: "analytics", icon: LineChart, locked: 'pro', description: "Track your legal and compliance performance over time." },
   playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare, description: "Actionable guides for key business milestones like fundraising." },
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail, description: "Manage your sent and received collaboration invitations." },
-  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, locked: 'beta', description: "Get the latest business and compliance news." },
+  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, description: "Get the latest business and compliance news." },
 
   // Role-specific overrides
   portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart, description: "Get a health overview of your entire client portfolio." },
@@ -255,7 +255,7 @@ const navItemConfig: NavItemConfig = {
   aiPracticeSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiPracticeSuite", icon: Sparkles, description: "AI tools to enhance your advisory practice and services." },
   aiCounselTools: { href: "/dashboard/ai-toolkit", translationKey: "aiCounselTools", icon: Sparkles, description: "Leverage AI for legal research, document analysis, and drafting." },
   aiComplianceSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiComplianceSuite", icon: Sparkles, description: "AI-driven tools for managing enterprise-wide compliance." },
-  taxesCalculation: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator, description: "Tools to calculate personal, corporate, and GST taxes." },
+  taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator, description: "Tools to calculate personal, corporate, and GST taxes." },
 } as const;
 
 
@@ -270,9 +270,9 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.capTable },
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
-  { ...navItemConfig.playbook },
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.learnHub },
+  { ...navItemConfig.playbook },
   { ...navItemConfig.docVault },
   { ...navItemConfig.analytics, label_override_key: "analytics" },
   { ...navItemConfig.team, label_override_key: "teamManagement" },
@@ -307,6 +307,8 @@ const legalAdvisorNavItems: ThemedNavItem[] = [
   navItemConfig.clients,
   { ...navItemConfig.aiToolkit, label_override_key: "aiCounselTools" },
   navItemConfig.clauseLibrary,
+  navItemConfig.reportCenter,
+  navItemConfig.learnHub,
   { ...navItemConfig.playbook },
   { ...navItemConfig.invitations },
   { ...navItemConfig.connections, locked: 'beta' },
@@ -528,7 +530,7 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
 
 function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { userProfile, signOut, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
+  const { user, userProfile, signOut, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
@@ -891,6 +893,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
