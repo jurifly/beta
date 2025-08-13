@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData, TeamMember } from '@/lib/types';
 import { useToast } from './use-toast';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, where, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { add, type Duration } from 'date-fns';
@@ -225,25 +225,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, notifications]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        const userData: User = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName
-        };
-        setUser(userData);
-        await fetchUserProfile(userData);
-        await fetchNotifications(userData.uid);
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        setNotifications([]);
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    const initializeAuth = async () => {
+        try {
+            await setPersistence(auth, browserLocalPersistence);
+            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+                if (firebaseUser) {
+                    const userData: User = {
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        displayName: firebaseUser.displayName,
+                    };
+                    setUser(userData);
+                    await fetchUserProfile(userData);
+                    await fetchNotifications(userData.uid);
+                } else {
+                    setUser(null);
+                    setUserProfile(null);
+                    setNotifications([]);
+                }
+                setLoading(false);
+            });
+            return () => unsubscribe();
+        } catch (error) {
+            console.error("Firebase persistence error:", error);
+            setLoading(false);
+        }
+    };
+    initializeAuth();
   }, [fetchUserProfile, fetchNotifications]);
   
   useEffect(() => {
@@ -478,6 +486,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
+        await setPersistence(auth, browserLocalPersistence);
         const result = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         if (firebaseUser) {
