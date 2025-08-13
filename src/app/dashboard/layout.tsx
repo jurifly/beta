@@ -74,7 +74,7 @@ import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { BetaBanner } from "./beta-banner";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { FounderQuoteBanner } from './founder-quote-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
@@ -250,7 +250,7 @@ const navItemConfig: NavItemConfig = {
   invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
   taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
   learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
-  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss },
+  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, locked: 'beta' },
 } as const;
 
 
@@ -876,6 +876,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
