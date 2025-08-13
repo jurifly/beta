@@ -266,14 +266,14 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.financials },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.playbook },
+  { ...navItemConfig.reportCenter },
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.docVault },
   { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
   { ...navItemConfig.team, label_override_key: "teamManagement" },
   { ...navItemConfig.clauseLibrary },
-  { ...navItemConfig.reportCenter },
   { ...navItemConfig.connections },
   { ...navItemConfig.community },
-  { ...navItemConfig.learnHub },
   { ...navItemConfig.latestNews },
 ];
 
@@ -282,18 +282,18 @@ const caNavItems: ThemedNavItem[] = [
   { ...navItemConfig.clients },
   { ...navItemConfig.team, locked: 'pro' },
   { ...navItemConfig.aiToolkit, label_override_key: "aiPracticeSuite" },
+  { ...navItemConfig.reportCenter },
+  { ...navItemConfig.learnHub },
   { ...navItemConfig.capTable },
   { ...navItemConfig.launchPad },
   { ...navItemConfig.docVault },
   { ...navItemConfig.taxesAndCalc },
   { ...navItemConfig.portfolioAnalytics },
   { ...navItemConfig.playbook },
-  { ...navItemConfig.reportCenter },
   { ...navItemConfig.connections, locked: 'beta' },
   { ...navItemConfig.workflows, locked: 'beta' },
   { ...navItemConfig.clauseLibrary },
   { ...navItemConfig.community, locked: 'beta' },
-  { ...navItemConfig.learnHub },
   { ...navItemConfig.latestNews },
 ];
 
@@ -876,6 +876,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
