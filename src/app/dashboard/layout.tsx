@@ -83,6 +83,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { UserNav } from "@/components/dashboard/user-nav";
 import { PageTransition } from '@/components/dashboard/page-transition';
 import { ProductWalkthrough } from "@/components/dashboard/ProductWalkthrough";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
@@ -217,6 +218,7 @@ type NavItemConfig = {
         href: string;
         translationKey: keyof typeof translations;
         icon: React.ElementType;
+        description: string;
         locked?: boolean | 'pro' | 'beta';
         label?: string; // For overrides
         badge?: string; // For "Beta", "New", etc.
@@ -224,34 +226,36 @@ type NavItemConfig = {
 }
 
 const navItemConfig: NavItemConfig = {
-  dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard },
-  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, locked: 'beta' },
-  aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles },
-  launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network },
-  capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart },
-  financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt },
-  docVault: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive },
-  portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart },
-  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText },
-  learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart },
-  community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: 'beta' },
-  clients: { href: "/dashboard/clients", translationKey: "clients", icon: Briefcase },
-  team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: 'pro' },
-  clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library, locked: 'pro' },
-  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: 'beta' },
-  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true },
-  settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings },
-  help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy },
-  analytics: { href: "/dashboard/analytics", translationKey: "analytics", icon: LineChart, locked: 'pro' },
-  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare },
-  teamManagement: { href: "/dashboard/team", translationKey: "teamManagement", icon: Users, locked: 'pro' },
-  clientManagement: { href: "/dashboard/client-management", translationKey: "clientManagement", icon: Users, locked: true },
-  aiPracticeSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiPracticeSuite", icon: Sparkles },
-  aiCounselTools: { href: "/dashboard/ai-toolkit", translationKey: "aiCounselTools", icon: Sparkles },
-  aiComplianceSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiComplianceSuite", icon: Sparkles },
-  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail },
-  taxesAndCalc: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator },
-  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, locked: 'beta' },
+  dashboard: { href: "/dashboard", translationKey: "dashboard", icon: LayoutDashboard, description: "Your mission control for compliance and financial health." },
+  connections: { href: "/dashboard/ca-connect", translationKey: "connections", icon: Users, locked: 'beta', description: "Collaborate with your CA, manage document requests." },
+  aiToolkit: { href: "/dashboard/ai-toolkit", translationKey: "aiToolkit", icon: Sparkles, description: "A suite of AI tools for analysis, generation, and research." },
+  launchPad: { href: "/dashboard/business-setup", translationKey: "launchPad", icon: Network, description: "AI-guided assistance for registering your new venture." },
+  capTable: { href: "/dashboard/cap-table", translationKey: "capTable", icon: PieChart, description: "Manage your company's equity and model funding rounds." },
+  financials: { href: "/dashboard/financials", translationKey: "financials", icon: Receipt, description: "Calculate your runway, forecast scenarios, and analyze taxes." },
+  docVault: { href: "/dashboard/documents", translationKey: "docVault", icon: Archive, description: "Securely store and manage your documents via Google Drive." },
+  reportCenter: { href: "/dashboard/report-center", translationKey: "reportCenter", icon: FileText, description: "Generate professional compliance and health reports for clients." },
+  learnHub: { href: "/dashboard/learn", translationKey: "learnHub", icon: BookHeart, description: "A quick-reference dictionary for startup and compliance terms." },
+  community: { href: "/dashboard/community", translationKey: "community", icon: MessageSquare, locked: 'beta', description: "Connect with founders and experts in the community forum." },
+  clients: { href: "/dashboard/clients", translationKey: "clients", icon: Briefcase, description: "Manage all your client companies from a single dashboard." },
+  team: { href: "/dashboard/team", translationKey: "team", icon: Users, locked: 'pro', description: "Invite and manage your team members and their permissions." },
+  clauseLibrary: { href: "/dashboard/clause-library", translationKey: "clauseLibrary", icon: Library, locked: 'pro', description: "A library of pre-built and custom legal clauses." },
+  workflows: { href: "/dashboard/ai-toolkit?tab=workflows", translationKey: "workflows", icon: Workflow, locked: 'beta', description: "Automate compliance tasks and approval processes." },
+  reconciliation: { href: "/dashboard/ai-toolkit?tab=reconciliation", translationKey: "reconciliation", icon: Scale, locked: true, description: "AI-powered reconciliation of financial documents." },
+  settings: { href: "/dashboard/settings", translationKey: "settings", icon: Settings, description: "Manage your profile, billing, and workspace settings." },
+  help: { href: "/dashboard/help", translationKey: "help", icon: LifeBuoy, description: "Find answers to frequently asked questions." },
+  analytics: { href: "/dashboard/analytics", translationKey: "analytics", icon: LineChart, locked: 'pro', description: "Track your legal and compliance performance over time." },
+  playbook: { href: "/dashboard/playbook", translationKey: "playbook", icon: GanttChartSquare, description: "Actionable guides for key business milestones like fundraising." },
+  invitations: { href: "/dashboard/invitations", translationKey: "invitations", icon: Mail, description: "Manage your sent and received collaboration invitations." },
+  latestNews: { href: "/dashboard/news", translationKey: "latestNews", icon: Rss, locked: 'beta', description: "Get the latest business and compliance news." },
+
+  // Role-specific overrides
+  portfolioAnalytics: { href: "/dashboard/analytics", translationKey: "portfolioAnalytics", icon: LineChart, description: "Get a health overview of your entire client portfolio." },
+  teamManagement: { href: "/dashboard/team", translationKey: "teamManagement", icon: Users, locked: 'pro', description: "Manage your team members and their access." },
+  clientManagement: { href: "/dashboard/client-management", translationKey: "clientManagement", icon: Users, locked: true, description: "A central hub to manage all your clients." },
+  aiPracticeSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiPracticeSuite", icon: Sparkles, description: "AI tools to enhance your advisory practice and services." },
+  aiCounselTools: { href: "/dashboard/ai-toolkit", translationKey: "aiCounselTools", icon: Sparkles, description: "Leverage AI for legal research, document analysis, and drafting." },
+  aiComplianceSuite: { href: "/dashboard/ai-toolkit", translationKey: "aiComplianceSuite", icon: Sparkles, description: "AI-driven tools for managing enterprise-wide compliance." },
+  taxesCalculation: { href: "/dashboard/financials", translationKey: "taxesCalculation", icon: Calculator, description: "Tools to calculate personal, corporate, and GST taxes." },
 } as const;
 
 
@@ -270,7 +274,7 @@ const founderNavItems: ThemedNavItem[] = [
   { ...navItemConfig.reportCenter },
   { ...navItemConfig.learnHub },
   { ...navItemConfig.docVault },
-  { ...navItemConfig.portfolioAnalytics, label_override_key: "analytics" },
+  { ...navItemConfig.analytics, label_override_key: "analytics" },
   { ...navItemConfig.team, label_override_key: "teamManagement" },
   { ...navItemConfig.clauseLibrary },
   { ...navItemConfig.connections },
@@ -832,23 +836,32 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
                 const label = translations[labelKey] ? translations[labelKey][lang] : labelKey;
 
                 return (
-                    <Link
-                      key={item.href}
-                      href={isLocked ? '#' : item.href}
-                      onClick={(e) => handleLinkClick(e, item)}
-                      className={cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 relative interactive-lift",
-                          isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
-                          isLocked && "cursor-not-allowed"
-                      )}
-                    >
-                      <item.icon className={cn("h-4 w-4 group-hover:scale-110", isActive && "text-primary")} />
-                      <span className="group-data-[state=collapsed]/sidebar:hidden">{label}</span>
-                      {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50 group-data-[state=collapsed]/sidebar:hidden">{item.badge}</Badge>}
-                      {isLocked && (
-                        <Lock className="ml-auto h-3 w-3 text-muted-foreground group-data-[state=collapsed]/sidebar:hidden" />
-                      )}
-                    </Link>
+                    <TooltipProvider key={item.href}>
+                        <Tooltip delayDuration={300}>
+                            <TooltipTrigger asChild>
+                                <Link
+                                  href={isLocked ? '#' : item.href}
+                                  onClick={(e) => handleLinkClick(e, item)}
+                                  className={cn(
+                                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground/70 relative interactive-lift",
+                                      isActive && "text-primary font-semibold bg-gradient-to-tr from-primary/10 to-transparent",
+                                      isLocked && "cursor-not-allowed"
+                                  )}
+                                >
+                                  <item.icon className={cn("h-4 w-4 group-hover:scale-110", isActive && "text-primary")} />
+                                  <span className="group-data-[state=collapsed]/sidebar:hidden">{label}</span>
+                                  {item.badge && <Badge variant="outline" className="ml-auto text-primary border-primary/50 group-data-[state=collapsed]/sidebar:hidden">{item.badge}</Badge>}
+                                  {isLocked && (
+                                    <Lock className="ml-auto h-3 w-3 text-muted-foreground group-data-[state=collapsed]/sidebar:hidden" />
+                                  )}
+                                </Link>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" align="start" className="max-w-xs">
+                                <p className="font-semibold">{label}</p>
+                                <p className="text-muted-foreground">{item.description}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 )
               })}
             </nav>
@@ -878,6 +891,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 
