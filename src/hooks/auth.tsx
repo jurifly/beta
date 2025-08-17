@@ -7,11 +7,19 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData, TeamMember, Language } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, updateDoc, runTransaction, collection, addDoc, getDocs, query, orderBy, limit, writeBatch, serverTimestamp, where, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { add, type Duration } from 'date-fns';
 import { ToastAction } from '@/components/ui/toast';
 import Link from 'next/link';
+
+// Lazy-load Firebase services
+const getFirebaseServices = async () => {
+    const { auth, db } = await import('@/lib/firebase/config');
+    if (!auth || !db) {
+        throw new Error("Firebase services could not be initialized.");
+    }
+    return { auth, db };
+};
 
 export interface AuthContextType {
   user: User | null;
@@ -97,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const createNewUserProfile = useCallback(async (firebaseUser: User, legalRegion: string, role: UserRole, refId?: string): Promise<UserProfile> => {
+    const { db } = await getFirebaseServices();
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const newExpiry = add(new Date(), { days: 30 });
     
@@ -142,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addNotification = useCallback(async (notificationData: Omit<AppNotification, 'id' | 'createdAt' | 'read'>, targetUserId?: string) => {
+    const { db } = await getFirebaseServices();
     const uid = targetUserId || user?.uid;
     if (!uid) return;
 
@@ -165,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const fetchUserProfile = useCallback(async (firebaseUser: User) => {
+    const { db } = await getFirebaseServices();
     const userDocRef = doc(db, "users", firebaseUser.uid);
     const userDoc = await getDoc(userDocRef);
 
@@ -212,6 +223,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchNotifications = useCallback(async (uid: string) => {
+    const { db } = await getFirebaseServices();
     if (!uid) return;
     const notificationsCollectionRef = collection(db, `users/${uid}/notifications`);
     const q = query(notificationsCollectionRef, orderBy('createdAt', 'desc'), limit(20));
@@ -221,6 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const markNotificationAsRead = useCallback(async (id: string) => {
+    const { db } = await getFirebaseServices();
     if (!user) return;
     const notificationRef = doc(db, `users/${user.uid}/notifications`, id);
     await updateDoc(notificationRef, { read: true });
@@ -228,6 +241,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
   
   const markAllNotificationsAsRead = useCallback(async () => {
+    const { db } = await getFirebaseServices();
     if (!user) return;
     const batch = writeBatch(db);
     notifications.forEach(n => {
@@ -243,6 +257,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
         try {
+            const { auth } = await getFirebaseServices();
             await setPersistence(auth, browserLocalPersistence);
             const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                 if (firebaseUser) {
@@ -279,6 +294,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [userProfile]);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
+    const { db } = await getFirebaseServices();
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     
@@ -306,6 +322,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     companyId: string,
     updates: { itemId: string; completed: boolean }[]
   ) => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile || updates.length === 0) return;
     
     const isCaUpdatingClient = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor';
@@ -386,6 +403,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, userProfile, toast]);
 
     const applyAccessPass = useCallback(async (passCode: string): Promise<{ success: boolean; message: string }> => {
+        const { db } = await getFirebaseServices();
         if (!user || !userProfile) return { success: false, message: 'You must be logged in to use an access pass.' };
 
         // 1. Check if user has already used this pass
@@ -461,10 +479,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("Access Pass Transaction Error:", error);
             return { success: false, message: error.message || "An unexpected error occurred." };
         }
-    }, [user, userProfile, fetchUserProfile]);
+    }, [user, userProfile, fetchUserProfile, toast]);
 
 
   const signUpWithEmailAndPassword = async (email: string, pass: string, name: string, legalRegion: string, role: UserRole, refId?: string, accessPass?: string) => {
+      const { auth } = await getFirebaseServices();
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const firebaseUser = userCredential.user;
       if (firebaseUser) {
@@ -492,20 +511,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithEmailAndPassword = async (email: string, pass: string) => {
+      const { auth } = await getFirebaseServices();
       await signInWithEmail(auth, email, pass);
   };
 
   const sendPasswordResetLink = async (email: string) => {
+    const { auth } = await getFirebaseServices();
     await sendPasswordResetEmail(auth, email);
   };
 
   const signInWithGoogle = async () => {
+    const { auth } = await getFirebaseServices();
     const provider = new GoogleAuthProvider();
     try {
         await setPersistence(auth, browserLocalPersistence);
         const result = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         if (firebaseUser) {
+            const { db } = await getFirebaseServices();
             const userDocRef = doc(db, "users", firebaseUser.uid);
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
@@ -533,9 +556,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signOut = async () => { await firebaseSignOut(auth); };
+  const signOut = async () => { 
+    const { auth } = await getFirebaseServices();
+    await firebaseSignOut(auth); 
+  };
 
  const deductCredits = useCallback(async (amount: number): Promise<boolean> => {
+    const { db } = await getFirebaseServices();
     if (isDevMode) return true;
     
     let success = false;
@@ -597,12 +624,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const saveChatHistory = async (chat: ChatMessage[]) => {
+    const { db } = await getFirebaseServices();
     if (!user) return;
     const historyCollectionRef = collection(db, `users/${user.uid}/chatHistory`);
     await addDoc(historyCollectionRef, { messages: chat, createdAt: serverTimestamp() });
   };
 
   const getChatHistory = async (): Promise<ChatMessage[][]> => {
+    const { db } = await getFirebaseServices();
     if (!user) return [];
     const historyCollectionRef = collection(db, `users/${user.uid}/chatHistory`);
     const q = query(historyCollectionRef, orderBy('createdAt', 'desc'), limit(20));
@@ -611,6 +640,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addFeedback = async (category: string, message: string, sentiment?: 'positive' | 'negative') => {
+    const { db } = await getFirebaseServices();
     if (!user) throw new Error("User not logged in");
     await addDoc(collection(db, 'feedback'), {
       userId: user.uid,
@@ -621,6 +651,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getPendingInvites = async () => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) return [];
     const invitesRef = collection(db, 'invites');
     const q = query(invitesRef, where('caEmail', '==', user.email), where('status', '==', 'pending'));
@@ -629,6 +660,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendClientInvite = async (clientEmail: string): Promise<{ success: boolean; message: string }> => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) {
       return { success: false, message: 'Only CAs can invite clients.' };
     }
@@ -654,6 +686,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const sendCaInvite = async (caEmail: string, companyId: string, companyName: string): Promise<{ success: boolean; message: string }> => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile || userProfile.role !== 'Founder') return { success: false, message: 'Only founders can send invites.' };
     
     const existingInvite = (userProfile.invites || []).find(inv => inv.caEmail === caEmail && inv.companyId === companyId && inv.status === 'pending');
@@ -676,6 +709,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const acceptInvite = async (inviteId: string) => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile || (userProfile.role !== 'CA' && userProfile.role !== 'Legal Advisor')) {
       throw new Error("Only advisors can accept invites.");
     }
@@ -703,6 +737,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const checkForAcceptedInvites = useCallback(async () => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile || userProfile.role !== 'Founder') return;
   
     const invitesRef = collection(db, 'invites');
@@ -748,6 +783,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, userProfile, toast, addNotification]);
 
   const sendTeamInvite = async (email: string, role: TeamMember['role']): Promise<{ success: boolean; message: string }> => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile) return { success: false, message: 'You must be logged in.' };
     
     // Check if user is already a member
@@ -782,6 +818,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const revokeTeamInvite = async (inviteId: string): Promise<{ success: boolean; message: string }> => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile) return { success: false, message: "Not authenticated." };
     try {
       const inviteRef = doc(db, 'invites', inviteId);
@@ -796,6 +833,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeTeamMember = async (memberId: string): Promise<{ success: boolean; message: string }> => {
+    const { db } = await getFirebaseServices();
     if (!user || !userProfile) return { success: false, message: "Not authenticated." };
     if (memberId === user.uid) return { success: false, message: "You cannot remove yourself." };
 
