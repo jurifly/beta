@@ -71,7 +71,6 @@ import type { UserProfile, UserRole, AppNotification, Company } from "@/lib/type
 import { planHierarchy } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
-import { BetaBanner } from "./beta-banner";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -535,6 +534,7 @@ function AppShell({ children }: { children: ReactNode }) {
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
   const [lang, setLang] = useState<Language>('en');
+  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -695,11 +695,10 @@ function AppShell({ children }: { children: ReactNode }) {
                 </div>
             </header>
             <main className="flex-1 flex-col gap-4 lg:gap-6 lg:p-6 p-4 bg-background pb-20 md:pb-6 overflow-y-auto">
-                <BetaBanner />
                 <FounderQuoteBanner />
                 <CaQuoteBanner />
                 <ProductWalkthrough />
-                <PageTransition pathname={usePathname()}>
+                <PageTransition pathname={pathname}>
                     {childrenWithLang}
                 </PageTransition>
             </main>
@@ -893,6 +892,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 

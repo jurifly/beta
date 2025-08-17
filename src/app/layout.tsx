@@ -16,7 +16,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Jurifly - Your AI Co-pilot for Startup Compliance',
-  description: 'Jurifly is your AI co-pilot for startup compliance. Organize legal tasks, track compliance, and collaborate with your CA in one place.',
+  description: 'Stay legally compliant and build your startup with Jurifly, India\'s smartest AI co-pilot for founders and CAs. Handle GST, ROC, ITR, and more with ease.',
   keywords: ['startup compliance', 'AI assistant', 'founders', 'CA tools', 'legal tech', 'document generation', 'cap table'],
 };
 

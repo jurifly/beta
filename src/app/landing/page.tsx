@@ -104,13 +104,13 @@ const LandingHeader = () => {
   );
 };
 
-const PrototypeBanner = () => {
+const BetaTrustBadge = () => {
     return (
-        <div className="bg-yellow-100 dark:bg-yellow-900/30 border-t border-b border-yellow-200 dark:border-yellow-800/50 text-yellow-800 dark:text-yellow-200">
+        <div className="bg-blue-100 dark:bg-blue-900/30 border-t border-b border-blue-200 dark:border-blue-800/50 text-blue-800 dark:text-blue-200">
             <div className="container mx-auto px-4 py-2 text-center text-sm flex items-center justify-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
                 <p>
-                    <span className="font-semibold">Prototype for User Testing:</span> All AI-generated content is for demonstration and should be verified.
+                    <span className="font-semibold">Beta – early access.</span> Constantly improving with you.
                 </p>
             </div>
         </div>
@@ -144,9 +144,6 @@ const HeroSection = () => {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/register')}>
                     Sign up for Beta
-                </Button>
-                 <Button variant="outline" className="w-full md:w-auto text-lg interactive-lift" size="lg" asChild>
-                    <Link href="#newsletter">Subscribe to Newsletter</Link>
                 </Button>
             </div>
         </motion.div>
@@ -381,7 +378,7 @@ const NewsletterSection = () => {
                                 className="flex-1"
                                 aria-label="Email for newsletter"
                             />
-                            <Button type="submit" className="sm:w-auto">Subscribe to Jurifly Mail</Button>
+                            <Button type="submit" className="sm:w-auto">Subscribe</Button>
                         </form>
                     </div>
                 </Card>
@@ -396,7 +393,7 @@ const FinalCtaSection = () => {
     <section className="w-full py-20 md:py-24">
       <AnimatedSection className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
         <h2 className="text-3xl md:text-5xl font-bold font-headline" data-cursor-size="large">Don’t Worry About Legal Stuff Again.</h2>
-        <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. No filings. Just clarity.</p>
+        <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. Track & manage your filings in one place.</p>
         <div className="mt-8">
           <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>
             Get Started – It’s Free for Beta Users
@@ -412,8 +409,8 @@ const LandingFooter = () => (
     <footer className="border-t">
         <div className="container mx-auto max-w-screen-xl py-12 px-4 sm:px-6 lg:px-8 text-left">
              <div style={{textAlign: 'left'}}>
-              <h1 className="text-[80px] font-extrabold leading-[1.1] text-foreground/80" data-cursor-size="large">
-                Live<br />it up!
+              <h1 className="text-[80px] font-extrabold leading-[1.1] text-foreground/80 font-headline" data-cursor-size="large">
+                Build<br />fearlessly.
               </h1>
               <p className="mt-6 text-[18px] text-muted-foreground font-medium flex items-center gap-2">
                 Made with <Heart className="w-5 h-5 text-red-500 fill-current" /> in India
@@ -422,13 +419,16 @@ const LandingFooter = () => (
                 <JuriFlyWord /> helps <span className="font-semibold text-foreground/90">CAs</span> and <span className="font-semibold text-foreground/90">Startup Founders</span> stay legally unstoppable.
               </p>
             </div>
-            <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-                <p>&copy; {new Date().getFullYear()} JuriFly. All rights reserved.</p>
-                <div className="flex items-center gap-4">
-                     <Link href="/about" className="hover:text-primary">About</Link>
-                     <Link href="/contact" className="hover:text-primary">Contact</Link>
-                     <Link href="/careers" className="hover:text-primary">Careers</Link>
-                     <Link href="/dashboard/settings?tab=policies" className="hover:text-primary">Terms</Link>
+            <div className="mt-8 pt-8 border-t flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground">
+                <NewsletterSection />
+                <div className="flex flex-col sm:flex-row items-center justify-between w-full">
+                  <p>&copy; {new Date().getFullYear()} JuriFly. All rights reserved.</p>
+                  <div className="flex items-center gap-4">
+                       <Link href="/about" className="hover:text-primary">About</Link>
+                       <Link href="/contact" className="hover:text-primary">Contact</Link>
+                       <Link href="/careers" className="hover:text-primary">Careers</Link>
+                       <Link href="/dashboard/settings?tab=policies" className="hover:text-primary">Terms</Link>
+                  </div>
                 </div>
             </div>
         </div>
@@ -531,7 +531,7 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden no-cursor-effect">
       <LandingHeader />
-      <PrototypeBanner />
+      <BetaTrustBadge />
       <main className="flex-1 relative z-10">
         <HeroSection />
         <div className="top-marquee py-8">
@@ -559,27 +559,6 @@ export default function LandingPage() {
         <FounderLoveSection />
         <TestimonialsSection />
         <FaqSection />
-        <NewsletterSection />
-        <div className="bottom-marquee py-8">
-            <Marquee>
-                <span>No Jargon</span><span className="mx-4 text-primary">&bull;</span>
-                <span>No Overwhelm</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Just Clarity</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Your AI Co-pilot</span><span className="mx-4 text-primary">&bull;</span>
-                <span>One Unified Workspace</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Angel Tax Guidance</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Smart Alerts</span><span className="mx-4 text-primary">&bull;</span>
-            </Marquee>
-            <Marquee reverse>
-                <span>ESOP Management</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Built for India</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Real-time Collaboration</span><span className="mx-4 text-primary">&bull;</span>
-                <span>DPIIT & MSME Recognition</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Founder-Friendly</span><span className="mx-4 text-primary">&bull;</span>
-                <span>No More Spreadsheets</span><span className="mx-4 text-primary">&bull;</span>
-                <span>Your Legal Co-pilot</span><span className="mx-4 text-primary">&bull;</span>
-            </Marquee>
-        </div>
         <FinalCtaSection />
       </main>
       <LandingFooter />
