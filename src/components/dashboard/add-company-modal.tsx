@@ -76,8 +76,6 @@ const STEPS = [
   { id: 1, name: "Company Details", icon: Building },
   { id: 2, name: "Identification", icon: KeyRound },
   { id: 3, name: "Profile", icon: User },
-  { id: 4, name: "Financials", icon: Banknote },
-  { id: 5, name: "Review", icon: FileText },
 ];
 
 interface AddCompanyModalProps {
@@ -126,14 +124,28 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
 
 
   const nextStep = async () => {
-    const fieldsToValidate = STEPS.find(s => s.id === step)?.fields;
-    // For this design, we'll validate all fields on each step for simplicity
-    const isValid = await trigger();
-    if (isValid && step < STEPS.length) {
-      setStep(step + 1);
-    } else if (isValid && step === STEPS.length) {
-      // Handle final submission
-       handleSubmit(onSubmit)();
+    let fieldsToValidate: (keyof FormData)[];
+    switch (step) {
+      case 1:
+        fieldsToValidate = ['name', 'type', 'legalRegion'];
+        break;
+      case 2:
+        fieldsToValidate = ['pan', 'gstin', 'cin'];
+        break;
+      case 3:
+        fieldsToValidate = ['incorporationDate', 'sector', 'location'];
+        break;
+      default:
+        fieldsToValidate = [];
+    }
+
+    const isValid = await trigger(fieldsToValidate);
+    if (isValid) {
+      if (step < STEPS.length) {
+        setStep(step + 1);
+      } else {
+        handleSubmit(onSubmit)();
+      }
     }
   };
 
@@ -194,12 +206,41 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
   const gstinLabel = selectedRegion === 'India' ? 'GSTIN (Optional)' : 'VAT ID (Optional)';
   
   const isListedManual = selectedCompanyType === 'Listed Company (Manual)';
-  const totalSteps = isListedManual ? 1 : 5;
+  const totalSteps = isListedManual ? 1 : STEPS.length;
 
   const currentStepInfo = STEPS[step - 1];
   const StepIcon = currentStepInfo.icon;
 
   const renderFormContent = () => {
+    if(isEditMode) {
+      // A simplified form for editing
+      return (
+        <div className="space-y-6">
+          <Controller name="name" control={control} render={({ field }) => (
+            <div className="space-y-2">
+              <Label htmlFor="name">{isCA ? "Client's Legal Name" : "Company Legal Name"}</Label>
+              <Input id="name" placeholder="e.g., Acme Innovations Pvt. Ltd." {...field} />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            </div>
+          )}/>
+          <Controller name="sector" control={control} render={({ field }) => (
+            <div className="space-y-2">
+                <Label htmlFor="sector">Industry / Sector</Label>
+                <Input id="sector" placeholder="e.g. Fintech, SaaS, Healthcare" {...field} />
+                {errors.sector && <p className="text-sm text-destructive">{errors.sector.message}</p>}
+            </div>
+          )}/>
+            <Controller name="location" control={control} render={({ field }) => (
+            <div className="space-y-2">
+                <Label htmlFor="location">Registered Office (City, State/Country)</Label>
+                <Input id="location" placeholder="e.g. Mumbai, Maharashtra" {...field} />
+                {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
+            </div>
+          )}/>
+        </div>
+      );
+    }
+
     switch (step) {
       case 1:
         return (
@@ -286,7 +327,6 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
               )}/>
           </div>
         );
-      // Other cases would go here
       default:
         return <div>Review Your Information</div>;
     }
@@ -297,31 +337,49 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
       <InviteClientModal isOpen={isInviteClientModalOpen} onOpenChange={setInviteClientModalOpen} />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-xl flex flex-col max-h-[90vh] p-0">
-          <div className="p-6">
-            <Progress value={progressValue} className="h-2" />
-          </div>
-
-          <div className="p-6 pt-0 text-center">
-             <div className="inline-flex items-center justify-center p-3 bg-muted rounded-full mb-3">
-              <StepIcon className="w-6 h-6 text-primary"/>
-            </div>
-            <DialogTitle className="font-headline text-xl">
-              Step {step} of {totalSteps}: {currentStepInfo.name}
-            </DialogTitle>
-          </div>
+          {!isEditMode && (
+            <>
+              <div className="p-6">
+                <Progress value={progressValue} className="h-2" />
+              </div>
+              <div className="p-6 pt-0 text-center">
+                <div className="inline-flex items-center justify-center p-3 bg-muted rounded-full mb-3">
+                  <StepIcon className="w-6 h-6 text-primary"/>
+                </div>
+                <DialogTitle className="font-headline text-xl">
+                  Step {step} of {totalSteps}: {currentStepInfo.name}
+                </DialogTitle>
+              </div>
+            </>
+          )}
+          {isEditMode && (
+            <DialogHeader className="p-6">
+              <DialogTitle>Edit Company Details</DialogTitle>
+              <DialogDescription>Make changes to the company's profile information.</DialogDescription>
+            </DialogHeader>
+          )}
           
           <div className="flex-1 overflow-y-auto px-6">
-            {isEditMode ? "Edit form goes here" : renderFormContent()}
+            {renderFormContent()}
           </div>
           
           <DialogFooter className="p-6 border-t flex items-center justify-between">
-            <Button type="button" variant="ghost" onClick={prevStep} disabled={step === 1}>Back</Button>
-            {step < totalSteps ? (
+            {!isEditMode && <Button type="button" variant="ghost" onClick={prevStep} disabled={step === 1}>Back</Button>}
+            
+            {isEditMode ? (
+                <div className="w-full flex justify-end gap-2">
+                    <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                      Save Changes
+                    </Button>
+                </div>
+            ) : step < totalSteps ? (
                 <Button type="button" onClick={nextStep}>Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
             ) : (
                 <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                  {isEditMode ? "Save Changes" : "Finish"}
+                  Finish
                 </Button>
             )}
           </DialogFooter>
@@ -330,3 +388,4 @@ export function AddCompanyModal({ isOpen, onOpenChange, companyToEdit, deductCre
     </>
   );
 }
+
