@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { Bug, Lightbulb, Palette, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { auth } from "@/lib/firebase/config";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // --- Policies Tab Content ---
