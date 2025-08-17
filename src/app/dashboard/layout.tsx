@@ -75,7 +75,7 @@ import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal"
 import { formatDistanceToNow } from "date-fns";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
-import { FounderQuoteBanner } from './founder-quote-banner';
+import { BetaBanner } from './beta-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
@@ -529,12 +529,13 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
 
 function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, userProfile, signOut, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
   const [lang, setLang] = useState<Language>('en');
-  const pathname = usePathname();
+  
 
   useEffect(() => {
     try {
@@ -695,7 +696,7 @@ function AppShell({ children }: { children: ReactNode }) {
                 </div>
             </header>
             <main className="flex-1 flex-col gap-4 lg:gap-6 lg:p-6 p-4 bg-background pb-20 md:pb-6 overflow-y-auto">
-                <FounderQuoteBanner />
+                <BetaBanner />
                 <CaQuoteBanner />
                 <ProductWalkthrough />
                 <PageTransition pathname={pathname}>
@@ -717,6 +718,7 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -892,6 +894,7 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
+
 
 
 

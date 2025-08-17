@@ -211,7 +211,11 @@ function BusinessSetupContent() {
             <Button variant="outline" onClick={goToPrevStep} disabled={currentStep === 1}>
                 Back
             </Button>
-            {/* Next button is handled within each step */}
+            {currentStep < STEPS.length && (
+              <Button onClick={goToNextStep} disabled={!navigatorState.completedSteps.includes(currentStep)}>
+                Next Step <ArrowRight className="ml-2"/>
+              </Button>
+            )}
          </CardFooter>
       </Card>
     </div>
@@ -259,6 +263,7 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
             const response = await getBusinessRecommendationAction(data);
             setResult(response);
             updateState({ businessTypeResult: response });
+            onComplete();
         } catch (error: any) {
             toast({ variant: "destructive", title: "Recommendation Failed", description: error.message });
         } finally {
@@ -401,9 +406,6 @@ function Step1BusinessType({ onComplete, updateState, initialState }: StepProps)
                                 )}
                             </Accordion>
                         </div>
-                        <div className="mt-6 shrink-0">
-                           <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
-                        </div>
                     </div>
                 )}
                 {!isLoading && !result && (
@@ -441,6 +443,7 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
       const response = await getIncCodeAction(data);
       setResult(response);
       updateState({ incCodeResult: response });
+      onComplete();
     } catch (error: any) {
       toast({ variant: "destructive", title: "INC Code Search Failed", description: error.message });
     } finally {
@@ -499,7 +502,6 @@ function Step2IncCodeFinder({ onComplete, updateState, initialState }: StepProps
                         </div>
                     </div>
                 )}
-                <Button onClick={onComplete} className="w-full">Next Step <ArrowRight className="ml-2"/></Button>
              </div>
           )}
            {!isLoading && !result && (
@@ -533,6 +535,7 @@ function Step3Infrastructure({ onComplete, updateState, initialState }: StepProp
         const response = await compareStatesAction(data);
         setResult(response);
         updateState({ stateAssistantResult: response });
+        onComplete();
       } catch (e: any) {
         toast({ variant: 'destructive', title: 'Analysis Failed', description: e.message });
       }
@@ -601,9 +604,6 @@ function Step3Infrastructure({ onComplete, updateState, initialState }: StepProp
                             <Card key={state.state} className="flex flex-col"><CardHeader className="text-center bg-muted/50"><CardTitle>{state.state}</CardTitle><Badge className="w-fit mx-auto" variant={state.score > 7 ? 'default' : state.score > 4 ? 'secondary' : 'destructive'}>Score: {state.score}/10</Badge></CardHeader><CardContent className="p-4 space-y-3 text-sm flex-1"><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Incorporation</p><p className="text-muted-foreground text-xs">{state.incorporation.easeOfRegistration} {state.incorporation.complianceNotes}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Startup Schemes</p><p className="text-muted-foreground text-xs">{state.startupSchemes.incentives}</p></div><div className="p-2 border rounded-md"><p className="font-semibold text-xs">Tax &amp; Labour</p><p className="text-muted-foreground text-xs">Prof. Tax: {state.taxAndLabour.professionalTax}. Labour: {state.taxAndLabour.labourLawCompliance}</p></div><div className="p-2 border rounded-md bg-destructive/10"><p className="font-semibold text-xs text-destructive">Risks</p><p className="text-destructive/80 text-xs">{state.risksAndFlags.commonIssues.join(', ')}</p></div></CardContent></Card>
                         ))}
                     </div>
-                     <div className="text-center pt-4">
-                        <Button onClick={onComplete}>Next Step <ArrowRight className="ml-2"/></Button>
-                    </div>
                 </div>
             )}
         </div>
@@ -647,9 +647,6 @@ function Step4RegistrationGuide({ onComplete }: { onComplete: () => void }) {
                   </AccordionItem>
                 ))}
             </Accordion>
-            <div className="text-center pt-4">
-                <Button onClick={onComplete}>Next Step <ArrowRight className="ml-2"/></Button>
-            </div>
         </div>
     );
 }
@@ -706,6 +703,7 @@ function Step5DocumentGenerator({ onComplete, userProfile }: Step5DocumentGenera
             const doc = await generateDocument({ templateName, legalRegion: userProfile.legalRegion });
             setGeneratedContent(doc);
             setIsTyping(true);
+            onComplete();
         } catch (e: any) {
             toast({ variant: 'destructive', title: 'Generation Failed', description: e.message });
         } finally {
@@ -783,9 +781,6 @@ function Step5DocumentGenerator({ onComplete, userProfile }: Step5DocumentGenera
                         </div>
                     )}
                 </div>
-            </div>
-            <div className="lg:col-span-2 text-center pt-4">
-                <Button onClick={onComplete}>Next Step <ArrowRight className="ml-2"/></Button>
             </div>
         </div>
     )

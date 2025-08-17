@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -104,10 +105,8 @@ const InteractiveLandingEffects = () => {
                     left: creatureMouse.x,
                     top: creatureMouse.y,
                 }}
-                className="fixed w-40 h-40 opacity-20 pointer-events-none z-[998] hidden md:block"
-            >
-               <div className="w-full h-full bg-primary/20 rounded-full blur-[80px]"/>
-            </motion.div>
+                className="background-blob pointer-events-none z-[998] hidden md:block"
+            />
         </>
     );
 };

@@ -393,7 +393,7 @@ const FinalCtaSection = () => {
     <section className="w-full py-20 md:py-24">
       <AnimatedSection className="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-screen-md">
         <h2 className="text-3xl md:text-5xl font-bold font-headline" data-cursor-size="large">Don’t Worry About Legal Stuff Again.</h2>
-        <p className="text-lg text-muted-foreground mt-4">No jargon. No overwhelm. Track & manage your filings in one place.</p>
+        <p className="text-lg text-muted-foreground mt-4">Track & manage your filings in one place.</p>
         <div className="mt-8">
           <Button className="w-full md:w-auto text-lg interactive-lift" size="lg" onClick={() => router.push('/login')}>
             Get Started – It’s Free for Beta Users
@@ -410,7 +410,7 @@ const LandingFooter = () => (
         <div className="container mx-auto max-w-screen-xl py-12 px-4 sm:px-6 lg:px-8 text-left">
              <div style={{textAlign: 'left'}}>
               <h1 className="text-[80px] font-extrabold leading-[1.1] text-foreground/80 font-headline" data-cursor-size="large">
-                Build<br />fearlessly.
+                Compliance, simplified.
               </h1>
               <p className="mt-6 text-[18px] text-muted-foreground font-medium flex items-center gap-2">
                 Made with <Heart className="w-5 h-5 text-red-500 fill-current" /> in India

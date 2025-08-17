@@ -134,3 +134,12 @@ html {
     background-position: 200% center;
   }
 }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes pulse-slow {
+  50% { opacity: 0.5; }
+}
