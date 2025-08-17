@@ -11,6 +11,8 @@ export interface User {
   displayName: string | null;
 }
 
+export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
+
 export interface CapTableEntry {
   id: string;
   holder: string;

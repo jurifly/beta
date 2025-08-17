@@ -4,7 +4,7 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData, TeamMember } from '@/lib/types';
+import type { User, UserProfile, UserPlan, ChatMessage, AppNotification, Transaction, UserRole, Company, ActivityLogItem, Invite, HistoricalFinancialData, TeamMember, Language } from '@/lib/types';
 import { useToast } from './use-toast';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword as signInWithEmail, updateProfile as updateFirebaseProfile, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
@@ -20,6 +20,8 @@ export interface AuthContextType {
   isPlanActive: boolean;
   notifications: AppNotification[];
   isDevMode: boolean;
+  lang: Language;
+  setLang: (lang: Language) => void;
   setDevMode: (enabled: boolean) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   updateCompanyChecklistStatus: (companyId: string, updates: { itemId: string; completed: boolean }[]) => Promise<void>;
@@ -56,15 +58,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [lang, setLang] = useState<Language>('en');
 
   useEffect(() => {
     try {
       const devMode = localStorage.getItem('devMode') === 'true';
       setIsDevMode(devMode);
+      const savedLang = localStorage.getItem('jurifly-lang') as Language;
+      if (savedLang) {
+        setLang(savedLang);
+      }
     } catch (error) {
-      console.error("Could not access localStorage for devMode", error);
+      console.error("Could not access localStorage", error);
     }
   }, []);
+
+  const handleSetLang = (newLang: Language) => {
+    setLang(newLang);
+    try {
+        localStorage.setItem('jurifly-lang', newLang);
+    } catch (error) {
+        console.error("Could not save language to localStorage", error);
+    }
+  }
 
   const setDevMode = (enabled: boolean) => {
     try {
@@ -793,7 +809,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, applyAccessPass, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites, sendTeamInvite, revokeTeamInvite, removeTeamMember };
+  const value = { user, userProfile, loading, isPlanActive, notifications, isDevMode, lang, setLang: handleSetLang, setDevMode, updateUserProfile, updateCompanyChecklistStatus, deductCredits, applyAccessPass, signInWithGoogle, signInWithEmailAndPassword, signUpWithEmailAndPassword, signOut, sendPasswordResetLink, saveChatHistory, getChatHistory, addNotification, markNotificationAsRead, markAllNotificationsAsRead, addFeedback, getPendingInvites, acceptInvite, sendCaInvite, sendClientInvite, checkForAcceptedInvites, sendTeamInvite, revokeTeamInvite, removeTeamMember };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

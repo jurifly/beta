@@ -65,7 +65,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Language, type Translations, translations as allTranslations } from "./layout";
+import { translations } from "./layout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ComplianceActivityChart = dynamic(
@@ -134,23 +134,26 @@ const StatCard = ({ title, value, subtext, icon, colorClass, isLoading }: { titl
     </Card>
 );
 
-const QuickLinkCard = ({ title, description, href, icon, translations, lang }: { title: string, description: string, href: string, icon: React.ReactNode, translations: Translations, lang: Language }) => (
-    <Card className="interactive-lift hover:border-primary/50 transition-colors h-full">
-        <Link href={href} className="block h-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3 break-words">
-                    {icon} {title}
-                </CardTitle>
-                <CardDescription className="break-words">{description}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-                 <Button variant="link" className="p-0 h-auto">
-                    {translations.goTo[lang]} {title} <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-            </CardFooter>
-        </Link>
-    </Card>
-);
+const QuickLinkCard = ({ title, description, href, icon }: { title: string, description: string, href: string, icon: React.ReactNode }) => {
+    const { lang } = useAuth();
+    return (
+        <Card className="interactive-lift hover:border-primary/50 transition-colors h-full">
+            <Link href={href} className="block h-full">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3 break-words">
+                        {icon} {title}
+                    </CardTitle>
+                    <CardDescription className="break-words">{description}</CardDescription>
+                </CardHeader>
+                <CardFooter>
+                    <Button variant="link" className="p-0 h-auto">
+                        {translations.goTo[lang]} {title} <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                </CardFooter>
+            </Link>
+        </Card>
+    );
+};
 
 
 // --- Dashboards ---
@@ -167,10 +170,10 @@ type DashboardChecklistItem = {
     penalty: string;
 };
 
-function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }: { userProfile: UserProfile, onAddCompanyClick: () => void, translations: Translations, lang: Language }) {
+function FounderDashboard({ userProfile, onAddCompanyClick }: { userProfile: UserProfile, onAddCompanyClick: () => void }) {
     const activeCompany = Array.isArray(userProfile?.companies) ? userProfile.companies.find(c => c.id === userProfile.activeCompanyId) : null;
     const { toast } = useToast();
-    const { updateCompanyChecklistStatus, checkForAcceptedInvites } = useAuth();
+    const { updateCompanyChecklistStatus, checkForAcceptedInvites, lang } = useAuth();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [checklist, setChecklist] = useState<DashboardChecklistItem[]>([]);
@@ -705,13 +708,14 @@ function FounderDashboard({ userProfile, onAddCompanyClick, translations, lang }
     );
 }
 
-function CADashboard({ userProfile, onAddClientClick, translations, lang }: { userProfile: UserProfile, onAddClientClick: () => void, translations: Translations, lang: Language }) {
+function CADashboard({ userProfile, onAddClientClick }: { userProfile: UserProfile, onAddClientClick: () => void }) {
     const { toast } = useToast();
     const router = useRouter();
     const [insights, setInsights] = useState<Insight[]>([]);
     const [insightsLoading, setInsightsLoading] = useState(true);
     const [clientHealthData, setClientHealthData] = useState<any[]>([]);
     const [isLoadingHealth, setIsLoadingHealth] = useState(true);
+    const { lang } = useAuth();
 
     const clientCount = userProfile.companies.length;
     
@@ -939,11 +943,12 @@ function CADashboard({ userProfile, onAddClientClick, translations, lang }: { us
   )
 }
 
-function LegalAdvisorDashboard({ userProfile, translations, lang }: { userProfile: UserProfile, translations: Translations, lang: Language }) {
+function LegalAdvisorDashboard({ userProfile }: { userProfile: UserProfile }) {
+    const { lang } = useAuth();
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
              <div className="md:col-span-4 lg:col-span-4">
-                <QuickLinkCard title={translations.aiDocAnalyzer[lang]} description={translations.aiDocAnalyzerDesc[lang]} href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>} translations={translations} lang={lang}/>
+                <QuickLinkCard title={translations.aiDocAnalyzer[lang]} description={translations.aiDocAnalyzerDesc[lang]} href="/dashboard/ai-toolkit?tab=analyzer" icon={<FileScan className="text-primary"/>}/>
              </div>
              <Link href="/dashboard/clients" className="block"><StatCard title={translations.activeMatters[lang]} value={userProfile.companies.reduce((acc, c) => acc + (c.matters?.length || 0), 0).toString()} subtext={translations.acrossAllClients[lang]} icon={<Briefcase />} /></Link>
              <Link href="/dashboard/ai-toolkit?tab=analyzer" className="block"><StatCard title={translations.contractsAnalyzed[lang]} value="0" subtext={translations.thisMonth[lang]} icon={<ListChecks />} /></Link>
@@ -954,8 +959,9 @@ function LegalAdvisorDashboard({ userProfile, translations, lang }: { userProfil
     );
 }
 
-function EnterpriseDashboard({ userProfile, translations, lang }: { userProfile: UserProfile, translations: Translations, lang: Language }) {
+function EnterpriseDashboard({ userProfile }: { userProfile: UserProfile }) {
     const entityCount = userProfile.companies.length;
+    const { lang } = useAuth();
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
              <Link href="/dashboard/team" className="block"><StatCard title={translations.managedEntities[lang]} value={`${entityCount}`} subtext={translations.acrossOrganization[lang]} icon={<Building2 />} /></Link>
@@ -966,27 +972,22 @@ function EnterpriseDashboard({ userProfile, translations, lang }: { userProfile:
              <div className="lg:col-span-4"><ComplianceActivityChart dataByYear={staticChartDataByYear} /></div>
 
              <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title={translations.aiAuditAssistant[lang]} description={translations.aiAuditAssistantDesc[lang]} href="/dashboard/ai-toolkit?tab=audit" icon={<Sparkles className="text-primary"/>} translations={translations} lang={lang}/>
+                <QuickLinkCard title={translations.aiAuditAssistant[lang]} description={translations.aiAuditAssistantDesc[lang]} href="/dashboard/ai-toolkit?tab=audit" icon={<Sparkles className="text-primary"/>}/>
              </div>
              <div className="md:col-span-2 lg:col-span-4">
-                <QuickLinkCard title={translations.workflowAutomation[lang]} description={translations.workflowAutomationDesc[lang]} href="/dashboard/ai-toolkit?tab=workflows" icon={<Zap className="text-primary"/>} translations={translations} lang={lang}/>
+                <QuickLinkCard title={translations.workflowAutomation[lang]} description={translations.workflowAutomationDesc[lang]} href="/dashboard/ai-toolkit?tab=workflows" icon={<Zap className="text-primary"/>}/>
              </div>
         </div>
     );
 }
 
 export default function Dashboard() {
-  const { userProfile, deductCredits } = useAuth();
+  const { userProfile, deductCredits, lang } = useAuth();
   const [isAddCompanyModalOpen, setAddCompanyModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [lang, setLang] = useState<Language>('en');
 
   useEffect(() => {
     setIsMounted(true);
-    const savedLang = localStorage.getItem('jurifly-lang') as Language;
-    if (savedLang && allTranslations.dashboard[savedLang]) {
-      setLang(savedLang);
-    }
   }, []);
 
   const renderDashboardByRole = () => {
@@ -1008,15 +1009,15 @@ export default function Dashboard() {
     }
     switch (userProfile.role) {
       case 'Founder':
-        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={allTranslations} lang={lang}/>;
+        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} />;
       case 'CA':
-        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} translations={allTranslations} lang={lang}/>;
+        return <CADashboard userProfile={userProfile} onAddClientClick={() => setAddCompanyModalOpen(true)} />;
       case 'Legal Advisor':
-        return <LegalAdvisorDashboard userProfile={userProfile} translations={allTranslations} lang={lang}/>;
+        return <LegalAdvisorDashboard userProfile={userProfile} />;
       case 'Enterprise':
-        return <EnterpriseDashboard userProfile={userProfile} translations={allTranslations} lang={lang}/>;
+        return <EnterpriseDashboard userProfile={userProfile} />;
       default:
-        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} translations={allTranslations} lang={lang}/>;
+        return <FounderDashboard userProfile={userProfile} onAddCompanyClick={() => setAddCompanyModalOpen(true)} />;
     }
   };
   
@@ -1043,9 +1044,9 @@ export default function Dashboard() {
 
   const getAddButtonText = () => {
       if (userProfile?.role === 'CA' || userProfile?.role === 'Legal Advisor') {
-          return allTranslations.addClient[lang];
+          return translations.addClient[lang];
       }
-      return allTranslations.addCompany[lang];
+      return translations.addCompany[lang];
   }
 
   return (
@@ -1056,10 +1057,10 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">
-                {allTranslations.welcome[lang]}, {userProfile?.name.split(" ")[0]}!
+                {translations.welcome[lang]}, {userProfile?.name.split(" ")[0]}!
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                {allTranslations.workspaceOverview[lang]} {userProfile?.role === 'Founder' && activeCompany ? `${allTranslations.for[lang]} ${activeCompany.name}` : ''}.
+                {translations.workspaceOverview[lang]} {userProfile?.role === 'Founder' && activeCompany ? `${translations.for[lang]} ${activeCompany.name}` : ''}.
               </p>
             </div>
               <div className="flex items-center gap-4">

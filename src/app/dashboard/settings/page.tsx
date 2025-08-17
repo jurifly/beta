@@ -114,6 +114,7 @@ const settingsItems = [
 ];
 
 export default function SettingsPage() {
+  const { userProfile, deductCredits } = useAuth();
   const isMobile = useIsMobile();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -123,19 +124,12 @@ export default function SettingsPage() {
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null);
-  const { userProfile, deductCredits } = useAuth();
   
   useEffect(() => {
     setIsMounted(true);
     // Set initial active view based on query param or device type
     setActiveView(tabParam || (isMobile ? null : 'profile'));
   }, [tabParam, isMobile]);
-
-  useEffect(() => {
-    if (isMounted) {
-      setActiveView(tabParam || (isMobile ? null : 'profile'));
-    }
-  }, [isMounted, isMobile, tabParam]);
 
   if (!userProfile) {
     return <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

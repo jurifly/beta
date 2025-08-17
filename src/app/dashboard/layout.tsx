@@ -67,13 +67,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { useAuth } from "@/hooks/auth";
-import type { UserProfile, UserRole, AppNotification, Company } from "@/lib/types";
+import type { UserProfile, UserRole, AppNotification, Company, Language } from "@/lib/types";
 import { planHierarchy } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NotificationModal } from "@/components/dashboard/notification-modal";
 import { FeatureLockedModal } from "@/components/dashboard/feature-locked-modal";
 import { formatDistanceToNow } from "date-fns";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet";
 import { BetaBanner } from './beta-banner';
 import { CaQuoteBanner } from './ca-quote-banner';
@@ -85,7 +85,6 @@ import { ProductWalkthrough } from "@/components/dashboard/ProductWalkthrough";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
-export type Language = 'en' | 'hi' | 'es' | 'zh' | 'fr' | 'de' | 'pt' | 'ja';
 export type Translations = Record<string, Record<Language, string>>;
 
 const languages: { code: Language; name: string }[] = [
@@ -212,16 +211,9 @@ export const translations: Translations = {
     toastComplianceUpdatedDesc: { en: "All past tasks for", hi: "के लिए सभी पिछले कार्य", es: "Todas las tareas pasadas para", zh: "所有过去的任务", fr: "Toutes les tâches passées pour", de: "Alle vergangenen Aufgaben für", pt: "Todas as tarefas passadas para", ja: "のすべての過去のタスク" },
 };
 
-type NavItemConfig = {
-    [key: string]: {
-        href: string;
-        translationKey: keyof typeof translations;
-        icon: React.ElementType;
-        description: string;
-        locked?: boolean | 'pro' | 'beta';
-        label?: string; // For overrides
-        badge?: string; // For "Beta", "New", etc.
-    }
+type ThemedNavItem = (typeof navItemConfig)[keyof typeof navItemConfig] & {
+    color?: string;
+    label_override_key?: keyof typeof translations;
 }
 
 const navItemConfig: NavItemConfig = {
@@ -473,9 +465,9 @@ const MoreMenuSheet = ({ lang, setLang, onLockedFeatureClick }: { lang: Language
 };
 
 
-const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language, setLang: (l: Language) => void, onLockedFeatureClick: (name: string, type: 'pro' | 'beta') => void }) => {
+const BottomNavBar = ({ onLockedFeatureClick }: { onLockedFeatureClick: (name: string, type: 'pro' | 'beta') => void }) => {
     const pathname = usePathname();
-    const { userProfile, isDevMode } = useAuth();
+    const { userProfile, isDevMode, lang, setLang } = useAuth();
     if (!userProfile) return null;
 
     const isPro = planHierarchy[userProfile.plan] > 0;
@@ -530,32 +522,13 @@ const BottomNavBar = ({ lang, setLang, onLockedFeatureClick }: { lang: Language,
 function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, userProfile, signOut, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile } = useAuth();
+  const { user, userProfile, signOut, notifications, markNotificationAsRead, markAllNotificationsAsRead, isDevMode, setDevMode, updateUserProfile, lang, setLang } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [lockedFeatureType, setLockedFeatureType] = useState<'pro' | 'beta'>('beta');
-  const [lang, setLang] = useState<Language>('en');
-  
-
-  useEffect(() => {
-    try {
-      const savedLang = localStorage.getItem('jurifly-lang') as Language;
-      if (savedLang && languages.some(l => l.code === savedLang)) {
-        setLang(savedLang);
-      }
-    } catch (error) {
-      console.error('Could not access localStorage for language settings.', error);
-    }
-  }, []);
 
   const handleLanguageChange = (langCode: string) => {
-    const newLang = langCode as Language;
-    setLang(newLang);
-    try {
-      localStorage.setItem('jurifly-lang', newLang);
-    } catch (error) {
-      console.error('Could not access localStorage for language settings.', error);
-    }
+    setLang(langCode as Language);
   };
   
   const handleLockedFeatureClick = (featureName: string, type: 'pro' | 'beta') => {
@@ -589,14 +562,6 @@ function AppShell({ children }: { children: ReactNode }) {
   const totalCreditsRemaining = bonusCredits + dailyRemaining;
 
   const isPro = planHierarchy[userProfile.plan] > 0;
-  
-  // Pass language to children
-  const childrenWithLang = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-        return React.cloneElement(child, { lang: lang, translations: translations } as any);
-    }
-    return child;
-  });
   
   const isAdvisorRole = userProfile.role === 'CA' || userProfile.role === 'Legal Advisor';
 
@@ -700,10 +665,10 @@ function AppShell({ children }: { children: ReactNode }) {
                 <CaQuoteBanner />
                 <ProductWalkthrough />
                 <PageTransition pathname={pathname}>
-                    {childrenWithLang}
+                    {children}
                 </PageTransition>
             </main>
-            <BottomNavBar lang={lang} setLang={handleLanguageChange} onLockedFeatureClick={handleLockedFeatureClick}/>
+            <BottomNavBar onLockedFeatureClick={handleLockedFeatureClick}/>
             </div>
         </div>
     </>
@@ -894,20 +859,3 @@ const DesktopSidebar = ({ navItems, userProfile, onLockedFeatureClick, lang }: {
     );
 };
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
