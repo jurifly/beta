@@ -529,7 +529,7 @@ const CookieConsentBanner = () => {
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden no-cursor-effect">
+    <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden">
       <LandingHeader />
       <BetaTrustBadge />
       <main className="flex-1 relative z-10">
