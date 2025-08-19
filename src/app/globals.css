@@ -125,7 +125,7 @@ html {
   }
 
   .background-blob {
-      @apply absolute top-1/2 left-1/2 size-[1200px] -translate-x-1/2 -translate-y-1/2 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] bg-primary/10 blur-[120px] transition-all animate-wave;
+      @apply absolute top-1/2 left-1/2 size-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[90px] transition-all;
   }
 }
 
