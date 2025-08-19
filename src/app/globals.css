@@ -83,9 +83,6 @@ html {
   body {
     @apply bg-background text-foreground;
   }
-  .background-blob {
-      @apply absolute top-1/2 left-1/2 size-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[100px] transition-all;
-  }
 }
 
 @layer utilities {
@@ -126,7 +123,10 @@ html {
     animation: textGradient 5s ease-in-out infinite;
     text-shadow: 0 0 5px hsl(var(--primary)/0.5), 0 0 15px hsl(var(--accent)/0.3);
   }
-  
+
+  .background-blob {
+      @apply absolute top-1/2 left-1/2 size-[800px] -translate-x-1/2 -translate-y-1/2 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] bg-primary/5 blur-[100px] transition-all animate-wave;
+  }
 }
 
 @keyframes textGradient {
@@ -140,6 +140,8 @@ html {
   to { transform: translateX(-50%); }
 }
 
-@keyframes pulse-slow {
-  50% { opacity: 0.5; }
+@keyframes wave {
+    0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: translate(-50%, -50%) rotate(0deg); }
+    50% { border-radius: 30% 70% 40% 60% / 50% 60% 40% 50%; transform: translate(-50%, -50%) rotate(180deg); }
+    100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: translate(-50%, -50%) rotate(360deg); }
 }

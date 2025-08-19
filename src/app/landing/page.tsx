@@ -41,6 +41,7 @@ import { InteractiveLandingEffects } from "./InteractiveLandingEffects";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { WelcomePopup } from "./WelcomePopup";
 
 const Logo = () => (
     <>
@@ -135,7 +136,7 @@ const HeroSection = () => {
           className="text-center"
         >
             <h1 className="text-4xl md:text-6xl font-bold font-headline leading-tight" data-cursor-size="large">
-              India's Smartest Legal & Compliance Buddy for Founders & CAs.
+              Compliance, simplified.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mt-6 mx-auto" data-cursor-size="large">
               Why juggle GST, ROC, ITR, MCA, FEMA, ESOPs, and random panic attacks?
@@ -530,7 +531,9 @@ const CookieConsentBanner = () => {
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body landing-page-cursor-area relative overflow-x-hidden">
+      <InteractiveLandingEffects />
       <LandingHeader />
+      <WelcomePopup />
       <BetaTrustBadge />
       <main className="flex-1 relative z-10">
         <HeroSection />

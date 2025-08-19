@@ -101,6 +101,20 @@ export default {
         "marquee": {
           from: { transform: 'translateX(0)' },
           to: { transform: 'translateX(-50%)' },
+        },
+        "wave": {
+            "0%": {
+                "border-radius": "40% 60% 70% 30% / 40% 50% 60% 50%",
+                transform: "translate(-50%, -50%) rotate(0deg)"
+            },
+            "50%": {
+                "border-radius": "30% 70% 40% 60% / 50% 60% 40% 50%",
+                transform: "translate(-50%, -50%) rotate(180deg)"
+            },
+            "100%": {
+                "border-radius": "40% 60% 70% 30% / 40% 50% 60% 50%",
+                transform: "translate(-50%, -50%) rotate(360deg)"
+            }
         }
       },
       animation: {
@@ -111,6 +125,7 @@ export default {
         'slide-in-from-bottom-8': 'slide-in-from-bottom-8 0.5s ease-out',
         'fade-in-25': 'fade-in-25 0.5s ease-out',
         'marquee': 'marquee 80s linear infinite',
+        'wave': 'wave 15s linear infinite alternate',
       },
     },
   },
