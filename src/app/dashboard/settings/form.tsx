@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from 'next/link';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -60,7 +61,7 @@ const legalRegions = [
 ]
 
 export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: { onAddCompanyClick: () => void; onEditCompanyClick: (company: Company) => void }) {
-  const { user, userProfile, updateUserProfile } = useAuth();
+  const { user, userProfile, updateUserProfile, isDevMode } = useAuth();
   const { toast } = useToast();
 
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -113,123 +114,124 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
   const addButtonText = (userProfile.role === 'CA' || userProfile.role === 'Legal Advisor') ? 'Add New Client' : 'Add New Company';
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-4xl space-y-6">
+    <div className="space-y-6">
       <Card className="interactive-lift">
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>Profile</CardTitle>
           <CardDescription>Update your personal details and preferences.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <Controller
-              name="name"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
-                    <Label htmlFor="name">Full Name</Label>
-                    <div className="md:col-span-2">
-                        <Input id="name" {...field} />
-                        {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
+        <form onSubmit={handleSubmit(onSubmit)}>
+            <CardContent className="space-y-6">
+            <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                    <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
+                        <Label htmlFor="name">Full Name</Label>
+                        <div className="md:col-span-2">
+                            <Input id="name" {...field} />
+                            {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
+                        </div>
                     </div>
+                )}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
+                <Label htmlFor="email">Email</Label>
+                <div className="md:col-span-2">
+                    <Input id="email" type="email" value={user?.email || ""} disabled />
                 </div>
-              )}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
-              <Label htmlFor="email">Email</Label>
-              <div className="md:col-span-2">
-                  <Input id="email" type="email" value={user?.email || ""} disabled />
-              </div>
-          </div>
-          <Controller
-              name="phone"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
-                    <Label htmlFor="phone">Phone</Label>
-                    <div className="md:col-span-2">
-                        <Input id="phone" type="tel" {...field} />
-                        {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>}
+            </div>
+            <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                    <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
+                        <Label htmlFor="phone">Phone</Label>
+                        <div className="md:col-span-2">
+                            <Input id="phone" type="tel" {...field} />
+                            {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>}
+                        </div>
                     </div>
-                </div>
-              )}
-          />
-          <Separator />
-
-          <Controller
-              name="role"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
-                    <div>
-                        <Label>Your Role</Label>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Your role is currently locked. To change it for testing, use the "Developer Tools" in the user profile menu.
-                        </p>
+                )}
+            />
+            <Separator />
+            <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                    <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
+                        <div>
+                            <Label>Your Role</Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                            Your role is currently locked. To change it for testing, use the "Developer Tools" in the user profile menu.
+                            </p>
+                        </div>
+                        <RadioGroup 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value} 
+                            className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2"
+                            disabled={!isDevMode}
+                        >
+                            {roles.map((role) => (
+                                <TooltipProvider key={role.id}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Label htmlFor={`role-${role.id}`} className="flex items-start flex-col justify-center space-y-1 rounded-md border-2 border-muted bg-popover p-4 font-semibold hover:bg-accent hover:text-accent-foreground has-[input:checked]:border-primary has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-70">
+                                                <RadioGroupItem value={role.id} id={`role-${role.id}`} disabled={!isDevMode} className="sr-only"/>
+                                                <span>{role.label}</span>
+                                                <span className="font-normal text-xs text-muted-foreground">{role.description}</span>
+                                            </Label>
+                                        </TooltipTrigger>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            ))}
+                        </RadioGroup>
                     </div>
-                    <RadioGroup 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value} 
-                        className="md:col-span-2 grid grid-cols-2 gap-4 pt-2"
-                        disabled
-                    >
-                        {roles.map((role) => (
-                          <TooltipProvider key={role.id}>
-                              <Tooltip>
-                                  <TooltipTrigger asChild>
-                                      <Label htmlFor={`role-${role.id}`} className="flex items-start flex-col justify-center space-y-1 rounded-md border-2 border-muted bg-popover p-4 font-semibold hover:bg-accent hover:text-accent-foreground has-[input:checked]:border-primary has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-70">
-                                          <RadioGroupItem value={role.id} id={`role-${role.id}`} disabled className="sr-only"/>
-                                          <span>{role.label}</span>
-                                           <span className="font-normal text-xs text-muted-foreground">{role.description}</span>
-                                      </Label>
-                                  </TooltipTrigger>
-                              </Tooltip>
-                          </TooltipProvider>
-                        ))}
-                    </RadioGroup>
-                </div>
-              )}
-          />
-           <Controller
-              name="legalRegion"
-              control={control}
-              render={({ field }) => (
-                <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
-                    <div className="space-y-1">
-                        <Label>Legal Region</Label>
-                        <p className="text-xs text-muted-foreground">This sets the context for all AI and compliance features.</p>
+                )}
+            />
+            <Controller
+                name="legalRegion"
+                control={control}
+                render={({ field }) => (
+                    <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-2 md:gap-4">
+                        <div className="space-y-1">
+                            <Label>Legal Region</Label>
+                            <p className="text-xs text-muted-foreground">This sets the context for all AI and compliance features.</p>
+                        </div>
+                        <div className="md:col-span-2">
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select country..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {legalRegions.map(region => (
+                                        <SelectItem key={region.value} value={region.value}>
+                                            <div className="flex items-center gap-2">
+                                            <span>{region.label}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
+                        </div>
                     </div>
-                    <div className="md:col-span-2">
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select country..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {legalRegions.map(region => (
-                                    <SelectItem key={region.value} value={region.value}>
-                                        <div className="flex items-center gap-2">
-                                           <span>{region.label}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {errors.legalRegion && <p className="text-sm text-destructive">{errors.legalRegion.message}</p>}
-                    </div>
-                </div>
-              )}
-          />
-        </CardContent>
-         <CardFooter className="flex justify-end border-t pt-6">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                Save Changes
-            </Button>
-        </CardFooter>
+                )}
+            />
+            </CardContent>
+            <CardFooter className="flex justify-end border-t pt-6">
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                    Save Changes
+                </Button>
+            </CardFooter>
+        </form>
       </Card>
-
+      
       <Card className="interactive-lift">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
             <div>
-                <CardTitle>Company Information</CardTitle>
+                <CardTitle>Workspaces</CardTitle>
                 <CardDescription>
                   Manage your companies or clients here.
                 </CardDescription>
@@ -264,6 +266,6 @@ export default function SettingsForm({ onAddCompanyClick, onEditCompanyClick }: 
           )}
         </CardContent>
       </Card>
-    </form>
+    </div>
   );
 }

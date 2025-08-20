@@ -25,7 +25,7 @@ export default function CheckoutPage() {
                     <CardTitle>Payment System Unavailable</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Our payment system is currently under maintenance. Please check back later. All existing subscriptions are unaffected.</p>
+                    <div className="text-muted-foreground">Our payment system is currently under maintenance. Please check back later. All existing subscriptions are unaffected.</div>
                 </CardContent>
                 <CardFooter>
                     <Button onClick={() => router.push('/dashboard')} className="w-full">Go to Dashboard</Button>
