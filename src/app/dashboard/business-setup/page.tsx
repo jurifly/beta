@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, type ReactNode, useRef, useEffect, Suspense } from "react";
@@ -56,6 +55,7 @@ import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/comp
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import jsPDF from "jspdf";
 
 export const maxDuration = 300; 
 
@@ -658,6 +658,7 @@ interface Step5DocumentGeneratorProps {
 
 // --- Step 5: Document Generation ---
 const docTemplates = [
+  { name: "Partnership Agreement", desc: "A foundational agreement for businesses with multiple partners.", premium: false },
   { name: "NOC from Landlord", desc: "A no-objection certificate required if your registered office is a rented property.", premium: false },
   { name: "Board Resolution for Incorporation", desc: "The official board resolution to authorize the incorporation process.", premium: true },
   { name: "MSME Application Draft", desc: "A pre-filled draft to help with your Udyam registration.", premium: false },
@@ -713,15 +714,27 @@ function Step5DocumentGenerator({ onComplete, userProfile }: Step5DocumentGenera
     
     const handleDownload = () => {
         if (!generatedContent) return;
-        const blob = new Blob([editorContent], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${generatedContent.title.replace(/ /g, '_')}.txt`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const pdf = new jsPDF();
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(12);
+        const margin = 15;
+        const pageHeight = pdf.internal.pageSize.height;
+        const textLines = pdf.splitTextToSize(editorContent, pdf.internal.pageSize.width - margin * 2);
+        
+        let y = margin;
+        pdf.text(generatedContent.title, pdf.internal.pageSize.width / 2, y, { align: 'center' });
+        y += 15;
+
+        for (const line of textLines) {
+            if (y + 10 > pageHeight - margin) {
+                pdf.addPage();
+                y = margin;
+            }
+            pdf.text(line, margin, y);
+            y += 7;
+        }
+
+        pdf.save(`${generatedContent.title.replace(/ /g, '_')}.pdf`);
     };
 
     return (
@@ -758,7 +771,7 @@ function Step5DocumentGenerator({ onComplete, userProfile }: Step5DocumentGenera
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">{generatedContent?.title || "Document Preview"}</h3>
                     <Button variant="outline" size="sm" onClick={handleDownload} disabled={!generatedContent || loadingDoc}>
-                        <Download className="mr-2 h-4 w-4" /> Download
+                        <Download className="mr-2 h-4 w-4" /> Download PDF
                     </Button>
                 </div>
                 <div className="flex-1 border rounded-md bg-card overflow-hidden min-h-[300px]">
@@ -900,3 +913,5 @@ function Step6FinalChecklist({ navigatorState }: { navigatorState: NavigatorStat
         </div>
     )
 }
+
+    
