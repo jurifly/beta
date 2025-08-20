@@ -14,20 +14,9 @@ const firebaseConfig = {
 };
 
 
-// Initialize Firebase on the client side only
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+// Initialize Firebase
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
 
-if (typeof window !== 'undefined') {
-    if (!getApps().length) {
-        app = initializeApp(firebaseConfig);
-    } else {
-        app = getApp();
-    }
-    auth = getAuth(app);
-    db = getFirestore(app);
-}
-
-// @ts-ignore
 export { app, auth, db };
