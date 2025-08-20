@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent, useMemo, useTransition, useCallback, Fragment, Suspense } from 'react';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import { useSearchParams } from 'next/navigation';
+import jsPDF from "jspdf";
 
 
 import * as AiActions from './actions';
@@ -836,6 +836,35 @@ const DocumentGenerator = () => {
         toast({ title: 'Deleted', description: 'Document removed from history.' });
     };
 
+    const handleDownloadPdf = (doc: DocumentGeneratorOutput) => {
+        if (!doc) return;
+        const pdf = new jsPDF();
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(12);
+        const margin = 15;
+        const pageHeight = pdf.internal.pageSize.height;
+        
+        // Add Title
+        pdf.setFontSize(18);
+        pdf.text(doc.title, pdf.internal.pageSize.width / 2, margin, { align: 'center' });
+        
+        // Add Content
+        pdf.setFontSize(10);
+        const textLines = pdf.splitTextToSize(doc.content, pdf.internal.pageSize.width - margin * 2);
+        let y = margin + 20;
+
+        for (const line of textLines) {
+            if (y > pageHeight - margin) {
+                pdf.addPage();
+                y = margin;
+            }
+            pdf.text(line, margin, y);
+            y += 5; // Line height
+        }
+        
+        pdf.save(`${doc.title.replace(/ /g, '_')}.pdf`);
+    };
+
     const activeDoc = generatedDocs.find(d => d.id === activeDocId);
 
     if (!userProfile) return null;
@@ -939,6 +968,7 @@ const DocumentGenerator = () => {
                         </CardContent>
                         <CardFooter className="flex-wrap items-center justify-end gap-2">
                             <Button variant="outline" onClick={() => { navigator.clipboard.writeText(activeDoc.content); toast({ title: 'Copied!' }); }}><Copy className="mr-2 h-4 w-4"/>Copy</Button>
+                            <Button variant="outline" onClick={() => handleDownloadPdf(activeDoc)}><Download className="mr-2 h-4 w-4"/>Download PDF</Button>
                         </CardFooter>
                     </Card>
                 )}
@@ -1451,3 +1481,5 @@ export default function AiToolkitPage() {
         </Suspense>
     );
 }
+
+    
