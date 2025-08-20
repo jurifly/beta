@@ -50,6 +50,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export const maxDuration = 300; 
 
@@ -411,9 +412,9 @@ const DocumentAnalyzerTab = () => {
 
 const getRiskColor = (severity: 'High' | 'Medium' | 'Low') => {
   switch (severity) {
-    case 'High': return 'border-red-500 bg-red-500/10 text-red-500';
-    case 'Medium': return 'border-yellow-500 bg-yellow-500/10 text-yellow-500';
-    case 'Low': return 'border-green-500 bg-green-500/10 text-green-500';
+    case 'High': return 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400';
+    case 'Medium': return 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400';
+    case 'Low': return 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400';
     default: return 'border-muted';
   }
 };
@@ -503,7 +504,23 @@ const AnalyzedDocItem = ({ doc, onDelete, onSaveRedline }: { doc: DocumentAnalys
                        <div className="prose dark:prose-invert max-w-none text-sm"><ReactMarkdown>{editedContent}</ReactMarkdown></div>
                     )}
                   </TabsContent>
-                  <TabsContent value="risks" className="space-y-3">{doc.riskFlags.length > 0 ? doc.riskFlags.map((flag, i) => (<div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}><p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p><p className="text-muted-foreground text-sm mt-1"><span className="font-medium text-foreground">Risk:</span> {flag.risk}</p></div>)) : <EmptyTabContent icon={ShieldCheck} title="No Significant Risks Found" description="The AI did not find any major risks in this document." />}</TabsContent>
+                  <TabsContent value="risks" className="space-y-3">
+                    {doc.riskFlags.length > 0 ? (
+                      doc.riskFlags.map((flag, i) => (
+                        <div key={i} className={`p-3 bg-card rounded-lg border-l-4 ${getRiskColor(flag.severity)}`}>
+                          <p className="font-semibold text-sm">Clause: <span className="font-normal italic">"{flag.clause}"</span></p>
+                          <p className="text-muted-foreground text-sm mt-1">
+                            <span className="font-medium text-foreground">Risk:</span>
+                            <Alert className="mt-2 border-0 p-0 text-sm">
+                               <AlertDescription>{flag.risk}</AlertDescription>
+                            </Alert>
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <EmptyTabContent icon={ShieldCheck} title="No Significant Risks Found" description="The AI did not find any major risks in this document." />
+                    )}
+                  </TabsContent>
                   <TabsContent value="details">
                     {doc.contractDetails ? (
                       <div className="w-full space-y-3 p-4 bg-muted/50 rounded-lg border">
@@ -603,12 +620,13 @@ const templateLibrary: TemplateCategoryData[] = [
     roles: ["Founder"],
     templates: [
       { name: "Founders’ Agreement", isPremium: true },
+      { name: "Partnership Agreement", isPremium: false },
       { name: "Co-Founder Equity Split Agreement", isPremium: true },
       { name: "Incorporation Checklist", isPremium: false },
       { name: "Consent Letter for Registered Office", isPremium: false },
       { name: "ESOP Policy (Standard + Advanced)", isPremium: true },
       { name: "Shareholders Agreement (SHA) – Template", isPremium: true },
-      { name: "Board Resolution: Appointment of Directors", isPremium: false },
+      { name: "Board Resolution for Incorporation", isPremium: false },
       { name: "Board Resolution: Allotment of Shares", isPremium: false },
       { name: "Board Resolution: Opening Bank Account", isPremium: false },
       { name: "Board Report Generator", isPremium: true },
@@ -723,6 +741,10 @@ const templatePlaceholders: Record<string, { context: string; reason: string }> 
   "Founders Agreement": {
     context: "e.g., Two co-founders starting a new tech venture.",
     reason: "e.g., To clearly define equity split, roles, and responsibilities.",
+  },
+  "Partnership Agreement": {
+    context: "e.g., Two partners starting a services business.",
+    reason: "e.g., To define profit sharing, roles, and capital contributions.",
   },
   "Terms of Service": {
     context: "e.g., For our new SaaS application launching next month.",
